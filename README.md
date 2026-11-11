@@ -119,6 +119,17 @@ BitChord is free and always will be — if it's earned a spot in your rotation, 
 <br/>
 <img src="upi_support.jpg" alt="UPI Support" width="250" />
 
+
+
+If you would like the support the Hush Music team , they can be done thru here 
+ 
+<br/>
+<img src="upi_supportDhruv.jpg" alt="UPI_dhruv Support" width="250" />
+
+<br/>
+<img src="upi_supportVeena.jpg" alt="UPI_veena Support" width="250" />
+
+
 </div>
 
 ---
