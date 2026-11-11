@@ -20,6 +20,10 @@
 
 [**Download**](#download) · [**Features**](#features) · [**Contributing**](#contributing) · [**Support**](#support) · [**Disclaimer**](#disclaimer)
 
+<br/>
+
+
+</div>
 
 > [!IMPORTANT]
 > Hush Music is not affiliated with, endorsed by, or connected to YouTube or Google in any way. Use it at your own discretion.
