@@ -28,7 +28,7 @@
 </div>
 
 > [!IMPORTANT]
-> BitChord is not affiliated with, endorsed by, or connected to YouTube or Google in any way. Use it at your own discretion.
+> Hush Music is not affiliated with, endorsed by, or connected to YouTube or Google in any way. Use it at your own discretion.
 
 ---
 
