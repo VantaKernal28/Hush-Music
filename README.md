@@ -3,7 +3,7 @@
 <br/>
 <br/>
 
-<img src="Logo.png" alt="BitChord app icon" width="400" />
+<img src="Logo.png" alt="BitChord app icon" width="200" />
 
 # HUSH MUSIC
 
