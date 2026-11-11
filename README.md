@@ -102,24 +102,16 @@ Grab the latest signed APK from the [Releases](https://github.com/kushagrasinghx
 
 <h1><a id="contributing"></a>Contributing</h1>
 
-Hush Music is a Fork of BitChord Made by Kushagra Singh.
-All of the donations directly help towards the development of BitChord. Contribution's are  welcome to BitChord! Please review our [Contributing Guide](CONTRIBUTING.md) and [Code of Conduct](CODE_OF_CONDUCT.md) before submitting a Pull Request.
-
-[**Contributing Guide**](CONTRIBUTING.md) · [**Code of Conduct**](CODE_OF_CONDUCT.md) · [**Maintainers**](MAINTAINERS.md) · [**Additional Docs**](ADDITIONAL.md)
-
-### Thanks to all contributors ❤
-
-<a href="https://github.com/kushagrasinghx/BitChord/graphs/contributors">
-  <img src="https://raw.githubusercontent.com/kushagrasinghx/BitChord/contributors/contributors.svg" />
-</a>
-
-</div>
+Hush Music is a Fork of BitChord Made by Dhruv Dinesh Patil and Veena
+Contribution's are  welcome to Hush Music. 
 
 ---
 
 <div align="center">
 
 <h1><a id="support"></a>Support</h1>
+
+Hush Music is a Fork of BitChord - All the donations done help in the development of BitChord :
 
 BitChord is free and always will be — if it's earned a spot in your rotation, you can chip in here:
 
@@ -137,7 +129,7 @@ BitChord is free and always will be — if it's earned a spot in your rotation, 
 
 <h1><a id="disclaimer"></a>Disclaimer & Legal Notice</h1>
 
-BitChord is an independent, community-driven third-party audio player and client. It is **not** associated with Google LLC, YouTube Music, Deezer, Telegram, or any of their parent companies.
+Hush Music is an independent, community-driven third-party audio player and client. It is **not** associated with Google LLC, YouTube Music, Deezer, Telegram, or any of their parent companies.
 
 * **No Media Hosting:** BitChord does not host, upload, or store copyrighted music files. It operates strictly as an interface to scan local device storage or stream media directly from public, public-facing, or user-authenticated APIs.
 * **Fair Use & API Usage:** This software is created solely for personal research, educational, and fair-use purposes. The user is entirely responsible for ensuring their usage aligns with their local copyright laws and YouTube Terms of Service.
