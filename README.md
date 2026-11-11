@@ -7,7 +7,7 @@
 
 # HUSH MUSIC
 
-### Aesthetic YouTube Music Client
+### A Spotify style YouTube Music Client
 
 <br/>
 
@@ -126,7 +126,6 @@ If you would like the support the Hush Music team , they can be done thru here
 <br/>
 <img src="upi_supportDhruv.jpg" alt="UPI_dhruv Support" width="250" />
 
-<br/>
 <img src="upi_supportVeena.jpg" alt="UPI_veena Support" width="250" />
 
 
@@ -140,10 +139,10 @@ If you would like the support the Hush Music team , they can be done thru here
 
 Hush Music is an independent, community-driven third-party audio player and client. It is **not** associated with Google LLC, YouTube Music, Deezer, Telegram, or any of their parent companies.
 
-* **No Media Hosting:** BitChord does not host, upload, or store copyrighted music files. It operates strictly as an interface to scan local device storage or stream media directly from public, public-facing, or user-authenticated APIs.
+* **No Media Hosting:** Hush Music does not host, upload, or store copyrighted music files. It operates strictly as an interface to scan local device storage or stream media directly from public, public-facing, or user-authenticated APIs.
 * **Fair Use & API Usage:** This software is created solely for personal research, educational, and fair-use purposes. The user is entirely responsible for ensuring their usage aligns with their local copyright laws and YouTube Terms of Service.
-* **No Ad-Blocking Guarantee:** While BitChord focuses on providing a clean listening environment, it does not guarantee permanent bypasses or modifications to commercial third-party platform conditions.
-* **Copyleft:** BitChord is free software under the GPLv3. The license does not let anyone forbid others from selling or redistributing copies, but any distribution must come with the Corresponding Source under the same license.
+* **No Ad-Blocking Guarantee:** While Hush Music focuses on providing a clean listening environment, it does not guarantee permanent bypasses or modifications to commercial third-party platform conditions.
+* **Copyleft:** Hush Music is free software under the GPLv3. The license does not let anyone forbid others from selling or redistributing copies, but any distribution must come with the Corresponding Source under the same license.
 
 </div>
 
