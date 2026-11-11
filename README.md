@@ -3,7 +3,7 @@
 <br/>
 <br/>
 
-<img src="Logo.png" alt="BitChord app icon" width="200" />
+<img src="LogoHush.png" alt="BitChord app icon" width="200" />
 
 # HUSH MUSIC
 
@@ -34,7 +34,7 @@
 
 <div align="center">
 
-<img src="Banner.png" alt="BitChord banner" width="100%" />
+<img src="BannerHush.png" alt="BitChord banner" width="100%" />
 
 <h1><a id="features"></a>Features</h1>
 
