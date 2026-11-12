@@ -1,47 +1,47 @@
 /* ==========================================================================
-   Hush Music — Minimal Design System
-   Material 3 (M3) Dark Theme · Liquid Glass iOS Dock · Bouncy Spring Physics
-   Lando Norris Kinetic Typography · Pure Fidelity · Zero Bloat
+   Hush Music — Radical Redesign & Spatial Architecture
+   Material 3 (M3) · Liquid Glass iOS Dock · Bouncy Spring Physics (380/22)
+   Kinetic Editorial Typography · Pure Fidelity · Zero Bloat
    ========================================================================== */
 
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500;600;700&family=Plus+Jakarta+Sans:wght@400;500;600;700;800;900&family=Syne:wght@700;800&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500;600;700&family=Plus+Jakarta+Sans:wght@400;500;600;700;800;900&family=Syne:wght@700;800;900&display=swap');
 
 :root {
-  /* Material 3 Dark Palette Tokens */
-  --md-sys-color-surface: #0a0c12;
-  --md-sys-color-surface-dim: #06070a;
-  --md-sys-color-surface-container-lowest: #0b0e15;
-  --md-sys-color-surface-container-low: #10131d;
-  --md-sys-color-surface-container: #141825;
-  --md-sys-color-surface-container-high: #1a2030;
-  --md-sys-color-surface-container-highest: #22293c;
-  
-  --md-sys-color-on-surface: #f2f5fb;
-  --md-sys-color-on-surface-variant: rgba(242, 245, 251, 0.62);
-  --md-sys-color-outline: rgba(255, 255, 255, 0.08);
-  --md-sys-color-outline-variant: rgba(255, 255, 255, 0.14);
+  /* Material 3 Dark Tonal Surfaces */
+  --m3-surface-dim: #050608;
+  --m3-surface: #090b10;
+  --m3-surface-container-low: #0e1117;
+  --m3-surface-container: #131720;
+  --m3-surface-container-high: #1a202c;
+  --m3-surface-container-highest: #222a3a;
+
+  /* Typography Colors */
+  --m3-on-surface: #f3f6fc;
+  --m3-on-surface-variant: rgba(243, 246, 252, 0.65);
+  --m3-outline: rgba(255, 255, 255, 0.08);
+  --m3-outline-variant: rgba(255, 255, 255, 0.16);
 
   /* Accents */
-  --md-sys-color-primary: #d2ff00;       /* Cyber Volt */
-  --md-sys-color-primary-container: rgba(210, 255, 0, 0.1);
-  --md-sys-color-on-primary: #000000;
-  --md-sys-color-secondary: #00f0ff;     /* Electric Cyan */
-  --md-sys-color-secondary-container: rgba(0, 240, 255, 0.1);
-  --md-sys-color-tertiary: #b084ff;      /* Neon Lavender */
+  --accent-volt: #d2ff00;       /* Cyber Volt */
+  --accent-volt-glow: rgba(210, 255, 0, 0.35);
+  --accent-cyan: #00f0ff;       /* Electric Cyan */
+  --accent-cyan-glow: rgba(0, 240, 255, 0.3);
+  --accent-purple: #b084ff;     /* Neon Lavender */
 
-  /* M3 Shape Tokens */
-  --md-shape-full: 9999px;
-  --md-shape-extra-large: 32px;
-  --md-shape-large: 24px;
-  --md-shape-medium: 16px;
-  --md-shape-small: 10px;
+  /* M3 Shapes */
+  --radius-full: 9999px;
+  --radius-3xl: 28px;
+  --radius-2xl: 20px;
+  --radius-xl: 16px;
+  --radius-lg: 12px;
 
-  /* Spring Physics & Bouncy Easings */
+  /* Spring Physics Curves (Equivalent to Stiffness: 380, Damping: 22) */
   --ease-spring: cubic-bezier(0.34, 1.56, 0.64, 1);
   --ease-elastic: cubic-bezier(0.175, 0.885, 0.32, 1.275);
+  --ease-curtain: cubic-bezier(0.76, 0, 0.24, 1);
   --ease-smooth: cubic-bezier(0.16, 1, 0.3, 1);
 
-  /* Typography */
+  /* Fonts */
   --font-display: 'Syne', 'Plus Jakarta Sans', system-ui, sans-serif;
   --font-sans: 'Plus Jakarta Sans', 'Inter', system-ui, sans-serif;
   --font-mono: 'JetBrains Mono', monospace;
@@ -55,15 +55,15 @@
 
 html {
   scroll-behavior: smooth;
-  background-color: var(--md-sys-color-surface-dim);
-  color: var(--md-sys-color-on-surface);
+  background-color: var(--m3-surface-dim);
+  color: var(--m3-on-surface);
   font-family: var(--font-sans);
   overflow-x: hidden;
 }
 
 body {
-  background-color: var(--md-sys-color-surface-dim);
-  color: var(--md-sys-color-on-surface);
+  background-color: var(--m3-surface-dim);
+  color: var(--m3-on-surface);
   min-height: 100vh;
   position: relative;
   overflow-x: hidden;
@@ -71,93 +71,99 @@ body {
 }
 
 /* -------------------------------------------------------------
-   1. BOUNCY ANIMATIONS & SPRING PHYSICS UTILITIES
+   1. BOUNCY SPRING PHYSICS (STIFFNESS 380 / DAMPING 22)
 -------------------------------------------------------------- */
-.bouncy-btn {
-  transition: transform 0.4s var(--ease-spring), box-shadow 0.3s ease, background 0.3s ease, color 0.3s ease !important;
+.spring-hover {
+  transition: transform 0.42s var(--ease-spring), box-shadow 0.35s ease, background 0.3s ease, border-color 0.3s ease !important;
   will-change: transform;
 }
-.bouncy-btn:hover {
-  transform: translateY(-4px) scale(1.04);
+.spring-hover:hover {
+  transform: translateY(-6px) scale(1.02);
 }
-.bouncy-btn:active {
-  transform: translateY(1px) scale(0.93) !important;
+.spring-hover:active {
+  transform: translateY(2px) scale(0.93) !important;
   transition: transform 0.12s ease !important;
 }
 
-.bouncy-chip {
-  transition: transform 0.35s var(--ease-spring), background 0.25s, border-color 0.25s;
+.spring-chip {
+  transition: transform 0.35s var(--ease-spring), background 0.25s, border-color 0.25s, color 0.25s;
   will-change: transform;
 }
-.bouncy-chip:hover {
-  transform: translateY(-2px) scale(1.05);
+.spring-chip:hover {
+  transform: translateY(-3px) scale(1.06);
 }
-.bouncy-chip:active {
-  transform: scale(0.95);
+.spring-chip:active {
+  transform: scale(0.94);
 }
 
-.bouncy-card {
-  transition: transform 0.45s var(--ease-spring), border-color 0.3s ease, background 0.3s ease, box-shadow 0.4s ease !important;
+.spring-card {
+  transition: transform 0.45s var(--ease-spring), border-color 0.35s ease, background 0.35s ease, box-shadow 0.45s ease !important;
   will-change: transform;
 }
-.bouncy-card:hover {
-  transform: translateY(-6px) scale(1.015);
+.spring-card:hover {
+  transform: translateY(-8px) scale(1.012);
+  border-color: rgba(210, 255, 0, 0.35);
+  box-shadow: 0 30px 70px -15px rgba(0, 0, 0, 0.85), 0 0 30px rgba(210, 255, 0, 0.08);
 }
 
-.bouncy-icon {
+.spring-icon {
   transition: transform 0.4s var(--ease-spring);
   display: inline-block;
+  will-change: transform;
 }
-*:hover > .bouncy-icon,
-.bouncy-btn:hover .bouncy-icon {
-  transform: scale(1.2) rotate(-5deg);
-}
-
-/* Floating Breathe Animation */
-@keyframes float-breathe {
-  0%, 100% {
-    transform: translateY(0);
-  }
-  50% {
-    transform: translateY(-8px);
-  }
-}
-.animate-float-bounce {
-  animation: float-breathe 5s var(--ease-spring) infinite;
+*:hover > .spring-icon,
+.spring-hover:hover .spring-icon {
+  transform: scale(1.22) rotate(-6deg);
 }
 
 /* -------------------------------------------------------------
-   2. PRELOADER & LOADING ANIMATION
+   2. CUSTOM PRELOADER & CURTAIN REVEAL
 -------------------------------------------------------------- */
 #preloader {
   position: fixed;
   inset: 0;
   z-index: 9999;
-  background: #050608;
+  background: #040507;
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  transition: opacity 0.65s var(--ease-smooth), transform 0.65s var(--ease-spring);
+  transition: transform 0.85s var(--ease-curtain), opacity 0.85s ease;
+  will-change: transform;
 }
 
 #preloader.loaded {
-  opacity: 0;
+  transform: translateY(-100%);
   pointer-events: none;
-  transform: translateY(-30px) scale(1.03);
+}
+
+.preloader-glow {
+  position: absolute;
+  width: 420px;
+  height: 420px;
+  border-radius: 50%;
+  background: radial-gradient(circle, rgba(210, 255, 0, 0.2) 0%, rgba(0, 240, 255, 0.08) 50%, transparent 70%);
+  filter: blur(80px);
+  pointer-events: none;
+  animation: pulse-preloader-glow 3s infinite ease-in-out alternate;
+}
+
+@keyframes pulse-preloader-glow {
+  0% { transform: scale(0.9); opacity: 0.6; }
+  100% { transform: scale(1.15); opacity: 1; }
 }
 
 .loader-badge {
   font-family: var(--font-mono);
   font-size: 11px;
-  letter-spacing: 0.16em;
-  color: var(--md-sys-color-primary);
+  letter-spacing: 0.18em;
+  color: var(--accent-volt);
   text-transform: uppercase;
-  margin-bottom: 26px;
-  background: var(--md-sys-color-primary-container);
-  border: 1px solid rgba(210, 255, 0, 0.25);
-  padding: 6px 16px;
-  border-radius: var(--md-shape-full);
+  margin-bottom: 24px;
+  background: rgba(210, 255, 0, 0.08);
+  border: 1px solid rgba(210, 255, 0, 0.28);
+  padding: 6px 18px;
+  border-radius: var(--radius-full);
   display: inline-flex;
   align-items: center;
   gap: 8px;
@@ -167,9 +173,9 @@ body {
   content: '';
   width: 6px;
   height: 6px;
-  background: var(--md-sys-color-primary);
+  background: var(--accent-volt);
   border-radius: 50%;
-  box-shadow: 0 0 10px var(--md-sys-color-primary);
+  box-shadow: 0 0 10px var(--accent-volt);
   animation: pulse-dot 1.2s infinite ease-in-out;
 }
 
@@ -178,58 +184,32 @@ body {
   50% { opacity: 1; transform: scale(1.3); }
 }
 
-.loader-logo-wrap {
-  position: relative;
-  width: 96px;
-  height: 96px;
+.loader-brand {
+  font-family: var(--font-display);
+  font-size: clamp(32px, 5vw, 56px);
+  font-weight: 900;
+  letter-spacing: -0.04em;
+  color: #ffffff;
   display: flex;
   align-items: center;
-  justify-content: center;
-}
-
-.loader-ring {
-  position: absolute;
-  inset: -6px;
-  border-radius: 32px;
-  border: 2px solid transparent;
-  border-top-color: var(--md-sys-color-primary);
-  border-right-color: var(--md-sys-color-secondary);
-  animation: spin-ring 2s cubic-bezier(0.4, 0, 0.2, 1) infinite;
-}
-
-@keyframes spin-ring {
-  0% { transform: rotate(0deg); }
-  100% { transform: rotate(360deg); }
-}
-
-.loader-logo {
-  width: 78px;
-  height: 78px;
-  object-fit: contain;
-  border-radius: 22px;
-  box-shadow: 0 0 35px rgba(210, 255, 0, 0.25);
-  animation: logo-spring 1.8s var(--ease-spring) infinite alternate;
-}
-
-@keyframes logo-spring {
-  0% { transform: scale(0.92); }
-  100% { transform: scale(1.05); filter: drop-shadow(0 0 25px rgba(0, 240, 255, 0.4)); }
+  gap: 14px;
+  margin-bottom: 18px;
 }
 
 .loader-waves {
   display: flex;
   gap: 5px;
   align-items: center;
-  height: 28px;
-  margin-top: 24px;
+  height: 32px;
+  margin-top: 10px;
 }
 
 .loader-bar {
-  width: 4px;
+  width: 4.5px;
   height: 8px;
-  background: var(--md-sys-color-primary);
-  border-radius: var(--md-shape-full);
-  animation: bouncy-wave 1.1s var(--ease-spring) infinite;
+  background: var(--accent-volt);
+  border-radius: var(--radius-full);
+  animation: wave-bounce 1.1s var(--ease-spring) infinite;
 }
 .loader-bar:nth-child(1) { animation-delay: 0.0s; }
 .loader-bar:nth-child(2) { animation-delay: 0.15s; }
@@ -237,27 +217,27 @@ body {
 .loader-bar:nth-child(4) { animation-delay: 0.45s; }
 .loader-bar:nth-child(5) { animation-delay: 0.6s; }
 
-@keyframes bouncy-wave {
+@keyframes wave-bounce {
   0%, 100% { height: 6px; opacity: 0.35; transform: scaleY(0.7); }
-  50% { height: 26px; opacity: 1; transform: scaleY(1.15); background: var(--md-sys-color-secondary); }
+  50% { height: 32px; opacity: 1; transform: scaleY(1.2); background: var(--accent-cyan); }
 }
 
 .loader-counter {
   font-family: var(--font-mono);
-  font-size: 30px;
+  font-size: 28px;
   font-weight: 700;
-  letter-spacing: -0.04em;
+  letter-spacing: -0.03em;
   color: #ffffff;
-  margin-top: 12px;
+  margin-top: 16px;
 }
 
-.loader-telemetry {
+.loader-status {
   font-family: var(--font-mono);
   font-size: 11px;
-  color: var(--md-sys-color-on-surface-variant);
+  letter-spacing: 0.12em;
+  color: var(--m3-on-surface-variant);
   margin-top: 6px;
-  height: 16px;
-  letter-spacing: 0.08em;
+  height: 18px;
 }
 
 /* -------------------------------------------------------------
@@ -283,7 +263,7 @@ body {
 .lando-text .char {
   display: inline-block;
   position: relative;
-  transition: transform 0.4s var(--ease-spring);
+  transition: transform 0.42s var(--ease-spring);
   transition-delay: calc(var(--char-index, 0) * 18ms);
 }
 
@@ -293,34 +273,33 @@ body {
   top: 100%;
   left: 0;
   display: inline-block;
-  color: var(--md-sys-color-primary);
+  color: var(--accent-volt);
 }
 
 .lando-link:hover .char,
-.lando-hover:hover .lando-text .char,
-.bouncy-btn:hover .lando-text .char {
+.spring-hover:hover .lando-text .char,
+.btn-volt:hover .lando-text .char {
   transform: translateY(-100%);
 }
 
-/* Neon Glow Button */
-.btn-m3-primary {
+.btn-volt {
   position: relative;
-  background: var(--md-sys-color-primary);
+  background: var(--accent-volt);
   color: #000000;
   font-weight: 700;
-  border-radius: var(--md-shape-full);
-  padding: 12px 26px;
+  border-radius: var(--radius-full);
+  padding: 13px 28px;
   display: inline-flex;
   align-items: center;
   gap: 9px;
   text-decoration: none;
-  box-shadow: 0 0 20px rgba(210, 255, 0, 0.3), 0 4px 12px rgba(0, 0, 0, 0.4);
+  box-shadow: 0 0 25px rgba(210, 255, 0, 0.32), 0 4px 14px rgba(0, 0, 0, 0.4);
 }
-.btn-m3-primary:hover {
+.btn-volt:hover {
   background: #e2ff40;
-  box-shadow: 0 0 35px rgba(210, 255, 0, 0.6), 0 8px 20px rgba(0, 0, 0, 0.5);
+  box-shadow: 0 0 40px rgba(210, 255, 0, 0.65), 0 8px 24px rgba(0, 0, 0, 0.5);
 }
-.btn-m3-primary .char::after {
+.btn-volt .char::after {
   color: #000000;
 }
 
@@ -329,9 +308,9 @@ body {
   width: 100%;
   overflow: hidden;
   background: linear-gradient(90deg, rgba(210, 255, 0, 0.04), rgba(0, 240, 255, 0.04));
-  border-top: 1px solid var(--md-sys-color-outline);
-  border-bottom: 1px solid var(--md-sys-color-outline);
-  padding: 10px 0;
+  border-top: 1px solid var(--m3-outline);
+  border-bottom: 1px solid var(--m3-outline);
+  padding: 12px 0;
   position: relative;
 }
 
@@ -356,11 +335,11 @@ body {
   align-items: center;
   gap: 16px;
   padding: 0 20px;
-  color: rgba(255, 255, 255, 0.75);
+  color: rgba(255, 255, 255, 0.8);
 }
 
 .kinetic-marquee .highlight {
-  color: var(--md-sys-color-primary);
+  color: var(--accent-volt);
   font-weight: 700;
 }
 
@@ -368,8 +347,8 @@ body {
   width: 5px;
   height: 5px;
   border-radius: 50%;
-  background: var(--md-sys-color-secondary);
-  box-shadow: 0 0 6px var(--md-sys-color-secondary);
+  background: var(--accent-cyan);
+  box-shadow: 0 0 6px var(--accent-cyan);
 }
 
 @keyframes marquee-roll {
@@ -378,7 +357,7 @@ body {
 }
 
 /* -------------------------------------------------------------
-   4. LIQUID GLASS iOS-TYPE LOWER NAVIGATION DOCK (MINIMAL)
+   4. LIQUID GLASS iOS-TYPE LOWER NAVIGATION DOCK
 -------------------------------------------------------------- */
 .ios-glass-dock {
   position: fixed;
@@ -388,17 +367,17 @@ body {
   z-index: 900;
   display: flex;
   align-items: center;
-  gap: 6px;
+  gap: 4px;
   padding: 6px 10px;
-  border-radius: var(--md-shape-full);
-  background: rgba(15, 18, 26, 0.68);
-  -webkit-backdrop-filter: blur(32px) saturate(220%);
-  backdrop-filter: blur(32px) saturate(220%);
+  border-radius: var(--radius-full);
+  background: rgba(14, 18, 26, 0.72);
+  -webkit-backdrop-filter: blur(28px) saturate(180%);
+  backdrop-filter: blur(28px) saturate(180%);
   border: 1px solid rgba(255, 255, 255, 0.16);
   box-shadow:
-    0 24px 48px -12px rgba(0, 0, 0, 0.85),
+    0 24px 50px -10px rgba(0, 0, 0, 0.85),
     0 0 0 1px rgba(0, 0, 0, 0.5),
-    inset 0 1.5px 0 0 rgba(255, 255, 255, 0.35),
+    inset 0 1px 1px 0 rgba(255, 255, 255, 0.35),
     inset 0 -1px 0 0 rgba(0, 0, 0, 0.4);
   transition: transform 0.4s var(--ease-spring), box-shadow 0.35s ease, border-color 0.3s;
 }
@@ -408,7 +387,7 @@ body {
   box-shadow:
     0 28px 60px -10px rgba(0, 0, 0, 0.9),
     0 0 35px rgba(0, 240, 255, 0.2),
-    inset 0 1.5px 0 0 rgba(255, 255, 255, 0.5);
+    inset 0 1.5px 1px 0 rgba(255, 255, 255, 0.45);
   transform: translateX(-50%) translateY(-2px);
 }
 
@@ -418,12 +397,12 @@ body {
   align-items: center;
   gap: 7px;
   padding: 8px 16px;
-  border-radius: var(--md-shape-full);
+  border-radius: var(--radius-full);
   color: rgba(255, 255, 255, 0.7);
   font-size: 13px;
   font-weight: 500;
   text-decoration: none;
-  transition: all 0.3s var(--ease-spring);
+  transition: all 0.35s var(--ease-spring);
   white-space: nowrap;
 }
 
@@ -441,8 +420,8 @@ body {
 }
 
 .dock-item:hover svg {
-  transform: scale(1.2) rotate(-4deg);
-  color: var(--md-sys-color-primary);
+  transform: scale(1.22) rotate(-4deg);
+  color: var(--accent-volt);
 }
 
 .dock-item:active {
@@ -451,7 +430,7 @@ body {
 
 .dock-item.active {
   color: #000000;
-  background: var(--md-sys-color-primary);
+  background: var(--accent-volt);
   font-weight: 700;
   box-shadow: 0 4px 16px rgba(210, 255, 0, 0.45);
 }
@@ -471,7 +450,7 @@ body {
   background: linear-gradient(135deg, #00f0ff, #7928ca);
   color: #ffffff !important;
   font-weight: 600;
-  border-radius: var(--md-shape-full);
+  border-radius: var(--radius-full);
   box-shadow: 0 0 16px rgba(0, 240, 255, 0.4);
 }
 .dock-pill-btn:hover {
@@ -480,159 +459,219 @@ body {
 }
 
 /* -------------------------------------------------------------
-   5. MATERIAL 3 TONAL SURFACES & CONTAINERS
+   5. MATERIAL 3 SPATIAL ARCHITECTURE & CONTAINERS
 -------------------------------------------------------------- */
 .m3-surface-container {
-  background: var(--md-sys-color-surface-container);
-  border: 1px solid var(--md-sys-color-outline);
-  border-radius: var(--md-shape-extra-large);
+  background: var(--m3-surface-container);
+  border: 1px solid var(--m3-outline);
+  border-radius: var(--radius-3xl);
   position: relative;
   overflow: hidden;
-  box-shadow: 0 16px 40px -10px rgba(0, 0, 0, 0.6), inset 0 1px 0 rgba(255, 255, 255, 0.08);
-  backdrop-filter: blur(20px);
+  box-shadow: 0 20px 50px -12px rgba(0, 0, 0, 0.7), inset 0 1px 0 rgba(255, 255, 255, 0.08);
+  backdrop-filter: blur(24px);
 }
 
-.tag-telemetry {
+.m3-surface-high {
+  background: var(--m3-surface-container-high);
+  border: 1px solid var(--m3-outline-variant);
+  border-radius: var(--radius-3xl);
+  box-shadow: 0 24px 60px -15px rgba(0, 0, 0, 0.8), inset 0 1px 0 rgba(255, 255, 255, 0.12);
+}
+
+.tag-tech {
   display: inline-flex;
   align-items: center;
   gap: 7px;
   font-family: var(--font-mono);
   font-size: 11px;
-  letter-spacing: 0.12em;
-  color: var(--md-sys-color-primary);
-  background: var(--md-sys-color-primary-container);
-  border: 1px solid rgba(210, 255, 0, 0.25);
-  border-radius: var(--md-shape-full);
+  letter-spacing: 0.14em;
+  color: var(--accent-volt);
+  background: rgba(210, 255, 0, 0.08);
+  border: 1px solid rgba(210, 255, 0, 0.28);
+  border-radius: var(--radius-full);
   padding: 5px 14px;
   text-transform: uppercase;
 }
 
-.hero-headline {
+.hero-display {
   font-family: var(--font-display);
-  font-size: clamp(38px, 6vw, 76px);
-  font-weight: 800;
-  line-height: 1.02;
+  font-size: clamp(40px, 6.8vw, 84px);
+  font-weight: 900;
+  line-height: 0.98;
   letter-spacing: -0.04em;
   text-transform: uppercase;
 }
 
-.hero-headline span.gradient-text {
-  background: linear-gradient(135deg, #ffffff 30%, var(--md-sys-color-primary) 75%, var(--md-sys-color-secondary) 100%);
+.hero-display span.gradient-text {
+  background: linear-gradient(135deg, #ffffff 30%, var(--accent-volt) 75%, var(--accent-cyan) 100%);
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
 }
 
 /* -------------------------------------------------------------
-   6. INTERACTIVE LIVE AUDIO VISUALIZER (AIRY & EXPANDED)
+   6. INTERACTIVE AUDIO FIDELITY SANDBOX
 -------------------------------------------------------------- */
-.visualizer-card {
-  background: var(--md-sys-color-surface-container);
-  border: 1px solid var(--md-sys-color-outline-variant);
-  border-radius: var(--md-shape-extra-large);
-  padding: 36px 40px;
+.fidelity-sandbox-card {
+  background: var(--m3-surface-container);
+  border: 1px solid var(--m3-outline-variant);
+  border-radius: var(--radius-3xl);
+  padding: 36px 42px;
   box-shadow: 0 30px 80px -20px rgba(0, 0, 0, 0.85), inset 0 1px 0 rgba(255, 255, 255, 0.16);
-  backdrop-filter: blur(24px);
   position: relative;
   overflow: hidden;
 }
 
-.visualizer-card::before {
+.fidelity-sandbox-card::before {
   content: '';
   position: absolute;
   top: 0;
   left: 0;
   right: 0;
   height: 2px;
-  background: linear-gradient(90deg, transparent, var(--md-sys-color-primary), var(--md-sys-color-secondary), transparent);
+  background: linear-gradient(90deg, transparent, var(--accent-volt), var(--accent-cyan), transparent);
+}
+
+.mode-pill-bar {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 5px;
+  background: rgba(0, 0, 0, 0.45);
+  border: 1px solid var(--m3-outline);
+  border-radius: var(--radius-full);
+}
+
+.mode-pill {
+  padding: 8px 20px;
+  border-radius: var(--radius-full);
+  font-family: var(--font-sans);
+  font-size: 13px;
+  font-weight: 600;
+  color: rgba(255, 255, 255, 0.65);
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  transition: all 0.35s var(--ease-spring);
+  white-space: nowrap;
+}
+
+.mode-pill:hover {
+  color: #ffffff;
+}
+
+.mode-pill.active {
+  background: var(--accent-volt);
+  color: #000000;
+  box-shadow: 0 4px 16px rgba(210, 255, 0, 0.4);
 }
 
 .eq-canvas {
   width: 100%;
-  height: 96px;
-  border-radius: var(--md-shape-medium);
-  background: rgba(0, 0, 0, 0.45);
-  border: 1px solid rgba(255, 255, 255, 0.05);
+  height: 104px;
+  border-radius: var(--radius-xl);
+  background: rgba(0, 0, 0, 0.5);
+  border: 1px solid rgba(255, 255, 255, 0.06);
 }
 
-.player-scrubber {
-  width: 100%;
-  height: 6px;
-  background: rgba(255, 255, 255, 0.1);
-  border-radius: var(--md-shape-full);
-  position: relative;
-  cursor: pointer;
-  overflow: hidden;
-  transition: height 0.2s ease;
+.spec-badge {
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid var(--m3-outline);
+  border-radius: var(--radius-xl);
+  padding: 16px 20px;
+  transition: all 0.3s var(--ease-spring);
 }
-.player-scrubber:hover {
-  height: 9px;
-}
-
-.player-progress {
-  height: 100%;
-  width: 42%;
-  background: linear-gradient(90deg, var(--md-sys-color-primary), var(--md-sys-color-secondary));
-  border-radius: var(--md-shape-full);
-  position: relative;
-  transition: width 0.1s linear;
+.spec-badge:hover {
+  border-color: rgba(210, 255, 0, 0.3);
+  background: rgba(210, 255, 0, 0.04);
 }
 
 /* -------------------------------------------------------------
-   7. PURE FIDELITY PILLARS (SPACIOUS M3 CARDS)
+   7. ASYMMETRIC BENTO GRID (4 CORE PILLARS)
 -------------------------------------------------------------- */
-.speed-card {
-  background: var(--md-sys-color-surface-container);
-  border: 1px solid var(--md-sys-color-outline);
-  border-radius: var(--md-shape-large);
-  padding: 34px 30px;
+.bento-card {
+  background: var(--m3-surface-container);
+  border: 1px solid var(--m3-outline);
+  border-radius: var(--radius-3xl);
+  padding: 36px 34px;
   position: relative;
   overflow: hidden;
 }
 
-.speed-card:hover {
-  border-color: rgba(210, 255, 0, 0.35);
-  background: var(--md-sys-color-surface-container-high);
-  box-shadow: 0 24px 50px -15px rgba(0, 0, 0, 0.8), 0 0 25px rgba(210, 255, 0, 0.08);
-}
-
-.speed-card .card-telemetry {
+.bento-card .card-index {
   font-family: var(--font-mono);
   font-size: 11px;
-  letter-spacing: 0.12em;
-  color: var(--md-sys-color-primary);
+  letter-spacing: 0.14em;
+  color: var(--accent-volt);
   margin-bottom: 14px;
   display: block;
 }
 
-.speed-card h3 {
+.bento-card h3 {
   font-family: var(--font-display);
-  font-size: 22px;
-  font-weight: 700;
+  font-size: 24px;
+  font-weight: 800;
   letter-spacing: -0.02em;
   color: #ffffff;
   margin-bottom: 10px;
 }
 
-.speed-card p {
+.bento-card p {
   font-size: 14.5px;
   line-height: 1.65;
-  color: var(--md-sys-color-on-surface-variant);
+  color: var(--m3-on-surface-variant);
 }
 
 /* -------------------------------------------------------------
-   8. CREDITS CARD (VantaKernal28 & {SRIKAR_PLACEHOLDER})
+   8. INTERACTIVE 4-STEP ONBOARDING PREVIEW
+-------------------------------------------------------------- */
+.onboarding-card {
+  background: var(--m3-surface-container);
+  border: 1px solid var(--m3-outline-variant);
+  border-radius: var(--radius-3xl);
+  padding: 38px 42px;
+  box-shadow: 0 24px 60px -15px rgba(0, 0, 0, 0.8);
+}
+
+.step-indicator {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.step-tab {
+  padding: 8px 16px;
+  border-radius: var(--radius-full);
+  font-family: var(--font-mono);
+  font-size: 12px;
+  font-weight: 600;
+  color: rgba(255, 255, 255, 0.5);
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid var(--m3-outline);
+  cursor: pointer;
+  transition: all 0.3s var(--ease-spring);
+}
+
+.step-tab.active {
+  background: var(--accent-volt);
+  color: #000000;
+  border-color: var(--accent-volt);
+  box-shadow: 0 4px 16px rgba(210, 255, 0, 0.4);
+}
+
+/* -------------------------------------------------------------
+   9. CREDITS CARD & FOOTER WATERMARK
 -------------------------------------------------------------- */
 .credits-banner {
-  background: linear-gradient(135deg, rgba(210, 255, 0, 0.07), rgba(0, 240, 255, 0.07));
-  border: 1px solid var(--md-sys-color-outline-variant);
-  border-radius: var(--md-shape-large);
-  padding: 26px 32px;
+  background: linear-gradient(135deg, rgba(210, 255, 0, 0.08), rgba(0, 240, 255, 0.08));
+  border: 1px solid var(--m3-outline-variant);
+  border-radius: var(--radius-3xl);
+  padding: 28px 36px;
   display: flex;
   flex-wrap: wrap;
   align-items: center;
   justify-content: space-between;
   gap: 18px;
-  box-shadow: 0 16px 40px -10px rgba(0, 0, 0, 0.6);
+  box-shadow: 0 20px 50px -12px rgba(0, 0, 0, 0.7);
 }
 
 .creator-tag {
@@ -641,8 +680,8 @@ body {
   gap: 8px;
   background: rgba(255, 255, 255, 0.06);
   border: 1px solid rgba(255, 255, 255, 0.16);
-  padding: 7px 16px;
-  border-radius: var(--md-shape-full);
+  padding: 7px 18px;
+  border-radius: var(--radius-full);
   font-family: var(--font-mono);
   font-size: 13px;
   font-weight: 600;
@@ -651,77 +690,92 @@ body {
 }
 
 .creator-tag:hover {
-  background: var(--md-sys-color-primary);
+  background: var(--accent-volt);
   color: #000000;
-  border-color: var(--md-sys-color-primary);
+  border-color: var(--accent-volt);
   box-shadow: 0 0 20px rgba(210, 255, 0, 0.5);
 }
 
 .creator-tag.srikar:hover {
-  background: var(--md-sys-color-secondary);
+  background: var(--accent-cyan);
   color: #000000;
-  border-color: var(--md-sys-color-secondary);
+  border-color: var(--accent-cyan);
   box-shadow: 0 0 20px rgba(0, 240, 255, 0.5);
+}
+
+.footer-watermark {
+  font-family: var(--font-display);
+  font-size: clamp(60px, 14vw, 170px);
+  font-weight: 900;
+  letter-spacing: -0.05em;
+  color: rgba(255, 255, 255, 0.03);
+  text-transform: uppercase;
+  user-select: none;
+  line-height: 0.85;
+  text-align: center;
+  pointer-events: none;
+  margin-bottom: 24px;
 }
 
 /* Ambient Glow Blobs */
 .hero-glow-blob {
   position: absolute;
   border-radius: 50%;
-  filter: blur(120px);
+  filter: blur(130px);
   pointer-events: none;
   z-index: 0;
-  opacity: 0.45;
+  opacity: 0.42;
   will-change: transform;
 }
 .hero-blob-1 {
-  width: 500px;
-  height: 500px;
-  background: radial-gradient(circle, rgba(210, 255, 0, 0.2) 0%, rgba(210, 255, 0, 0) 70%);
-  top: -6%;
-  left: 10%;
+  width: 540px;
+  height: 540px;
+  background: radial-gradient(circle, rgba(210, 255, 0, 0.22) 0%, rgba(210, 255, 0, 0) 70%);
+  top: -8%;
+  left: 8%;
   animation: float-blob-1 14s ease-in-out infinite alternate;
 }
 .hero-blob-2 {
-  width: 580px;
-  height: 580px;
-  background: radial-gradient(circle, rgba(0, 240, 255, 0.16) 0%, rgba(0, 240, 255, 0) 70%);
-  top: 15%;
-  right: 5%;
+  width: 620px;
+  height: 620px;
+  background: radial-gradient(circle, rgba(0, 240, 255, 0.18) 0%, rgba(0, 240, 255, 0) 70%);
+  top: 14%;
+  right: 4%;
   animation: float-blob-2 18s ease-in-out infinite alternate;
 }
 
 @keyframes float-blob-1 {
   0% { transform: translate(0, 0) scale(1); }
-  100% { transform: translate(40px, 30px) scale(1.1); }
+  100% { transform: translate(45px, 35px) scale(1.1); }
 }
 @keyframes float-blob-2 {
   0% { transform: translate(0, 0) scale(1.05); }
-  100% { transform: translate(-40px, 40px) scale(0.95); }
+  100% { transform: translate(-45px, 45px) scale(0.95); }
 }
 
 @media (max-width: 768px) {
   .ios-glass-dock {
     bottom: 16px;
     padding: 5px 8px;
-    gap: 3px;
+    gap: 2px;
     width: calc(100vw - 32px);
-    max-width: 420px;
+    max-width: 440px;
     justify-content: space-around;
   }
   .dock-item {
     padding: 6px 10px;
-    font-size: 11.5px;
+    font-size: 11px;
     gap: 4px;
   }
   .dock-item svg {
     width: 15px;
     height: 15px;
   }
-  .hero-headline {
-    font-size: 38px;
+  .hero-display {
+    font-size: 40px;
   }
-  .visualizer-card {
+  .fidelity-sandbox-card,
+  .onboarding-card {
     padding: 24px 20px;
   }
 }
