@@ -11,10 +11,10 @@
 
 <br/>
 
-[![Latest release](https://img.shields.io/github/v/release/kushagrasinghx/BitChord?style=for-the-badge&labelColor=0d1117)](https://github.com/kushagrasinghx/BitChord/releases)
-[![License](https://img.shields.io/github/license/kushagrasinghx/BitChord?style=for-the-badge&labelColor=0d1117)](https://github.com/kushagrasinghx/BitChord/blob/main/LICENSE)
-[![Downloads](https://img.shields.io/github/downloads/kushagrasinghx/BitChord/total?style=for-the-badge&labelColor=0d1117)](https://github.com/kushagrasinghx/BitChord/releases)
-[![Listening now](https://api.bitchord.kushagrasingh.in/api/stats/live/badge.svg)](https://api.bitchord.kushagrasingh.in/api/stats/live)
+[![Status](https://img.shields.io/badge/Status-BETA-orange?style=for-the-badge&labelColor=0d1117)](#)
+[![Release](https://img.shields.io/badge/Release-BETA-blue?style=for-the-badge&labelColor=0d1117)](#)
+[![License](https://img.shields.io/badge/License-BETA-yellow?style=for-the-badge&labelColor=0d1117)](#)
+[![Build](https://img.shields.io/badge/Build-BETA-purple?style=for-the-badge&labelColor=0d1117)](#)
 
 <br/>
 
