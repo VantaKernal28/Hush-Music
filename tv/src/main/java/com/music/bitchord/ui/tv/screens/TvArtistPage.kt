@@ -1,4 +1,4 @@
-package com.music.Hush Music.ui.tv.screens
+package com.music.bitchord.ui.tv.screens
 
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.interaction.collectIsFocusedAsState
@@ -47,34 +47,34 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import coil3.compose.AsyncImage
-import com.music.Hush Music.data.canvas.AppleArtistArt
-import com.music.Hush Music.data.canvas.AppleArtistArtRepository
-import com.music.Hush Music.data.canvas.appleCatalogue
-import com.music.Hush Music.data.model.BrowseType
-import com.music.Hush Music.data.model.DetailPage
-import com.music.Hush Music.data.model.HomeShelf
-import com.music.Hush Music.data.model.ShelfItem
-import com.music.Hush Music.data.model.Song
-import com.music.Hush Music.data.model.UiState
-import com.music.Hush Music.data.model.artworkAt
-import com.music.Hush Music.ui.tv.components.ProvideTvComfortScrolling
-import com.music.Hush Music.ui.tv.components.TvActivityIndicator
-import com.music.Hush Music.ui.tv.components.TvArtwork
-import com.music.Hush Music.ui.tv.components.TvButton
-import com.music.Hush Music.ui.tv.components.TvChromeScrollEffect
-import com.music.Hush Music.ui.tv.components.TvErrorState
-import com.music.Hush Music.ui.tv.components.TvLockup
-import com.music.Hush Music.ui.tv.components.TvRow
-import com.music.Hush Music.ui.tv.components.TvShelf
-import com.music.Hush Music.ui.tv.components.TvShelfTitle
-import com.music.Hush Music.ui.tv.components.TvSongRow
-import com.music.Hush Music.ui.tv.components.tvClick
-import com.music.Hush Music.ui.tv.components.tvInitialFocus
-import com.music.Hush Music.ui.tv.components.tvLift
-import com.music.Hush Music.ui.tv.components.tvPlatter
-import com.music.Hush Music.ui.tv.theme.TvDimensions
-import com.music.Hush Music.ui.tv.theme.TvGlass
-import com.music.Hush Music.ui.tv.theme.TvType
+import com.music.bitchord.data.canvas.AppleArtistArt
+import com.music.bitchord.data.canvas.AppleArtistArtRepository
+import com.music.bitchord.data.canvas.appleCatalogue
+import com.music.bitchord.data.model.BrowseType
+import com.music.bitchord.data.model.DetailPage
+import com.music.bitchord.data.model.HomeShelf
+import com.music.bitchord.data.model.ShelfItem
+import com.music.bitchord.data.model.Song
+import com.music.bitchord.data.model.UiState
+import com.music.bitchord.data.model.artworkAt
+import com.music.bitchord.ui.tv.components.ProvideTvComfortScrolling
+import com.music.bitchord.ui.tv.components.TvActivityIndicator
+import com.music.bitchord.ui.tv.components.TvArtwork
+import com.music.bitchord.ui.tv.components.TvButton
+import com.music.bitchord.ui.tv.components.TvChromeScrollEffect
+import com.music.bitchord.ui.tv.components.TvErrorState
+import com.music.bitchord.ui.tv.components.TvLockup
+import com.music.bitchord.ui.tv.components.TvRow
+import com.music.bitchord.ui.tv.components.TvShelf
+import com.music.bitchord.ui.tv.components.TvShelfTitle
+import com.music.bitchord.ui.tv.components.TvSongRow
+import com.music.bitchord.ui.tv.components.tvClick
+import com.music.bitchord.ui.tv.components.tvInitialFocus
+import com.music.bitchord.ui.tv.components.tvLift
+import com.music.bitchord.ui.tv.components.tvPlatter
+import com.music.bitchord.ui.tv.theme.TvDimensions
+import com.music.bitchord.ui.tv.theme.TvGlass
+import com.music.bitchord.ui.tv.theme.TvType
 import kotlinx.coroutines.launch
 
 /** Top Songs stops here, as on the phone: past twenty the list would bury the releases. */

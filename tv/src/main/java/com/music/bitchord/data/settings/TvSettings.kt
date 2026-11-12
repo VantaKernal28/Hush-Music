@@ -1,4 +1,4 @@
-package com.music.Hush Music.data.settings
+package com.music.bitchord.data.settings
 
 import android.content.Context
 import android.content.SharedPreferences
@@ -21,7 +21,7 @@ enum class TvPlayerStyle(val label: String) {
  * The Android TV app's own preferences. They live in the same preferences file
  * as [AppSettings] — `Hush Music_settings` — under `tv_`-prefixed keys, so the
  * phone's settings class carries nothing of TV. Loaded by
- * [com.music.Hush Music.data.TvStartup] before anything reads them.
+ * [com.music.bitchord.data.TvStartup] before anything reads them.
  */
 object TvSettings {
     private lateinit var prefs: SharedPreferences

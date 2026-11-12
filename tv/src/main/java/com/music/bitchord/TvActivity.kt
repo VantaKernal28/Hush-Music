@@ -1,4 +1,4 @@
-package com.music.Hush Music
+package com.music.bitchord
 
 import android.content.Intent
 import android.os.Bundle
@@ -7,16 +7,16 @@ import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.viewModels
 import androidx.core.view.WindowCompat
-import com.music.Hush Music.data.listentogether.JamInviteLink
-import com.music.Hush Music.playback.MusicLink
-import com.music.Hush Music.playback.PlayerDeepLink
-import com.music.Hush Music.playback.rememberMediaController
-import com.music.Hush Music.playback.rememberPlayerState
-import com.music.Hush Music.ui.MainViewModel
-import com.music.Hush Music.ui.theme.Hush MusicTheme
-import com.music.Hush Music.ui.tv.TvApp
-import com.music.Hush Music.ui.tv.display.TvRefreshRateController
-import com.music.Hush Music.ui.tv.theme.Hush MusicTvTheme
+import com.music.bitchord.data.listentogether.JamInviteLink
+import com.music.bitchord.playback.MusicLink
+import com.music.bitchord.playback.PlayerDeepLink
+import com.music.bitchord.playback.rememberMediaController
+import com.music.bitchord.playback.rememberPlayerState
+import com.music.bitchord.ui.MainViewModel
+import com.music.bitchord.ui.theme.HushMusicTheme
+import com.music.bitchord.ui.tv.TvApp
+import com.music.bitchord.ui.tv.display.TvRefreshRateController
+import com.music.bitchord.ui.tv.theme.HushMusicTvTheme
 
 /**
  * Dedicated TV Activity for Android TV, Google TV, and Fire TV devices.
@@ -37,10 +37,10 @@ class TvActivity : ComponentActivity() {
         window.addFlags(WindowManager.LayoutParams.FLAG_DRAWS_SYSTEM_BAR_BACKGROUNDS)
 
         setContent {
-            Hush MusicTvTheme {
+            HushMusicTvTheme {
                 // The phone's Material theme too, so the components shared with
                 // it (lyrics, mood sleeves) are set in SF Pro on its type scale.
-                Hush MusicTheme(darkTheme = true) {
+                HushMusicTheme(darkTheme = true) {
                     val mediaController = rememberMediaController()
                     val playerState = rememberPlayerState(mediaController)
 
@@ -77,7 +77,7 @@ class TvActivity : ComponentActivity() {
                         applicationContext,
                         android.content.ComponentName(
                             applicationContext,
-                            com.music.Hush Music.playback.PlaybackService::class.java,
+                            com.music.bitchord.playback.PlaybackService::class.java,
                         ),
                     ),
                 ).buildAsync()

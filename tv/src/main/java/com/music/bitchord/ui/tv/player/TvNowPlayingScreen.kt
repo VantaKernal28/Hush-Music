@@ -1,4 +1,4 @@
-package com.music.Hush Music.ui.tv.player
+package com.music.bitchord.ui.tv.player
 
 import android.view.KeyEvent
 import androidx.activity.compose.BackHandler
@@ -34,15 +34,15 @@ import androidx.compose.ui.input.key.onPreviewKeyEvent
 import androidx.compose.ui.input.key.type
 import androidx.media3.common.Player
 import androidx.media3.session.MediaController
-import com.music.Hush Music.data.LikeState
-import com.music.Hush Music.data.model.LikeStatus
-import com.music.Hush Music.data.settings.AppSettings
-import com.music.Hush Music.data.settings.TvSettings
-import com.music.Hush Music.playback.PlayerState
-import com.music.Hush Music.playback.toggleAutoplay
-import com.music.Hush Music.playback.toggleShuffle
-import com.music.Hush Music.ui.MainViewModel
-import com.music.Hush Music.ui.tv.dialogs.TvSongActionMenuDialog
+import com.music.bitchord.data.LikeState
+import com.music.bitchord.data.model.LikeStatus
+import com.music.bitchord.data.settings.AppSettings
+import com.music.bitchord.data.settings.TvSettings
+import com.music.bitchord.playback.PlayerState
+import com.music.bitchord.playback.toggleAutoplay
+import com.music.bitchord.playback.toggleShuffle
+import com.music.bitchord.ui.MainViewModel
+import com.music.bitchord.ui.tv.dialogs.TvSongActionMenuDialog
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
@@ -101,7 +101,7 @@ fun TvNowPlayingScreen(
     val lyricsChecked by viewModel.lyricsChecked.collectAsState()
     val likeOverrides by LikeState.overrides.collectAsState()
     val isLiked = likeOverrides[song.videoId] == LikeStatus.LIKE
-    val shuffle by com.music.Hush Music.playback.QueueShuffle.enabled.collectAsState()
+    val shuffle by com.music.bitchord.playback.QueueShuffle.enabled.collectAsState()
     val autoplay by AppSettings.autoplay.collectAsState()
     val playerStyle by TvSettings.tvPlayerStyle.collectAsState()
 

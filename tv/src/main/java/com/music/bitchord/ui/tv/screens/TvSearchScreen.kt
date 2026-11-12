@@ -1,4 +1,4 @@
-package com.music.Hush Music.ui.tv.screens
+package com.music.bitchord.ui.tv.screens
 
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -34,30 +34,30 @@ import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.media3.session.MediaController
-import com.music.Hush Music.data.model.BrowseItem
-import com.music.Hush Music.data.model.BrowseType
-import com.music.Hush Music.data.model.EntityType
-import com.music.Hush Music.data.model.SearchFilter
-import com.music.Hush Music.data.model.SearchHistoryEntity
-import com.music.Hush Music.data.model.SearchResult
-import com.music.Hush Music.data.model.Song
-import com.music.Hush Music.data.model.UiState
-import com.music.Hush Music.playback.playSongs
-import com.music.Hush Music.ui.MainViewModel
-import com.music.Hush Music.ui.tv.components.TvActivityIndicator
-import com.music.Hush Music.ui.tv.components.TvButton
-import com.music.Hush Music.ui.tv.components.TvChromeScrollEffect
-import com.music.Hush Music.ui.tv.components.TvEmptyState
-import com.music.Hush Music.ui.tv.components.TvErrorState
-import com.music.Hush Music.ui.tv.components.TvListRow
-import com.music.Hush Music.ui.tv.components.TvLockup
-import com.music.Hush Music.ui.tv.components.TvSegmented
-import com.music.Hush Music.ui.tv.components.TvShelf
-import com.music.Hush Music.ui.tv.components.TvShelfTitle
-import com.music.Hush Music.ui.tv.components.TvSongRow
-import com.music.Hush Music.ui.tv.components.TvTextField
-import com.music.Hush Music.ui.tv.dialogs.TvSongMenu
-import com.music.Hush Music.ui.tv.theme.TvDimensions
+import com.music.bitchord.data.model.BrowseItem
+import com.music.bitchord.data.model.BrowseType
+import com.music.bitchord.data.model.EntityType
+import com.music.bitchord.data.model.SearchFilter
+import com.music.bitchord.data.model.SearchHistoryEntity
+import com.music.bitchord.data.model.SearchResult
+import com.music.bitchord.data.model.Song
+import com.music.bitchord.data.model.UiState
+import com.music.bitchord.playback.playSongs
+import com.music.bitchord.ui.MainViewModel
+import com.music.bitchord.ui.tv.components.TvActivityIndicator
+import com.music.bitchord.ui.tv.components.TvButton
+import com.music.bitchord.ui.tv.components.TvChromeScrollEffect
+import com.music.bitchord.ui.tv.components.TvEmptyState
+import com.music.bitchord.ui.tv.components.TvErrorState
+import com.music.bitchord.ui.tv.components.TvListRow
+import com.music.bitchord.ui.tv.components.TvLockup
+import com.music.bitchord.ui.tv.components.TvSegmented
+import com.music.bitchord.ui.tv.components.TvShelf
+import com.music.bitchord.ui.tv.components.TvShelfTitle
+import com.music.bitchord.ui.tv.components.TvSongRow
+import com.music.bitchord.ui.tv.components.TvTextField
+import com.music.bitchord.ui.tv.dialogs.TvSongMenu
+import com.music.bitchord.ui.tv.theme.TvDimensions
 import kotlinx.coroutines.launch
 
 private val SearchFilters = listOf(
@@ -263,8 +263,8 @@ fun TvSearchScreen(
  * a grid of lockups — with a Clear on its heading.
  */
 private fun LazyListScope.idleContent(
-    history: List<com.music.Hush Music.data.model.SearchHistoryEntity>,
-    onHistory: (com.music.Hush Music.data.model.SearchHistoryEntity) -> Unit,
+    history: List<com.music.bitchord.data.model.SearchHistoryEntity>,
+    onHistory: (com.music.bitchord.data.model.SearchHistoryEntity) -> Unit,
     onClearHistory: () -> Unit,
 ) {
     if (history.isEmpty()) {

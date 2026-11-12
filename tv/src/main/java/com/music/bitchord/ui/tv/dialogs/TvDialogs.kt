@@ -1,4 +1,4 @@
-package com.music.Hush Music.ui.tv.dialogs
+package com.music.bitchord.ui.tv.dialogs
 
 import android.app.Activity
 import android.content.Context
@@ -80,38 +80,38 @@ import androidx.compose.ui.unit.sp
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.window.Dialog
 import androidx.compose.ui.window.DialogProperties
-import com.music.Hush Music.BuildConfig
-import com.music.Hush Music.auth.GoogleAccountSession
-import com.music.Hush Music.auth.WebSessionMode
-import com.music.Hush Music.auth.YouTubeProfile
-import com.music.Hush Music.data.lyrics.LyricsSource
-import com.music.Hush Music.data.settings.AppSettings
-import com.music.Hush Music.data.settings.TvPinThrottle
-import com.music.Hush Music.data.settings.TvSettings
+import com.music.bitchord.BuildConfig
+import com.music.bitchord.auth.GoogleAccountSession
+import com.music.bitchord.auth.WebSessionMode
+import com.music.bitchord.auth.YouTubeProfile
+import com.music.bitchord.data.lyrics.LyricsSource
+import com.music.bitchord.data.settings.AppSettings
+import com.music.bitchord.data.settings.TvPinThrottle
+import com.music.bitchord.data.settings.TvSettings
 import kotlin.math.ceil
 import kotlinx.coroutines.delay
-import com.music.Hush Music.ui.MainViewModel
-import com.music.Hush Music.ui.configureTvSignInWebView
-import com.music.Hush Music.ui.onSignedIn
-import com.music.Hush Music.ui.tv.TvAppMark
-import com.music.Hush Music.ui.tv.auth.TvAuthServer
-import com.music.Hush Music.ui.tv.auth.TvQrCodeView
-import com.music.Hush Music.ui.tv.components.TvActivityIndicator
-import com.music.Hush Music.ui.tv.components.TvArtwork
-import com.music.Hush Music.ui.tv.components.TvButton
-import com.music.Hush Music.ui.tv.components.TvDialog
-import com.music.Hush Music.ui.tv.components.TvDialogButton
-import com.music.Hush Music.ui.tv.components.TvListRow
-import com.music.Hush Music.ui.tv.components.TvTextField
-import com.music.Hush Music.ui.tv.components.tvClick
-import com.music.Hush Music.ui.tv.components.tvInitialFocus
-import com.music.Hush Music.ui.tv.components.tvLift
-import com.music.Hush Music.ui.tv.components.tvPlatter
-import com.music.Hush Music.ui.tv.display.TvRefreshRateController
-import com.music.Hush Music.ui.tv.display.TvRefreshRatePreference
-import com.music.Hush Music.ui.tv.personalization.AppThemeOption
-import com.music.Hush Music.ui.tv.theme.TvGlass
-import com.music.Hush Music.ui.tv.theme.TvType
+import com.music.bitchord.ui.MainViewModel
+import com.music.bitchord.ui.configureTvSignInWebView
+import com.music.bitchord.ui.onSignedIn
+import com.music.bitchord.ui.tv.TvAppMark
+import com.music.bitchord.ui.tv.auth.TvAuthServer
+import com.music.bitchord.ui.tv.auth.TvQrCodeView
+import com.music.bitchord.ui.tv.components.TvActivityIndicator
+import com.music.bitchord.ui.tv.components.TvArtwork
+import com.music.bitchord.ui.tv.components.TvButton
+import com.music.bitchord.ui.tv.components.TvDialog
+import com.music.bitchord.ui.tv.components.TvDialogButton
+import com.music.bitchord.ui.tv.components.TvListRow
+import com.music.bitchord.ui.tv.components.TvTextField
+import com.music.bitchord.ui.tv.components.tvClick
+import com.music.bitchord.ui.tv.components.tvInitialFocus
+import com.music.bitchord.ui.tv.components.tvLift
+import com.music.bitchord.ui.tv.components.tvPlatter
+import com.music.bitchord.ui.tv.display.TvRefreshRateController
+import com.music.bitchord.ui.tv.display.TvRefreshRatePreference
+import com.music.bitchord.ui.tv.personalization.AppThemeOption
+import com.music.bitchord.ui.tv.theme.TvGlass
+import com.music.bitchord.ui.tv.theme.TvType
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 
@@ -1129,7 +1129,7 @@ private fun TvGoogleSignIn(viewModel: MainViewModel, onBack: () -> Unit, onSigne
                     .weight(1f)
                     .fillMaxWidth(),
             ) {
-                com.music.Hush Music.auth.YtMusicLoginScreen(
+                com.music.bitchord.auth.YtMusicLoginScreen(
                     mode = WebSessionMode.SIGN_IN,
                     configureWebView = ::configureTvSignInWebView,
                     captureRequest = capture,

@@ -1,4 +1,4 @@
-package com.music.Hush Music.ui.tv.dialogs
+package com.music.bitchord.ui.tv.dialogs
 
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Spacer
@@ -21,13 +21,13 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
-import com.music.Hush Music.data.AppUpdateChecker
-import com.music.Hush Music.data.AppUpdateChecker.DownloadState
-import com.music.Hush Music.ui.tv.auth.TvQrCodeView
-import com.music.Hush Music.ui.tv.components.TvDialog
-import com.music.Hush Music.ui.tv.components.TvDialogButton
-import com.music.Hush Music.ui.tv.theme.TvGlass
-import com.music.Hush Music.ui.tv.theme.TvType
+import com.music.bitchord.data.AppUpdateChecker
+import com.music.bitchord.data.AppUpdateChecker.DownloadState
+import com.music.bitchord.ui.tv.auth.TvQrCodeView
+import com.music.bitchord.ui.tv.components.TvDialog
+import com.music.bitchord.ui.tv.components.TvDialogButton
+import com.music.bitchord.ui.tv.theme.TvGlass
+import com.music.bitchord.ui.tv.theme.TvType
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob

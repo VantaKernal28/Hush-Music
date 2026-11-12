@@ -1,4 +1,4 @@
-package com.music.Hush Music.wear
+package com.music.bitchord.wear
 
 import android.Manifest
 import android.app.Application
@@ -8,7 +8,7 @@ import android.os.Bundle
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.lifecycleScope
 import androidx.lifecycle.repeatOnLifecycle
-import com.music.Hush Music.wear.data.SelfUpdate
+import com.music.bitchord.wear.data.SelfUpdate
 import kotlinx.coroutines.flow.filterNotNull
 import kotlinx.coroutines.launch
 import androidx.activity.ComponentActivity
@@ -21,11 +21,11 @@ import androidx.lifecycle.DefaultLifecycleObserver
 import androidx.lifecycle.LifecycleOwner
 import androidx.lifecycle.viewModelScope
 import androidx.wear.ambient.AmbientLifecycleObserver
-import com.music.Hush Music.wear.ui.Ambient
-import com.music.Hush Music.wear.ui.LocalAmbient
-import com.music.Hush Music.wear.data.PhoneLink
-import com.music.Hush Music.wear.ui.Hush MusicWearTheme
-import com.music.Hush Music.wear.ui.WearApp
+import com.music.bitchord.wear.ui.Ambient
+import com.music.bitchord.wear.ui.LocalAmbient
+import com.music.bitchord.wear.data.PhoneLink
+import com.music.bitchord.wear.ui.HushMusicWearTheme
+import com.music.bitchord.wear.ui.WearApp
 
 class WearViewModel(app: Application) : AndroidViewModel(app) {
     /** Outlives a rotation-less recreate (theme, locale) so the last state stays drawn. */
@@ -95,7 +95,7 @@ class WearActivity : ComponentActivity() {
             }
         }
         setContent {
-            Hush MusicWearTheme {
+            HushMusicWearTheme {
                 CompositionLocalProvider(LocalAmbient provides ambient.value) {
                     WearApp(model.link)
                 }

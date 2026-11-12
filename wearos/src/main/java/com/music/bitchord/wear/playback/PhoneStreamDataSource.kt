@@ -1,4 +1,4 @@
-package com.music.Hush Music.wear.playback
+package com.music.bitchord.wear.playback
 
 import android.content.Context
 import android.net.Uri
@@ -18,7 +18,7 @@ import java.io.DataInputStream
 import java.io.DataOutputStream
 import java.io.InputStream
 import java.util.concurrent.TimeUnit
-import com.music.Hush Music.wear.WearProtocol as P
+import com.music.bitchord.wear.WearProtocol as P
 
 /**
  * Reads a track through the phone.

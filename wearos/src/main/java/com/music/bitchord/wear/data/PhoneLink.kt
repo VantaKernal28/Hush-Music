@@ -1,4 +1,4 @@
-package com.music.Hush Music.wear.data
+package com.music.bitchord.wear.data
 
 import android.content.Context
 import android.graphics.BitmapFactory
@@ -30,8 +30,8 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.tasks.await
 import kotlinx.coroutines.withContext
 import kotlinx.coroutines.withTimeoutOrNull
-import com.music.Hush Music.wear.playback.Speaker
-import com.music.Hush Music.wear.WearProtocol as P
+import com.music.bitchord.wear.playback.Speaker
+import com.music.bitchord.wear.WearProtocol as P
 
 /**
  * The watch's whole view of the phone.

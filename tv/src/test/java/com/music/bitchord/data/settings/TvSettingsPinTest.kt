@@ -1,4 +1,4 @@
-package com.music.Hush Music.data.settings
+package com.music.bitchord.data.settings
 
 import android.content.SharedPreferences
 import org.junit.Assert.assertEquals

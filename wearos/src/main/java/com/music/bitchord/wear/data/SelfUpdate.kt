@@ -1,4 +1,4 @@
-package com.music.Hush Music.wear.data
+package com.music.bitchord.wear.data
 
 import android.app.NotificationChannel
 import android.app.NotificationManager
@@ -16,12 +16,12 @@ import com.google.android.gms.tasks.Tasks
 import com.google.android.gms.wearable.ChannelClient
 import com.google.android.gms.wearable.PutDataMapRequest
 import com.google.android.gms.wearable.Wearable
-import com.music.Hush Music.wear.R
+import com.music.bitchord.wear.R
 import kotlinx.coroutines.flow.MutableStateFlow
 import java.io.File
 import java.security.MessageDigest
 import java.util.concurrent.TimeUnit
-import com.music.Hush Music.wear.WearProtocol as P
+import com.music.bitchord.wear.WearProtocol as P
 
 /**
  * What the phone's "Hush Music for Wear OS" settings need from this side: which

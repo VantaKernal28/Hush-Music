@@ -1,10 +1,10 @@
-package com.music.Hush Music.data
+package com.music.bitchord.data
 
 import android.content.Context
 import androidx.startup.Initializer
-import com.music.Hush Music.data.settings.TvSettings
-import com.music.Hush Music.ui.player.CanvasPlaybackLimits
-import com.music.Hush Music.ui.tv.DeviceType
+import com.music.bitchord.data.settings.TvSettings
+import com.music.bitchord.ui.player.CanvasPlaybackLimits
+import com.music.bitchord.ui.tv.DeviceType
 
 /**
  * Runs once at process start, before any activity or the playback service, so

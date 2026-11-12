@@ -1,4 +1,4 @@
-package com.music.Hush Music.ui.tv.theme
+package com.music.bitchord.ui.tv.theme
 
 import androidx.compose.animation.core.Easing
 import androidx.compose.animation.core.FastOutSlowInEasing

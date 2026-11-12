@@ -1,4 +1,4 @@
-package com.music.Hush Music.ui.tv.components
+package com.music.bitchord.ui.tv.components
 
 import androidx.compose.animation.core.LinearEasing
 import androidx.compose.animation.core.RepeatMode

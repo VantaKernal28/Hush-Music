@@ -1,4 +1,4 @@
-package com.music.Hush Music.ui.tv.player
+package com.music.bitchord.ui.tv.player
 
 import android.view.KeyEvent
 import androidx.compose.animation.AnimatedVisibility
@@ -79,36 +79,36 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.util.lerp
 import androidx.media3.common.Player
-import com.music.Hush Music.data.NerdStats
-import com.music.Hush Music.data.canvas.CanvasArtwork
-import com.music.Hush Music.data.canvas.CanvasRepository
-import com.music.Hush Music.data.lyrics.LyricLine
-import com.music.Hush Music.data.model.Song
-import com.music.Hush Music.data.settings.AppSettings
-import com.music.Hush Music.playback.PlaybackPosition
-import com.music.Hush Music.sharedui.resources.Res
-import com.music.Hush Music.sharedui.resources.ic_dolby_atmos
-import com.music.Hush Music.sharedui.resources.ic_player_next
-import com.music.Hush Music.sharedui.resources.ic_player_pause
-import com.music.Hush Music.sharedui.resources.ic_player_play
-import com.music.Hush Music.sharedui.resources.ic_player_previous
-import com.music.Hush Music.ui.icons.Hush MusicIcons
-import com.music.Hush Music.data.settings.TvPlayerStyle
-import com.music.Hush Music.ui.player.ArtworkMeshBackdrop
-import com.music.Hush Music.ui.player.CanvasArtworkPlayer
-import com.music.Hush Music.ui.player.SyncedLyricsPanel
-import com.music.Hush Music.ui.player.rememberArtworkMesh
-import com.music.Hush Music.ui.tv.components.TvActivityIndicator
-import com.music.Hush Music.ui.tv.components.TvArtwork
-import com.music.Hush Music.ui.tv.components.TvButton
-import com.music.Hush Music.ui.tv.components.TvRow
-import com.music.Hush Music.ui.tv.components.TvLockup
-import com.music.Hush Music.ui.tv.components.tvClick
-import com.music.Hush Music.ui.tv.components.tvInitialFocus
-import com.music.Hush Music.ui.tv.components.tvLift
-import com.music.Hush Music.ui.tv.components.tvPlatter
-import com.music.Hush Music.ui.tv.theme.TvGlass
-import com.music.Hush Music.ui.tv.theme.TvType
+import com.music.bitchord.data.NerdStats
+import com.music.bitchord.data.canvas.CanvasArtwork
+import com.music.bitchord.data.canvas.CanvasRepository
+import com.music.bitchord.data.lyrics.LyricLine
+import com.music.bitchord.data.model.Song
+import com.music.bitchord.data.settings.AppSettings
+import com.music.bitchord.playback.PlaybackPosition
+import com.music.bitchord.sharedui.resources.Res
+import com.music.bitchord.sharedui.resources.ic_dolby_atmos
+import com.music.bitchord.sharedui.resources.ic_player_next
+import com.music.bitchord.sharedui.resources.ic_player_pause
+import com.music.bitchord.sharedui.resources.ic_player_play
+import com.music.bitchord.sharedui.resources.ic_player_previous
+import com.music.bitchord.ui.icons.Hush MusicIcons
+import com.music.bitchord.data.settings.TvPlayerStyle
+import com.music.bitchord.ui.player.ArtworkMeshBackdrop
+import com.music.bitchord.ui.player.CanvasArtworkPlayer
+import com.music.bitchord.ui.player.SyncedLyricsPanel
+import com.music.bitchord.ui.player.rememberArtworkMesh
+import com.music.bitchord.ui.tv.components.TvActivityIndicator
+import com.music.bitchord.ui.tv.components.TvArtwork
+import com.music.bitchord.ui.tv.components.TvButton
+import com.music.bitchord.ui.tv.components.TvRow
+import com.music.bitchord.ui.tv.components.TvLockup
+import com.music.bitchord.ui.tv.components.tvClick
+import com.music.bitchord.ui.tv.components.tvInitialFocus
+import com.music.bitchord.ui.tv.components.tvLift
+import com.music.bitchord.ui.tv.components.tvPlatter
+import com.music.bitchord.ui.tv.theme.TvGlass
+import com.music.bitchord.ui.tv.theme.TvType
 import kotlinx.coroutines.delay
 import org.jetbrains.compose.resources.painterResource
 import java.util.Locale

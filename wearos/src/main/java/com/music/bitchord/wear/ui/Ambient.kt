@@ -1,4 +1,4 @@
-package com.music.Hush Music.wear.ui
+package com.music.bitchord.wear.ui
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.BoxWithConstraints
@@ -22,8 +22,8 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.wear.compose.material3.Icon
 import androidx.wear.compose.material3.Text
-import com.music.Hush Music.wear.R
-import com.music.Hush Music.wear.data.NowPlaying
+import com.music.bitchord.wear.R
+import com.music.bitchord.wear.data.NowPlaying
 
 /**
  * Always-on state, set by the activity's AmbientLifecycleObserver.

@@ -1,4 +1,4 @@
-package com.music.Hush Music.ui.tv.dialogs
+package com.music.bitchord.ui.tv.dialogs
 
 import android.view.KeyEvent
 import androidx.compose.animation.AnimatedContent
@@ -60,21 +60,21 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import com.music.Hush Music.data.settings.AppSettings
-import com.music.Hush Music.playback.EqLayout
-import com.music.Hush Music.playback.EqualizerPreset
-import com.music.Hush Music.ui.tv.components.TvButton
-import com.music.Hush Music.ui.tv.components.TvDialog
-import com.music.Hush Music.ui.tv.components.TvListRow
-import com.music.Hush Music.ui.tv.components.TvSegmented
-import com.music.Hush Music.ui.tv.components.tvInitialFocus
-import com.music.Hush Music.ui.tv.theme.TvGlass
-import com.music.Hush Music.ui.tv.theme.TvType
+import com.music.bitchord.data.settings.AppSettings
+import com.music.bitchord.playback.EqLayout
+import com.music.bitchord.playback.EqualizerPreset
+import com.music.bitchord.ui.tv.components.TvButton
+import com.music.bitchord.ui.tv.components.TvDialog
+import com.music.bitchord.ui.tv.components.TvListRow
+import com.music.bitchord.ui.tv.components.TvSegmented
+import com.music.bitchord.ui.tv.components.tvInitialFocus
+import com.music.bitchord.ui.tv.theme.TvGlass
+import com.music.bitchord.ui.tv.theme.TvType
 import androidx.compose.foundation.layout.heightIn
-import com.music.Hush Music.ui.tv.theme.AppleSpringPreset
-import com.music.Hush Music.ui.tv.theme.TvSFProDisplay
-import com.music.Hush Music.ui.tv.theme.TvThemeColors
-import com.music.Hush Music.ui.tv.theme.appleSpring
+import com.music.bitchord.ui.tv.theme.AppleSpringPreset
+import com.music.bitchord.ui.tv.theme.TvSFProDisplay
+import com.music.bitchord.ui.tv.theme.TvThemeColors
+import com.music.bitchord.ui.tv.theme.appleSpring
 import java.util.Locale
 import kotlin.math.abs
 import kotlin.math.roundToInt

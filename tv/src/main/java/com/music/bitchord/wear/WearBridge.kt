@@ -1,15 +1,15 @@
-package com.music.Hush Music.wear
+package com.music.bitchord.wear
 
 import android.content.Context
 import androidx.media3.common.Player
 import androidx.media3.datasource.DataSource
 import androidx.media3.exoplayer.ExoPlayer
-import com.music.Hush Music.playback.cast.NoSpeaker
-import com.music.Hush Music.playback.cast.RemoteSpeaker
+import com.music.bitchord.playback.cast.NoSpeaker
+import com.music.bitchord.playback.cast.RemoteSpeaker
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
-import com.music.Hush Music.widget.MediaWidgetSnapshot
+import com.music.bitchord.widget.MediaWidgetSnapshot
 
 /**
  * The TV app's stand-in for the phone's watch bridge

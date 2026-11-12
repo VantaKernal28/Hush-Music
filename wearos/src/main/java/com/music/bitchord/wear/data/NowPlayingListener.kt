@@ -1,4 +1,4 @@
-package com.music.Hush Music.wear.data
+package com.music.bitchord.wear.data
 
 import android.app.NotificationChannel
 import android.app.NotificationManager
@@ -15,10 +15,10 @@ import com.google.android.gms.wearable.DataMapItem
 import com.google.android.gms.wearable.ChannelClient
 import com.google.android.gms.wearable.MessageEvent
 import com.google.android.gms.wearable.WearableListenerService
-import com.music.Hush Music.wear.playback.Speaker
-import com.music.Hush Music.wear.R
-import com.music.Hush Music.wear.WearActivity
-import com.music.Hush Music.wear.WearProtocol as P
+import com.music.bitchord.wear.playback.Speaker
+import com.music.bitchord.wear.R
+import com.music.bitchord.wear.WearActivity
+import com.music.bitchord.wear.WearProtocol as P
 
 /**
  * Puts Hush Music's own icon on the watch face while the phone plays.

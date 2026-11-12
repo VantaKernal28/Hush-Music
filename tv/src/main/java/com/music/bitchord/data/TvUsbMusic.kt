@@ -1,10 +1,10 @@
-package com.music.Hush Music.data
+package com.music.bitchord.data
 
 import android.content.Context
 import android.media.MediaMetadataRetriever
 import android.net.Uri
-import com.music.Hush Music.data.DebugLog as Log
-import com.music.Hush Music.data.model.Song
+import com.music.bitchord.data.DebugLog as Log
+import com.music.bitchord.data.model.Song
 import java.io.File
 import java.util.Locale
 

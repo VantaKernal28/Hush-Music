@@ -1,11 +1,11 @@
-package com.music.Hush Music.ui.tv.auth
+package com.music.bitchord.ui.tv.auth
 
 import android.content.Context
 import android.util.Log
-import com.music.Hush Music.data.YtMusicRepository
-import com.music.Hush Music.data.model.SearchFilter
-import com.music.Hush Music.data.model.SearchResult
-import com.music.Hush Music.data.model.Song
+import com.music.bitchord.data.YtMusicRepository
+import com.music.bitchord.data.model.SearchFilter
+import com.music.bitchord.data.model.SearchResult
+import com.music.bitchord.data.model.Song
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch

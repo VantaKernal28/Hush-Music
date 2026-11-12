@@ -1,9 +1,9 @@
-package com.music.Hush Music.ui
+package com.music.bitchord.ui
 
 import android.annotation.SuppressLint
 import android.webkit.WebView
-import com.music.Hush Music.auth.CapturedSession
-import com.music.Hush Music.auth.WebSessionMode
+import com.music.bitchord.auth.CapturedSession
+import com.music.bitchord.auth.WebSessionMode
 
 /**
  * Sign in from a bare cookie — what TV pairing hands over, where there is no
