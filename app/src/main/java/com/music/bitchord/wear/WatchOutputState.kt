@@ -1,4 +1,4 @@
-﻿package com.music.bitchord.wear
+package com.music.bitchord.wear
 
 /**
  * The Hush Music watch app as one of this phone's outputs, for the output sheet.

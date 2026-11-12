@@ -1,4 +1,4 @@
-﻿package com.music.bitchord.data.stats
+package com.music.bitchord.data.stats
 
 import android.content.Context
 import android.net.Uri

@@ -1,4 +1,4 @@
-﻿package com.music.bitchord.data.settings
+package com.music.bitchord.data.settings
 
 import com.music.bitchord.data.webdav.update
 import com.music.bitchord.ui.components.VideoThumbnails

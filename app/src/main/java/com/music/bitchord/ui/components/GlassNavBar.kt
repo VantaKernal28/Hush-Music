@@ -1,4 +1,4 @@
-﻿/*
+/*
  * The bar's structure and its inline/expanded behaviour are
  * EchoMusicApp/Echo-Music's AppFloatingNavBar + FloatingMiniPlayer (GPL-3.0),
  * over the FloatingTabBar vendored in [com.music.bitchord.ui.components.floatingtabbar].

@@ -1,4 +1,4 @@
-﻿package com.music.bitchord.download
+package com.music.bitchord.download
 
 import com.music.bitchord.data.DebugLog as Log
 import com.music.bitchord.data.lyrics.LyricsRepository

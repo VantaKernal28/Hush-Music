@@ -1,4 +1,4 @@
-﻿package com.music.bitchord.ui.player
+package com.music.bitchord.ui.player
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable

@@ -1,4 +1,4 @@
-﻿package com.music.Hush Music.wear
+package com.music.Hush Music.wear
 
 import android.content.Context
 import androidx.media3.common.Player

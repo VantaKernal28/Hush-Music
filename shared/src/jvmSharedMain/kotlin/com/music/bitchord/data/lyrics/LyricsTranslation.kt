@@ -1,4 +1,4 @@
-﻿package com.music.bitchord.data.lyrics
+package com.music.bitchord.data.lyrics
 
 import com.music.bitchord.data.Http
 import java.io.File

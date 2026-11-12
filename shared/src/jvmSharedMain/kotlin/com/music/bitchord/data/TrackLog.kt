@@ -1,4 +1,4 @@
-﻿package com.music.bitchord.data
+package com.music.bitchord.data
 
 import com.music.bitchord.data.model.Song
 import kotlinx.coroutines.Dispatchers

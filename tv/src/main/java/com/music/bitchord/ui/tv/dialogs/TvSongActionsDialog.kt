@@ -1,4 +1,4 @@
-﻿package com.music.Hush Music.ui.tv.dialogs
+package com.music.Hush Music.ui.tv.dialogs
 
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column

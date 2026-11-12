@@ -1,4 +1,4 @@
-﻿package com.music.Hush Music.wear.data
+package com.music.Hush Music.wear.data
 
 import android.content.Context
 import android.graphics.BitmapFactory

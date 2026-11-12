@@ -1,4 +1,4 @@
-﻿package com.music.Hush Music.wear.playback
+package com.music.Hush Music.wear.playback
 
 import android.content.Context
 import android.net.Uri

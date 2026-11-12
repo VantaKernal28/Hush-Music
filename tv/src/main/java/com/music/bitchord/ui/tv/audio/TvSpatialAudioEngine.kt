@@ -1,4 +1,4 @@
-﻿package com.music.Hush Music.ui.tv.audio
+package com.music.Hush Music.ui.tv.audio
 
 import android.media.audiofx.Virtualizer
 import com.music.Hush Music.data.DebugLog as Log

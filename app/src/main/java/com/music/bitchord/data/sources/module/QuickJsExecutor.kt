@@ -1,4 +1,4 @@
-﻿package com.music.bitchord.data.sources.module
+package com.music.bitchord.data.sources.module
 
 import android.util.Log
 import com.music.bitchord.data.TrackLog

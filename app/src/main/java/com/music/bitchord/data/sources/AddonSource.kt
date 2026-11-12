@@ -1,4 +1,4 @@
-﻿package com.music.bitchord.data.sources
+package com.music.bitchord.data.sources
 
 import com.music.bitchord.data.TrackLog
 import com.music.bitchord.data.model.Song

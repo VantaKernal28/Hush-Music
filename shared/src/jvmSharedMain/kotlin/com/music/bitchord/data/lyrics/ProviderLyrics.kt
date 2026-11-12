@@ -1,4 +1,4 @@
-﻿package com.music.bitchord.data.lyrics
+package com.music.bitchord.data.lyrics
 
 import kotlinx.serialization.json.JsonArray
 import kotlinx.serialization.json.JsonElement

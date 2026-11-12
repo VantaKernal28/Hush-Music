@@ -1,4 +1,4 @@
-﻿package com.music.Hush Music.data
+package com.music.Hush Music.data
 
 import android.content.Context
 import androidx.startup.Initializer

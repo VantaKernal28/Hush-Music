@@ -1,4 +1,4 @@
-﻿package com.music.bitchord.ui.player
+package com.music.bitchord.ui.player
 
 import androidx.compose.ui.graphics.ImageBitmap
 import androidx.compose.animation.animateColorAsState

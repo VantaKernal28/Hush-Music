@@ -1,4 +1,4 @@
-﻿package com.music.Hush Music.ui.tv.screens
+package com.music.Hush Music.ui.tv.screens
 
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.interaction.collectIsFocusedAsState

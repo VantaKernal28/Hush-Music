@@ -1,4 +1,4 @@
-﻿package com.music.Hush Music.ui.tv.onboarding
+package com.music.Hush Music.ui.tv.onboarding
 
 import androidx.activity.compose.BackHandler
 import androidx.compose.animation.AnimatedContent

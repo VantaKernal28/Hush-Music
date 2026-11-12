@@ -1,4 +1,4 @@
-﻿package com.music.bitchord.playback
+package com.music.bitchord.playback
 
 import android.net.Uri
 import android.util.Log

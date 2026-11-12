@@ -1,4 +1,4 @@
-﻿package com.music.bitchord.data.sources
+package com.music.bitchord.data.sources
 
 import android.net.Uri
 import android.util.Log

@@ -1,4 +1,4 @@
-﻿package com.music.Hush Music
+package com.music.Hush Music
 
 import android.content.Intent
 import android.os.Bundle

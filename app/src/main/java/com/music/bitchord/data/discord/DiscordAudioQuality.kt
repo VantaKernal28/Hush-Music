@@ -1,4 +1,4 @@
-﻿package com.music.bitchord.data.discord
+package com.music.bitchord.data.discord
 
 import com.music.bitchord.data.NerdStats
 import java.util.Locale

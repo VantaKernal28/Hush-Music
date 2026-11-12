@@ -1,4 +1,4 @@
-﻿package com.music.Hush Music.wear.ui
+package com.music.Hush Music.wear.ui
 
 import android.view.HapticFeedbackConstants
 import androidx.annotation.DrawableRes

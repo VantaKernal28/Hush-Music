@@ -1,4 +1,4 @@
-﻿/*
+/*
  * The selection pill's motion — the travel spring, the held lift, the
  * acceleration squash and the glass-to-flat hand-off, with their constants —
  * is ported from liquid_glass_easy's LiquidGlassAnimatedNavBar and

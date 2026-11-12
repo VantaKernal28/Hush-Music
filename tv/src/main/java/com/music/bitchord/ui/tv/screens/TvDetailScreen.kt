@@ -1,4 +1,4 @@
-﻿package com.music.Hush Music.ui.tv.screens
+package com.music.Hush Music.ui.tv.screens
 
 import android.Manifest
 import android.os.Build

@@ -1,4 +1,4 @@
-﻿package com.music.bitchord.data.canvas
+package com.music.bitchord.data.canvas
 
 import java.text.Normalizer
 import java.util.Locale

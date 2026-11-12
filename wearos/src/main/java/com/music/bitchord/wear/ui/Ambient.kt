@@ -1,4 +1,4 @@
-﻿package com.music.Hush Music.wear.ui
+package com.music.Hush Music.wear.ui
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.BoxWithConstraints

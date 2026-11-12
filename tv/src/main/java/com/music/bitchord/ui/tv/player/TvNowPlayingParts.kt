@@ -1,4 +1,4 @@
-﻿package com.music.Hush Music.ui.tv.player
+package com.music.Hush Music.ui.tv.player
 
 import android.view.KeyEvent
 import androidx.compose.animation.AnimatedVisibility

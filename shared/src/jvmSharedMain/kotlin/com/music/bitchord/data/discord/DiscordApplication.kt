@@ -1,4 +1,4 @@
-﻿package com.music.bitchord.data.discord
+package com.music.bitchord.data.discord
 
 /**
  * Hush Music's own Discord application, shared by the phone and desktop presence.

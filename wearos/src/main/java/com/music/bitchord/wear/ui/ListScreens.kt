@@ -1,4 +1,4 @@
-﻿package com.music.Hush Music.wear.ui
+package com.music.Hush Music.wear.ui
 
 import androidx.annotation.DrawableRes
 import androidx.compose.foundation.Image

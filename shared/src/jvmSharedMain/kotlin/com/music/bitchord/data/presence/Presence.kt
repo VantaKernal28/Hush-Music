@@ -1,4 +1,4 @@
-﻿package com.music.bitchord.data.presence
+package com.music.bitchord.data.presence
 
 import com.music.bitchord.data.DebugLog
 import com.music.bitchord.data.Http

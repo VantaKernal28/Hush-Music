@@ -1,4 +1,4 @@
-﻿package com.music.Hush Music.ui.tv.components
+package com.music.Hush Music.ui.tv.components
 
 import android.graphics.Bitmap
 import androidx.compose.animation.animateColorAsState

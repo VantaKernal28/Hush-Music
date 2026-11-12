@@ -1,4 +1,4 @@
-﻿package com.music.bitchord.data.sources.addon
+package com.music.bitchord.data.sources.addon
 
 import android.content.Context
 import android.content.SharedPreferences

@@ -1,4 +1,4 @@
-﻿package com.music.bitchord.playback.audio
+package com.music.bitchord.playback.audio
 
 import android.util.Log
 import com.music.bitchord.BuildConfig

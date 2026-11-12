@@ -1,4 +1,4 @@
-﻿package com.music.Hush Music.wear
+package com.music.Hush Music.wear
 
 /**
  * The wire between the phone app and the watch app.

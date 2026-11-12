@@ -1,4 +1,4 @@
-﻿@file:OptIn(ExperimentalSharedTransitionApi::class)
+@file:OptIn(ExperimentalSharedTransitionApi::class)
 
 /*
  * FloatingTabBar v1.0.1 by Elyes Mansour

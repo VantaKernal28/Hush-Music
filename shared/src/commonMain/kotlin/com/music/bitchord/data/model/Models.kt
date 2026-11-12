@@ -1,4 +1,4 @@
-﻿package com.music.bitchord.data.model
+package com.music.bitchord.data.model
 
 /** Tier of an item in the playback queue. */
 enum class QueueTier {

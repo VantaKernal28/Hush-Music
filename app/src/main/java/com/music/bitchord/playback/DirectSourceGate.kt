@@ -1,4 +1,4 @@
-﻿package com.music.bitchord.playback
+package com.music.bitchord.playback
 
 import com.music.bitchord.data.NerdStats
 import com.music.bitchord.data.TrackLog

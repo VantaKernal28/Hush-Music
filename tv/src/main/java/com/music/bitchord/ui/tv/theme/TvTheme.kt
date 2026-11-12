@@ -1,4 +1,4 @@
-﻿package com.music.Hush Music.ui.tv.theme
+package com.music.Hush Music.ui.tv.theme
 
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider

@@ -1,4 +1,4 @@
-﻿package com.music.Hush Music.wear
+package com.music.Hush Music.wear
 
 import android.Manifest
 import android.app.Application

@@ -1,4 +1,4 @@
-﻿package com.music.bitchord.data
+package com.music.bitchord.data
 
 import android.content.Context
 import android.content.Intent

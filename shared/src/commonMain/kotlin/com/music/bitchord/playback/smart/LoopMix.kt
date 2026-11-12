@@ -1,4 +1,4 @@
-﻿/*
+/*
  * BitChord: the Automix loop mix, a DJ transition on two beat-tracked songs.
  * Ported from the web player's playback/automix/engine/loopMix.ts (which
  * builds on AutoMix by David Finnegan, AGPL-3.0; see that folder's NOTICE.md).

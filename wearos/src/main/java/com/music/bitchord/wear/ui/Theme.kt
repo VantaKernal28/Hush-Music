@@ -1,4 +1,4 @@
-﻿package com.music.Hush Music.wear.ui
+package com.music.Hush Music.wear.ui
 
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.graphics.Color

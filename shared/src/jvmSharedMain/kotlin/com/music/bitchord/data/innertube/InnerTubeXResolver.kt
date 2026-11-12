@@ -1,4 +1,4 @@
-﻿package com.music.bitchord.data.innertube
+package com.music.bitchord.data.innertube
 
 import com.music.bitchord.data.MonotonicClock
 import com.metrolist.innertubex.InnerTube

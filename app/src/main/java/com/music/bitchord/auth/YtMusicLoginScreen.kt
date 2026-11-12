@@ -1,4 +1,4 @@
-﻿package com.music.bitchord.auth
+package com.music.bitchord.auth
 
 import android.annotation.SuppressLint
 import android.webkit.CookieManager

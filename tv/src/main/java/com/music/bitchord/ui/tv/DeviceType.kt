@@ -1,4 +1,4 @@
-﻿package com.music.Hush Music.ui.tv
+package com.music.Hush Music.ui.tv
 
 import android.app.ActivityManager
 import android.app.UiModeManager

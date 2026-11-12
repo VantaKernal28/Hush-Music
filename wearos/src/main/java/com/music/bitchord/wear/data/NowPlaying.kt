@@ -1,4 +1,4 @@
-﻿package com.music.Hush Music.wear.data
+package com.music.Hush Music.wear.data
 
 import androidx.compose.runtime.Immutable
 import androidx.compose.ui.graphics.Color

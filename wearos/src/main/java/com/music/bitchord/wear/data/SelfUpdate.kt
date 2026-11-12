@@ -1,4 +1,4 @@
-﻿package com.music.Hush Music.wear.data
+package com.music.Hush Music.wear.data
 
 import android.app.NotificationChannel
 import android.app.NotificationManager

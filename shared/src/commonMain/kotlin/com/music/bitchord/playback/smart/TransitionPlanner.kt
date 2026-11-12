@@ -1,4 +1,4 @@
-﻿/*
+/*
  * Ported from Orchard (https://github.com/SFG5453/Orchard), merging its
  * TransitionPlanner.kt and WsolaPlanner.kt into one file.
  *

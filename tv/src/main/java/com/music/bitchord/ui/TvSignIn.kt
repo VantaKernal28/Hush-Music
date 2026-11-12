@@ -1,4 +1,4 @@
-﻿package com.music.Hush Music.ui
+package com.music.Hush Music.ui
 
 import android.annotation.SuppressLint
 import android.webkit.WebView

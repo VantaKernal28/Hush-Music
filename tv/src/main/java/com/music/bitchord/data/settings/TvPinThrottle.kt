@@ -1,4 +1,4 @@
-﻿package com.music.Hush Music.data.settings
+package com.music.Hush Music.data.settings
 
 import android.content.SharedPreferences
 import android.os.SystemClock

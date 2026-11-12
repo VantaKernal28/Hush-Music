@@ -1,4 +1,4 @@
-﻿package com.music.bitchord.ui.player
+package com.music.bitchord.ui.player
 
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier

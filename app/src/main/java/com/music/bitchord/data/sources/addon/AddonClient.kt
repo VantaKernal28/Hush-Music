@@ -1,4 +1,4 @@
-﻿package com.music.bitchord.data.sources.addon
+package com.music.bitchord.data.sources.addon
 
 import com.music.bitchord.data.Http
 import com.music.bitchord.data.TrackLog

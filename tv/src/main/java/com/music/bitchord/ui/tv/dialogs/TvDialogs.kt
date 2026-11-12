@@ -1,4 +1,4 @@
-﻿package com.music.Hush Music.ui.tv.dialogs
+package com.music.Hush Music.ui.tv.dialogs
 
 import android.app.Activity
 import android.content.Context

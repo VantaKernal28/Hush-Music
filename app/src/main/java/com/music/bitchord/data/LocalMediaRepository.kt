@@ -1,4 +1,4 @@
-﻿package com.music.bitchord.data
+package com.music.bitchord.data
 
 import android.Manifest
 import android.content.ContentUris

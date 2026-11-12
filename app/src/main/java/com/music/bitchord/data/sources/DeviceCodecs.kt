@@ -1,4 +1,4 @@
-﻿package com.music.bitchord.data.sources
+package com.music.bitchord.data.sources
 
 import android.media.MediaCodecList
 import androidx.media3.common.util.UnstableApi

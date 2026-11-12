@@ -1,4 +1,4 @@
-﻿package com.music.Hush Music.ui.tv.auth
+package com.music.Hush Music.ui.tv.auth
 
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background

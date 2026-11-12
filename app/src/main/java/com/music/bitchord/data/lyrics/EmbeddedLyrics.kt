@@ -1,4 +1,4 @@
-﻿package com.music.bitchord.data.lyrics
+package com.music.bitchord.data.lyrics
 
 import android.content.Context
 import android.net.Uri
