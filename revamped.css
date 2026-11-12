@@ -1,32 +1,32 @@
 /* ==========================================================================
-   Hush Music — Design System
+   Hush Music — Minimal Design System
    Material 3 (M3) Dark Theme · Liquid Glass iOS Dock · Bouncy Spring Physics
-   Lando Norris Kinetic Typography · Minimal & Spacious Layout
+   Lando Norris Kinetic Typography · Pure Fidelity · Zero Bloat
    ========================================================================== */
 
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500;600;700&family=Plus+Jakarta+Sans:wght@400;500;600;700;800;900&family=Syne:wght@700;800&display=swap');
 
 :root {
   /* Material 3 Dark Palette Tokens */
-  --md-sys-color-surface: #0b0d13;
-  --md-sys-color-surface-dim: #07080c;
-  --md-sys-color-surface-container-lowest: #0e1118;
-  --md-sys-color-surface-container-low: #121520;
-  --md-sys-color-surface-container: #171b28;
-  --md-sys-color-surface-container-high: #1d2232;
-  --md-sys-color-surface-container-highest: #242a3d;
+  --md-sys-color-surface: #0a0c12;
+  --md-sys-color-surface-dim: #06070a;
+  --md-sys-color-surface-container-lowest: #0b0e15;
+  --md-sys-color-surface-container-low: #10131d;
+  --md-sys-color-surface-container: #141825;
+  --md-sys-color-surface-container-high: #1a2030;
+  --md-sys-color-surface-container-highest: #22293c;
   
   --md-sys-color-on-surface: #f2f5fb;
-  --md-sys-color-on-surface-variant: rgba(242, 245, 251, 0.65);
+  --md-sys-color-on-surface-variant: rgba(242, 245, 251, 0.62);
   --md-sys-color-outline: rgba(255, 255, 255, 0.08);
-  --md-sys-color-outline-variant: rgba(255, 255, 255, 0.16);
+  --md-sys-color-outline-variant: rgba(255, 255, 255, 0.14);
 
   /* Accents */
   --md-sys-color-primary: #d2ff00;       /* Cyber Volt */
-  --md-sys-color-primary-container: rgba(210, 255, 0, 0.12);
+  --md-sys-color-primary-container: rgba(210, 255, 0, 0.1);
   --md-sys-color-on-primary: #000000;
   --md-sys-color-secondary: #00f0ff;     /* Electric Cyan */
-  --md-sys-color-secondary-container: rgba(0, 240, 255, 0.12);
+  --md-sys-color-secondary-container: rgba(0, 240, 255, 0.1);
   --md-sys-color-tertiary: #b084ff;      /* Neon Lavender */
 
   /* M3 Shape Tokens */
@@ -67,7 +67,7 @@ body {
   min-height: 100vh;
   position: relative;
   overflow-x: hidden;
-  line-height: 1.6;
+  line-height: 1.65;
 }
 
 /* -------------------------------------------------------------
@@ -81,7 +81,7 @@ body {
   transform: translateY(-4px) scale(1.04);
 }
 .bouncy-btn:active {
-  transform: translateY(1px) scale(0.94) !important;
+  transform: translateY(1px) scale(0.93) !important;
   transition: transform 0.12s ease !important;
 }
 
@@ -101,7 +101,7 @@ body {
   will-change: transform;
 }
 .bouncy-card:hover {
-  transform: translateY(-8px) scale(1.015);
+  transform: translateY(-6px) scale(1.015);
 }
 
 .bouncy-icon {
@@ -110,7 +110,7 @@ body {
 }
 *:hover > .bouncy-icon,
 .bouncy-btn:hover .bouncy-icon {
-  transform: scale(1.22) rotate(-5deg);
+  transform: scale(1.2) rotate(-5deg);
 }
 
 /* Floating Breathe Animation */
@@ -119,33 +119,21 @@ body {
     transform: translateY(0);
   }
   50% {
-    transform: translateY(-10px);
+    transform: translateY(-8px);
   }
 }
 .animate-float-bounce {
   animation: float-breathe 5s var(--ease-spring) infinite;
 }
 
-/* Scroll Entrance Reveals with Spring Physics */
-.reveal-on-scroll {
-  opacity: 0;
-  transform: translateY(32px) scale(0.97);
-  transition: opacity 0.7s var(--ease-smooth), transform 0.7s var(--ease-spring);
-  will-change: opacity, transform;
-}
-.reveal-on-scroll.is-visible {
-  opacity: 1;
-  transform: translateY(0) scale(1);
-}
-
 /* -------------------------------------------------------------
-   2. PRELOADER & LOADING ANIMATION (BOUNCY ELASTIC)
+   2. PRELOADER & LOADING ANIMATION
 -------------------------------------------------------------- */
 #preloader {
   position: fixed;
   inset: 0;
   z-index: 9999;
-  background: #06070a;
+  background: #050608;
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -165,7 +153,7 @@ body {
   letter-spacing: 0.16em;
   color: var(--md-sys-color-primary);
   text-transform: uppercase;
-  margin-bottom: 28px;
+  margin-bottom: 26px;
   background: var(--md-sys-color-primary-container);
   border: 1px solid rgba(210, 255, 0, 0.25);
   padding: 6px 16px;
@@ -173,7 +161,6 @@ body {
   display: inline-flex;
   align-items: center;
   gap: 8px;
-  animation: float-breathe 3s ease-in-out infinite;
 }
 
 .loader-badge::before {
@@ -193,8 +180,8 @@ body {
 
 .loader-logo-wrap {
   position: relative;
-  width: 104px;
-  height: 104px;
+  width: 96px;
+  height: 96px;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -202,8 +189,8 @@ body {
 
 .loader-ring {
   position: absolute;
-  inset: -8px;
-  border-radius: 34px;
+  inset: -6px;
+  border-radius: 32px;
   border: 2px solid transparent;
   border-top-color: var(--md-sys-color-primary);
   border-right-color: var(--md-sys-color-secondary);
@@ -216,25 +203,25 @@ body {
 }
 
 .loader-logo {
-  width: 84px;
-  height: 84px;
+  width: 78px;
+  height: 78px;
   object-fit: contain;
-  border-radius: 24px;
-  box-shadow: 0 0 40px rgba(210, 255, 0, 0.25);
+  border-radius: 22px;
+  box-shadow: 0 0 35px rgba(210, 255, 0, 0.25);
   animation: logo-spring 1.8s var(--ease-spring) infinite alternate;
 }
 
 @keyframes logo-spring {
-  0% { transform: scale(0.92); filter: drop-shadow(0 0 12px rgba(210, 255, 0, 0.2)); }
-  100% { transform: scale(1.06); filter: drop-shadow(0 0 35px rgba(0, 240, 255, 0.45)); }
+  0% { transform: scale(0.92); }
+  100% { transform: scale(1.05); filter: drop-shadow(0 0 25px rgba(0, 240, 255, 0.4)); }
 }
 
 .loader-waves {
   display: flex;
   gap: 5px;
   align-items: center;
-  height: 30px;
-  margin-top: 26px;
+  height: 28px;
+  margin-top: 24px;
 }
 
 .loader-bar {
@@ -252,16 +239,16 @@ body {
 
 @keyframes bouncy-wave {
   0%, 100% { height: 6px; opacity: 0.35; transform: scaleY(0.7); }
-  50% { height: 28px; opacity: 1; transform: scaleY(1.15); background: var(--md-sys-color-secondary); }
+  50% { height: 26px; opacity: 1; transform: scaleY(1.15); background: var(--md-sys-color-secondary); }
 }
 
 .loader-counter {
   font-family: var(--font-mono);
-  font-size: 32px;
+  font-size: 30px;
   font-weight: 700;
   letter-spacing: -0.04em;
   color: #ffffff;
-  margin-top: 14px;
+  margin-top: 12px;
 }
 
 .loader-telemetry {
@@ -322,16 +309,16 @@ body {
   color: #000000;
   font-weight: 700;
   border-radius: var(--md-shape-full);
-  padding: 13px 28px;
+  padding: 12px 26px;
   display: inline-flex;
   align-items: center;
-  gap: 10px;
+  gap: 9px;
   text-decoration: none;
-  box-shadow: 0 0 24px rgba(210, 255, 0, 0.32), 0 4px 12px rgba(0, 0, 0, 0.4);
+  box-shadow: 0 0 20px rgba(210, 255, 0, 0.3), 0 4px 12px rgba(0, 0, 0, 0.4);
 }
 .btn-m3-primary:hover {
   background: #e2ff40;
-  box-shadow: 0 0 38px rgba(210, 255, 0, 0.65), 0 8px 24px rgba(0, 0, 0, 0.5);
+  box-shadow: 0 0 35px rgba(210, 255, 0, 0.6), 0 8px 20px rgba(0, 0, 0, 0.5);
 }
 .btn-m3-primary .char::after {
   color: #000000;
@@ -341,10 +328,10 @@ body {
 .kinetic-marquee-wrap {
   width: 100%;
   overflow: hidden;
-  background: linear-gradient(90deg, rgba(210, 255, 0, 0.05), rgba(0, 240, 255, 0.05));
+  background: linear-gradient(90deg, rgba(210, 255, 0, 0.04), rgba(0, 240, 255, 0.04));
   border-top: 1px solid var(--md-sys-color-outline);
   border-bottom: 1px solid var(--md-sys-color-outline);
-  padding: 12px 0;
+  padding: 10px 0;
   position: relative;
 }
 
@@ -354,7 +341,7 @@ body {
   width: max-content;
   animation: marquee-roll 28s linear infinite;
   font-family: var(--font-mono);
-  font-size: 12.5px;
+  font-size: 12px;
   font-weight: 600;
   letter-spacing: 0.12em;
   text-transform: uppercase;
@@ -369,7 +356,7 @@ body {
   align-items: center;
   gap: 16px;
   padding: 0 20px;
-  color: rgba(255, 255, 255, 0.8);
+  color: rgba(255, 255, 255, 0.75);
 }
 
 .kinetic-marquee .highlight {
@@ -378,11 +365,11 @@ body {
 }
 
 .kinetic-marquee .dot {
-  width: 6px;
-  height: 6px;
+  width: 5px;
+  height: 5px;
   border-radius: 50%;
   background: var(--md-sys-color-secondary);
-  box-shadow: 0 0 8px var(--md-sys-color-secondary);
+  box-shadow: 0 0 6px var(--md-sys-color-secondary);
 }
 
 @keyframes marquee-roll {
@@ -391,7 +378,7 @@ body {
 }
 
 /* -------------------------------------------------------------
-   4. LIQUID GLASS iOS-TYPE LOWER NAVIGATION DOCK (M3 ENHANCED)
+   4. LIQUID GLASS iOS-TYPE LOWER NAVIGATION DOCK (MINIMAL)
 -------------------------------------------------------------- */
 .ios-glass-dock {
   position: fixed;
@@ -401,7 +388,7 @@ body {
   z-index: 900;
   display: flex;
   align-items: center;
-  gap: 4px;
+  gap: 6px;
   padding: 6px 10px;
   border-radius: var(--md-shape-full);
   background: rgba(15, 18, 26, 0.68);
@@ -430,7 +417,7 @@ body {
   display: flex;
   align-items: center;
   gap: 7px;
-  padding: 8px 15px;
+  padding: 8px 16px;
   border-radius: var(--md-shape-full);
   color: rgba(255, 255, 255, 0.7);
   font-size: 13px;
@@ -454,7 +441,7 @@ body {
 }
 
 .dock-item:hover svg {
-  transform: scale(1.22) rotate(-4deg);
+  transform: scale(1.2) rotate(-4deg);
   color: var(--md-sys-color-primary);
 }
 
@@ -475,7 +462,7 @@ body {
 
 .dock-divider {
   width: 1px;
-  height: 22px;
+  height: 20px;
   background: rgba(255, 255, 255, 0.12);
   margin: 0 2px;
 }
@@ -485,10 +472,10 @@ body {
   color: #ffffff !important;
   font-weight: 600;
   border-radius: var(--md-shape-full);
-  box-shadow: 0 0 18px rgba(0, 240, 255, 0.4);
+  box-shadow: 0 0 16px rgba(0, 240, 255, 0.4);
 }
 .dock-pill-btn:hover {
-  box-shadow: 0 0 28px rgba(0, 240, 255, 0.7);
+  box-shadow: 0 0 26px rgba(0, 240, 255, 0.7);
   transform: translateY(-2px) scale(1.05);
 }
 
@@ -503,13 +490,6 @@ body {
   overflow: hidden;
   box-shadow: 0 16px 40px -10px rgba(0, 0, 0, 0.6), inset 0 1px 0 rgba(255, 255, 255, 0.08);
   backdrop-filter: blur(20px);
-}
-
-.m3-surface-high {
-  background: var(--md-sys-color-surface-container-high);
-  border: 1px solid var(--md-sys-color-outline-variant);
-  border-radius: var(--md-shape-large);
-  box-shadow: 0 20px 48px -12px rgba(0, 0, 0, 0.7);
 }
 
 .tag-telemetry {
@@ -529,9 +509,9 @@ body {
 
 .hero-headline {
   font-family: var(--font-display);
-  font-size: clamp(42px, 7vw, 84px);
+  font-size: clamp(38px, 6vw, 76px);
   font-weight: 800;
-  line-height: 0.98;
+  line-height: 1.02;
   letter-spacing: -0.04em;
   text-transform: uppercase;
 }
@@ -543,14 +523,14 @@ body {
 }
 
 /* -------------------------------------------------------------
-   6. INTERACTIVE LIVE AUDIO VISUALIZER
+   6. INTERACTIVE LIVE AUDIO VISUALIZER (AIRY & EXPANDED)
 -------------------------------------------------------------- */
 .visualizer-card {
   background: var(--md-sys-color-surface-container);
   border: 1px solid var(--md-sys-color-outline-variant);
   border-radius: var(--md-shape-extra-large);
-  padding: 32px;
-  box-shadow: 0 28px 70px -15px rgba(0, 0, 0, 0.8), inset 0 1px 0 rgba(255, 255, 255, 0.15);
+  padding: 36px 40px;
+  box-shadow: 0 30px 80px -20px rgba(0, 0, 0, 0.85), inset 0 1px 0 rgba(255, 255, 255, 0.16);
   backdrop-filter: blur(24px);
   position: relative;
   overflow: hidden;
@@ -568,7 +548,7 @@ body {
 
 .eq-canvas {
   width: 100%;
-  height: 76px;
+  height: 96px;
   border-radius: var(--md-shape-medium);
   background: rgba(0, 0, 0, 0.45);
   border: 1px solid rgba(255, 255, 255, 0.05);
@@ -598,13 +578,13 @@ body {
 }
 
 /* -------------------------------------------------------------
-   7. SPEED & ENGINEERING PILLARS (M3 ELEVATED CARDS)
+   7. PURE FIDELITY PILLARS (SPACIOUS M3 CARDS)
 -------------------------------------------------------------- */
 .speed-card {
   background: var(--md-sys-color-surface-container);
   border: 1px solid var(--md-sys-color-outline);
   border-radius: var(--md-shape-large);
-  padding: 30px;
+  padding: 34px 30px;
   position: relative;
   overflow: hidden;
 }
@@ -620,79 +600,38 @@ body {
   font-size: 11px;
   letter-spacing: 0.12em;
   color: var(--md-sys-color-primary);
-  margin-bottom: 12px;
+  margin-bottom: 14px;
   display: block;
 }
 
 .speed-card h3 {
   font-family: var(--font-display);
-  font-size: 21px;
+  font-size: 22px;
   font-weight: 700;
   letter-spacing: -0.02em;
   color: #ffffff;
-  margin-bottom: 8px;
+  margin-bottom: 10px;
 }
 
 .speed-card p {
-  font-size: 14px;
-  line-height: 1.6;
+  font-size: 14.5px;
+  line-height: 1.65;
   color: var(--md-sys-color-on-surface-variant);
 }
 
 /* -------------------------------------------------------------
-   8. MINIMAL COMPARISON MATRIX
--------------------------------------------------------------- */
-.matrix-table {
-  width: 100%;
-  border-collapse: separate;
-  border-spacing: 0;
-  border-radius: var(--md-shape-large);
-  overflow: hidden;
-  background: var(--md-sys-color-surface-container);
-  border: 1px solid var(--md-sys-color-outline);
-}
-
-.matrix-table th,
-.matrix-table td {
-  padding: 16px 20px;
-  text-align: left;
-  border-bottom: 1px solid var(--md-sys-color-outline);
-}
-
-.matrix-table th {
-  background: var(--md-sys-color-surface-container-high);
-  font-family: var(--font-mono);
-  font-size: 12px;
-  letter-spacing: 0.08em;
-  text-transform: uppercase;
-  color: var(--md-sys-color-on-surface-variant);
-}
-
-.matrix-table th.highlight-col,
-.matrix-table td.highlight-col {
-  background: var(--md-sys-color-primary-container);
-  border-left: 1px solid rgba(210, 255, 0, 0.2);
-  border-right: 1px solid rgba(210, 255, 0, 0.2);
-}
-
-.matrix-table th.highlight-col {
-  color: var(--md-sys-color-primary);
-  font-weight: 700;
-}
-
-/* -------------------------------------------------------------
-   9. CREDITS CARD (VantaKernal28 & {SRIKAR_PLACEHOLDER})
+   8. CREDITS CARD (VantaKernal28 & {SRIKAR_PLACEHOLDER})
 -------------------------------------------------------------- */
 .credits-banner {
-  background: linear-gradient(135deg, rgba(210, 255, 0, 0.08), rgba(0, 240, 255, 0.08));
+  background: linear-gradient(135deg, rgba(210, 255, 0, 0.07), rgba(0, 240, 255, 0.07));
   border: 1px solid var(--md-sys-color-outline-variant);
   border-radius: var(--md-shape-large);
-  padding: 24px 30px;
+  padding: 26px 32px;
   display: flex;
   flex-wrap: wrap;
   align-items: center;
   justify-content: space-between;
-  gap: 16px;
+  gap: 18px;
   box-shadow: 0 16px 40px -10px rgba(0, 0, 0, 0.6);
 }
 
@@ -725,90 +664,28 @@ body {
   box-shadow: 0 0 20px rgba(0, 240, 255, 0.5);
 }
 
-/* -------------------------------------------------------------
-   10. BOUNCY FAQ ACCORDION
--------------------------------------------------------------- */
-.faq-item {
-  background: var(--md-sys-color-surface-container);
-  border: 1px solid var(--md-sys-color-outline);
-  border-radius: var(--md-shape-medium);
-  margin-bottom: 12px;
-  overflow: hidden;
-  transition: border-color 0.3s ease, background 0.3s ease;
-}
-
-.faq-item:hover {
-  border-color: rgba(255, 255, 255, 0.22);
-}
-
-.faq-trigger {
-  width: 100%;
-  padding: 20px 24px;
-  background: transparent;
-  border: none;
-  color: #ffffff;
-  font-family: var(--font-sans);
-  font-size: 16px;
-  font-weight: 600;
-  text-align: left;
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  cursor: pointer;
-  gap: 16px;
-}
-
-.faq-trigger svg {
-  width: 20px;
-  height: 20px;
-  transition: transform 0.45s var(--ease-spring);
-  color: var(--md-sys-color-primary);
-  flex-shrink: 0;
-}
-
-.faq-item.open .faq-trigger svg {
-  transform: rotate(180deg) scale(1.15);
-}
-
-.faq-content {
-  max-height: 0;
-  overflow: hidden;
-  transition: max-height 0.45s var(--ease-spring), padding 0.3s ease;
-  padding: 0 24px;
-  color: var(--md-sys-color-on-surface-variant);
-  font-size: 14px;
-  line-height: 1.6;
-}
-
-.faq-item.open .faq-content {
-  max-height: 220px;
-  padding-bottom: 20px;
-}
-
-/* -------------------------------------------------------------
-   11. AMBIENT GLOW BLOBS
--------------------------------------------------------------- */
+/* Ambient Glow Blobs */
 .hero-glow-blob {
   position: absolute;
   border-radius: 50%;
   filter: blur(120px);
   pointer-events: none;
   z-index: 0;
-  opacity: 0.5;
+  opacity: 0.45;
   will-change: transform;
 }
 .hero-blob-1 {
-  width: 520px;
-  height: 520px;
-  background: radial-gradient(circle, rgba(210, 255, 0, 0.22) 0%, rgba(210, 255, 0, 0) 70%);
-  top: -8%;
-  left: 12%;
+  width: 500px;
+  height: 500px;
+  background: radial-gradient(circle, rgba(210, 255, 0, 0.2) 0%, rgba(210, 255, 0, 0) 70%);
+  top: -6%;
+  left: 10%;
   animation: float-blob-1 14s ease-in-out infinite alternate;
 }
 .hero-blob-2 {
-  width: 600px;
-  height: 600px;
-  background: radial-gradient(circle, rgba(0, 240, 255, 0.18) 0%, rgba(0, 240, 255, 0) 70%);
+  width: 580px;
+  height: 580px;
+  background: radial-gradient(circle, rgba(0, 240, 255, 0.16) 0%, rgba(0, 240, 255, 0) 70%);
   top: 15%;
   right: 5%;
   animation: float-blob-2 18s ease-in-out infinite alternate;
@@ -816,26 +693,25 @@ body {
 
 @keyframes float-blob-1 {
   0% { transform: translate(0, 0) scale(1); }
-  100% { transform: translate(50px, 35px) scale(1.12); }
+  100% { transform: translate(40px, 30px) scale(1.1); }
 }
 @keyframes float-blob-2 {
   0% { transform: translate(0, 0) scale(1.05); }
-  100% { transform: translate(-45px, 45px) scale(0.95); }
+  100% { transform: translate(-40px, 40px) scale(0.95); }
 }
 
-/* Responsive adjustments */
 @media (max-width: 768px) {
   .ios-glass-dock {
     bottom: 16px;
     padding: 5px 8px;
-    gap: 2px;
+    gap: 3px;
     width: calc(100vw - 32px);
-    max-width: 480px;
+    max-width: 420px;
     justify-content: space-around;
   }
   .dock-item {
-    padding: 6px 8px;
-    font-size: 11px;
+    padding: 6px 10px;
+    font-size: 11.5px;
     gap: 4px;
   }
   .dock-item svg {
@@ -843,6 +719,9 @@ body {
     height: 15px;
   }
   .hero-headline {
-    font-size: 40px;
+    font-size: 38px;
+  }
+  .visualizer-card {
+    padding: 24px 20px;
   }
 }
