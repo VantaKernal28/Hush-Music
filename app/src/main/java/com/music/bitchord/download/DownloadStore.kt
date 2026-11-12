@@ -1,4 +1,4 @@
-package com.music.bitchord.download
+﻿package com.music.bitchord.download
 
 import android.content.ContentValues
 import android.content.Context
@@ -53,7 +53,7 @@ import java.util.Locale
  */
 object DownloadStore {
 
-    private const val TAG = "BitChord"
+    private const val TAG = "HushMusic"
 
     /** The subfolder of Music that everything lands in. */
     const val FOLDER = "BitChord"

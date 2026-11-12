@@ -1,4 +1,4 @@
-name: TV
+﻿name: TV
 
 # The Android TV app builds from the phone app's sources (see tv/README.md), so
 # a change under app/, shared/, sharedUi/ or native/ can break it as easily as
@@ -73,7 +73,7 @@ jobs:
       - name: Upload the TV dev APK
         uses: actions/upload-artifact@v4
         with:
-          name: bitchord-tv-dev-debug
+          name: hushmusic-tv-dev-debug
           path: tv/build/outputs/apk/dev/debug/*universal*.apk
 
       - name: Upload build reports

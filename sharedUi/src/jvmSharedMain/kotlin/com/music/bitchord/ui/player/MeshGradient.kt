@@ -1,4 +1,4 @@
-package com.music.bitchord.ui.player
+﻿package com.music.bitchord.ui.player
 
 import androidx.compose.ui.graphics.ImageBitmap
 import androidx.compose.animation.animateColorAsState
@@ -239,7 +239,7 @@ private const val BLOB_ALPHA = 0.85f
 const val MESH_CYCLE_MILLIS = 3_600
 
 /**
- * BitChord's own colours, for the surfaces that have no artwork to take them
+ * Hush Music's own colours, for the surfaces that have no artwork to take them
  * from: the welcome pages and the sign-in card on Home. Starts on Apple
  * Music's red and wanders off from there.
  */

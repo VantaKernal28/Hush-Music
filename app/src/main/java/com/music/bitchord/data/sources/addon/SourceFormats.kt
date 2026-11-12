@@ -1,4 +1,4 @@
-package com.music.bitchord.data.sources.addon
+﻿package com.music.bitchord.data.sources.addon
 
 import com.music.bitchord.data.Http
 import com.music.bitchord.data.TrackLog
@@ -48,7 +48,7 @@ sealed interface DetectedFormat {
 
 object SourceFormats {
 
-    private const val TAG = "BitChord"
+    private const val TAG = "HushMusic"
 
     private val json = Json {
         isLenient = true
@@ -171,7 +171,7 @@ object SourceFormats {
             if (manifest.resources.isNotEmpty() && !manifest.declares("search")) {
                 val declared = manifest.resources.joinToString(", ")
                 return DetectedFormat.Unsupported(
-                    "This addon declares $declared — BitChord needs search",
+                    "This addon declares $declared — Hush Music needs search",
                 )
             }
             return DetectedFormat.Addon(manifest, AddonClient.normalizeBase(url))
@@ -210,7 +210,7 @@ object SourceFormats {
     private suspend fun fetch(url: String): Result<String> = runCatching {
         val request = Request.Builder().url(url)
             .header("Accept", "application/json")
-            .header("User-Agent", "BitChord/v${com.music.bitchord.BuildConfig.VERSION_NAME}")
+            .header("User-Agent", "HushMusic/v${com.music.bitchord.BuildConfig.VERSION_NAME}")
             .build()
         Http.client.newCall(request).execute().use { response ->
             if (!response.isSuccessful) {

@@ -11,6 +11,18 @@ const RECENT_TITLE = 'Recently Played';
 const RECENT_LIMIT = 20;
 const RECENT_SOURCE = { title: RECENT_TITLE, type: 'home' as const };
 
+function getPersonalizedGreeting(): string {
+  try {
+    const name = localStorage.getItem('hush_user_name');
+    if (!name || !name.trim()) return 'Home';
+    const hour = new Date().getHours();
+    const timeGreeting = hour < 12 ? 'Good morning' : hour < 18 ? 'Good afternoon' : 'Good evening';
+    return `${timeGreeting}, ${name.trim()}`;
+  } catch {
+    return 'Home';
+  }
+}
+
 /**
  * The account's listening history, newest first, one row per song
  * (YtMusicRepository.recentlyPlayed): the first 20, signed in only. The same
@@ -48,7 +60,7 @@ export default function HomePage() {
   if (missing) {
     return (
       <>
-        <PageHeader title="Home" />
+        <PageHeader title={getPersonalizedGreeting()} />
         <NeedsExtension />
       </>
     );
@@ -57,7 +69,7 @@ export default function HomePage() {
   if (home.isError && !home.data) {
     return (
       <>
-        <PageHeader title="Home" />
+        <PageHeader title={getPersonalizedGreeting()} />
         <LoadError error={home.error} onRetry={() => void home.refetch()} />
       </>
     );
@@ -70,7 +82,7 @@ export default function HomePage() {
     .filter((shelf) => !(recent.length > 0 && shelf.title.trim().toLowerCase() === RECENT_TITLE.toLowerCase()));
   return (
     <>
-      <PageHeader title="Home" />
+      <PageHeader title={getPersonalizedGreeting()} />
       {recent.length > 0 && <TrackShelf title={RECENT_TITLE} to="/library/recent" tracks={recent} source={RECENT_SOURCE} />}
       <Shelves shelves={shelves} />
       <div ref={sentinel} />

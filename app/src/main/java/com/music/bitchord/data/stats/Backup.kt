@@ -1,4 +1,4 @@
-package com.music.bitchord.data.stats
+﻿package com.music.bitchord.data.stats
 
 import android.content.Context
 import android.net.Uri
@@ -121,7 +121,7 @@ object Backup {
         val at: String,
     )
 
-    private const val APP_TAG = "bitchord"
+    private const val APP_TAG = "HushMusic"
 
     /**
      * Bump when the shape below stops being readable by an older build. A file

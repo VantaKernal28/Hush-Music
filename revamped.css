@@ -1,0 +1,848 @@
+/* ==========================================================================
+   Hush Music — Design System
+   Material 3 (M3) Dark Theme · Liquid Glass iOS Dock · Bouncy Spring Physics
+   Lando Norris Kinetic Typography · Minimal & Spacious Layout
+   ========================================================================== */
+
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500;600;700&family=Plus+Jakarta+Sans:wght@400;500;600;700;800;900&family=Syne:wght@700;800&display=swap');
+
+:root {
+  /* Material 3 Dark Palette Tokens */
+  --md-sys-color-surface: #0b0d13;
+  --md-sys-color-surface-dim: #07080c;
+  --md-sys-color-surface-container-lowest: #0e1118;
+  --md-sys-color-surface-container-low: #121520;
+  --md-sys-color-surface-container: #171b28;
+  --md-sys-color-surface-container-high: #1d2232;
+  --md-sys-color-surface-container-highest: #242a3d;
+  
+  --md-sys-color-on-surface: #f2f5fb;
+  --md-sys-color-on-surface-variant: rgba(242, 245, 251, 0.65);
+  --md-sys-color-outline: rgba(255, 255, 255, 0.08);
+  --md-sys-color-outline-variant: rgba(255, 255, 255, 0.16);
+
+  /* Accents */
+  --md-sys-color-primary: #d2ff00;       /* Cyber Volt */
+  --md-sys-color-primary-container: rgba(210, 255, 0, 0.12);
+  --md-sys-color-on-primary: #000000;
+  --md-sys-color-secondary: #00f0ff;     /* Electric Cyan */
+  --md-sys-color-secondary-container: rgba(0, 240, 255, 0.12);
+  --md-sys-color-tertiary: #b084ff;      /* Neon Lavender */
+
+  /* M3 Shape Tokens */
+  --md-shape-full: 9999px;
+  --md-shape-extra-large: 32px;
+  --md-shape-large: 24px;
+  --md-shape-medium: 16px;
+  --md-shape-small: 10px;
+
+  /* Spring Physics & Bouncy Easings */
+  --ease-spring: cubic-bezier(0.34, 1.56, 0.64, 1);
+  --ease-elastic: cubic-bezier(0.175, 0.885, 0.32, 1.275);
+  --ease-smooth: cubic-bezier(0.16, 1, 0.3, 1);
+
+  /* Typography */
+  --font-display: 'Syne', 'Plus Jakarta Sans', system-ui, sans-serif;
+  --font-sans: 'Plus Jakarta Sans', 'Inter', system-ui, sans-serif;
+  --font-mono: 'JetBrains Mono', monospace;
+}
+
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+html {
+  scroll-behavior: smooth;
+  background-color: var(--md-sys-color-surface-dim);
+  color: var(--md-sys-color-on-surface);
+  font-family: var(--font-sans);
+  overflow-x: hidden;
+}
+
+body {
+  background-color: var(--md-sys-color-surface-dim);
+  color: var(--md-sys-color-on-surface);
+  min-height: 100vh;
+  position: relative;
+  overflow-x: hidden;
+  line-height: 1.6;
+}
+
+/* -------------------------------------------------------------
+   1. BOUNCY ANIMATIONS & SPRING PHYSICS UTILITIES
+-------------------------------------------------------------- */
+.bouncy-btn {
+  transition: transform 0.4s var(--ease-spring), box-shadow 0.3s ease, background 0.3s ease, color 0.3s ease !important;
+  will-change: transform;
+}
+.bouncy-btn:hover {
+  transform: translateY(-4px) scale(1.04);
+}
+.bouncy-btn:active {
+  transform: translateY(1px) scale(0.94) !important;
+  transition: transform 0.12s ease !important;
+}
+
+.bouncy-chip {
+  transition: transform 0.35s var(--ease-spring), background 0.25s, border-color 0.25s;
+  will-change: transform;
+}
+.bouncy-chip:hover {
+  transform: translateY(-2px) scale(1.05);
+}
+.bouncy-chip:active {
+  transform: scale(0.95);
+}
+
+.bouncy-card {
+  transition: transform 0.45s var(--ease-spring), border-color 0.3s ease, background 0.3s ease, box-shadow 0.4s ease !important;
+  will-change: transform;
+}
+.bouncy-card:hover {
+  transform: translateY(-8px) scale(1.015);
+}
+
+.bouncy-icon {
+  transition: transform 0.4s var(--ease-spring);
+  display: inline-block;
+}
+*:hover > .bouncy-icon,
+.bouncy-btn:hover .bouncy-icon {
+  transform: scale(1.22) rotate(-5deg);
+}
+
+/* Floating Breathe Animation */
+@keyframes float-breathe {
+  0%, 100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-10px);
+  }
+}
+.animate-float-bounce {
+  animation: float-breathe 5s var(--ease-spring) infinite;
+}
+
+/* Scroll Entrance Reveals with Spring Physics */
+.reveal-on-scroll {
+  opacity: 0;
+  transform: translateY(32px) scale(0.97);
+  transition: opacity 0.7s var(--ease-smooth), transform 0.7s var(--ease-spring);
+  will-change: opacity, transform;
+}
+.reveal-on-scroll.is-visible {
+  opacity: 1;
+  transform: translateY(0) scale(1);
+}
+
+/* -------------------------------------------------------------
+   2. PRELOADER & LOADING ANIMATION (BOUNCY ELASTIC)
+-------------------------------------------------------------- */
+#preloader {
+  position: fixed;
+  inset: 0;
+  z-index: 9999;
+  background: #06070a;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  transition: opacity 0.65s var(--ease-smooth), transform 0.65s var(--ease-spring);
+}
+
+#preloader.loaded {
+  opacity: 0;
+  pointer-events: none;
+  transform: translateY(-30px) scale(1.03);
+}
+
+.loader-badge {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  letter-spacing: 0.16em;
+  color: var(--md-sys-color-primary);
+  text-transform: uppercase;
+  margin-bottom: 28px;
+  background: var(--md-sys-color-primary-container);
+  border: 1px solid rgba(210, 255, 0, 0.25);
+  padding: 6px 16px;
+  border-radius: var(--md-shape-full);
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  animation: float-breathe 3s ease-in-out infinite;
+}
+
+.loader-badge::before {
+  content: '';
+  width: 6px;
+  height: 6px;
+  background: var(--md-sys-color-primary);
+  border-radius: 50%;
+  box-shadow: 0 0 10px var(--md-sys-color-primary);
+  animation: pulse-dot 1.2s infinite ease-in-out;
+}
+
+@keyframes pulse-dot {
+  0%, 100% { opacity: 0.3; transform: scale(0.8); }
+  50% { opacity: 1; transform: scale(1.3); }
+}
+
+.loader-logo-wrap {
+  position: relative;
+  width: 104px;
+  height: 104px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.loader-ring {
+  position: absolute;
+  inset: -8px;
+  border-radius: 34px;
+  border: 2px solid transparent;
+  border-top-color: var(--md-sys-color-primary);
+  border-right-color: var(--md-sys-color-secondary);
+  animation: spin-ring 2s cubic-bezier(0.4, 0, 0.2, 1) infinite;
+}
+
+@keyframes spin-ring {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+.loader-logo {
+  width: 84px;
+  height: 84px;
+  object-fit: contain;
+  border-radius: 24px;
+  box-shadow: 0 0 40px rgba(210, 255, 0, 0.25);
+  animation: logo-spring 1.8s var(--ease-spring) infinite alternate;
+}
+
+@keyframes logo-spring {
+  0% { transform: scale(0.92); filter: drop-shadow(0 0 12px rgba(210, 255, 0, 0.2)); }
+  100% { transform: scale(1.06); filter: drop-shadow(0 0 35px rgba(0, 240, 255, 0.45)); }
+}
+
+.loader-waves {
+  display: flex;
+  gap: 5px;
+  align-items: center;
+  height: 30px;
+  margin-top: 26px;
+}
+
+.loader-bar {
+  width: 4px;
+  height: 8px;
+  background: var(--md-sys-color-primary);
+  border-radius: var(--md-shape-full);
+  animation: bouncy-wave 1.1s var(--ease-spring) infinite;
+}
+.loader-bar:nth-child(1) { animation-delay: 0.0s; }
+.loader-bar:nth-child(2) { animation-delay: 0.15s; }
+.loader-bar:nth-child(3) { animation-delay: 0.3s; }
+.loader-bar:nth-child(4) { animation-delay: 0.45s; }
+.loader-bar:nth-child(5) { animation-delay: 0.6s; }
+
+@keyframes bouncy-wave {
+  0%, 100% { height: 6px; opacity: 0.35; transform: scaleY(0.7); }
+  50% { height: 28px; opacity: 1; transform: scaleY(1.15); background: var(--md-sys-color-secondary); }
+}
+
+.loader-counter {
+  font-family: var(--font-mono);
+  font-size: 32px;
+  font-weight: 700;
+  letter-spacing: -0.04em;
+  color: #ffffff;
+  margin-top: 14px;
+}
+
+.loader-telemetry {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  color: var(--md-sys-color-on-surface-variant);
+  margin-top: 6px;
+  height: 16px;
+  letter-spacing: 0.08em;
+}
+
+/* -------------------------------------------------------------
+   3. LANDO NORRIS SIGNATURE TEXT EFFECT (.lando-text & .char)
+-------------------------------------------------------------- */
+.lando-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  text-decoration: none;
+  color: inherit;
+  cursor: pointer;
+}
+
+.lando-text {
+  position: relative;
+  display: inline-flex;
+  overflow: hidden;
+  font-weight: 600;
+  line-height: 1.2;
+}
+
+.lando-text .char {
+  display: inline-block;
+  position: relative;
+  transition: transform 0.4s var(--ease-spring);
+  transition-delay: calc(var(--char-index, 0) * 18ms);
+}
+
+.lando-text .char::after {
+  content: attr(data-char);
+  position: absolute;
+  top: 100%;
+  left: 0;
+  display: inline-block;
+  color: var(--md-sys-color-primary);
+}
+
+.lando-link:hover .char,
+.lando-hover:hover .lando-text .char,
+.bouncy-btn:hover .lando-text .char {
+  transform: translateY(-100%);
+}
+
+/* Neon Glow Button */
+.btn-m3-primary {
+  position: relative;
+  background: var(--md-sys-color-primary);
+  color: #000000;
+  font-weight: 700;
+  border-radius: var(--md-shape-full);
+  padding: 13px 28px;
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  text-decoration: none;
+  box-shadow: 0 0 24px rgba(210, 255, 0, 0.32), 0 4px 12px rgba(0, 0, 0, 0.4);
+}
+.btn-m3-primary:hover {
+  background: #e2ff40;
+  box-shadow: 0 0 38px rgba(210, 255, 0, 0.65), 0 8px 24px rgba(0, 0, 0, 0.5);
+}
+.btn-m3-primary .char::after {
+  color: #000000;
+}
+
+/* Kinetic Marquee Ticker */
+.kinetic-marquee-wrap {
+  width: 100%;
+  overflow: hidden;
+  background: linear-gradient(90deg, rgba(210, 255, 0, 0.05), rgba(0, 240, 255, 0.05));
+  border-top: 1px solid var(--md-sys-color-outline);
+  border-bottom: 1px solid var(--md-sys-color-outline);
+  padding: 12px 0;
+  position: relative;
+}
+
+.kinetic-marquee {
+  display: flex;
+  white-space: nowrap;
+  width: max-content;
+  animation: marquee-roll 28s linear infinite;
+  font-family: var(--font-mono);
+  font-size: 12.5px;
+  font-weight: 600;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+
+.kinetic-marquee:hover {
+  animation-play-state: paused;
+}
+
+.kinetic-marquee span {
+  display: inline-flex;
+  align-items: center;
+  gap: 16px;
+  padding: 0 20px;
+  color: rgba(255, 255, 255, 0.8);
+}
+
+.kinetic-marquee .highlight {
+  color: var(--md-sys-color-primary);
+  font-weight: 700;
+}
+
+.kinetic-marquee .dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--md-sys-color-secondary);
+  box-shadow: 0 0 8px var(--md-sys-color-secondary);
+}
+
+@keyframes marquee-roll {
+  0% { transform: translateX(0); }
+  100% { transform: translateX(-50%); }
+}
+
+/* -------------------------------------------------------------
+   4. LIQUID GLASS iOS-TYPE LOWER NAVIGATION DOCK (M3 ENHANCED)
+-------------------------------------------------------------- */
+.ios-glass-dock {
+  position: fixed;
+  bottom: 24px;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 900;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  padding: 6px 10px;
+  border-radius: var(--md-shape-full);
+  background: rgba(15, 18, 26, 0.68);
+  -webkit-backdrop-filter: blur(32px) saturate(220%);
+  backdrop-filter: blur(32px) saturate(220%);
+  border: 1px solid rgba(255, 255, 255, 0.16);
+  box-shadow:
+    0 24px 48px -12px rgba(0, 0, 0, 0.85),
+    0 0 0 1px rgba(0, 0, 0, 0.5),
+    inset 0 1.5px 0 0 rgba(255, 255, 255, 0.35),
+    inset 0 -1px 0 0 rgba(0, 0, 0, 0.4);
+  transition: transform 0.4s var(--ease-spring), box-shadow 0.35s ease, border-color 0.3s;
+}
+
+.ios-glass-dock:hover {
+  border-color: rgba(255, 255, 255, 0.28);
+  box-shadow:
+    0 28px 60px -10px rgba(0, 0, 0, 0.9),
+    0 0 35px rgba(0, 240, 255, 0.2),
+    inset 0 1.5px 0 0 rgba(255, 255, 255, 0.5);
+  transform: translateX(-50%) translateY(-2px);
+}
+
+.dock-item {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  padding: 8px 15px;
+  border-radius: var(--md-shape-full);
+  color: rgba(255, 255, 255, 0.7);
+  font-size: 13px;
+  font-weight: 500;
+  text-decoration: none;
+  transition: all 0.3s var(--ease-spring);
+  white-space: nowrap;
+}
+
+.dock-item svg {
+  width: 17px;
+  height: 17px;
+  transition: transform 0.35s var(--ease-spring), color 0.2s;
+  flex-shrink: 0;
+}
+
+.dock-item:hover {
+  color: #ffffff;
+  background: rgba(255, 255, 255, 0.08);
+  transform: translateY(-2px);
+}
+
+.dock-item:hover svg {
+  transform: scale(1.22) rotate(-4deg);
+  color: var(--md-sys-color-primary);
+}
+
+.dock-item:active {
+  transform: scale(0.92);
+}
+
+.dock-item.active {
+  color: #000000;
+  background: var(--md-sys-color-primary);
+  font-weight: 700;
+  box-shadow: 0 4px 16px rgba(210, 255, 0, 0.45);
+}
+
+.dock-item.active svg {
+  color: #000000;
+}
+
+.dock-divider {
+  width: 1px;
+  height: 22px;
+  background: rgba(255, 255, 255, 0.12);
+  margin: 0 2px;
+}
+
+.dock-pill-btn {
+  background: linear-gradient(135deg, #00f0ff, #7928ca);
+  color: #ffffff !important;
+  font-weight: 600;
+  border-radius: var(--md-shape-full);
+  box-shadow: 0 0 18px rgba(0, 240, 255, 0.4);
+}
+.dock-pill-btn:hover {
+  box-shadow: 0 0 28px rgba(0, 240, 255, 0.7);
+  transform: translateY(-2px) scale(1.05);
+}
+
+/* -------------------------------------------------------------
+   5. MATERIAL 3 TONAL SURFACES & CONTAINERS
+-------------------------------------------------------------- */
+.m3-surface-container {
+  background: var(--md-sys-color-surface-container);
+  border: 1px solid var(--md-sys-color-outline);
+  border-radius: var(--md-shape-extra-large);
+  position: relative;
+  overflow: hidden;
+  box-shadow: 0 16px 40px -10px rgba(0, 0, 0, 0.6), inset 0 1px 0 rgba(255, 255, 255, 0.08);
+  backdrop-filter: blur(20px);
+}
+
+.m3-surface-high {
+  background: var(--md-sys-color-surface-container-high);
+  border: 1px solid var(--md-sys-color-outline-variant);
+  border-radius: var(--md-shape-large);
+  box-shadow: 0 20px 48px -12px rgba(0, 0, 0, 0.7);
+}
+
+.tag-telemetry {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  font-family: var(--font-mono);
+  font-size: 11px;
+  letter-spacing: 0.12em;
+  color: var(--md-sys-color-primary);
+  background: var(--md-sys-color-primary-container);
+  border: 1px solid rgba(210, 255, 0, 0.25);
+  border-radius: var(--md-shape-full);
+  padding: 5px 14px;
+  text-transform: uppercase;
+}
+
+.hero-headline {
+  font-family: var(--font-display);
+  font-size: clamp(42px, 7vw, 84px);
+  font-weight: 800;
+  line-height: 0.98;
+  letter-spacing: -0.04em;
+  text-transform: uppercase;
+}
+
+.hero-headline span.gradient-text {
+  background: linear-gradient(135deg, #ffffff 30%, var(--md-sys-color-primary) 75%, var(--md-sys-color-secondary) 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
+/* -------------------------------------------------------------
+   6. INTERACTIVE LIVE AUDIO VISUALIZER
+-------------------------------------------------------------- */
+.visualizer-card {
+  background: var(--md-sys-color-surface-container);
+  border: 1px solid var(--md-sys-color-outline-variant);
+  border-radius: var(--md-shape-extra-large);
+  padding: 32px;
+  box-shadow: 0 28px 70px -15px rgba(0, 0, 0, 0.8), inset 0 1px 0 rgba(255, 255, 255, 0.15);
+  backdrop-filter: blur(24px);
+  position: relative;
+  overflow: hidden;
+}
+
+.visualizer-card::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 2px;
+  background: linear-gradient(90deg, transparent, var(--md-sys-color-primary), var(--md-sys-color-secondary), transparent);
+}
+
+.eq-canvas {
+  width: 100%;
+  height: 76px;
+  border-radius: var(--md-shape-medium);
+  background: rgba(0, 0, 0, 0.45);
+  border: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+.player-scrubber {
+  width: 100%;
+  height: 6px;
+  background: rgba(255, 255, 255, 0.1);
+  border-radius: var(--md-shape-full);
+  position: relative;
+  cursor: pointer;
+  overflow: hidden;
+  transition: height 0.2s ease;
+}
+.player-scrubber:hover {
+  height: 9px;
+}
+
+.player-progress {
+  height: 100%;
+  width: 42%;
+  background: linear-gradient(90deg, var(--md-sys-color-primary), var(--md-sys-color-secondary));
+  border-radius: var(--md-shape-full);
+  position: relative;
+  transition: width 0.1s linear;
+}
+
+/* -------------------------------------------------------------
+   7. SPEED & ENGINEERING PILLARS (M3 ELEVATED CARDS)
+-------------------------------------------------------------- */
+.speed-card {
+  background: var(--md-sys-color-surface-container);
+  border: 1px solid var(--md-sys-color-outline);
+  border-radius: var(--md-shape-large);
+  padding: 30px;
+  position: relative;
+  overflow: hidden;
+}
+
+.speed-card:hover {
+  border-color: rgba(210, 255, 0, 0.35);
+  background: var(--md-sys-color-surface-container-high);
+  box-shadow: 0 24px 50px -15px rgba(0, 0, 0, 0.8), 0 0 25px rgba(210, 255, 0, 0.08);
+}
+
+.speed-card .card-telemetry {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  letter-spacing: 0.12em;
+  color: var(--md-sys-color-primary);
+  margin-bottom: 12px;
+  display: block;
+}
+
+.speed-card h3 {
+  font-family: var(--font-display);
+  font-size: 21px;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+  color: #ffffff;
+  margin-bottom: 8px;
+}
+
+.speed-card p {
+  font-size: 14px;
+  line-height: 1.6;
+  color: var(--md-sys-color-on-surface-variant);
+}
+
+/* -------------------------------------------------------------
+   8. MINIMAL COMPARISON MATRIX
+-------------------------------------------------------------- */
+.matrix-table {
+  width: 100%;
+  border-collapse: separate;
+  border-spacing: 0;
+  border-radius: var(--md-shape-large);
+  overflow: hidden;
+  background: var(--md-sys-color-surface-container);
+  border: 1px solid var(--md-sys-color-outline);
+}
+
+.matrix-table th,
+.matrix-table td {
+  padding: 16px 20px;
+  text-align: left;
+  border-bottom: 1px solid var(--md-sys-color-outline);
+}
+
+.matrix-table th {
+  background: var(--md-sys-color-surface-container-high);
+  font-family: var(--font-mono);
+  font-size: 12px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--md-sys-color-on-surface-variant);
+}
+
+.matrix-table th.highlight-col,
+.matrix-table td.highlight-col {
+  background: var(--md-sys-color-primary-container);
+  border-left: 1px solid rgba(210, 255, 0, 0.2);
+  border-right: 1px solid rgba(210, 255, 0, 0.2);
+}
+
+.matrix-table th.highlight-col {
+  color: var(--md-sys-color-primary);
+  font-weight: 700;
+}
+
+/* -------------------------------------------------------------
+   9. CREDITS CARD (VantaKernal28 & {SRIKAR_PLACEHOLDER})
+-------------------------------------------------------------- */
+.credits-banner {
+  background: linear-gradient(135deg, rgba(210, 255, 0, 0.08), rgba(0, 240, 255, 0.08));
+  border: 1px solid var(--md-sys-color-outline-variant);
+  border-radius: var(--md-shape-large);
+  padding: 24px 30px;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  box-shadow: 0 16px 40px -10px rgba(0, 0, 0, 0.6);
+}
+
+.creator-tag {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  background: rgba(255, 255, 255, 0.06);
+  border: 1px solid rgba(255, 255, 255, 0.16);
+  padding: 7px 16px;
+  border-radius: var(--md-shape-full);
+  font-family: var(--font-mono);
+  font-size: 13px;
+  font-weight: 600;
+  color: #ffffff;
+  text-decoration: none;
+}
+
+.creator-tag:hover {
+  background: var(--md-sys-color-primary);
+  color: #000000;
+  border-color: var(--md-sys-color-primary);
+  box-shadow: 0 0 20px rgba(210, 255, 0, 0.5);
+}
+
+.creator-tag.srikar:hover {
+  background: var(--md-sys-color-secondary);
+  color: #000000;
+  border-color: var(--md-sys-color-secondary);
+  box-shadow: 0 0 20px rgba(0, 240, 255, 0.5);
+}
+
+/* -------------------------------------------------------------
+   10. BOUNCY FAQ ACCORDION
+-------------------------------------------------------------- */
+.faq-item {
+  background: var(--md-sys-color-surface-container);
+  border: 1px solid var(--md-sys-color-outline);
+  border-radius: var(--md-shape-medium);
+  margin-bottom: 12px;
+  overflow: hidden;
+  transition: border-color 0.3s ease, background 0.3s ease;
+}
+
+.faq-item:hover {
+  border-color: rgba(255, 255, 255, 0.22);
+}
+
+.faq-trigger {
+  width: 100%;
+  padding: 20px 24px;
+  background: transparent;
+  border: none;
+  color: #ffffff;
+  font-family: var(--font-sans);
+  font-size: 16px;
+  font-weight: 600;
+  text-align: left;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  cursor: pointer;
+  gap: 16px;
+}
+
+.faq-trigger svg {
+  width: 20px;
+  height: 20px;
+  transition: transform 0.45s var(--ease-spring);
+  color: var(--md-sys-color-primary);
+  flex-shrink: 0;
+}
+
+.faq-item.open .faq-trigger svg {
+  transform: rotate(180deg) scale(1.15);
+}
+
+.faq-content {
+  max-height: 0;
+  overflow: hidden;
+  transition: max-height 0.45s var(--ease-spring), padding 0.3s ease;
+  padding: 0 24px;
+  color: var(--md-sys-color-on-surface-variant);
+  font-size: 14px;
+  line-height: 1.6;
+}
+
+.faq-item.open .faq-content {
+  max-height: 220px;
+  padding-bottom: 20px;
+}
+
+/* -------------------------------------------------------------
+   11. AMBIENT GLOW BLOBS
+-------------------------------------------------------------- */
+.hero-glow-blob {
+  position: absolute;
+  border-radius: 50%;
+  filter: blur(120px);
+  pointer-events: none;
+  z-index: 0;
+  opacity: 0.5;
+  will-change: transform;
+}
+.hero-blob-1 {
+  width: 520px;
+  height: 520px;
+  background: radial-gradient(circle, rgba(210, 255, 0, 0.22) 0%, rgba(210, 255, 0, 0) 70%);
+  top: -8%;
+  left: 12%;
+  animation: float-blob-1 14s ease-in-out infinite alternate;
+}
+.hero-blob-2 {
+  width: 600px;
+  height: 600px;
+  background: radial-gradient(circle, rgba(0, 240, 255, 0.18) 0%, rgba(0, 240, 255, 0) 70%);
+  top: 15%;
+  right: 5%;
+  animation: float-blob-2 18s ease-in-out infinite alternate;
+}
+
+@keyframes float-blob-1 {
+  0% { transform: translate(0, 0) scale(1); }
+  100% { transform: translate(50px, 35px) scale(1.12); }
+}
+@keyframes float-blob-2 {
+  0% { transform: translate(0, 0) scale(1.05); }
+  100% { transform: translate(-45px, 45px) scale(0.95); }
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+  .ios-glass-dock {
+    bottom: 16px;
+    padding: 5px 8px;
+    gap: 2px;
+    width: calc(100vw - 32px);
+    max-width: 480px;
+    justify-content: space-around;
+  }
+  .dock-item {
+    padding: 6px 8px;
+    font-size: 11px;
+    gap: 4px;
+  }
+  .dock-item svg {
+    width: 15px;
+    height: 15px;
+  }
+  .hero-headline {
+    font-size: 40px;
+  }
+}

@@ -1,4 +1,4 @@
-package com.music.bitchord.playback.audio
+﻿package com.music.bitchord.playback.audio
 
 import android.util.Log
 import com.music.bitchord.BuildConfig
@@ -8,7 +8,7 @@ import com.music.bitchord.playback.SpatialAudioProcessor
 import com.music.bitchord.playback.TransitionFilterProcessor
 
 /**
- * Composite DSP chain executing BitChord's custom audio processors in their canonical sequence:
+ * Composite DSP chain executing Hush Music's custom audio processors in their canonical sequence:
  *
  * AudioBlock(Float32) -> SpatialAudioProcessor -> EqualizerProcessor
  *   -> TransitionFilterProcessor -> LoudnessProcessor -> AudioBlock(Float32)

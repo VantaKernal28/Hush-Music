@@ -1,4 +1,4 @@
-package com.music.bitchord.data.lyrics
+﻿package com.music.bitchord.data.lyrics
 
 import com.music.bitchord.data.Http
 import kotlinx.serialization.json.Json
@@ -16,7 +16,7 @@ import java.util.concurrent.TimeUnit
  */
 private const val LYRICS_TIMEOUT_SECONDS = 6L
 
-internal const val LYRICS_AGENT = "BitChord (https://github.com/bitchord)"
+internal const val LYRICS_AGENT = "HushMusic (https://github.com/bitchord)"
 
 val lyricsJson = Json { ignoreUnknownKeys = true; isLenient = true }
 

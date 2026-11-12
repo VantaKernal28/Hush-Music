@@ -1,4 +1,4 @@
-package com.music.bitchord.wear.ui
+﻿package com.music.Hush Music.wear.ui
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -37,9 +37,9 @@ import androidx.wear.compose.material3.TimeText
 import androidx.wear.compose.navigation.SwipeDismissableNavHost
 import androidx.wear.compose.navigation.composable
 import androidx.wear.compose.navigation.rememberSwipeDismissableNavController
-import com.music.bitchord.wear.R
-import com.music.bitchord.wear.data.Link
-import com.music.bitchord.wear.data.PhoneLink
+import com.music.Hush Music.wear.R
+import com.music.Hush Music.wear.data.Link
+import com.music.Hush Music.wear.data.PhoneLink
 
 private const val PLAYER = "player"
 private const val QUEUE = "queue"

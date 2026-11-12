@@ -791,3 +791,6 @@ object BitChordIcons {
         }.build()
     }
 }
+
+/** Hush Music icons alias for modern rebranded usage. */
+val HushMusicIcons = BitChordIcons

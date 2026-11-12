@@ -1,4 +1,4 @@
-package com.music.bitchord.ui.tv.dialogs
+﻿package com.music.Hush Music.ui.tv.dialogs
 
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -43,29 +43,29 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.media3.session.MediaController
-import com.music.bitchord.data.LikeState
-import com.music.bitchord.data.YtMusicRepository
-import com.music.bitchord.data.model.BrowseType
-import com.music.bitchord.data.model.LikeStatus
-import com.music.bitchord.data.model.PlaylistPrivacy
-import com.music.bitchord.data.model.Song
-import com.music.bitchord.data.settings.AppSettings
-import com.music.bitchord.playback.SleepTimer
-import com.music.bitchord.playback.beginRadioQueue
-import com.music.bitchord.playback.commitRadioQueue
-import com.music.bitchord.playback.playSongs
-import com.music.bitchord.playback.toMediaItem
-import com.music.bitchord.ui.MainViewModel
-import com.music.bitchord.ui.tv.components.TvActivityIndicator
-import com.music.bitchord.ui.tv.components.TvArtwork
-import com.music.bitchord.ui.tv.components.TvDialog
-import com.music.bitchord.ui.tv.components.TvDialogButton
-import com.music.bitchord.ui.tv.components.TvListRow
-import com.music.bitchord.ui.tv.components.TvSongRow
-import com.music.bitchord.ui.tv.components.TvTextField
-import com.music.bitchord.ui.tv.components.tvInitialFocus
-import com.music.bitchord.ui.tv.theme.TvGlass
-import com.music.bitchord.ui.tv.theme.TvType
+import com.music.Hush Music.data.LikeState
+import com.music.Hush Music.data.YtMusicRepository
+import com.music.Hush Music.data.model.BrowseType
+import com.music.Hush Music.data.model.LikeStatus
+import com.music.Hush Music.data.model.PlaylistPrivacy
+import com.music.Hush Music.data.model.Song
+import com.music.Hush Music.data.settings.AppSettings
+import com.music.Hush Music.playback.SleepTimer
+import com.music.Hush Music.playback.beginRadioQueue
+import com.music.Hush Music.playback.commitRadioQueue
+import com.music.Hush Music.playback.playSongs
+import com.music.Hush Music.playback.toMediaItem
+import com.music.Hush Music.ui.MainViewModel
+import com.music.Hush Music.ui.tv.components.TvActivityIndicator
+import com.music.Hush Music.ui.tv.components.TvArtwork
+import com.music.Hush Music.ui.tv.components.TvDialog
+import com.music.Hush Music.ui.tv.components.TvDialogButton
+import com.music.Hush Music.ui.tv.components.TvListRow
+import com.music.Hush Music.ui.tv.components.TvSongRow
+import com.music.Hush Music.ui.tv.components.TvTextField
+import com.music.Hush Music.ui.tv.components.tvInitialFocus
+import com.music.Hush Music.ui.tv.theme.TvGlass
+import com.music.Hush Music.ui.tv.theme.TvType
 import kotlinx.coroutines.launch
 
 /**

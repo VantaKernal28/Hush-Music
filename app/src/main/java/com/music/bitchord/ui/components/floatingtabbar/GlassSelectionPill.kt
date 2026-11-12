@@ -1,11 +1,11 @@
-/*
+﻿/*
  * The selection pill's motion — the travel spring, the held lift, the
  * acceleration squash and the glass-to-flat hand-off, with their constants —
  * is ported from liquid_glass_easy's LiquidGlassAnimatedNavBar and
  * LiquidGlassLensMotion (pub.dev/packages/liquid_glass_easy, 4.3.4).
  * Copyright (c) 2025 Ahmed Gamil, MIT License.
  *
- * The rendering is BitChord's own, on the vendored backdrop library: the lens
+ * The rendering is Hush Music's own, on the vendored backdrop library: the lens
  * refracts the tab bar's exported glass and its recorded tab row rather than a
  * screen capture.
  */

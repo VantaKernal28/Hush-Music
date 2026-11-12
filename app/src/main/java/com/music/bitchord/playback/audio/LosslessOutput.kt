@@ -1,4 +1,4 @@
-package com.music.bitchord.playback.audio
+﻿package com.music.bitchord.playback.audio
 
 import android.content.Context
 import android.media.AudioDeviceCallback
@@ -176,5 +176,5 @@ object LosslessOutput {
         31, // TYPE_DOCK_ANALOG, API 34
     )
 
-    private const val TAG = "BitChord"
+    private const val TAG = "HushMusic"
 }

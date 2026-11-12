@@ -1,4 +1,4 @@
-import { create } from 'zustand';
+﻿import { create } from 'zustand';
 
 /**
  * The web counterpart of the app's TrackLog: every step of resolving and
@@ -38,7 +38,7 @@ function push(level: LogLevel, message: string, about: string | null) {
   }));
   const tag = about ? `[${about}] ` : '';
   const out = level === 'error' ? console.error : level === 'warn' ? console.warn : console.debug;
-  out(`BitChord ${tag}${message}`);
+  out(`Hush Music ${tag}${message}`);
 }
 
 export const trackLog = {

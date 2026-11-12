@@ -1,0 +1,1024 @@
+﻿<!DOCTYPE html>
+<html lang="en" class="dark scroll-smooth">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Hush Music — Pure Sound. Zero Ads.</title>
+  <meta name="description" content="High-fidelity, open-source streaming for Android, Desktop, and TV. 24-bit lossless audio, syllable-synced lyrics, and zero tracking.">
+  <meta name="application-name" content="Hush Music">
+  <meta name="theme-color" content="#07080c">
+  <meta name="color-scheme" content="dark">
+  
+  <!-- OpenGraph & Twitter -->
+  <meta property="og:title" content="Hush Music — Pure Sound. Zero Ads.">
+  <meta property="og:description" content="High-fidelity, open-source streaming client for Android, Desktop, and TV.">
+  <meta property="og:site_name" content="Hush Music">
+  <meta property="og:image" content="public/FullLogoTransparent.png">
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content="Hush Music — Aesthetic Music Streaming">
+  <meta name="twitter:description" content="High-fidelity, ad-free streaming client for Android, Desktop, and TV.">
+  
+  <!-- Favicons -->
+  <link rel="icon" href="public/favicon.ico" sizes="48x48" type="image/x-icon">
+  <link rel="icon" href="public/logo-mark.svg" sizes="any" type="image/svg+xml">
+  <link rel="apple-touch-icon" href="public/apple-icon.png" sizes="180x180" type="image/png">
+  
+  <!-- Fonts & Styles -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500;600;700&family=Plus+Jakarta+Sans:wght@400;500;600;700;800;900&family=Syne:wght@700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="styles.css">
+  <link rel="stylesheet" href="revamped.css">
+</head>
+<body class="bg-[#07080c] text-[#f2f5fb] antialiased selection:bg-[#d2ff00] selection:text-black">
+
+  <!-- ============================================================
+       1. LOADING PRELOADER (BOUNCY SPRING PHYSICS)
+  ============================================================= -->
+  <div id="preloader" aria-hidden="true">
+    <div class="loader-badge">[HUSH AUDIO CORE // V2.4]</div>
+    <div class="loader-logo-wrap">
+      <div class="loader-ring"></div>
+      <img src="public/logo-mark.png" alt="Hush Music" class="loader-logo">
+    </div>
+    <div class="loader-waves">
+      <div class="loader-bar"></div>
+      <div class="loader-bar"></div>
+      <div class="loader-bar"></div>
+      <div class="loader-bar"></div>
+      <div class="loader-bar"></div>
+    </div>
+    <div class="loader-counter" id="loader-counter">00%</div>
+    <div class="loader-telemetry" id="loader-status">INITIALIZING 24-BIT DSP AUDIO ENGINE...</div>
+  </div>
+
+  <!-- Ambient Glow Blobs -->
+  <div class="hero-glow-blob hero-blob-1"></div>
+  <div class="hero-glow-blob hero-blob-2"></div>
+
+  <!-- Top Slim Progress Accent Line -->
+  <span aria-hidden="true" class="fixed inset-x-0 top-0 z-[60] h-[2px] origin-left bg-gradient-to-r from-[#d2ff00] via-[#00f0ff] to-[#b084ff]" style="width: 100%;"></span>
+
+  <!-- ============================================================
+       2. TOP HEADER & MINIMAL NAVIGATION
+  ============================================================= -->
+  <header id="top" class="relative z-40 pt-6">
+    <div class="max-w-[1180px] mx-auto px-6 flex items-center justify-between gap-6 py-3">
+      <!-- Brand Logo -->
+      <a href="#top" class="flex items-center gap-3 bouncy-chip group" aria-label="Hush Music home">
+        <img src="public/FullLogoTransparent.png" alt="Hush Music" class="h-9 w-auto object-contain">
+      </a>
+
+      <!-- Live Stream Status Chip -->
+      <div class="hidden sm:flex items-center gap-2.5 px-4 py-1.5 rounded-full bg-white/[0.04] border border-white/10 font-mono text-[11px] text-white/70">
+        <span class="size-2 rounded-full bg-[#d2ff00] shadow-[0_0_8px_#d2ff00] animate-pulse"></span>
+        <span>2,840 STREAMING NOW</span>
+        <span class="text-white/20">|</span>
+        <span class="text-[#00f0ff]">FLAC 24-BIT</span>
+      </div>
+
+      <!-- Quick Nav Links & GitHub Button -->
+      <div class="flex items-center gap-6">
+        <a href="#features" class="lando-link hidden md:inline-flex text-[14px] text-white/70 hover:text-white transition-colors">
+          <span class="lando-text">Features</span>
+        </a>
+        <a href="#player" class="lando-link hidden md:inline-flex text-[14px] text-white/70 hover:text-white transition-colors">
+          <span class="lando-text">Live Player</span>
+        </a>
+        <a href="#compare" class="lando-link hidden md:inline-flex text-[14px] text-white/70 hover:text-white transition-colors">
+          <span class="lando-text">Compare</span>
+        </a>
+        <a href="https://github.com/hushmusic/hush-music" target="_blank" rel="noopener noreferrer" class="bouncy-btn btn-m3-primary !py-2 !px-4 !text-[13px]">
+          <svg class="size-4 bouncy-icon" fill="currentColor" viewBox="0 0 24 24"><path fill-rule="evenodd" clip-rule="evenodd" d="M12 2C6.477 2 2 6.484 2 12.017c0 4.425 2.865 8.18 6.839 9.504.5.092.682-.217.682-.483 0-.237-.008-.868-.013-1.703-2.782.605-3.369-1.343-3.369-1.343-.454-1.158-1.11-1.466-1.11-1.466-.908-.62.069-.608.069-.608 1.003.07 1.53 1.032 1.53 1.032.892 1.53 2.341 1.088 2.91.832.092-.647.35-1.088.636-1.338-2.22-.253-4.555-1.113-4.555-4.951 0-1.093.39-1.988 1.029-2.688-.103-.253-.446-1.272.098-2.65 0 0 .84-.27 2.75 1.026A9.564 9.564 0 0112 6.844c.85.004 1.705.115 2.504.337 1.909-1.296 2.747-1.027 2.747-1.027.546 1.379.202 2.398.1 2.651.64.7 1.028 1.595 1.028 2.688 0 3.848-2.339 4.695-4.566 4.943.359.309.678.92.678 1.855 0 1.338-.012 2.419-.012 2.747 0 .268.18.58.688.482A10.019 10.019 0 0022 12.017C22 6.484 17.522 2 12 2z"></path></svg>
+          <span class="lando-text">GitHub</span>
+        </a>
+      </div>
+    </div>
+  </header>
+
+  <!-- ============================================================
+       3. KINETIC RUNNING MARQUEE TICKER (LANDO STYLE)
+  ============================================================= -->
+  <div class="kinetic-marquee-wrap my-8">
+    <div class="kinetic-marquee">
+      <span><span class="dot"></span> HUSH MUSIC <span class="highlight">// HIGH FIDELITY CORE</span></span>
+      <span><span class="dot"></span> 24-BIT / 192KHZ LOSSLESS AUDIO</span>
+      <span><span class="dot"></span> <span class="highlight">ZERO ADS FOREVER</span></span>
+      <span><span class="dot"></span> SYLLABLE-SYNCED LYRICS</span>
+      <span><span class="dot"></span> <span class="highlight">DYNAMIC BEATMATCH AUTOMIX</span></span>
+      <span><span class="dot"></span> DISCORD RICH PRESENCE 2.0</span>
+      <span><span class="dot"></span> <span class="highlight">NO TRACKING // GPL-3.0</span></span>
+      <span><span class="dot"></span> ANDROID // WINDOWS // LINUX // MACOS // TV</span>
+      <!-- Duplicate for infinite seamless loop -->
+      <span><span class="dot"></span> HUSH MUSIC <span class="highlight">// HIGH FIDELITY CORE</span></span>
+      <span><span class="dot"></span> 24-BIT / 192KHZ LOSSLESS AUDIO</span>
+      <span><span class="dot"></span> <span class="highlight">ZERO ADS FOREVER</span></span>
+      <span><span class="dot"></span> SYLLABLE-SYNCED LYRICS</span>
+      <span><span class="dot"></span> <span class="highlight">DYNAMIC BEATMATCH AUTOMIX</span></span>
+      <span><span class="dot"></span> DISCORD RICH PRESENCE 2.0</span>
+      <span><span class="dot"></span> <span class="highlight">NO TRACKING // GPL-3.0</span></span>
+    </div>
+  </div>
+
+  <main id="main-content" class="relative z-10 pb-40">
+
+    <!-- ============================================================
+         4. HERO SECTION (MINIMAL, SPACIOUS, MATERIAL 3 CONTAINER)
+    ============================================================= -->
+    <section class="max-w-[1180px] mx-auto px-6 pt-6 pb-20" aria-label="Hush Music Hero">
+      <div class="m3-surface-container p-8 sm:p-14 lg:p-16">
+        
+        <div class="grid grid-cols-1 lg:grid-cols-12 gap-12 lg:gap-16 items-center">
+          
+          <!-- Left Column: Copy & Actions -->
+          <div class="lg:col-span-7 space-y-7">
+            
+            <!-- Telemetry Pill -->
+            <div class="flex flex-wrap items-center gap-3">
+              <span class="tag-telemetry bouncy-chip">
+                <span class="size-1.5 rounded-full bg-[#d2ff00] animate-ping"></span>
+                OPEN-SOURCE AUDIO CORE
+              </span>
+              <span class="tag-telemetry !border-[#00f0ff]/30 !text-[#00f0ff] !bg-[#00f0ff]/10 bouncy-chip">
+                V2.4.0-STABLE
+              </span>
+            </div>
+
+            <!-- Punchy Headline -->
+            <h1 class="hero-headline">
+              PURE SOUND.<br>
+              <span class="gradient-text">ZERO COMPROMISE.</span>
+            </h1>
+
+            <p class="text-base sm:text-lg text-white/65 max-w-[540px] leading-relaxed">
+              High-fidelity, open-source streaming for Android, Desktop, and TV. Beat-matched Automix, live syllable lyrics, and pure 24-bit lossless audio. No paywalls, no tracking, zero ads.
+            </p>
+
+            <!-- Bouncy Action Buttons -->
+            <div class="flex flex-wrap items-center gap-4 pt-2">
+              <a href="https://github.com/hushmusic/hush-music/releases/latest" target="_blank" rel="noopener noreferrer" class="bouncy-btn btn-m3-primary" aria-label="Download Hush Music">
+                <svg class="size-5 bouncy-icon" fill="none" stroke="currentColor" stroke-width="2.2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M12 4v12m0 0l-4-4m4 4l4-4M4 18h16"/></svg>
+                <span class="lando-text">Download APK</span>
+              </a>
+
+              <a href="#player" class="bouncy-btn inline-flex items-center gap-2.5 px-6 py-3.5 rounded-full bg-white/10 hover:bg-white/15 border border-white/15 text-[14px] font-semibold text-white shadow-lg">
+                <svg class="size-4 text-[#00f0ff] bouncy-icon" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><polygon points="5 3 19 12 5 21 5 3"></polygon></svg>
+                <span class="lando-text">Live Visualizer</span>
+              </a>
+            </div>
+
+            <!-- Platform Availability Chips -->
+            <div class="pt-2 flex flex-wrap items-center gap-2.5 text-xs text-white/50 font-mono">
+              <span class="text-white/40">SUPPORTS:</span>
+              <span class="bouncy-chip px-3 py-1 rounded-full bg-white/[0.05] border border-white/10 text-white/80">Android</span>
+              <span class="bouncy-chip px-3 py-1 rounded-full bg-white/[0.05] border border-white/10 text-white/80">Windows</span>
+              <span class="bouncy-chip px-3 py-1 rounded-full bg-white/[0.05] border border-white/10 text-white/80">macOS</span>
+              <span class="bouncy-chip px-3 py-1 rounded-full bg-white/[0.05] border border-white/10 text-white/80">Linux</span>
+              <span class="bouncy-chip px-3 py-1 rounded-full bg-white/[0.05] border border-white/10 text-[#d2ff00]">Android TV</span>
+            </div>
+
+            <!-- Creator Recognition Banner Inside Hero -->
+            <div class="mt-8 pt-6 border-t border-white/10 flex flex-wrap items-center gap-3">
+              <span class="text-xs text-white/50 font-mono uppercase tracking-wider">Engineered by:</span>
+              <a href="https://github.com/VantaKernal28" target="_blank" rel="noopener noreferrer" class="creator-tag bouncy-chip">
+                <span class="size-2 rounded-full bg-[#d2ff00]"></span>
+                VantaKernal28
+              </a>
+              <span class="text-white/30">&amp;</span>
+              <span class="creator-tag srikar bouncy-chip">
+                <span class="size-2 rounded-full bg-[#00f0ff]"></span>
+                {SRIKAR_PLACEHOLDER}
+              </span>
+            </div>
+
+          </div>
+
+          <!-- Right Column: Sleek Phone Mockup & Syllable Lyrics -->
+          <div class="lg:col-span-5 flex justify-center">
+            <div class="relative w-[320px] sm:w-[360px] rounded-[48px] p-3 bg-black border-2 border-white/15 shadow-[0_25px_80px_rgba(0,0,0,0.95),0_0_35px_rgba(210,255,0,0.1)] bouncy-card">
+              
+              <!-- Screen Container -->
+              <div class="relative h-[640px] rounded-[38px] overflow-hidden bg-[#0d0e14] flex flex-col justify-between p-6">
+                <!-- Blurred Backdrop -->
+                <div class="absolute inset-0 -z-10">
+                  <img src="public/albums/coldplay-parachutes.png" alt="Parachutes" class="w-full h-full object-cover scale-150 blur-3xl opacity-40">
+                  <div class="absolute inset-0 bg-gradient-to-b from-black/30 via-black/60 to-black/90"></div>
+                </div>
+
+                <!-- Dynamic Island -->
+                <div class="flex justify-center">
+                  <div class="w-24 h-4 bg-black rounded-full ring-1 ring-white/10 flex items-center justify-end px-3">
+                    <span class="size-2 rounded-full bg-white/20"></span>
+                  </div>
+                </div>
+
+                <!-- Track Header -->
+                <div class="flex items-center gap-3.5 mt-4">
+                  <img src="public/albums/coldplay-parachutes.png" alt="Yellow" class="size-13 rounded-xl shadow-lg ring-1 ring-white/20 object-cover">
+                  <div>
+                    <h3 class="font-bold text-white text-base">Yellow</h3>
+                    <p class="text-xs text-white/60">Coldplay — Parachutes</p>
+                    <span class="inline-block mt-1 text-[10px] font-mono px-1.5 py-0.5 rounded bg-[#d2ff00]/10 text-[#d2ff00] border border-[#d2ff00]/25">FLAC 24-BIT</span>
+                  </div>
+                </div>
+
+                <!-- Live Syllable Karaoke Lyrics -->
+                <div class="my-auto space-y-4 text-left font-semibold text-base leading-snug">
+                  <p class="text-white/30 text-sm">Look at the stars</p>
+                  <p class="text-white/40 text-sm">Look how they shine for you</p>
+                  <p class="text-xl sm:text-2xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-[#d2ff00] to-[#00f0ff] filter drop-shadow-[0_0_12px_rgba(210,255,0,0.4)]">
+                    And everything you do
+                  </p>
+                  <p class="text-white/80 text-sm">Yeah, they were all yellow</p>
+                  <p class="text-white/30 text-sm">I came along, I wrote a song for you</p>
+                </div>
+
+                <!-- Scrubber & Controls -->
+                <div class="space-y-4">
+                  <!-- Progress Bar -->
+                  <div class="space-y-1.5">
+                    <div class="h-1.5 w-full bg-white/20 rounded-full overflow-hidden">
+                      <div class="h-full bg-gradient-to-r from-[#d2ff00] to-[#00f0ff] w-[46%] rounded-full shadow-[0_0_8px_#d2ff00]"></div>
+                    </div>
+                    <div class="flex justify-between text-[11px] font-mono text-white/50">
+                      <span>01:52</span>
+                      <span>04:29</span>
+                    </div>
+                  </div>
+
+                  <!-- Control Buttons with Bouncy Press -->
+                  <div class="flex items-center justify-between text-white">
+                    <button type="button" aria-label="Shuffle" class="text-white/50 hover:text-white bouncy-chip"><svg class="size-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M16 3h5v5M4 20L21 3M21 16v5h-5M15 15l6 6M4 4l5 5"/></svg></button>
+                    <button type="button" aria-label="Previous" class="text-white/70 hover:text-white bouncy-chip"><svg class="size-6" fill="currentColor" viewBox="0 0 24 24"><polygon points="19 20 9 12 19 4 19 20"></polygon><line x1="5" y1="19" x2="5" y2="5" stroke="currentColor" stroke-width="2"></line></svg></button>
+                    <button type="button" aria-label="Play" class="size-12 rounded-full bg-white text-black grid place-items-center bouncy-btn shadow-[0_0_20px_rgba(255,255,255,0.4)]">
+                      <svg class="size-5 fill-black ml-0.5" viewBox="0 0 24 24"><polygon points="5 3 19 12 5 21 5 3"></polygon></svg>
+                    </button>
+                    <button type="button" aria-label="Next" class="text-white/70 hover:text-white bouncy-chip"><svg class="size-6" fill="currentColor" viewBox="0 0 24 24"><polygon points="5 4 15 12 5 20 5 4"></polygon><line x1="19" y1="5" x2="19" y2="19" stroke="currentColor" stroke-width="2"></line></svg></button>
+                    <button type="button" aria-label="Repeat" class="text-white/50 hover:text-white bouncy-chip"><svg class="size-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M17 2l4 4-4 4"/><path d="M3 11v-1a4 4 0 0 1 4-4h14"/><path d="M7 22l-4-4 4-4"/><path d="M21 13v1a4 4 0 0 1-4 4H3"/></svg></button>
+                  </div>
+                </div>
+
+              </div>
+            </div>
+          </div>
+
+        </div>
+      </div>
+    </section>
+
+    <!-- ============================================================
+         5. INTERACTIVE LIVE WEB PLAYER & REAL SOUNDWAVE VISUALIZER
+    ============================================================= -->
+    <section id="player" class="max-w-[1180px] mx-auto px-6 py-14 scroll-mt-24">
+      <div class="visualizer-card bouncy-card">
+        <div class="flex flex-col md:flex-row md:items-center justify-between gap-6 pb-6 border-b border-white/10">
+          <div>
+            <span class="tag-telemetry mb-2 bouncy-chip">DSP SOUND ENGINE</span>
+            <h2 class="text-2xl sm:text-3xl font-bold font-display uppercase tracking-tight text-white">
+              Interactive Audio Visualizer
+            </h2>
+            <p class="text-sm text-white/60 mt-1">
+              Real-time hardware canvas frequency analysis. Hit play to engage the DSP audio spectrum.
+            </p>
+          </div>
+
+          <!-- Player Controls -->
+          <div class="flex items-center gap-4">
+            <button id="visualizer-toggle" type="button" class="bouncy-btn btn-m3-primary !py-3 !px-6">
+              <svg id="visualizer-icon" class="size-5 bouncy-icon" fill="currentColor" viewBox="0 0 24 24">
+                <polygon points="5 3 19 12 5 21 5 3"></polygon>
+              </svg>
+              <span id="visualizer-btn-text" class="lando-text">Play Visualizer</span>
+            </button>
+            <div class="flex items-center gap-2 font-mono text-xs px-4 py-2.5 rounded-full bg-white/5 border border-white/10">
+              <span class="size-2 rounded-full bg-[#00f0ff] animate-pulse"></span>
+              <span id="visualizer-status">AUDIO CORE: READY</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Canvas Audio Frequency Waves -->
+        <div class="my-6">
+          <canvas id="audio-eq-canvas" class="eq-canvas" height="76"></canvas>
+        </div>
+
+        <!-- Scrubber & Track Status Bar -->
+        <div class="space-y-3">
+          <div class="player-scrubber" id="interactive-scrubber">
+            <div class="player-progress" id="interactive-progress"></div>
+          </div>
+          <div class="flex flex-wrap items-center justify-between gap-4 text-xs font-mono text-white/60">
+            <div class="flex items-center gap-3">
+              <span class="text-white font-semibold">Coldplay — Yellow (Lossless 24-Bit / 96kHz)</span>
+              <span class="px-2 py-0.5 rounded-full bg-[#d2ff00]/15 text-[#d2ff00] border border-[#d2ff00]/30 font-bold">1411 KBPS</span>
+            </div>
+            <div class="flex items-center gap-4">
+              <span id="eq-time-elapsed">01:52</span> / <span>04:29</span>
+              <span class="text-white/20">|</span>
+              <span class="text-[#00f0ff]">STEREO DYNAMICS</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ============================================================
+         6. SPEED & ENGINEERING FEATURE GRID (6 CORE PILLARS)
+    ============================================================= -->
+    <section id="features" class="max-w-[1180px] mx-auto px-6 py-18 scroll-mt-24">
+      <div class="text-center max-w-[620px] mx-auto mb-14">
+        <span class="tag-telemetry mb-3 bouncy-chip">ENGINEERED FOR VELOCITY</span>
+        <h2 class="text-3xl sm:text-5xl font-extrabold font-display uppercase tracking-tight">
+          Pure Fidelity. <span class="text-[#d2ff00]">Zero Bloat.</span>
+        </h2>
+        <p class="text-white/60 text-sm sm:text-base mt-3">
+          Built for listeners who care about uncompressed sound, fluid performance, and complete autonomy.
+        </p>
+      </div>
+
+      <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-7">
+        
+        <!-- Card 1 -->
+        <div class="speed-card bouncy-card">
+          <span class="card-telemetry">[01 // SOUND ENGINE]</span>
+          <h3>24-Bit Hi-Res Lossless</h3>
+          <p>Direct bit-perfect hardware output bypassing standard OS resampling for crystal-clear FLAC audio.</p>
+        </div>
+
+        <!-- Card 2 -->
+        <div class="speed-card bouncy-card">
+          <span class="card-telemetry">[02 // INTELLIGENCE]</span>
+          <h3>Syllable-Synced Lyrics</h3>
+          <p>Word-by-word real-time karaoke lyrics powered by multi-provider feeds with instant translation.</p>
+        </div>
+
+        <!-- Card 3 -->
+        <div class="speed-card bouncy-card">
+          <span class="card-telemetry">[03 // ALGORITHM]</span>
+          <h3>Beat-Matched Automix</h3>
+          <p>Seamless DJ transitions analyzing BPM and musical phrasing to blend consecutive tracks smoothly.</p>
+        </div>
+
+        <!-- Card 4 -->
+        <div class="speed-card bouncy-card">
+          <span class="card-telemetry">[04 // ECOSYSTEM]</span>
+          <h3>Discord Rich Presence</h3>
+          <p>Broadcast your current track, album art, elapsed progress, and playback status directly to Discord.</p>
+        </div>
+
+        <!-- Card 5 -->
+        <div class="speed-card bouncy-card">
+          <span class="card-telemetry">[05 // STORAGE]</span>
+          <h3>Encrypted Offline Vault</h3>
+          <p>Download entire albums or playlists with automated high-res metadata tagging for zero-signal flights.</p>
+        </div>
+
+        <!-- Card 6 -->
+        <div class="speed-card bouncy-card">
+          <span class="card-telemetry">[06 // INTEGRITY]</span>
+          <h3>Zero Ads &amp; 100% GPLv3</h3>
+          <p>Fully open-source, zero paywalls, and built-in SponsorBlock integration for uninterrupted listening.</p>
+        </div>
+
+      </div>
+    </section>
+
+    <!-- ============================================================
+         7. CURATED TRENDING TRACKS (MINIMAL M3 MUSIC SHOWCASE)
+    ============================================================= -->
+    <section class="max-w-[1180px] mx-auto px-6 py-14">
+      <div class="m3-surface-container p-8 sm:p-12">
+        <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-8">
+          <div>
+            <span class="tag-telemetry mb-1 bouncy-chip">CURATED PREVIEW</span>
+            <h2 class="text-2xl sm:text-3xl font-bold font-display uppercase tracking-tight text-white">Trending in Lossless</h2>
+          </div>
+          <p class="text-xs sm:text-sm text-white/50 font-mono">ALL TRACKS STREAMED AT 24-BIT / 96KHZ</p>
+        </div>
+
+        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
+          <!-- Track 1 -->
+          <div class="bouncy-card p-4 rounded-2xl bg-white/[0.03] hover:bg-white/[0.07] border border-white/10 group cursor-pointer">
+            <div class="aspect-square rounded-xl overflow-hidden mb-3 relative">
+              <img src="https://is1-ssl.mzstatic.com/image/thumb/Music221/v4/5f/7c/cb/5f7ccb13-1490-5b92-f78b-d1a0f665a07e/196874972953.jpg/500x500bb.jpg" alt="Southside" class="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105">
+              <span class="absolute bottom-2 right-2 px-2 py-0.5 rounded-full bg-black/80 font-mono text-[10px] text-[#d2ff00] border border-[#d2ff00]/30 font-bold">FLAC</span>
+            </div>
+            <h4 class="font-bold text-sm text-white truncate">Southside (Explicit)</h4>
+            <p class="text-xs text-white/50 truncate">Future, Loe Shimmy</p>
+          </div>
+
+          <!-- Track 2 -->
+          <div class="bouncy-card p-4 rounded-2xl bg-white/[0.03] hover:bg-white/[0.07] border border-white/10 group cursor-pointer">
+            <div class="aspect-square rounded-xl overflow-hidden mb-3 relative">
+              <img src="https://is1-ssl.mzstatic.com/image/thumb/Music211/v4/4f/a6/39/4fa63976-a53a-0084-ef73-b49bc2d8c29e/26UM1IM40331.rgb.jpg/500x500bb.jpg" alt="take me home" class="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105">
+              <span class="absolute bottom-2 right-2 px-2 py-0.5 rounded-full bg-black/80 font-mono text-[10px] text-[#00f0ff] border border-[#00f0ff]/30 font-bold">FLAC</span>
+            </div>
+            <h4 class="font-bold text-sm text-white truncate">take me home</h4>
+            <p class="text-xs text-white/50 truncate">Olivia Rodrigo</p>
+          </div>
+
+          <!-- Track 3 -->
+          <div class="bouncy-card p-4 rounded-2xl bg-white/[0.03] hover:bg-white/[0.07] border border-white/10 group cursor-pointer">
+            <div class="aspect-square rounded-xl overflow-hidden mb-3 relative">
+              <img src="https://is1-ssl.mzstatic.com/image/thumb/Music211/v4/a2/df/3c/a2df3c58-fbda-cc45-b349-bad967c1e7a8/26UM1IM31430.rgb.jpg/500x500bb.jpg" alt="Say Something" class="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105">
+              <span class="absolute bottom-2 right-2 px-2 py-0.5 rounded-full bg-black/80 font-mono text-[10px] text-[#d2ff00] border border-[#d2ff00]/30 font-bold">FLAC</span>
+            </div>
+            <h4 class="font-bold text-sm text-white truncate">Say Something</h4>
+            <p class="text-xs text-white/50 truncate">Lil Baby</p>
+          </div>
+
+          <!-- Track 4 -->
+          <div class="bouncy-card p-4 rounded-2xl bg-white/[0.03] hover:bg-white/[0.07] border border-white/10 group cursor-pointer">
+            <div class="aspect-square rounded-xl overflow-hidden mb-3 relative">
+              <img src="https://is1-ssl.mzstatic.com/image/thumb/Music221/v4/8c/bf/a0/8cbfa073-e71f-b19b-c19b-acb60873ee82/196874973769.jpg/500x500bb.jpg" alt="The Heart Is a Muscle" class="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105">
+              <span class="absolute bottom-2 right-2 px-2 py-0.5 rounded-full bg-black/80 font-mono text-[10px] text-[#00f0ff] border border-[#00f0ff]/30 font-bold">FLAC</span>
+            </div>
+            <h4 class="font-bold text-sm text-white truncate">The Heart Is a Muscle</h4>
+            <p class="text-xs text-white/50 truncate">Gang of Youths</p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ============================================================
+         8. ANNUAL REPLAY SHOWCASE
+    ============================================================= -->
+    <section id="replay" class="max-w-[1180px] mx-auto px-6 py-14 scroll-mt-24">
+      <div class="m3-surface-container p-8 sm:p-12 relative overflow-hidden">
+        
+        <div class="flex flex-col sm:flex-row sm:items-end justify-between gap-6 mb-8">
+          <div>
+            <span class="tag-telemetry mb-2 bouncy-chip">PERSONALIZED METRICS</span>
+            <h2 id="replay-title" class="text-2xl sm:text-4xl font-extrabold font-display uppercase tracking-tight text-white">
+              Your Year in Music
+            </h2>
+            <p class="text-sm text-white/60 mt-1">
+              Replay tracks every minute, artist, and genre into shareable story cards.
+            </p>
+          </div>
+
+          <!-- Carousel Controls -->
+          <div class="flex items-center gap-2">
+            <button type="button" aria-label="Previous Replay card" class="bouncy-chip size-10 rounded-full bg-white/10 hover:bg-white/20 border border-white/15 grid place-items-center text-white">
+              <svg class="size-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M15 19l-7-7 7-7"/></svg>
+            </button>
+            <button type="button" aria-label="Next Replay card" class="bouncy-chip size-10 rounded-full bg-white/10 hover:bg-white/20 border border-white/15 grid place-items-center text-white">
+              <svg class="size-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M9 5l7 7-7 7"/></svg>
+            </button>
+          </div>
+        </div>
+
+        <!-- Scrollable Cards Container -->
+        <ul class="no-scrollbar flex snap-x snap-mandatory gap-5 overflow-x-auto scroll-smooth pb-3 pt-2">
+          
+          <!-- Card 1: Minutes -->
+          <li class="snap-center shrink-0">
+            <div class="aspect-[1.58] w-[310px] sm:w-[340px] rounded-[24px] p-6 relative overflow-hidden bg-gradient-to-br from-[#33330a] via-[#1c1c08] to-black border border-yellow-500/30 shadow-xl flex flex-col justify-between bouncy-card">
+              <div class="flex justify-between items-start">
+                <span class="text-xs font-mono uppercase tracking-widest text-yellow-300">Hush Replay 2026</span>
+                <span class="size-2 rounded-full bg-yellow-400 shadow-[0_0_8px_#facc15]"></span>
+              </div>
+              <div>
+                <p class="text-xs text-yellow-200/70 font-mono">TOTAL MINUTES</p>
+                <h4 class="text-4xl font-extrabold font-display text-white mt-1">48,326</h4>
+                <p class="text-xs text-white/50 mt-1">3,912 Plays across 412 Artists</p>
+              </div>
+              <div class="text-[11px] font-mono text-yellow-300/80">TOP 1% OF ALL LISTENERS</div>
+            </div>
+          </li>
+
+          <!-- Card 2: Top Song -->
+          <li class="snap-center shrink-0">
+            <div class="aspect-[1.58] w-[310px] sm:w-[340px] rounded-[24px] p-6 relative overflow-hidden bg-gradient-to-br from-[#0c2e3a] via-[#091b22] to-black border border-cyan-500/30 shadow-xl flex flex-col justify-between bouncy-card">
+              <div class="flex justify-between items-start">
+                <span class="text-xs font-mono uppercase tracking-widest text-cyan-300">Top Track</span>
+                <span class="size-2 rounded-full bg-[#00f0ff] shadow-[0_0_8px_#00f0ff]"></span>
+              </div>
+              <div>
+                <p class="text-xs text-cyan-200/70 font-mono">MOST REPEATED</p>
+                <h4 class="text-3xl font-extrabold font-display text-white mt-1">Ya Hit</h4>
+                <p class="text-xs text-white/50 mt-1">Lil Baby — 418 Plays</p>
+              </div>
+              <div class="text-[11px] font-mono text-cyan-300/80">FIRST PLAYED: JAN 04</div>
+            </div>
+          </li>
+
+          <!-- Card 3: Top Artist -->
+          <li class="snap-center shrink-0">
+            <div class="aspect-[1.58] w-[310px] sm:w-[340px] rounded-[24px] p-6 relative overflow-hidden bg-gradient-to-br from-[#2e0e38] via-[#1a0820] to-black border border-purple-500/30 shadow-xl flex flex-col justify-between bouncy-card">
+              <div class="flex justify-between items-start">
+                <span class="text-xs font-mono uppercase tracking-widest text-purple-300">Top Artist</span>
+                <span class="size-2 rounded-full bg-[#b084ff] shadow-[0_0_8px_#b084ff]"></span>
+              </div>
+              <div>
+                <p class="text-xs text-purple-200/70 font-mono">1,492 TOTAL PLAYS</p>
+                <h4 class="text-3xl font-extrabold font-display text-white mt-1">Lil Baby</h4>
+                <p class="text-xs text-white/50 mt-1">Top Track: Ya Hit</p>
+              </div>
+              <div class="text-[11px] font-mono text-purple-300/80">6,120 MINUTES LOGGED</div>
+            </div>
+          </li>
+
+        </ul>
+      </div>
+    </section>
+
+    <!-- ============================================================
+         9. BIG SCREEN TV EXPERIENCE
+    ============================================================= -->
+    <section id="tv" class="max-w-[1180px] mx-auto px-6 py-14 scroll-mt-24">
+      <div class="m3-surface-container p-8 sm:p-14 text-center relative overflow-hidden">
+        
+        <span class="tag-telemetry mb-3 bouncy-chip">LIVING ROOM REDEFINED</span>
+        <h2 id="tv-title" class="text-3xl sm:text-5xl font-extrabold font-display uppercase tracking-tight text-white">
+          Now on the Big Screen
+        </h2>
+        <p class="text-sm sm:text-base text-white/60 max-w-[580px] mx-auto mt-2">
+          Full-screen artwork, syllable-synced lyrics, and instant queue control for Android TV and Fire TV.
+        </p>
+
+        <!-- TV Mockup Frame -->
+        <div class="relative mx-auto mt-10 max-w-[800px] bouncy-card">
+          <div class="rounded-2xl bg-[#050505] p-3 sm:p-4 border border-white/20 shadow-[0_30px_90px_rgba(0,0,0,0.95)]">
+            <div class="relative aspect-video overflow-hidden rounded-lg bg-black">
+              <img id="tv-mockup-img" src="public/tv/now-playing.webp" alt="Hush Music on TV: Now Playing" class="w-full h-full object-cover transition-opacity duration-300">
+            </div>
+          </div>
+          <div aria-hidden="true" class="mx-auto h-2.5 w-28 sm:w-36 rounded-b-md bg-gradient-to-b from-[#2a2a2a] to-[#0d0d0d]"></div>
+        </div>
+
+        <!-- TV Tabs Selector Pills -->
+        <div class="mt-8 flex justify-center gap-2.5" role="tablist" aria-label="TV screenshots">
+          <button type="button" role="tab" aria-selected="true" aria-label="Now Playing" class="h-2 rounded-full transition-all duration-300 focus-visible:outline-none w-8 bg-[#d2ff00] shadow-[0_0_10px_#d2ff00]"></button>
+          <button type="button" role="tab" aria-selected="false" aria-label="Synced lyrics" class="h-2 rounded-full transition-all duration-300 focus-visible:outline-none w-2 bg-white/25 hover:bg-white/40"></button>
+          <button type="button" role="tab" aria-selected="false" aria-label="Synced lyrics (Pride)" class="h-2 rounded-full transition-all duration-300 focus-visible:outline-none w-2 bg-white/25 hover:bg-white/40"></button>
+          <button type="button" role="tab" aria-selected="false" aria-label="Up Next" class="h-2 rounded-full transition-all duration-300 focus-visible:outline-none w-2 bg-white/25 hover:bg-white/40"></button>
+        </div>
+
+        <!-- TV CTA -->
+        <div class="mt-8 flex flex-col items-center gap-2">
+          <a href="https://github.com/hushmusic/hush-music/releases/latest" target="_blank" rel="noopener noreferrer" class="bouncy-btn btn-m3-primary" aria-label="Download TV APK">
+            <svg class="size-4 bouncy-icon" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M12 17V3m-6 8l6 6 6-6M19 21H5"/></svg>
+            <span class="lando-text">Download TV APK</span>
+          </a>
+          <p class="text-xs text-white/40 font-mono">Universal APK for Android TV &amp; Fire TV</p>
+        </div>
+
+      </div>
+    </section>
+
+    <!-- ============================================================
+         10. FEATURE COMPARISON MATRIX (MINIMAL & SCAN-FRIENDLY)
+    ============================================================= -->
+    <section id="compare" class="max-w-[1180px] mx-auto px-6 py-16 scroll-mt-24">
+      <div class="text-center max-w-[620px] mx-auto mb-12">
+        <span class="tag-telemetry mb-2 bouncy-chip">BENCHMARK MATRIX</span>
+        <h2 class="text-3xl sm:text-5xl font-extrabold font-display uppercase tracking-tight text-white">
+          Why Switch to <span class="text-[#d2ff00]">Hush</span>?
+        </h2>
+        <p class="text-sm sm:text-base text-white/60 mt-2">
+          Head-to-head comparison with mainstream streaming subscriptions.
+        </p>
+      </div>
+
+      <div class="overflow-x-auto">
+        <table class="matrix-table">
+          <thead>
+            <tr>
+              <th>Feature</th>
+              <th class="highlight-col">⚡ Hush Music</th>
+              <th>Spotify</th>
+              <th>YouTube Music</th>
+              <th>Apple Music</th>
+            </tr>
+          </thead>
+          <tbody class="text-sm">
+            <tr>
+              <td class="font-semibold">Price / Subscription</td>
+              <td class="highlight-col font-bold text-[#d2ff00]">$0 / Free Forever</td>
+              <td>$11.99 / mo</td>
+              <td>$10.99 / mo</td>
+              <td>$10.99 / mo</td>
+            </tr>
+            <tr>
+              <td class="font-semibold">Advertisements</td>
+              <td class="highlight-col font-bold text-[#d2ff00]">Zero (Hard-blocked)</td>
+              <td>Podcasts have ads</td>
+              <td>Frequent Video Ads</td>
+              <td>None</td>
+            </tr>
+            <tr>
+              <td class="font-semibold">Audio Resolution</td>
+              <td class="highlight-col font-bold text-[#d2ff00]">24-Bit / 192kHz FLAC</td>
+              <td>320 kbps (Lossy OGG)</td>
+              <td>256 kbps (AAC)</td>
+              <td>24-Bit Lossless</td>
+            </tr>
+            <tr>
+              <td class="font-semibold">Beat-Matched Automix</td>
+              <td class="highlight-col text-[#d2ff00]">✓ Included</td>
+              <td>Basic Crossfade</td>
+              <td>✕ None</td>
+              <td>Basic Crossfade</td>
+            </tr>
+            <tr>
+              <td class="font-semibold">Syllable Karaoke Lyrics</td>
+              <td class="highlight-col text-[#d2ff00]">✓ Word-by-Word</td>
+              <td>Partial / Limited</td>
+              <td>Line-by-line</td>
+              <td>Word-by-word</td>
+            </tr>
+            <tr>
+              <td class="font-semibold">Discord Rich Presence</td>
+              <td class="highlight-col text-[#d2ff00]">✓ Live Canvas</td>
+              <td>Basic Text</td>
+              <td>✕ None</td>
+              <td>✕ None</td>
+            </tr>
+            <tr>
+              <td class="font-semibold">Open Source &amp; Privacy</td>
+              <td class="highlight-col font-bold text-[#d2ff00]">100% GPLv3</td>
+              <td>✕ Closed Source</td>
+              <td>✕ Closed Source</td>
+              <td>✕ Closed Source</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <!-- ============================================================
+         11. BOUNCY FAQ ACCORDION
+    ============================================================= -->
+    <section class="max-w-[840px] mx-auto px-6 py-14">
+      <div class="text-center mb-10">
+        <span class="tag-telemetry mb-2 bouncy-chip">FAQS</span>
+        <h2 class="text-2xl sm:text-4xl font-extrabold font-display uppercase tracking-tight text-white">
+          Common Questions
+        </h2>
+      </div>
+
+      <div class="space-y-3">
+        <!-- FAQ 1 -->
+        <div class="faq-item">
+          <button type="button" class="faq-trigger" aria-expanded="false">
+            <span>Is Hush Music completely free and open-source?</span>
+            <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M19 9l-7 7-7-7"/></svg>
+          </button>
+          <div class="faq-content">
+            <p>Yes, 100%. Licensed under the GNU General Public License v3.0 (GPLv3). No subscriptions, no paywalls, and zero telemetry collection.</p>
+          </div>
+        </div>
+
+        <!-- FAQ 2 -->
+        <div class="faq-item">
+          <button type="button" class="faq-trigger" aria-expanded="false">
+            <span>Do I need an account to listen?</span>
+            <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M19 9l-7 7-7-7"/></svg>
+          </button>
+          <div class="faq-content">
+            <p>No account is required to stream, search, save playlists, or download songs. Signing in simply syncs your existing YouTube Music library.</p>
+          </div>
+        </div>
+
+        <!-- FAQ 3 -->
+        <div class="faq-item">
+          <button type="button" class="faq-trigger" aria-expanded="false">
+            <span>How does Hush Music achieve lossless audio?</span>
+            <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M19 9l-7 7-7-7"/></svg>
+          </button>
+          <div class="faq-content">
+            <p>Hush Music connects directly to the highest available bit-depth YouTube Music stream feeds and processes audio with a custom 24-bit DSP pipeline that bypasses OS resampling.</p>
+          </div>
+        </div>
+
+        <!-- FAQ 4 -->
+        <div class="faq-item">
+          <button type="button" class="faq-trigger" aria-expanded="false">
+            <span>Can I install Hush Music on Android TV or FireStick?</span>
+            <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M19 9l-7 7-7-7"/></svg>
+          </button>
+          <div class="faq-content">
+            <p>Yes! We distribute a dedicated Universal Android TV APK optimized for remote controls, featuring a full-screen ambient lyric mode.</p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ============================================================
+         12. PROMINENT CREDITS CARD (VantaKernal28 & {SRIKAR_PLACEHOLDER})
+    ============================================================= -->
+    <section class="max-w-[1180px] mx-auto px-6 py-10">
+      <div class="credits-banner bouncy-card">
+        <div class="flex items-center gap-4">
+          <div class="size-11 rounded-2xl bg-gradient-to-tr from-[#d2ff00] to-[#00f0ff] grid place-items-center text-black font-extrabold text-lg bouncy-icon">
+            ⚡
+          </div>
+          <div>
+            <h3 class="font-display font-bold text-white text-base sm:text-lg">Website Architecture &amp; Creative Redesign</h3>
+            <p class="text-xs text-white/50">Engineered with Material 3, bouncy spring animations, and zero bloat.</p>
+          </div>
+        </div>
+
+        <div class="flex flex-wrap items-center gap-3">
+          <span class="text-xs text-white/50 font-mono">DEVELOPED BY:</span>
+          <a href="https://github.com/VantaKernal28" target="_blank" rel="noopener noreferrer" class="creator-tag bouncy-chip">
+            <svg class="size-4" fill="currentColor" viewBox="0 0 24 24"><path d="M12 0C5.37 0 0 5.37 0 12c0 5.31 3.435 9.795 8.205 11.385.6.105.825-.255.825-.57 0-.285-.015-1.23-.015-2.235-3.015.555-3.795-.735-4.035-1.41-.135-.345-.72-1.41-1.23-1.695-.42-.225-1.02-.78-.015-.795.945-.015 1.62.87 1.845 1.23 1.08 1.815 2.805 1.305 3.495.99.105-.78.42-1.305.765-1.605-2.67-.3-5.46-1.335-5.46-5.925 0-1.305.465-2.385 1.23-3.225-.12-.3-.54-1.53.12-3.18 0 0 1.005-.315 3.3 1.23.96-.27 1.98-.405 3-.405s2.04.135 3 .405c2.295-1.56 3.3-1.23 3.3-1.23.66 1.65.24 2.88.12 3.18.765.84 1.23 1.905 1.23 3.225 0 4.605-2.805 5.625-5.475 5.925.435.375.81 1.095.81 2.22 0 1.605-.015 2.895-.015 3.3 0 .315.225.69.825.57A12.02 12.02 0 0024 12c0-6.63-5.37-12-12-12z"/></svg>
+            VantaKernal28
+          </a>
+          <span class="text-white/20">&amp;</span>
+          <span class="creator-tag srikar bouncy-chip">
+            <span class="size-2 rounded-full bg-[#00f0ff]"></span>
+            {SRIKAR_PLACEHOLDER}
+          </span>
+        </div>
+      </div>
+    </section>
+
+  </main>
+
+  <!-- ============================================================
+       13. FOOTER & LEGAL DISCLAIMER
+  ============================================================= -->
+  <footer class="border-t border-white/10 bg-[#050609] py-16 relative z-10">
+    <div class="max-w-[1180px] mx-auto px-6">
+      <div class="flex flex-col md:flex-row md:items-center justify-between gap-6 pb-10 border-b border-white/10">
+        <a href="#top" aria-label="Hush Music home" class="inline-flex w-fit bouncy-chip">
+          <img src="public/FullLogoTransparent.png" alt="Hush Music" class="h-8 w-auto">
+        </a>
+
+        <ul class="flex flex-wrap gap-x-6 gap-y-2 text-[13px] text-white/60">
+          <li><a href="https://github.com/hushmusic/hush-music" target="_blank" rel="noopener noreferrer" class="hover:text-white transition-colors">GitHub</a></li>
+          <li><a href="https://github.com/hushmusic/hush-music/releases" target="_blank" rel="noopener noreferrer" class="hover:text-white transition-colors">Releases</a></li>
+          <li><a href="https://discord.gg/pSafNTyKZx" target="_blank" rel="noopener noreferrer" class="hover:text-white transition-colors">Discord</a></li>
+          <li><a href="https://ko-fi.com/kushagrasinghx" target="_blank" rel="noopener noreferrer" class="hover:text-white transition-colors">Ko-fi</a></li>
+          <li><a href="https://github.com/hushmusic/hush-music/blob/main/LICENSE" target="_blank" rel="noopener noreferrer" class="hover:text-white transition-colors">GPL-3.0 License</a></li>
+        </ul>
+      </div>
+
+      <div class="mt-8 space-y-2 text-[12px] leading-relaxed text-white/40 max-w-[760px]">
+        <p>Hush Music is not affiliated with, endorsed by, or connected to YouTube or Google in any way.</p>
+        <p>Album artwork, titles, and artist names displayed are for illustrative purposes and remain the property of their respective copyright holders.</p>
+      </div>
+
+      <div class="mt-8 flex flex-wrap items-center justify-between gap-4 text-[12px] text-white/50 font-mono">
+        <p>
+          Website engineered by <span class="text-[#d2ff00] font-semibold">VantaKernal28</span> and <span class="text-[#00f0ff] font-semibold">{SRIKAR_PLACEHOLDER}</span>
+        </p>
+        <p>© 2026 Hush Music. Pure Sound. Zero Friction.</p>
+      </div>
+    </div>
+  </footer>
+
+  <!-- ============================================================
+       14. LIQUID GLASS iOS LOWER NAVIGATION DOCK (M3 ENHANCED)
+  ============================================================= -->
+  <nav class="ios-glass-dock" aria-label="Liquid Glass Navigation Dock">
+    <a href="#top" class="dock-item active" data-tab="home" aria-label="Home">
+      <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"/></svg>
+      <span class="lando-text">Home</span>
+    </a>
+
+    <a href="#features" class="dock-item" data-tab="features" aria-label="Features">
+      <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M13 10V3L4 14h7v7l9-11h-7z"/></svg>
+      <span class="lando-text">Features</span>
+    </a>
+
+    <a href="#player" class="dock-item" data-tab="player" aria-label="Live Player">
+      <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M9 19V6l12-3v13M9 19c0 1.105-1.343 2-3 2s-3-.895-3-2 1.343-2 3-2 3 .895 3 2zm12-3c0 1.105-1.343 2-3 2s-3-.895-3-2 1.343-2 3-2 3 .895 3 2zM9 10l12-3"/></svg>
+      <span class="lando-text">Player</span>
+    </a>
+
+    <a href="#replay" class="dock-item" data-tab="replay" aria-label="Replay">
+      <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M16 8v8m-4-5v5m-4-2v2m-2 4h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg>
+      <span class="lando-text">Replay</span>
+    </a>
+
+    <a href="#tv" class="dock-item" data-tab="tv" aria-label="TV">
+      <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><rect x="2" y="7" width="20" height="15" rx="2" ry="2"/><polyline points="17 2 12 7 7 2"/></svg>
+      <span class="lando-text">TV</span>
+    </a>
+
+    <div class="dock-divider"></div>
+
+    <a href="https://github.com/hushmusic/hush-music/releases/latest" target="_blank" rel="noopener noreferrer" class="dock-item dock-pill-btn" aria-label="Download">
+      <svg fill="none" stroke="currentColor" stroke-width="2.2" viewBox="0 0 24 24"><path d="M12 4v12m0 0l-4-4m4 4l4-4M4 18h16"/></svg>
+      <span class="lando-text">Get App</span>
+    </a>
+  </nav>
+
+  <!-- ============================================================
+       15. VANILLA JAVASCRIPT LOGIC
+  ============================================================= -->
+  <script>
+    document.addEventListener("DOMContentLoaded", function () {
+
+      // -----------------------------------------------------------
+      // A. LANDO NORRIS CHARACTER-BY-CHARACTER SPLIT & 3D FLIP WAVE
+      // -----------------------------------------------------------
+      document.querySelectorAll('.lando-text').forEach((el) => {
+        const text = el.textContent.trim();
+        if (!text) return;
+        el.innerHTML = text.split('').map((char, i) => {
+          const display = char === ' ' ? '&nbsp;' : char;
+          const dataChar = char === ' ' ? ' ' : char;
+          return `<span class="char" style="--char-index: ${i}" data-char="${dataChar}">${display}</span>`;
+        }).join('');
+      });
+
+      // -----------------------------------------------------------
+      // B. LOADING ANIMATION (PRELOADER)
+      // -----------------------------------------------------------
+      const preloader = document.getElementById('preloader');
+      const counter = document.getElementById('loader-counter');
+      const status = document.getElementById('loader-status');
+      
+      const statuses = [
+        "INITIALIZING 24-BIT DSP AUDIO ENGINE...",
+        "CONNECTING TO HIGH-RES STREAM REPOSITORY...",
+        "PRELOADING DOLBY SPATIAL ACOUSTICS...",
+        "CALIBRATING AUTOMIX BEAT BUFFER...",
+        "SYSTEM READY."
+      ];
+
+      let progress = 0;
+      const interval = setInterval(() => {
+        progress += Math.floor(Math.random() * 12) + 6;
+        if (progress > 100) progress = 100;
+        
+        counter.textContent = `${progress.toString().padStart(2, '0')}%`;
+        const statusIdx = Math.min(Math.floor((progress / 100) * statuses.length), statuses.length - 1);
+        status.textContent = statuses[statusIdx];
+
+        if (progress >= 100) {
+          clearInterval(interval);
+          setTimeout(() => {
+            preloader.classList.add('loaded');
+          }, 350);
+        }
+      }, 40);
+
+      // -----------------------------------------------------------
+      // C. LIQUID GLASS iOS DOCK ACTIVE TAB TRACKER
+      // -----------------------------------------------------------
+      const dockItems = document.querySelectorAll('.dock-item[data-tab]');
+      const sections = ['top', 'features', 'player', 'replay', 'tv'];
+
+      window.addEventListener('scroll', () => {
+        let current = 'top';
+        sections.forEach(secId => {
+          const sec = document.getElementById(secId);
+          if (sec) {
+            const top = sec.getBoundingClientRect().top;
+            if (top <= 250) current = secId;
+          }
+        });
+
+        dockItems.forEach(item => {
+          const tab = item.getAttribute('data-tab');
+          if (tab === (current === 'top' ? 'home' : current)) {
+            item.classList.add('active');
+          } else {
+            item.classList.remove('active');
+          }
+        });
+      }, { passive: true });
+
+      // -----------------------------------------------------------
+      // D. INTERACTIVE AUDIO VISUALIZER (CANVAS)
+      // -----------------------------------------------------------
+      const canvas = document.getElementById('audio-eq-canvas');
+      const ctx = canvas.getContext('2d');
+      const toggleBtn = document.getElementById('visualizer-toggle');
+      const btnText = document.getElementById('visualizer-btn-text');
+      const icon = document.getElementById('visualizer-icon');
+      const statusLabel = document.getElementById('visualizer-status');
+      const scrubberProgress = document.getElementById('interactive-progress');
+      const elapsedLabel = document.getElementById('eq-time-elapsed');
+
+      let isPlaying = false;
+      let animId = null;
+      let barHeights = Array.from({ length: 64 }, () => Math.random() * 20 + 5);
+      let scrubberPercent = 42;
+
+      function resizeCanvas() {
+        canvas.width = canvas.parentElement.clientWidth;
+        canvas.height = 76;
+      }
+      resizeCanvas();
+      window.addEventListener('resize', resizeCanvas);
+
+      function drawVisualizer() {
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+        const barCount = 48;
+        const barWidth = (canvas.width / barCount) - 3;
+
+        for (let i = 0; i < barCount; i++) {
+          if (isPlaying) {
+            const target = Math.sin(Date.now() * 0.007 + i * 0.32) * 32 + Math.random() * 22 + 14;
+            barHeights[i] += (target - barHeights[i]) * 0.22;
+          } else {
+            barHeights[i] += (6 - barHeights[i]) * 0.12;
+          }
+
+          const h = Math.max(4, Math.min(68, barHeights[i]));
+          const x = i * (barWidth + 3);
+          const y = canvas.height - h;
+
+          const grad = ctx.createLinearGradient(0, y, 0, canvas.height);
+          grad.addColorStop(0, '#d2ff00');
+          grad.addColorStop(1, '#00f0ff');
+
+          ctx.fillStyle = grad;
+          ctx.beginPath();
+          ctx.roundRect(x, y, barWidth, h, [3, 3, 0, 0]);
+          ctx.fill();
+        }
+
+        if (isPlaying) {
+          scrubberPercent += 0.04;
+          if (scrubberPercent > 100) scrubberPercent = 0;
+          scrubberProgress.style.width = scrubberPercent + '%';
+
+          const totalSecs = 269;
+          const currentSecs = Math.floor((scrubberPercent / 100) * totalSecs);
+          const mins = Math.floor(currentSecs / 60);
+          const secs = (currentSecs % 60).toString().padStart(2, '0');
+          elapsedLabel.textContent = `0${mins}:${secs}`;
+
+          animId = requestAnimationFrame(drawVisualizer);
+        }
+      }
+      drawVisualizer();
+
+      toggleBtn.addEventListener('click', () => {
+        isPlaying = !isPlaying;
+        if (isPlaying) {
+          btnText.textContent = "Pause Visualizer";
+          icon.innerHTML = '<rect x="6" y="4" width="4" height="16"></rect><rect x="14" y="4" width="4" height="16"></rect>';
+          statusLabel.textContent = "AUDIO CORE: PLAYING (24-BIT/96KHZ)";
+          statusLabel.style.color = "#d2ff00";
+          drawVisualizer();
+        } else {
+          btnText.textContent = "Play Visualizer";
+          icon.innerHTML = '<polygon points="5 3 19 12 5 21 5 3"></polygon>';
+          statusLabel.textContent = "AUDIO CORE: PAUSED";
+          statusLabel.style.color = "#ffffff";
+          cancelAnimationFrame(animId);
+          drawVisualizer();
+        }
+      });
+
+      // -----------------------------------------------------------
+      // E. TV SCREEN SWITCHER TABS
+      // -----------------------------------------------------------
+      const tvImg = document.getElementById('tv-mockup-img');
+      const tvTabs = document.querySelectorAll('[role="tablist"][aria-label="TV screenshots"] button');
+      const tvScreens = [
+        { src: "public/tv/now-playing.webp", alt: "Hush Music on TV: Now Playing" },
+        { src: "public/tv/lyrics.webp", alt: "Hush Music on TV: Synced Lyrics" },
+        { src: "public/tv/lyrics-pride.webp", alt: "Hush Music on TV: Synced Lyrics Pride" },
+        { src: "public/tv/up-next.webp", alt: "Hush Music on TV: Up Next Queue" }
+      ];
+
+      tvTabs.forEach((tab, index) => {
+        tab.addEventListener('click', () => {
+          tvTabs.forEach(t => {
+            t.setAttribute('aria-selected', 'false');
+            t.className = "h-2 rounded-full transition-all duration-300 focus-visible:outline-none w-2 bg-white/25 hover:bg-white/40";
+          });
+          tab.setAttribute('aria-selected', 'true');
+          tab.className = "h-2 rounded-full transition-all duration-300 focus-visible:outline-none w-8 bg-[#d2ff00] shadow-[0_0_10px_#d2ff00]";
+
+          tvImg.style.opacity = '0';
+          setTimeout(() => {
+            tvImg.src = tvScreens[index].src;
+            tvImg.alt = tvScreens[index].alt;
+            tvImg.style.opacity = '1';
+          }, 150);
+        });
+      });
+
+      // -----------------------------------------------------------
+      // F. FAQ ACCORDION LOGIC
+      // -----------------------------------------------------------
+      const faqItems = document.querySelectorAll('.faq-item');
+      faqItems.forEach(item => {
+        const trigger = item.querySelector('.faq-trigger');
+        trigger.addEventListener('click', () => {
+          const isOpen = item.classList.contains('open');
+          faqItems.forEach(i => {
+            i.classList.remove('open');
+            i.querySelector('.faq-trigger').setAttribute('aria-expanded', 'false');
+          });
+          if (!isOpen) {
+            item.classList.add('open');
+            trigger.setAttribute('aria-expanded', 'true');
+          }
+        });
+      });
+
+    });
+  </script>
+</body>
+</html>

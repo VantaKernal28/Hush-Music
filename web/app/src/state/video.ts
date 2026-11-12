@@ -1,4 +1,4 @@
-import { create } from 'zustand';
+﻿import { create } from 'zustand';
 
 /**
  * A music video's picture (playback/youtube/videoDeck.ts plays it). One muted
@@ -27,7 +27,7 @@ interface VideoState {
   activeHeight: number | null;
 }
 
-const QUALITY_KEY = 'bitchord:video-quality';
+const QUALITY_KEY = 'Hush Music:video-quality';
 
 function storedQuality(): VideoQuality {
   const stored = localStorage.getItem(QUALITY_KEY);

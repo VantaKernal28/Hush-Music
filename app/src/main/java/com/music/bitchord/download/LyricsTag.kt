@@ -1,4 +1,4 @@
-package com.music.bitchord.download
+﻿package com.music.bitchord.download
 
 import com.music.bitchord.data.DebugLog as Log
 import com.music.bitchord.data.lyrics.LyricsRepository
@@ -34,7 +34,7 @@ import kotlinx.coroutines.withTimeoutOrNull
  */
 internal object LyricsTag {
 
-    private const val TAG = "BitChord"
+    private const val TAG = "HushMusic"
 
     /**
      * An LRC document for [track], or null when there is nothing worth writing.

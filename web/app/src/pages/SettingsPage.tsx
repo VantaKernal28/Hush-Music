@@ -1,4 +1,4 @@
-import { ChevronRight, Users } from 'lucide-react';
+﻿import { ChevronRight, Sparkles, Users } from 'lucide-react';
 import { lazy, Suspense, useState, type ComponentType, type ReactNode } from 'react';
 import { MdOutlineExtension } from 'react-icons/md';
 import { SiApplemusic, SiDiscord, SiSpotify, SiYoutubemusic } from 'react-icons/si';
@@ -12,6 +12,7 @@ import { useHistorySettings } from '@/playback/historyReporting';
 import { Select } from '@/components/Select';
 import { AUTOMIX_BARS } from '@/playback/automix/choices';
 import { CROSSFADE_CHOICES, usePlayer } from '@/state/player';
+import { useUi } from '@/state/ui';
 import { AppleMusicIntegration, AppleMusicToggles, CanvasToggle, DiscordIntegration, LyricSourcesAccess, SpotifyIntegration, Toggle } from './IntegrationSettings';
 import { settingsUi } from './settingsStyles';
 
@@ -66,6 +67,7 @@ export default function SettingsPage() {
   const shareHistory = useHistorySettings((s) => s.share);
   const setShareHistory = useHistorySettings((s) => s.setShare);
   const { setAutoplay, setCrossfade, setAutomix, setAutomixBars, setShowNerdStats } = usePlayer.getState();
+  const openOnboarding = useUi((s) => s.openOnboarding);
   const [lyrics, setLyrics] = useState(false);
   const present = extension.state === 'present';
   const discordText =
@@ -99,7 +101,7 @@ export default function SettingsPage() {
           <LinkRow
             to="/extension"
             icon={<Glyph Icon={MdOutlineExtension} color="#636366" />}
-            title="BitChord Extension"
+            title="Hush Music Extension"
             value={present ? `v${extension.extension.info.version}` : 'Not installed'}
           />
         </section>
@@ -108,7 +110,7 @@ export default function SettingsPage() {
             label="Share Listening Activity to YouTube"
             detail={
               present && !extension.extension.info.capabilities.includes('yt.stats')
-                ? 'Update the BitChord extension to share: this version can’t send plays to YouTube.'
+                ? 'Update the Hush Music extension to share: this version can’t send plays to YouTube.'
                 : 'Songs you play here go to your YouTube Music history and shape its recommendations.'
             }
             checked={shareHistory}
@@ -136,6 +138,18 @@ export default function SettingsPage() {
             title="Listen Together"
             value={party.code ? `In party ${party.code}` : 'Listen in sync with friends'}
           />
+        </section>
+
+        <h2 className={settingsUi.sectionHeader}>Onboarding & Taste</h2>
+        <section className={settingsUi.group}>
+          <button className={`${settingsUi.integrationPlain} ${settingsUi.linkRow}`} onClick={openOnboarding}>
+            <Glyph Icon={Sparkles} color="#fa586a" />
+            <span className={settingsUi.integrationName}>Revamp Sound & Taste Profile</span>
+            <span className={settingsUi.value}>
+              Customize
+              <ChevronRight size={16} />
+            </span>
+          </button>
         </section>
 
         <h2 className={settingsUi.sectionHeader}>Playback</h2>

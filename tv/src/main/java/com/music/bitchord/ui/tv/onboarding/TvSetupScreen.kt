@@ -1,4 +1,4 @@
-package com.music.bitchord.ui.tv.onboarding
+﻿package com.music.Hush Music.ui.tv.onboarding
 
 import androidx.activity.compose.BackHandler
 import androidx.compose.animation.AnimatedContent
@@ -45,23 +45,23 @@ import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
-import com.music.bitchord.data.settings.AppSettings
-import com.music.bitchord.data.settings.TvSettings
-import com.music.bitchord.ui.MainViewModel
-import com.music.bitchord.ui.tv.TvAppMark
-import com.music.bitchord.ui.tv.audio.TvSpatialAudioEngine
-import com.music.bitchord.ui.tv.components.TvButton
-import com.music.bitchord.ui.tv.components.TvListRow
-import com.music.bitchord.ui.tv.components.tvClick
-import com.music.bitchord.ui.tv.components.tvInitialFocus
-import com.music.bitchord.ui.tv.components.tvLift
-import com.music.bitchord.ui.tv.dialogs.TvAccountDialog
-import com.music.bitchord.ui.tv.personalization.AppThemeOption
-import com.music.bitchord.ui.tv.theme.TvDarkPalette
-import com.music.bitchord.ui.tv.theme.TvGlass
-import com.music.bitchord.ui.tv.theme.TvMidnightPalette
-import com.music.bitchord.ui.tv.theme.TvOledPalette
-import com.music.bitchord.ui.tv.theme.TvType
+import com.music.Hush Music.data.settings.AppSettings
+import com.music.Hush Music.data.settings.TvSettings
+import com.music.Hush Music.ui.MainViewModel
+import com.music.Hush Music.ui.tv.TvAppMark
+import com.music.Hush Music.ui.tv.audio.TvSpatialAudioEngine
+import com.music.Hush Music.ui.tv.components.TvButton
+import com.music.Hush Music.ui.tv.components.TvListRow
+import com.music.Hush Music.ui.tv.components.tvClick
+import com.music.Hush Music.ui.tv.components.tvInitialFocus
+import com.music.Hush Music.ui.tv.components.tvLift
+import com.music.Hush Music.ui.tv.dialogs.TvAccountDialog
+import com.music.Hush Music.ui.tv.personalization.AppThemeOption
+import com.music.Hush Music.ui.tv.theme.TvDarkPalette
+import com.music.Hush Music.ui.tv.theme.TvGlass
+import com.music.Hush Music.ui.tv.theme.TvMidnightPalette
+import com.music.Hush Music.ui.tv.theme.TvOledPalette
+import com.music.Hush Music.ui.tv.theme.TvType
 
 private enum class SetupStep { Welcome, SignIn, Appearance, Preferences, Done }
 
@@ -104,7 +104,7 @@ fun TvSetupScreen(
     ) { current ->
         when (current) {
             SetupStep.Welcome -> TvSetupPage(
-                title = "Welcome to BitChord",
+                title = "Welcome to Hush Music",
                 message = "Your music, made for the big screen.",
                 hero = { TvAppMark(size = 106.dp) },
             ) {
@@ -218,7 +218,7 @@ private fun TvSignInStep(viewModel: MainViewModel, onContinue: () -> Unit) {
     TvSetupPage(
         title = if (signedIn) "Signed In" else "Sign In to YouTube Music",
         message = if (signedIn) {
-            "BitChord will use ${account?.name ?: "your account"}'s library and recommendations."
+            "Hush Music will use ${account?.name ?: "your account"}'s library and recommendations."
         } else {
             "Bring your library, playlists and recommendations. You can also do this later in Settings."
         },

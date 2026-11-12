@@ -1,8 +1,8 @@
-/** The web player's production origin. */
-export const PRODUCTION_ORIGIN = 'https://bitchord.in';
+﻿/** The web player's production origin. */
+export const PRODUCTION_ORIGIN = 'https://Hush Music.in';
 
 /** The same site at its Cloudflare Pages address (the production branch's deploy). */
-const PAGES_ORIGIN = 'https://bitchord-8bw.pages.dev';
+const PAGES_ORIGIN = 'https://Hush Music-8bw.pages.dev';
 
 /** The Vite dev server (web/app/vite.config.ts pins the port). */
 const DEV_ORIGIN = 'http://localhost:5173';
@@ -12,14 +12,14 @@ const DEV_ORIGIN = 'http://localhost:5173';
  * this list, and it becomes externally_connectable (Chromium), the relay's
  * content-script matches (Firefox) and the DNR rules' initiatorDomains.
  *
- * bitchord.in and its pages.dev address always, and the dev server too except in a store build
- * (BITCHORD_STORE_BUILD=1), so a published extension never answers a page on
- * localhost. BITCHORD_SITE_ORIGINS (comma-separated) replaces the list. The
+ * Hush Music.in and its pages.dev address always, and the dev server too except in a store build
+ * (Hush Music_STORE_BUILD=1), so a published extension never answers a page on
+ * localhost. Hush Music_SITE_ORIGINS (comma-separated) replaces the list. The
  * first origin is the one the popup and homepage_url link to.
  */
 export const SITE_ORIGINS: string[] = (
-  process.env.BITCHORD_SITE_ORIGINS ??
-  [PRODUCTION_ORIGIN, PAGES_ORIGIN, ...(process.env.BITCHORD_STORE_BUILD === '1' ? [] : [DEV_ORIGIN])].join(',')
+  process.env.Hush Music_SITE_ORIGINS ??
+  [PRODUCTION_ORIGIN, PAGES_ORIGIN, ...(process.env.Hush Music_STORE_BUILD === '1' ? [] : [DEV_ORIGIN])].join(',')
 )
   .split(',')
   .map((o) => o.trim().replace(/\/+$/, ''))

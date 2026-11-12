@@ -3376,18 +3376,27 @@ private fun BitChordApp(
                                 },
                             )
                         } else when ((destination as? AppDestination.Tab)?.index ?: selectedTab) {
-                            TAB_HOME -> HomeScreen(
-                                state = visibleHomeState,
-                                listState = homeListState,
-                                currentSong = player.song,
-                                isPlaying = player.isPlaying,
-                                title = stringResource(R.string.listen_now),
-                                festiveLogo = diwaliFestive,
-                                onFestiveLogoClick = { showDiwali = true },
-                                signedIn = signedIn,
-                                onSignIn = { webSession = WebSessionMode.SIGN_IN },
-                                onItemClick = { item, shelfTitle ->
-                                    val song = shelfSong(item)
+                            TAB_HOME -> {
+                                val userNickname = ListenTogether.nickname().ifBlank { account?.name.orEmpty() }.trim()
+                                val personalizedGreeting = remember(userNickname) {
+                                    if (userNickname.isNotBlank()) {
+                                        val hour = java.util.Calendar.getInstance().get(java.util.Calendar.HOUR_OF_DAY)
+                                        val prefix = if (hour < 12) "Good morning" else if (hour < 18) "Good afternoon" else "Good evening"
+                                        "$prefix, $userNickname"
+                                    } else null
+                                }
+                                HomeScreen(
+                                    state = visibleHomeState,
+                                    listState = homeListState,
+                                    currentSong = player.song,
+                                    isPlaying = player.isPlaying,
+                                    title = personalizedGreeting ?: stringResource(R.string.listen_now),
+                                    festiveLogo = diwaliFestive,
+                                    onFestiveLogoClick = { showDiwali = true },
+                                    signedIn = signedIn,
+                                    onSignIn = { webSession = WebSessionMode.SIGN_IN },
+                                    onItemClick = { item, shelfTitle ->
+                                        val song = shelfSong(item)
                                     // Hoisted because ShelfItem lives in :shared, and
                                     // Kotlin will not smart-cast a public nullable
                                     // property declared in another module.
@@ -3437,6 +3446,7 @@ private fun BitChordApp(
                                     }
                                 },
                             )
+                        }
                             TAB_EXPLORE -> selectedMoodGenre?.let { category ->
                                 MoodGenrePlaylistsScreen(
                                     title = category.title,

@@ -1,4 +1,4 @@
-import { Menu } from 'lucide-react';
+﻿import { Menu } from 'lucide-react';
 import { PrefetchLink } from '@/components/PrefetchLink';
 import { LogoMark } from '@/components/icons/LogoMark';
 import { useUi } from '@/state/ui';
@@ -11,9 +11,9 @@ export function MobileTopBar() {
       <button className="grid size-11 place-items-center rounded-full" aria-label="Open menu" onClick={() => setDrawerOpen(true)}>
         <Menu size={22} strokeWidth={2} />
       </button>
-      <PrefetchLink to="/home" className="inline-flex items-center gap-1.5 justify-self-center type-[700_16px/20px]" aria-label="BitChord, Home">
+      <PrefetchLink to="/home" className="inline-flex items-center gap-1.5 justify-self-center type-[700_16px/20px]" aria-label="Hush Music, Home">
         <LogoMark size={20} className="text-primary" />
-        <span>BitChord</span>
+        <span>Hush Music</span>
       </PrefetchLink>
       <span className="w-11" />
     </header>

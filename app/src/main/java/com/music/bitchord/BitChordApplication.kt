@@ -218,7 +218,7 @@ class BitChordApplication : Application(), SingletonImageLoader.Factory, Configu
                     chain.request().newBuilder()
                         .header(
                             "User-Agent",
-                            "BitChord/${BuildConfig.VERSION_NAME} (Android; +https://github.com/kushagrasinghx/BitChord)",
+                            "HushMusic/${BuildConfig.VERSION_NAME} (Android; +https://github.com/VantaKernal28/Hush-Music)",
                         )
                         .build(),
                 )

@@ -1,4 +1,4 @@
-package com.music.bitchord.data.sources
+﻿package com.music.bitchord.data.sources
 
 import android.media.MediaCodecList
 import androidx.media3.common.util.UnstableApi
@@ -67,7 +67,7 @@ import java.util.Locale
  */
 object DeviceCodecs {
 
-    private const val TAG = "BitChord"
+    private const val TAG = "HushMusic"
 
     /**
      * E-AC-3 JOC, and the plain E-AC-3 core it degrades to. Either decoder is

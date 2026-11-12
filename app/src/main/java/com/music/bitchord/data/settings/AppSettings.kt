@@ -1,4 +1,4 @@
-package com.music.bitchord.data.settings
+﻿package com.music.bitchord.data.settings
 
 import com.music.bitchord.data.webdav.update
 import com.music.bitchord.ui.components.VideoThumbnails
@@ -74,7 +74,7 @@ enum class BitPerfectMode {
     OFF,
 
     /**
-     * BitChord's own USB Audio Class driver on libusb: any Android version,
+     * Hush Music's own USB Audio Class driver on libusb: any Android version,
      * volume set on the DAC itself. Requires USB permission.
      */
     USB_DIRECT,
@@ -884,7 +884,7 @@ object AppSettings {
 
     /**
      * A temporary cap on [effectiveAudioQuality], for as long as something other
-     * than this phone's own speaker is playing — the BitChord watch app, whose
+     * than this phone's own speaker is playing — the Hush Music watch app, whose
      * audio goes over a Bluetooth link that cannot keep up with lossless. Never
      * persisted, never shown: the listener's own settings are untouched, and
      * apply again the moment the phone takes the music back.
@@ -1154,7 +1154,7 @@ object AppSettings {
      * the very first call seeds the stored value from [currentVersionCode]
      * rather than reporting an update.
      *
-     * BitChord ships sideloaded (see [com.music.bitchord.data.AppUpdateChecker]),
+     * Hush Music ships sideloaded (see [com.music.bitchord.data.AppUpdateChecker]),
      * so installing a new APK over the old one is the only "update" there is —
      * app data, this pref included, survives it exactly like a Play Store
      * update. Call once per process start, before anything reads a cache that

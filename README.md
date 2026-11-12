@@ -1,4 +1,4 @@
-<div align="center">
+﻿<div align="center">
 
 <br/>
 <br/>
@@ -87,9 +87,9 @@
 
 <h1><a id="download"></a>Download</h1>
 
-<a href="https://github.com/kushagrasinghx/BitChord/releases" target="_blank" rel="noopener noreferrer"><img src="https://cdn.jsdelivr.net/gh/JMcrafter26/badges@main/src/assets/supported/android/cozy.svg" alt="Download for Android" height="55"/></a>
+<a href="https://github.com/kushagrasinghx/Hush Music/releases" target="_blank" rel="noopener noreferrer"><img src="https://cdn.jsdelivr.net/gh/JMcrafter26/badges@main/src/assets/supported/android/cozy.svg" alt="Download for Android" height="55"/></a>
 
-Grab the latest signed APK from the [Releases](https://github.com/kushagrasinghx/BitChord/releases) page. Sideloading requires enabling "Install unknown apps" for whichever app you download it with.
+Grab the latest signed APK from the [Releases](https://github.com/kushagrasinghx/Hush Music/releases) page. Sideloading requires enabling "Install unknown apps" for whichever app you download it with.
 
 
 </div>
@@ -100,7 +100,7 @@ Grab the latest signed APK from the [Releases](https://github.com/kushagrasinghx
 
 <h1><a id="contributing"></a>Contributing</h1>
 
-Hush Music is a Fork of BitChord Made by Dhruv Dinesh Patil and Phoenix Veena
+Hush Music is a Fork of Hush Music Made by Dhruv Dinesh Patil and Phoenix Veena
 Contribution's are  welcome to Hush Music. 
 
 ---
@@ -109,9 +109,9 @@ Contribution's are  welcome to Hush Music.
 
 <h1><a id="support"></a>Support</h1>
 
-Hush Music is a Fork of BitChord - All the donations done help in the development of BitChord :
+Hush Music is a Fork of Hush Music - All the donations done help in the development of Hush Music :
 
-BitChord is free and always will be — if it's earned a spot in your rotation, you can chip in here:
+Hush Music is free and always will be — if it's earned a spot in your rotation, you can chip in here:
 
 <a href="https://ko-fi.com/kushagrasinghx" target="_blank" rel="noopener noreferrer"><img src="https://cdn.jsdelivr.net/gh/JMcrafter26/badges@main/src/assets/donate/kofi-singular-alt/cozy.svg" alt="Support me on Ko-fi" height="55"/></a>
 <a href="https://paypal.me/kuxhagrasingh" target="_blank" rel="noopener noreferrer"><img src="https://cdn.jsdelivr.net/gh/JMcrafter26/badges@main/src/assets/donate/paypal-plural/cozy.svg" alt="Support us on PayPal" height="55"/></a>

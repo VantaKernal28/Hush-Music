@@ -1,4 +1,4 @@
-package com.music.bitchord.data
+﻿package com.music.bitchord.data
 
 import com.music.bitchord.data.DebugLog as Log
 import com.music.bitchord.data.model.ArtistPage
@@ -42,7 +42,7 @@ import kotlin.random.Random
  */
 object TopPicks {
 
-    private const val TAG = "BitChord"
+    private const val TAG = "HushMusic"
 
     /** How many artists get a page fetched — and so a card. */
     private const val ARTISTS = 3

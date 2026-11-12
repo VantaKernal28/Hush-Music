@@ -1,4 +1,4 @@
-package com.music.bitchord.playback
+﻿package com.music.bitchord.playback
 
 import android.net.Uri
 import androidx.annotation.OptIn
@@ -39,7 +39,7 @@ import kotlinx.coroutines.withTimeoutOrNull
  */
 object MusicOnlyPlayback {
 
-    private const val TAG = "BitChord"
+    private const val TAG = "HushMusic"
 
     /** How long a row waits for its audio version before playing the video's own audio. */
     const val ANSWER_TIMEOUT_MS = 15_000L

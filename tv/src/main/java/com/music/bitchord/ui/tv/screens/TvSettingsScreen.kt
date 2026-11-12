@@ -1,4 +1,4 @@
-package com.music.bitchord.ui.tv.screens
+﻿package com.music.Hush Music.ui.tv.screens
 
 import androidx.compose.animation.AnimatedContent
 import androidx.compose.animation.fadeIn
@@ -26,34 +26,34 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
-import com.music.bitchord.BuildConfig
-import com.music.bitchord.data.AppUpdateChecker
-import com.music.bitchord.data.settings.AppSettings
-import com.music.bitchord.data.settings.TvSettings
-import com.music.bitchord.ui.MainViewModel
-import com.music.bitchord.ui.tv.TvAppMark
-import com.music.bitchord.ui.tv.audio.TvSpatialAudioEngine
-import com.music.bitchord.ui.tv.components.TvChromePinned
-import com.music.bitchord.ui.tv.components.TvListHeader
-import com.music.bitchord.ui.tv.components.TvListRow
-import com.music.bitchord.ui.tv.dialogs.TvAboutDialog
-import com.music.bitchord.ui.tv.dialogs.TvEqualizerDialog
-import com.music.bitchord.ui.tv.dialogs.TvLyricsSourcesDialog
-import com.music.bitchord.ui.tv.dialogs.TvRefreshRateDialog
-import com.music.bitchord.ui.tv.dialogs.TvScrobbleDialog
-import com.music.bitchord.data.settings.TvPlayerStyle
-import com.music.bitchord.ui.tv.dialogs.TvThemeDialog
-import com.music.bitchord.ui.tv.dialogs.TvUpdateDialog
-import com.music.bitchord.ui.tv.display.TvRefreshRateController
-import com.music.bitchord.ui.tv.personalization.AppThemeOption
-import com.music.bitchord.ui.tv.theme.TvDimensions
-import com.music.bitchord.ui.tv.theme.TvGlass
-import com.music.bitchord.ui.tv.theme.TvType
+import com.music.Hush Music.BuildConfig
+import com.music.Hush Music.data.AppUpdateChecker
+import com.music.Hush Music.data.settings.AppSettings
+import com.music.Hush Music.data.settings.TvSettings
+import com.music.Hush Music.ui.MainViewModel
+import com.music.Hush Music.ui.tv.TvAppMark
+import com.music.Hush Music.ui.tv.audio.TvSpatialAudioEngine
+import com.music.Hush Music.ui.tv.components.TvChromePinned
+import com.music.Hush Music.ui.tv.components.TvListHeader
+import com.music.Hush Music.ui.tv.components.TvListRow
+import com.music.Hush Music.ui.tv.dialogs.TvAboutDialog
+import com.music.Hush Music.ui.tv.dialogs.TvEqualizerDialog
+import com.music.Hush Music.ui.tv.dialogs.TvLyricsSourcesDialog
+import com.music.Hush Music.ui.tv.dialogs.TvRefreshRateDialog
+import com.music.Hush Music.ui.tv.dialogs.TvScrobbleDialog
+import com.music.Hush Music.data.settings.TvPlayerStyle
+import com.music.Hush Music.ui.tv.dialogs.TvThemeDialog
+import com.music.Hush Music.ui.tv.dialogs.TvUpdateDialog
+import com.music.Hush Music.ui.tv.display.TvRefreshRateController
+import com.music.Hush Music.ui.tv.personalization.AppThemeOption
+import com.music.Hush Music.ui.tv.theme.TvDimensions
+import com.music.Hush Music.ui.tv.theme.TvGlass
+import com.music.Hush Music.ui.tv.theme.TvType
 
 // Discord Rich Presence is hidden on TV for now; TvDiscordDialog is kept for when it returns.
 private enum class SettingsSheet { Theme, RefreshRate, Equalizer, Scrobbling, LyricsSources, Update, About }
 
-private const val DefaultBlurb = "Playback, sound and display preferences for BitChord on this TV."
+private const val DefaultBlurb = "Playback, sound and display preferences for Hush Music on this TV."
 
 /**
  * Settings, as tvOS lays it out: the app on the left with a plain description of
@@ -269,7 +269,7 @@ fun TvSettingsScreen(
                 TvListRow(
                     title = "Appearance",
                     value = AppThemeOption.fromId(themeId).title,
-                    onFocused = { blurb = "The background behind BitChord's pages." },
+                    onFocused = { blurb = "The background behind Hush Music's pages." },
                     onClick = { sheet = SettingsSheet.Theme },
                 )
             }
@@ -336,7 +336,7 @@ fun TvSettingsScreen(
                     TvListRow(
                         title = "Software Update",
                         value = "${update?.version.orEmpty()} Available",
-                        onFocused = { blurb = "Download and install the new version of BitChord for TV." },
+                        onFocused = { blurb = "Download and install the new version of Hush Music for TV." },
                         onClick = { sheet = SettingsSheet.Update },
                     )
                 }

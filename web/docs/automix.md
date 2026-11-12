@@ -1,4 +1,4 @@
-# Automix
+﻿# Automix
 
 Settings → Playback → Crossfade → **Automix** (also in Up Next's ⋯ menu).
 The engine is AutoMix by David Finnegan (AGPL-3.0), ported into
@@ -11,7 +11,7 @@ that folder's `NOTICE.md`.
    from YouTube (the direct Opus URL), decoded at 44.1 kHz and analyzed in a
    worker with essentia.js: tempo, a beat grid for the opening and one for
    the end, downbeat, key (Camelot), energy curve, intro and outro. About
-   12–18 s per track; cached in IndexedDB (`bitchord-automix`).
+   12–18 s per track; cached in IndexedDB (`Hush Music-automix`).
 2. **Choosing.** The queue decides what comes next; only the playing and the
    next song are analysed. Until both are, nothing is planned or drawn on
    the seek bar, and a song whose mix wasn't ready plays to its end and

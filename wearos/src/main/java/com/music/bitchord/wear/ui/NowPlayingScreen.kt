@@ -1,4 +1,4 @@
-package com.music.bitchord.wear.ui
+﻿package com.music.Hush Music.wear.ui
 
 import android.view.HapticFeedbackConstants
 import androidx.annotation.DrawableRes
@@ -75,9 +75,9 @@ import androidx.lifecycle.repeatOnLifecycle
 import androidx.wear.compose.foundation.requestFocusOnHierarchyActive
 import androidx.wear.compose.material3.Icon
 import androidx.wear.compose.material3.Text
-import com.music.bitchord.wear.R
-import com.music.bitchord.wear.data.NowPlaying
-import com.music.bitchord.wear.data.Volume
+import com.music.Hush Music.wear.R
+import com.music.Hush Music.wear.data.NowPlaying
+import com.music.Hush Music.wear.data.Volume
 import kotlinx.coroutines.delay
 import kotlin.math.abs
 import kotlin.math.roundToInt

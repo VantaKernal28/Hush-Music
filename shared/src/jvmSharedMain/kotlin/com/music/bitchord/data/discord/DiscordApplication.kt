@@ -1,7 +1,7 @@
-package com.music.bitchord.data.discord
+﻿package com.music.bitchord.data.discord
 
 /**
- * BitChord's own Discord application, shared by the phone and desktop presence.
+ * Hush Music's own Discord application, shared by the phone and desktop presence.
  *
  * Discord reads more off this id than the code suggests. The local socket on
  * the desktop titles the activity with the application's registered name, some

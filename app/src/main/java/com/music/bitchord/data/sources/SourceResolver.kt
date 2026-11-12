@@ -1,4 +1,4 @@
-package com.music.bitchord.data.sources
+﻿package com.music.bitchord.data.sources
 
 import android.net.Uri
 import android.util.Log
@@ -41,7 +41,7 @@ import kotlinx.coroutines.withTimeoutOrNull
  */
 object SourceResolver {
 
-    private const val TAG = "BitChord"
+    private const val TAG = "HushMusic"
 
     /**
      * What to ask a source for, right now, from the connection's ceiling alone

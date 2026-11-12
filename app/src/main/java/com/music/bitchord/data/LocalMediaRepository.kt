@@ -1,4 +1,4 @@
-package com.music.bitchord.data
+﻿package com.music.bitchord.data
 
 import android.Manifest
 import android.content.ContentUris
@@ -24,7 +24,7 @@ import java.util.Locale
 
 object LocalMediaRepository {
 
-    private const val TAG = "BitChord"
+    private const val TAG = "HushMusic"
     private const val MIN_LOCAL_MUSIC_DURATION_MS = 30_000L
 
     // `mp4` only ever reaches this list as an audio row — MediaStore files a

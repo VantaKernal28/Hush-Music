@@ -1,4 +1,4 @@
-package com.music.bitchord.ui.tv.display
+﻿package com.music.Hush Music.ui.tv.display
 
 import android.os.Build
 import android.view.Display

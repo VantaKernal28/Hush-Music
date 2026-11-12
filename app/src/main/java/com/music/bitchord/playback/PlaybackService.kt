@@ -1,4 +1,4 @@
-package com.music.bitchord.playback
+﻿package com.music.bitchord.playback
 
 import android.app.PendingIntent
 import android.content.Context
@@ -758,7 +758,7 @@ class PlaybackService : MediaLibraryService() {
     )
 
     /**
-     * The BitChord watch app as the speaker — the same model as Cast: the phone
+     * The Hush Music watch app as the speaker — the same model as Cast: the phone
      * keeps the queue paused, the watch plays it and owns the clock. See
      * [WearBridge.createSpeaker].
      */

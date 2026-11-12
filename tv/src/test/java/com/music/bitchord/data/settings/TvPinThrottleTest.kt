@@ -1,4 +1,4 @@
-package com.music.bitchord.data.settings
+﻿package com.music.Hush Music.data.settings
 
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertTrue

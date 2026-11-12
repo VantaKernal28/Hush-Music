@@ -1,4 +1,4 @@
-import {
+﻿import {
   infiniteQueryOptions,
   queryOptions,
   useInfiniteQuery,
@@ -7,7 +7,7 @@ import {
   type InfiniteData,
 } from '@tanstack/react-query';
 import { useEffect, useState } from 'react';
-import type { DetectedExtension } from '@bitchord/shared/bridge';
+import type { DetectedExtension } from '@Hush Music/shared/bridge';
 import { extensionQueryKey, useExtension } from '@/extension/useExtension';
 import { useYtAuth, ytAuthSnapshot } from '@/extension/useYtAuth';
 import { queryClient } from '@/lib/queryClient';

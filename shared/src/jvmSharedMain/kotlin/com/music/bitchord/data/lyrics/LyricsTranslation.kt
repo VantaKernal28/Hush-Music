@@ -1,4 +1,4 @@
-package com.music.bitchord.data.lyrics
+﻿package com.music.bitchord.data.lyrics
 
 import com.music.bitchord.data.Http
 import java.io.File
@@ -350,7 +350,7 @@ object LyricsTranslation {
             .build()
         val request = Request.Builder()
             .url(ENDPOINT)
-            .header("User-Agent", "BitChord/1.7.1")
+            .header("User-Agent", "HushMusic/1.7.1")
             .header("Accept", "application/json")
             .post(body)
             .build()
@@ -383,7 +383,7 @@ object LyricsTranslation {
             .build()
         val request = Request.Builder()
             .url(ENDPOINT)
-            .header("User-Agent", "BitChord/1.7.1")
+            .header("User-Agent", "HushMusic/1.7.1")
             .header("Accept", "application/json")
             .post(body)
             .build()
@@ -438,7 +438,7 @@ object LyricsTranslation {
             .build()
         val request = Request.Builder()
             .url(INPUT_TOOLS_ENDPOINT)
-            .header("User-Agent", "BitChord/1.7.1")
+            .header("User-Agent", "HushMusic/1.7.1")
             .header("Accept", "application/json")
             .post(body)
             .build()

@@ -1,4 +1,4 @@
-package com.music.bitchord.ui.tv.screens
+﻿package com.music.Hush Music.ui.tv.screens
 
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -30,24 +30,24 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
 import androidx.media3.session.MediaController
-import com.music.bitchord.data.model.BrowseType
-import com.music.bitchord.data.model.HomeShelf
-import com.music.bitchord.data.model.Song
-import com.music.bitchord.data.model.UiState
-import com.music.bitchord.playback.PlayerState
-import com.music.bitchord.playback.playSongs
-import com.music.bitchord.ui.MainViewModel
-import com.music.bitchord.ui.tv.components.TvActivityIndicator
-import com.music.bitchord.ui.tv.components.TvButton
-import com.music.bitchord.ui.tv.components.TvChromePinned
-import com.music.bitchord.ui.tv.components.TvEmptyState
-import com.music.bitchord.ui.tv.components.TvErrorState
-import com.music.bitchord.ui.tv.components.TvListRow
-import com.music.bitchord.ui.tv.components.TvLockup
-import com.music.bitchord.ui.tv.components.TvSongRow
-import com.music.bitchord.ui.tv.dialogs.TvSongMenu
-import com.music.bitchord.ui.tv.theme.TvDimensions
-import com.music.bitchord.ui.tv.theme.TvGlass
+import com.music.Hush Music.data.model.BrowseType
+import com.music.Hush Music.data.model.HomeShelf
+import com.music.Hush Music.data.model.Song
+import com.music.Hush Music.data.model.UiState
+import com.music.Hush Music.playback.PlayerState
+import com.music.Hush Music.playback.playSongs
+import com.music.Hush Music.ui.MainViewModel
+import com.music.Hush Music.ui.tv.components.TvActivityIndicator
+import com.music.Hush Music.ui.tv.components.TvButton
+import com.music.Hush Music.ui.tv.components.TvChromePinned
+import com.music.Hush Music.ui.tv.components.TvEmptyState
+import com.music.Hush Music.ui.tv.components.TvErrorState
+import com.music.Hush Music.ui.tv.components.TvListRow
+import com.music.Hush Music.ui.tv.components.TvLockup
+import com.music.Hush Music.ui.tv.components.TvSongRow
+import com.music.Hush Music.ui.tv.dialogs.TvSongMenu
+import com.music.Hush Music.ui.tv.theme.TvDimensions
+import com.music.Hush Music.ui.tv.theme.TvGlass
 import kotlinx.coroutines.launch
 
 /** One entry in Library's sidebar. [key] survives the library reloading under it. */
@@ -291,7 +291,7 @@ private fun TvLibraryBanner(message: String, onRetry: () -> Unit) {
         Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(13.dp)) {
             androidx.compose.material3.Text(
                 text = message,
-                style = com.music.bitchord.ui.tv.theme.TvType.Caption,
+                style = com.music.Hush Music.ui.tv.theme.TvType.Caption,
                 color = TvGlass.TextSecondary,
                 maxLines = 1,
             )

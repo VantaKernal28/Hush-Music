@@ -1,4 +1,4 @@
-import { useEffect } from 'react';
+﻿import { useEffect } from 'react';
 import { useNavigate } from 'react-router';
 import { usePlayer } from '@/state/player';
 import { useUi } from '@/state/ui';
@@ -25,7 +25,7 @@ function focusSearch(navigate: ReturnType<typeof useNavigate>) {
 }
 
 /**
- * The web player's shortcuts, which BitChord matches (report §8): Space
+ * The web player's shortcuts, which Hush Music matches (report §8): Space
  * play/pause; ⌘/Ctrl+→ / ← next/previous; ⌘/Ctrl+↑ / ↓ volume; ⌘/Ctrl+F or
  * "/" focuses search; Esc closes the full-screen player, else the side panel.
  */

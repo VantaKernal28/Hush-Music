@@ -1,4 +1,4 @@
-package com.music.bitchord.data.model
+﻿package com.music.bitchord.data.model
 
 /** Tier of an item in the playback queue. */
 enum class QueueTier {
@@ -80,7 +80,7 @@ data class Song(
      * Explicit content or file URI for local device tracks or downloaded audio.
      */
     val localUri: String? = null,
-    /** A premium rendition marker recorded by BitChord for its Downloads list. */
+    /** A premium rendition marker recorded by Hush Music for its Downloads list. */
     val downloadFormat: String? = null,
     /**
      * Real filesystem path backing [localUri], when MediaStore exposes one.

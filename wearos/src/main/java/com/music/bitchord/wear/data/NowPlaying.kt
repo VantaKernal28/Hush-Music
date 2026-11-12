@@ -1,10 +1,10 @@
-package com.music.bitchord.wear.data
+﻿package com.music.Hush Music.wear.data
 
 import androidx.compose.runtime.Immutable
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.ImageBitmap
 import com.google.android.gms.wearable.DataMap
-import com.music.bitchord.wear.WearProtocol as P
+import com.music.Hush Music.wear.WearProtocol as P
 
 /** What the phone says is playing. Built from a [P.PATH_NOW_PLAYING] DataMap. */
 @Immutable
@@ -88,7 +88,7 @@ enum class Link {
     /** Looking for the phone, or waiting on its first answer. */
     Connecting,
 
-    /** No reachable phone with this build of BitChord on it. */
+    /** No reachable phone with this build of Hush Music on it. */
     NoPhone,
 
     Connected,

@@ -1,4 +1,4 @@
-package com.music.bitchord.data.sources.module
+﻿package com.music.bitchord.data.sources.module
 
 import android.util.Log
 import com.music.bitchord.data.TrackLog
@@ -54,7 +54,7 @@ import java.util.Locale
  */
 internal object QuickJsExecutor {
 
-    private const val TAG = "BitChord"
+    private const val TAG = "HushMusic"
 
     /**
      * How many modules stay resident.

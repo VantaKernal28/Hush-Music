@@ -1,4 +1,4 @@
-package com.music.bitchord.data.sources
+﻿package com.music.bitchord.data.sources
 
 import android.content.Context
 import android.content.SharedPreferences
@@ -122,7 +122,7 @@ data class SourceConfig(
  */
 object SourceRegistry {
 
-    private const val TAG = "BitChord"
+    private const val TAG = "HushMusic"
 
     private lateinit var prefs: SharedPreferences
 

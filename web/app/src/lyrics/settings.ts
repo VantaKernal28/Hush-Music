@@ -1,4 +1,4 @@
-import { create } from 'zustand';
+﻿import { create } from 'zustand';
 import { LYRICS_SOURCES, orderedSources, type LyricsSourceId } from './sources';
 
 /**
@@ -20,7 +20,7 @@ interface LyricsSettings {
   reset: () => void;
 }
 
-const KEY = 'bitchord:lyrics';
+const KEY = 'Hush Music:lyrics';
 type Saved = Pick<LyricsSettings, 'order' | 'disabled' | 'preferSyllables' | 'paxsenixKey'>;
 
 const DEFAULTS: Saved = {

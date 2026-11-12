@@ -1,4 +1,4 @@
-package com.music.bitchord.ui.tv.theme
+﻿package com.music.Hush Music.ui.tv.theme
 
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
@@ -22,9 +22,9 @@ import androidx.tv.material3.ColorScheme
 import androidx.tv.material3.MaterialTheme
 import androidx.tv.material3.Typography
 import androidx.tv.material3.darkColorScheme
-import com.music.bitchord.R
-import com.music.bitchord.data.settings.AppSettings
-import com.music.bitchord.data.settings.TvSettings
+import com.music.Hush Music.R
+import com.music.Hush Music.data.settings.AppSettings
+import com.music.Hush Music.data.settings.TvSettings
 
 // ─────────────────────────────────────────────────────────────────────────────
 // Immutable palette data class — one instance per theme variant
@@ -531,7 +531,7 @@ val LocalTvFontFamily = compositionLocalOf { TvSFProDisplay }
 // ─────────────────────────────────────────────────────────────────────────────
 
 @Composable
-fun BitChordTvTheme(
+fun Hush MusicTvTheme(
     content: @Composable () -> Unit,
 ) {
     val tvThemeId by TvSettings.tvTheme.collectAsState()

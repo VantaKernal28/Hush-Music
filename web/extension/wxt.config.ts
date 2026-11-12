@@ -1,10 +1,10 @@
-import { readFileSync } from 'node:fs';
+﻿import { readFileSync } from 'node:fs';
 import { defineConfig } from 'wxt';
 import { LYRIC_ORIGINS, patternOf } from './lib/lyricHosts';
 import { matchPatternsFor, SITE_ORIGINS } from './site.config';
 
-/** BITCHORD_STORE_BUILD=1 for a Chrome Web Store upload. */
-const STORE_BUILD = process.env.BITCHORD_STORE_BUILD === '1';
+/** Hush Music_STORE_BUILD=1 for a Chrome Web Store upload. */
+const STORE_BUILD = process.env.Hush Music_STORE_BUILD === '1';
 
 /**
  * Discord presence is user-token automation (prompt §7.3), so it is a build
@@ -26,8 +26,8 @@ export default defineConfig({
     },
   }),
   manifest: ({ browser }) => ({
-    name: 'BitChord',
-    description: 'Connects the BitChord web player to YouTube Music, Spotify and Discord.',
+    name: 'Hush Music',
+    description: 'Connects the Hush Music web player to YouTube Music, Spotify and Discord.',
     homepage_url: SITE_ORIGINS[0],
     // `cookies` reads the YouTube session for signed-in requests (phase 5);
     // the cookies themselves never leave the extension (lib/ytAuth.ts).
@@ -58,7 +58,7 @@ export default defineConfig({
       ? {
           browser_specific_settings: {
             gecko: {
-              id: 'extension@bitchord.kushagrasingh.in',
+              id: 'extension@Hush Music.kushagrasingh.in',
               strict_min_version: '128.0',
               data_collection_permissions: { required: ['none'] },
             },

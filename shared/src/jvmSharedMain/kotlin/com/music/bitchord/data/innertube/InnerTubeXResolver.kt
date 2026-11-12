@@ -1,4 +1,4 @@
-package com.music.bitchord.data.innertube
+﻿package com.music.bitchord.data.innertube
 
 import com.music.bitchord.data.MonotonicClock
 import com.metrolist.innertubex.InnerTube
@@ -43,7 +43,7 @@ import java.util.concurrent.ConcurrentHashMap
 /** YouTube stream extraction through InnerTubeX's live-benchmarked client catalog and cipher tiers. */
 object InnerTubeXResolver {
 
-    private const val TAG = "BitChord"
+    private const val TAG = "HushMusic"
 
     /** A stream InnerTubeX found, and the identity its media fetch has to wear. */
     class Extracted(

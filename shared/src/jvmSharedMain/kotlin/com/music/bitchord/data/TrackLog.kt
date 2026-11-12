@@ -1,4 +1,4 @@
-package com.music.bitchord.data
+﻿package com.music.bitchord.data
 
 import com.music.bitchord.data.model.Song
 import kotlinx.coroutines.Dispatchers
@@ -229,7 +229,7 @@ object TrackLog {
         count: Int,
         elsewhere: Int,
     ) = buildString {
-        appendLine("BitChord log — ${song.title} — ${song.artist}")
+        appendLine("Hush Music log — ${song.title} — ${song.artist}")
         appendLine("id=${song.videoId} duration=${song.durationText ?: "?"} album=${song.albumName ?: "?"}")
         appendLine("playing: ${stats.describe()}")
         sourcesLine()?.let(::appendLine)

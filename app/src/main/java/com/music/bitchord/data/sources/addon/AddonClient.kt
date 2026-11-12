@@ -1,4 +1,4 @@
-package com.music.bitchord.data.sources.addon
+﻿package com.music.bitchord.data.sources.addon
 
 import com.music.bitchord.data.Http
 import com.music.bitchord.data.TrackLog
@@ -103,7 +103,7 @@ class AddonClient(rawBaseUrl: String, private val pickedQuality: String? = null)
             }
             if (!manifest.isPlayable) {
                 val declared = manifest.resources.joinToString(", ")
-                throw AddonException("This addon declares $declared — BitChord needs search")
+                throw AddonException("This addon declares $declared — Hush Music needs search")
             }
             if (manifest.requiresBitChordAuth) authRequired = true
             manifest
@@ -485,7 +485,7 @@ class AddonClient(rawBaseUrl: String, private val pickedQuality: String? = null)
     private fun keyOf(vararg parts: String) = parts.joinToString("|") { "${it.length}:$it" }
 
     companion object {
-        private const val TAG = "BitChord"
+        private const val TAG = "HushMusic"
 
         /** The tiers [AddonSource][com.music.bitchord.data.sources.AddonSource] asks in. */
         const val TIER_LOSSLESS = "LOSSLESS"
@@ -580,7 +580,7 @@ class AddonClient(rawBaseUrl: String, private val pickedQuality: String? = null)
         private const val BACKOFF_BASE_MS = 500L
         private const val BACKOFF_CAP_MS = 8_000L
 
-        private val USER_AGENT = "BitChord/v${com.music.bitchord.BuildConfig.VERSION_NAME}"
+        private val USER_AGENT = "HushMusic/v${com.music.bitchord.BuildConfig.VERSION_NAME}"
 
         /**
          * What [probeSearch] asks for. Deliberately an ordinary word rather

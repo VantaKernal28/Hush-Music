@@ -1,4 +1,4 @@
-@file:OptIn(ExperimentalSharedTransitionApi::class)
+﻿@file:OptIn(ExperimentalSharedTransitionApi::class)
 
 /*
  * FloatingTabBar v1.0.1 by Elyes Mansour
@@ -20,7 +20,7 @@
  *   animation morphs around the center instead of the start edge.
  *
  * Taken from EchoMusicApp/Echo-Music, which carries the three modifications
- * listed above; BitChord's own use of it is in
+ * listed above; Hush Music's own use of it is in
  * [com.music.bitchord.ui.components.GlassNavBar]. One further change here:
  *
  * - `tabBarContentModifier` is a `@Composable () -> Modifier` factory rather

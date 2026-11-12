@@ -1,11 +1,11 @@
-package com.music.bitchord.data.sources
+﻿package com.music.bitchord.data.sources
 
 import com.music.bitchord.data.TrackLog
 import com.music.bitchord.data.jiosaavn.JioSaavnService
 import com.music.bitchord.data.jiosaavn.prioritizeExplicit
 import com.music.bitchord.data.model.Song
 
-private const val TAG = "BitChord"
+private const val TAG = "HushMusic"
 
 class JioSaavnSource(
     override val config: SourceConfig,

@@ -1,4 +1,4 @@
-package com.music.bitchord.ui.tv
+﻿package com.music.Hush Music.ui.tv
 
 import androidx.activity.compose.BackHandler
 import androidx.compose.animation.AnimatedContent
@@ -57,30 +57,30 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.zIndex
 import androidx.media3.session.MediaController
-import com.music.bitchord.R
-import com.music.bitchord.data.model.BrowseType
-import com.music.bitchord.data.settings.TvSettings
-import com.music.bitchord.playback.PlayerState
-import com.music.bitchord.ui.MainViewModel
-import com.music.bitchord.ui.tv.components.LocalTvChrome
-import com.music.bitchord.ui.tv.components.TvArtwork
-import com.music.bitchord.ui.tv.components.TvChrome
-import com.music.bitchord.ui.tv.components.TvTabIcon
-import com.music.bitchord.ui.tv.components.TvTabPill
-import com.music.bitchord.ui.tv.components.rememberDominantCardColor
-import com.music.bitchord.ui.tv.components.tvClick
-import com.music.bitchord.ui.tv.components.tvLift
-import com.music.bitchord.ui.tv.dialogs.TvAccountDialog
-import com.music.bitchord.ui.tv.dialogs.TvUpdateDialog
-import com.music.bitchord.ui.tv.player.TvNowPlayingScreen
-import com.music.bitchord.ui.tv.screens.TvDetailScreen
-import com.music.bitchord.ui.tv.screens.TvExploreScreen
-import com.music.bitchord.ui.tv.screens.TvHomeScreen
-import com.music.bitchord.ui.tv.screens.TvLibraryScreen
-import com.music.bitchord.ui.tv.screens.TvSearchScreen
-import com.music.bitchord.ui.tv.screens.TvSettingsScreen
-import com.music.bitchord.ui.tv.theme.TvGlass
-import com.music.bitchord.ui.tv.theme.TvThemeColors
+import com.music.Hush Music.R
+import com.music.Hush Music.data.model.BrowseType
+import com.music.Hush Music.data.settings.TvSettings
+import com.music.Hush Music.playback.PlayerState
+import com.music.Hush Music.ui.MainViewModel
+import com.music.Hush Music.ui.tv.components.LocalTvChrome
+import com.music.Hush Music.ui.tv.components.TvArtwork
+import com.music.Hush Music.ui.tv.components.TvChrome
+import com.music.Hush Music.ui.tv.components.TvTabIcon
+import com.music.Hush Music.ui.tv.components.TvTabPill
+import com.music.Hush Music.ui.tv.components.rememberDominantCardColor
+import com.music.Hush Music.ui.tv.components.tvClick
+import com.music.Hush Music.ui.tv.components.tvLift
+import com.music.Hush Music.ui.tv.dialogs.TvAccountDialog
+import com.music.Hush Music.ui.tv.dialogs.TvUpdateDialog
+import com.music.Hush Music.ui.tv.player.TvNowPlayingScreen
+import com.music.Hush Music.ui.tv.screens.TvDetailScreen
+import com.music.Hush Music.ui.tv.screens.TvExploreScreen
+import com.music.Hush Music.ui.tv.screens.TvHomeScreen
+import com.music.Hush Music.ui.tv.screens.TvLibraryScreen
+import com.music.Hush Music.ui.tv.screens.TvSearchScreen
+import com.music.Hush Music.ui.tv.screens.TvSettingsScreen
+import com.music.Hush Music.ui.tv.theme.TvGlass
+import com.music.Hush Music.ui.tv.theme.TvThemeColors
 import kotlinx.coroutines.delay
 
 /** The tabs of the top bar. Now Playing is a tab too, but it opens the player rather than a page. */
@@ -175,7 +175,7 @@ fun TvApp(
 
     val spatialAudio by TvSettings.spatialAudioEnabled.collectAsState()
     LaunchedEffect(spatialAudio) {
-        com.music.bitchord.ui.tv.audio.TvSpatialAudioEngine.setEnabled(spatialAudio)
+        com.music.Hush Music.ui.tv.audio.TvSpatialAudioEngine.setEnabled(spatialAudio)
     }
 
     val signedIn by viewModel.signedIn.collectAsState()
@@ -198,7 +198,7 @@ fun TvApp(
             modifier = Modifier.fillMaxSize(),
         ) { setup ->
             if (setup) {
-                com.music.bitchord.ui.tv.onboarding.TvSetupScreen(
+                com.music.Hush Music.ui.tv.onboarding.TvSetupScreen(
                     viewModel = viewModel,
                     onComplete = { isRunningSetup = false },
                 )
@@ -561,7 +561,7 @@ private fun TvTopBar(
         // The mark only, as the phone's Home heading shows it.
         Icon(
             painter = painterResource(R.drawable.ic_logo),
-            contentDescription = "BitChord",
+            contentDescription = "Hush Music",
             tint = TvGlass.TextPrimary,
             modifier = Modifier
                 .align(Alignment.CenterStart)
@@ -654,7 +654,7 @@ private fun TvAvatarButton(
     }
 }
 
-/** The BitChord mark, for the few places that show the app itself. */
+/** The Hush Music mark, for the few places that show the app itself. */
 @Composable
 fun TvAppMark(modifier: Modifier = Modifier, size: androidx.compose.ui.unit.Dp = 96.dp) {
     Box(
@@ -668,7 +668,7 @@ fun TvAppMark(modifier: Modifier = Modifier, size: androidx.compose.ui.unit.Dp =
     ) {
         Icon(
             painter = painterResource(R.drawable.ic_logo),
-            contentDescription = "BitChord",
+            contentDescription = "Hush Music",
             tint = Color.White,
             modifier = Modifier.size(size * 0.52f),
         )

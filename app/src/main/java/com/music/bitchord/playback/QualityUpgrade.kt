@@ -1,4 +1,4 @@
-package com.music.bitchord.playback
+﻿package com.music.bitchord.playback
 
 import android.net.Uri
 import android.util.Log
@@ -48,7 +48,7 @@ import java.util.concurrent.ConcurrentHashMap
  */
 object QualityUpgrade {
 
-    private const val TAG = "BitChord"
+    private const val TAG = "HushMusic"
 
     /** The marker that distinguishes an upgraded item from the one it replaced. */
     const val MARKER = "q"

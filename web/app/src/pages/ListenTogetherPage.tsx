@@ -1,4 +1,4 @@
-import { useMutation, useQuery } from '@tanstack/react-query';
+﻿import { useMutation, useQuery } from '@tanstack/react-query';
 import { Check, Copy, Crown, LogOut, UserMinus } from 'lucide-react';
 import { useEffect, useState } from 'react';
 import { useNavigate, useParams, useSearchParams } from 'react-router';
@@ -145,7 +145,7 @@ function StartOrJoin({ signedIn }: { signedIn: boolean }) {
           />
         </label>
       </section>
-      <p className={settingsUi.footer}>Leave the server empty to use BitChord’s. Anyone joining your party uses the server it’s on.</p>
+      <p className={settingsUi.footer}>Leave the server empty to use Hush Music’s. Anyone joining your party uses the server it’s on.</p>
     </>
   );
 }

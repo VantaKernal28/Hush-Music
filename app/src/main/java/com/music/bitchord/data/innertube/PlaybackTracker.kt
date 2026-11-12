@@ -1,4 +1,4 @@
-package com.music.bitchord.data.innertube
+﻿package com.music.bitchord.data.innertube
 
 import com.music.bitchord.data.TrackLog
 import com.music.bitchord.data.settings.AppSettings
@@ -41,7 +41,7 @@ import kotlinx.coroutines.withContext
  */
 object PlaybackTracker {
 
-    private const val TAG = "BitChord"
+    private const val TAG = "HushMusic"
 
     /** Report watched time once this much new audio has gone by. */
     private const val REPORT_INTERVAL_SECONDS = 30L

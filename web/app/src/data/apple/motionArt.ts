@@ -1,4 +1,4 @@
-import { useQuery } from '@tanstack/react-query';
+﻿import { useQuery } from '@tanstack/react-query';
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
 import { metered, useReducedMotion } from '@/data/spotify/canvas';
@@ -24,7 +24,7 @@ export const useAppleSettings = create<{
       setArtistArt: (artistArt) => set({ artistArt }),
       setMotion: (motion) => set({ motion }),
     }),
-    { name: 'bitchord:apple', version: 1 },
+    { name: 'Hush Music:apple', version: 1 },
   ),
 );
 

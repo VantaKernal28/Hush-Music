@@ -1,4 +1,4 @@
-package com.music.bitchord.data.sources.addon
+﻿package com.music.bitchord.data.sources.addon
 
 import android.content.Context
 import android.content.SharedPreferences
@@ -56,7 +56,7 @@ object AddonAuth {
     const val PROOF_HEADER = "X-BitChord-Proof"
     private const val PROOF_CONTEXT = "bitchord-addon-proof/v1"
 
-    private const val TAG = "BitChord"
+    private const val TAG = "HushMusic"
     private const val KEYSTORE = "AndroidKeyStore"
     private const val ALIAS_PREFIX = "bitchord_addon_auth_"
 
@@ -199,8 +199,8 @@ object AddonAuth {
     /** What to tell the listener when an addon refused credentials that were sent. */
     fun rejectionMessage(code: String?): String = when (code) {
         "stale_proof" -> "This addon rejected the request because this phone's clock is wrong"
-        "unavailable" -> "This addon couldn't check BitChord's verification right now"
-        else -> "This addon didn't accept BitChord's verification" + (code?.let { " ($it)" } ?: "")
+        "unavailable" -> "This addon couldn't check Hush Music's verification right now"
+        else -> "This addon didn't accept Hush Music's verification" + (code?.let { " ($it)" } ?: "")
     }
 
     // ── Session ───────────────────────────────────────────────────────────
@@ -222,7 +222,7 @@ object AddonAuth {
                 Refusal(e.message ?: "Verification refused", System.currentTimeMillis() + e.backoffMs, transient = false)
                     .also { refusal = it }.raise()
             } catch (e: Exception) {
-                val message = "Couldn't reach BitChord's addon verification service"
+                val message = "Couldn't reach Hush Music's addon verification service"
                 TrackLog.w(TAG, "addon auth: $message", e)
                 Refusal(message, System.currentTimeMillis() + TRANSIENT_BACKOFF_MS, transient = true)
                     .also { refusal = it }.raise()

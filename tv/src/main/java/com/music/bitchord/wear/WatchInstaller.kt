@@ -1,4 +1,4 @@
-package com.music.bitchord.wear
+﻿package com.music.Hush Music.wear
 
 import android.content.Context
 import kotlinx.coroutines.flow.MutableStateFlow

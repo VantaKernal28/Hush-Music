@@ -1,4 +1,4 @@
-package com.music.bitchord.data.lyrics
+﻿package com.music.bitchord.data.lyrics
 
 import com.music.bitchord.data.Http
 import kotlinx.coroutines.Dispatchers
@@ -50,7 +50,7 @@ object Genius {
      * which travels up as "no lyrics for this track" — indistinguishable from
      * a song Genius genuinely does not have.
      */
-    private const val USER_AGENT = "BitChord"
+    private const val USER_AGENT = "HushMusic"
 
     private val json by lazy { Json { ignoreUnknownKeys = true; isLenient = true } }
 

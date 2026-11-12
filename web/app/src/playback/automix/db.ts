@@ -1,4 +1,4 @@
-// Adapted from AutoMix's src/lib/library/db.ts (https://github.com/heydavidf/automix),
+﻿// Adapted from AutoMix's src/lib/library/db.ts (https://github.com/heydavidf/automix),
 // Copyright (C) 2026 David Finnegan. AGPL-3.0-only: see ./LICENSE and ./NOTICE.md.
 import { openDB, type DBSchema, type IDBPDatabase } from 'idb';
 import type { TrackAnalysis } from './analysis/types';
@@ -11,7 +11,7 @@ interface AutomixDB extends DBSchema {
 let dbPromise: Promise<IDBPDatabase<AutomixDB>> | null = null;
 
 function getDb(): Promise<IDBPDatabase<AutomixDB>> {
-  dbPromise ??= openDB<AutomixDB>('bitchord-automix', 1, {
+  dbPromise ??= openDB<AutomixDB>('Hush Music-automix', 1, {
     upgrade(db) {
       db.createObjectStore('tracks');
     },

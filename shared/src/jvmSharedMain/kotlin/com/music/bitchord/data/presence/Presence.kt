@@ -1,4 +1,4 @@
-package com.music.bitchord.data.presence
+﻿package com.music.bitchord.data.presence
 
 import com.music.bitchord.data.DebugLog
 import com.music.bitchord.data.Http
@@ -24,7 +24,7 @@ import kotlin.random.Random
 enum class PresencePlatform(val wire: String) { Android("android"), Pc("pc") }
 
 /**
- * Tells the BitChord server this install is open, so it can publish how many
+ * Tells the Hush Music server this install is open, so it can publish how many
  * apps are open right now (`GET /api/stats/live`).
  *
  * While open, one small POST goes out every few minutes. The server sets the

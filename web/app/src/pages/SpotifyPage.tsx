@@ -1,4 +1,4 @@
-import { PageHeader } from '@/components/PageHeader';
+﻿import { PageHeader } from '@/components/PageHeader';
 import { SquareLockup } from '@/components/music/Lockups';
 import { EmptyState, LoadError, NeedsExtension, stateStyles } from '@/components/music/States';
 import type { MusicItem } from '@/data/music/types';
@@ -26,14 +26,14 @@ export default function SpotifyPage() {
     return (
       <>
         <PageHeader title="Spotify" />
-        <EmptyState title="Update the extension" detail="This version of the BitChord extension doesn’t include Spotify yet." />
+        <EmptyState title="Update the extension" detail="This version of the Hush Music extension doesn’t include Spotify yet." />
       </>
     );
   }
   const state = auth.auth;
   if (!state.signedIn) {
     const [title, detail, action] = !state.browserSignedIn
-      ? ['Sign in to Spotify', 'BitChord uses the Spotify account this browser is signed in to, through the extension.', 'Sign In']
+      ? ['Sign in to Spotify', 'Hush Music uses the Spotify account this browser is signed in to, through the extension.', 'Sign In']
       : !state.connected
         ? ['Spotify is disconnected', 'You’re signed in to Spotify in this browser. Connect to see your playlists here.', 'Connect']
         : ['Couldn’t read your Spotify account', state.problem ?? 'Spotify didn’t answer.', 'Try Again'];

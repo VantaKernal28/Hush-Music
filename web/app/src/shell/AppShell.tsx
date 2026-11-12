@@ -1,4 +1,4 @@
-import { lazy, Suspense, useEffect } from 'react';
+﻿import { lazy, Suspense, useEffect } from 'react';
 import { resumeSession } from '@/party/listenTogether';
 import { startPartySync } from '@/party/partySync';
 import { useDiscordPresence } from '@/playback/discordPresence';
@@ -10,6 +10,7 @@ import { config } from '@/config';
 import { useExtension } from '@/extension/useExtension';
 import { isMobileBrowser } from '@/lib/platform';
 import { useUi } from '@/state/ui';
+import { OnboardingWizard } from '@/components/onboarding/OnboardingWizard';
 import { useKeyboardShortcuts } from './useKeyboardShortcuts';
 import { Banner, bannerButtonClass } from './Banner';
 import { MobileTopBar } from './MobileTopBar';
@@ -42,13 +43,15 @@ export function AppShell() {
   const bannerDismissed = useUi((s) => s.installBannerDismissed);
   const dismissBanner = useUi((s) => s.dismissInstallBanner);
   const fullScreen = useUi((s) => s.fullScreen);
+  const onboardingOpen = useUi((s) => s.onboardingOpen);
+  const closeOnboarding = useUi((s) => s.closeOnboarding);
 
   let banner = null;
   if (mobile) {
     banner = (
       <Banner
-        title="BitChord is better in the app."
-        detail="Phone browsers can’t run the BitChord extension. The Android app has everything."
+        title="Hush Music is better in the app."
+        detail="Phone browsers can’t run the Hush Music extension. The Android app has everything."
         action={
           <a className={bannerButtonClass} href={config.androidAppUrl} target="_blank" rel="noreferrer">
             Get the App
@@ -59,7 +62,7 @@ export function AppShell() {
   } else if (extension.state === 'missing' && !bannerDismissed) {
     banner = (
       <Banner
-        title="Play YouTube Music with the BitChord extension."
+        title="Play YouTube Music with the Hush Music extension."
         detail="Playback, YouTube Music sign-in, Spotify and Discord need the extension. Addons and lyrics work without it."
         action={
           <PrefetchLink className={bannerButtonClass} to="/extension">
@@ -96,6 +99,7 @@ export function AppShell() {
           <FullScreenPlayer />
         </Suspense>
       )}
+      <OnboardingWizard isOpen={onboardingOpen} onComplete={closeOnboarding} />
     </div>
   );
 }

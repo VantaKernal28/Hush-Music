@@ -1,4 +1,4 @@
-// From AutoMix (https://github.com/heydavidf/automix), Copyright (C) 2026 David Finnegan.
+﻿// From AutoMix (https://github.com/heydavidf/automix), Copyright (C) 2026 David Finnegan.
 // AGPL-3.0-only: see ./LICENSE and ./NOTICE.md in playback/automix.
 
 /**
@@ -17,7 +17,7 @@ export interface GridFit {
 }
 
 /*
- * BitChord change. AutoMix fitted t_i = offset + i * interval by least
+ * Hush Music change. AutoMix fitted t_i = offset + i * interval by least
  * squares, numbering the ticks consecutively. essentia leaves gaps where a
  * song drops its beat and wanders through a filtered intro, so ticks after a
  * gap got the wrong beat number and the fit fell apart: on Daft Punk's One

@@ -1,4 +1,4 @@
-package com.music.bitchord.data.sources
+﻿package com.music.bitchord.data.sources
 
 import com.music.bitchord.data.TrackLog
 import com.music.bitchord.data.model.Song
@@ -493,7 +493,7 @@ class AddonSource(
     }
 
     private companion object {
-        const val TAG = "BitChord"
+        const val TAG = "HushMusic"
 
         /** What a gated addon's health says, for the editor's Test line. The sources list draws its own. */
         const val NEEDS_LOSSLESS_OUTPUT =

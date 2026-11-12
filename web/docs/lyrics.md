@@ -1,4 +1,4 @@
-# Lyrics (phase 8)
+﻿# Lyrics (phase 8)
 
 Prompt §10. Our providers decide the lyrics; **am-lyrics renders them, unmodified**.
 
@@ -40,7 +40,7 @@ How the extension route works:
 - Each host is an `optional_host_permissions` entry.
 - Chrome only prompts in answer to a click inside the extension. So `lyrics.requestPermissions` opens `grant.html`, which asks.
 - Until a host is granted, requests to it fail with `permission`. Lyric Settings offers "Allow"; the panel offers it too, but only when nothing was found.
-- The grant happens in the extension's tab, so when BitChord's tab comes back (focus or visibility) the app asks `lyrics.permissions` about the refused hosts. Any that are allowed now leave the notice, the lyric cache is dropped, and the lookup runs again.
+- The grant happens in the extension's tab, so when Hush Music's tab comes back (focus or visibility) the app asks `lyrics.permissions` about the refused hosts. Any that are allowed now leave the notice, the lyric cache is dropped, and the lookup runs again.
 - Session rules give the extension's own requests:
   - Apple's Origin, for `amp-api`.
   - Musixmatch's `mxm_bab=AB` cookie.

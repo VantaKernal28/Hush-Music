@@ -1,4 +1,4 @@
-package com.music.bitchord.data.sources
+﻿package com.music.bitchord.data.sources
 
 import android.util.Log
 import com.music.bitchord.data.TrackLog
@@ -376,7 +376,7 @@ class ModuleSource(
         }
 
     internal companion object {
-        const val TAG = "BitChord"
+        const val TAG = "HushMusic"
 
         /**
          * Whether a module's stream URL is one no server could answer, decided

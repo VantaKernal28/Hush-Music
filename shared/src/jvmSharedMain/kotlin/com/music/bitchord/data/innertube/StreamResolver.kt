@@ -1,4 +1,4 @@
-package com.music.bitchord.data.innertube
+﻿package com.music.bitchord.data.innertube
 
 import com.music.bitchord.data.MonotonicClock
 import com.music.bitchord.data.TrackLog
@@ -63,7 +63,7 @@ object StreamResolver {
     var maxKbps: () -> Int = { Int.MAX_VALUE }
 
 
-    private const val TAG = "BitChord"
+    private const val TAG = "HushMusic"
 
     /** Past this, an extractor fetch is worth flagging rather than just noting. */
     private const val SLOW_FETCH_MS = 2000L

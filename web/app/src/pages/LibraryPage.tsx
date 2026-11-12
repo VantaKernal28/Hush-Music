@@ -1,4 +1,4 @@
-import { useEffect, useRef } from 'react';
+﻿import { useEffect, useRef } from 'react';
 import { Navigate, useParams } from 'react-router';
 import { PageHeader } from '@/components/PageHeader';
 import { CircleLockup, SquareLockup, VideoLockup } from '@/components/music/Lockups';
@@ -47,7 +47,7 @@ export default function LibraryPage() {
         <PageHeader title={title} />
         <EmptyState
           title="Sign in to see your library"
-          detail="BitChord uses the YouTube Music account this browser is signed in to. Sign in on music.youtube.com, then come back."
+          detail="Hush Music uses the YouTube Music account this browser is signed in to. Sign in on music.youtube.com, then come back."
         />
       </>
     );

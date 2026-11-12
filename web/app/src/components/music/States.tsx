@@ -1,4 +1,4 @@
-import { PrefetchLink } from '@/components/PrefetchLink';
+﻿import { PrefetchLink } from '@/components/PrefetchLink';
 
 /** A page-sized message, centred: also the Spotify page's sign-in invitation. */
 export const stateStyles = {
@@ -12,7 +12,7 @@ export const stateStyles = {
 export function NeedsExtension({ what = 'YouTube Music' }: { what?: string }) {
   return (
     <div className={stateStyles.state}>
-      <p className={stateStyles.title}>Browse {what} with the BitChord extension</p>
+      <p className={stateStyles.title}>Browse {what} with the Hush Music extension</p>
       <p className={stateStyles.detail}>
         The extension lets this page reach YouTube Music from your own browser. Addons and lyrics work without it.
       </p>

@@ -1,4 +1,4 @@
-// From AutoMix (https://github.com/heydavidf/automix), Copyright (C) 2026 David Finnegan.
+﻿// From AutoMix (https://github.com/heydavidf/automix), Copyright (C) 2026 David Finnegan.
 // AGPL-3.0-only: see ./LICENSE and ./NOTICE.md in playback/automix.
 
 import type { TrackAnalysis } from '../analysis/types';
@@ -27,7 +27,7 @@ export function gridOf(a: TrackAnalysis): Grid | null {
 }
 
 /**
- * BitChord: the analysis as the outgoing side of a blend sees it, its grid
+ * Hush Music: the analysis as the outgoing side of a blend sees it, its grid
  * fields swapped for the tail grid (see TrackAnalysis). The scheduler and the
  * mix loop read the outgoing track through this, so they stay AutoMix's.
  */

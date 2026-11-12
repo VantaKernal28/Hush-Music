@@ -1,4 +1,4 @@
-package com.music.bitchord.data.lyrics
+﻿package com.music.bitchord.data.lyrics
 
 import android.content.Context
 import android.net.Uri
@@ -46,7 +46,7 @@ import java.io.InputStream
  */
 object EmbeddedLyrics {
 
-    private const val TAG = "BitChord"
+    private const val TAG = "HushMusic"
 
     /**
      * Most bytes worth pulling to find a tag.

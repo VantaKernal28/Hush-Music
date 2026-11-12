@@ -1,4 +1,4 @@
-package com.music.bitchord.download
+﻿package com.music.bitchord.download
 
 import android.Manifest
 import android.app.Application
@@ -54,7 +54,7 @@ import java.util.concurrent.TimeUnit
  */
 object PlaylistSync {
 
-    private const val TAG = "BitChord"
+    private const val TAG = "HushMusic"
     private const val PERIODIC_WORK = "playlist_sync"
     private const val ONE_OFF_WORK = "playlist_sync_now"
     private const val PREFS = "bitchord_playlist_sync"

@@ -1,4 +1,4 @@
-package com.music.bitchord.data.canvas
+﻿package com.music.bitchord.data.canvas
 
 import java.text.Normalizer
 import java.util.Locale
@@ -43,7 +43,7 @@ data class CanvasArtwork(
      * Title and artists must match exactly once punctuation, case and accents
      * are stripped — a near miss here is a different song by the same artist,
      * which is the one failure mode users notice. The album is only held to
-     * that standard when both sides know it: BitChord resolves a track's album
+     * that standard when both sides know it: Hush Music resolves a track's album
      * asynchronously after the player opens, and a track queued from search
      * may never get one, so requiring it outright would mean no canvas at all
      * for most of a session.

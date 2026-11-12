@@ -1,4 +1,4 @@
-package com.music.bitchord.ui.tv.screens
+﻿package com.music.Hush Music.ui.tv.screens
 
 import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.layout.Arrangement
@@ -29,21 +29,21 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.media3.session.MediaController
-import com.music.bitchord.data.model.BrowseType
-import com.music.bitchord.data.model.MoodGenre
-import com.music.bitchord.data.model.MoodGenreSection
-import com.music.bitchord.data.model.Song
-import com.music.bitchord.data.model.UiState
-import com.music.bitchord.playback.playSongs
-import com.music.bitchord.ui.MainViewModel
-import com.music.bitchord.ui.screens.MOOD_CARD_ASPECT
-import com.music.bitchord.ui.tv.components.TvChromeScrollEffect
-import com.music.bitchord.ui.tv.components.TvErrorState
-import com.music.bitchord.ui.tv.components.TvMoodCard
-import com.music.bitchord.ui.tv.dialogs.TvSongMenu
-import com.music.bitchord.ui.tv.theme.TvDimensions
-import com.music.bitchord.ui.tv.theme.TvGlass
-import com.music.bitchord.ui.tv.theme.TvType
+import com.music.Hush Music.data.model.BrowseType
+import com.music.Hush Music.data.model.MoodGenre
+import com.music.Hush Music.data.model.MoodGenreSection
+import com.music.Hush Music.data.model.Song
+import com.music.Hush Music.data.model.UiState
+import com.music.Hush Music.playback.playSongs
+import com.music.Hush Music.ui.MainViewModel
+import com.music.Hush Music.ui.screens.MOOD_CARD_ASPECT
+import com.music.Hush Music.ui.tv.components.TvChromeScrollEffect
+import com.music.Hush Music.ui.tv.components.TvErrorState
+import com.music.Hush Music.ui.tv.components.TvMoodCard
+import com.music.Hush Music.ui.tv.dialogs.TvSongMenu
+import com.music.Hush Music.ui.tv.theme.TvDimensions
+import com.music.Hush Music.ui.tv.theme.TvGlass
+import com.music.Hush Music.ui.tv.theme.TvType
 import kotlinx.coroutines.launch
 
 /**

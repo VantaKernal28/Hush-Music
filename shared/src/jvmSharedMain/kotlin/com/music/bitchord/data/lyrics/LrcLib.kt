@@ -1,4 +1,4 @@
-package com.music.bitchord.data.lyrics
+﻿package com.music.bitchord.data.lyrics
 
 import com.music.bitchord.data.Http
 import kotlinx.coroutines.Dispatchers
@@ -25,7 +25,7 @@ import kotlin.math.abs
 object LrcLib {
 
     private const val BASE = "https://lrclib.net/api"
-    private const val AGENT = "BitChord (https://github.com/bitchord)"
+    private const val AGENT = "HushMusic (https://github.com/bitchord)"
 
     private val json = Json { ignoreUnknownKeys = true }
 
