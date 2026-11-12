@@ -22,7 +22,7 @@ import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
-import com.music.bitchord.ui.icons.Hush MusicIcons
+import com.music.bitchord.ui.icons.BitChordIcons
 import com.music.bitchord.ui.tv.components.tvClick
 import com.music.bitchord.ui.tv.components.tvInitialFocus
 import com.music.bitchord.ui.tv.components.tvLift
@@ -55,14 +55,14 @@ internal fun TvActionRow(
         verticalAlignment = Alignment.CenterVertically,
     ) {
         TvCircleAction(
-            icon = Hush MusicIcons.Shuffle,
+            icon = BitChordIcons.Shuffle,
             contentDescription = "Shuffle",
             size = 43.dp,
             enabled = canPlay,
             onClick = onShuffle,
         )
         TvCircleAction(
-            icon = Hush MusicIcons.Play,
+            icon = BitChordIcons.Play,
             contentDescription = "Play",
             size = 58.dp,
             iconScale = 0.5f,

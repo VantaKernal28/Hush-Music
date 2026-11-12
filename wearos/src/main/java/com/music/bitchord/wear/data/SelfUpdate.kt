@@ -75,7 +75,7 @@ object SelfUpdate {
         return hash
     }
 
-    private fun incoming(context: Context) = File(context.cacheDir, "update/Hush Music.apk")
+    private fun incoming(context: Context) = File(context.cacheDir, "update/HushMusic.apk")
 
     /**
      * A newer APK arriving on [P.PATH_APK].

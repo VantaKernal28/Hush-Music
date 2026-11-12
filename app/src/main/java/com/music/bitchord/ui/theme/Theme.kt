@@ -154,6 +154,14 @@ fun BitChordTheme(
     )
 }
 
+/** Hush Music theme alias for rebranded usage. */
+@Composable
+fun HushMusicTheme(
+    darkTheme: Boolean = isSystemInDarkTheme(),
+    font: AppFont = AppFont.DEFAULT,
+    content: @Composable () -> Unit,
+) = BitChordTheme(darkTheme = darkTheme, font = font, content = content)
+
 /**
  * Draws the status and navigation bar glyphs dark or light.
  *

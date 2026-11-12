@@ -92,7 +92,7 @@ import com.music.bitchord.sharedui.resources.ic_player_next
 import com.music.bitchord.sharedui.resources.ic_player_pause
 import com.music.bitchord.sharedui.resources.ic_player_play
 import com.music.bitchord.sharedui.resources.ic_player_previous
-import com.music.bitchord.ui.icons.Hush MusicIcons
+import com.music.bitchord.ui.icons.BitChordIcons
 import com.music.bitchord.data.settings.TvPlayerStyle
 import com.music.bitchord.ui.player.ArtworkMeshBackdrop
 import com.music.bitchord.ui.player.CanvasArtworkPlayer
@@ -363,19 +363,19 @@ internal fun TvTransport(
             }
             Row(horizontalArrangement = Arrangement.spacedBy(11.dp)) {
                 TvTransportButton(
-                    icon = if (isLiked) Hush MusicIcons.StarFilled else Hush MusicIcons.Star,
+                    icon = if (isLiked) BitChordIcons.StarFilled else BitChordIcons.Star,
                     contentDescription = if (isLiked) "Unfavorite" else "Favorite",
                     onClick = onToggleLike,
                 )
                 TvTransportButton(
-                    icon = Hush MusicIcons.LyricsQuote,
+                    icon = BitChordIcons.LyricsQuote,
                     contentDescription = "Lyrics",
                     active = lyricsOn,
                     enabled = lyricsAvailable,
                     onClick = onToggleLyrics,
                 )
                 TvTransportButton(
-                    icon = Hush MusicIcons.Queue,
+                    icon = BitChordIcons.Queue,
                     contentDescription = "Up Next",
                     active = upNextOpen,
                     onClick = onToggleUpNext,
@@ -694,14 +694,14 @@ internal fun TvUpNext(
             )
             Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
                 TvTransportButton(
-                    icon = Hush MusicIcons.Shuffle,
+                    icon = BitChordIcons.Shuffle,
                     contentDescription = "Shuffle",
                     active = shuffle,
                     size = 32.dp,
                     onClick = onToggleShuffle,
                 )
                 TvTransportButton(
-                    icon = if (repeatMode == Player.REPEAT_MODE_ONE) null else Hush MusicIcons.Repeat,
+                    icon = if (repeatMode == Player.REPEAT_MODE_ONE) null else BitChordIcons.Repeat,
                     contentDescription = when (repeatMode) {
                         Player.REPEAT_MODE_ONE -> "Repeat One"
                         Player.REPEAT_MODE_ALL -> "Repeat All"
@@ -713,7 +713,7 @@ internal fun TvUpNext(
                     onClick = onCycleRepeat,
                 )
                 TvTransportButton(
-                    icon = Hush MusicIcons.Infinity,
+                    icon = BitChordIcons.Infinity,
                     contentDescription = "Autoplay",
                     active = autoplay,
                     size = 32.dp,
@@ -818,7 +818,7 @@ internal fun TvNothingPlaying(onBrowse: () -> Unit, modifier: Modifier = Modifie
         verticalArrangement = Arrangement.Center,
     ) {
         Icon(
-            imageVector = Hush MusicIcons.MusicNote,
+            imageVector = BitChordIcons.MusicNote,
             contentDescription = null,
             tint = TvGlass.TextTertiary,
             modifier = Modifier.size(58.dp),
