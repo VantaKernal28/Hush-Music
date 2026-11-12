@@ -2,8 +2,9 @@
 
 on:
   push:
-    branches: [main]
+    branches: [main, BETA1.0]
   pull_request:
+  workflow_dispatch:
 
 concurrency:
   group: check-${{ github.workflow }}-${{ github.ref }}
