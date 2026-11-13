@@ -100,7 +100,7 @@ Grab the latest signed APK from the [Releases](https://github.com/kushagrasinghx
 
 <h1><a id="contributing"></a>Contributing</h1>
 
-Hush Music is a Fork of BitChord Made by Dhruv Dinesh Patil and Veena
+Hush Music is a Fork of BitChord Made by Dhruv Dinesh Patil and Phoenix Veena
 Contribution's are  welcome to Hush Music. 
 
 ---
