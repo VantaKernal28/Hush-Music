@@ -1,6 +1,7 @@
 import java.util.Properties
 import java.security.MessageDigest
 import java.io.FileInputStream
+import com.android.build.VariantOutput.FilterType
 
 plugins {
     id("com.android.application")
@@ -159,10 +160,11 @@ android {
         // exactly the failure the unsigned fallback above exists to avoid, so
         // the keystore has to be looked for rather than assumed.
         val store = signing.getProperty("storeFile")?.let { rootProject.file(it) }
-        if (store != null && store.exists()) {
+        val password = signing.getProperty("storePassword")
+        if (store != null && store.exists() && store.length() > 0 && !password.isNullOrBlank()) {
             create("release") {
                 storeFile = store
-                storePassword = signing.getProperty("storePassword")
+                storePassword = password
                 keyAlias = signing.getProperty("keyAlias")
                 keyPassword = signing.getProperty("keyPassword")
                 enableV1Signing = true
@@ -259,7 +261,7 @@ android {
         outputs.all {
             val output = this as? com.android.build.gradle.api.ApkVariantOutput
             if (output != null) {
-                val abi = output.getFilter("ABI") ?: "universal"
+                val abi = output.getFilter(FilterType.ABI) ?: "universal"
                 output.outputFileName = "HushMusic-v${vName}${flavor}-${abi}-${buildType}.apk"
             }
         }
