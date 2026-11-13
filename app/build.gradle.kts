@@ -103,7 +103,7 @@ android {
         // Which release assets are this app's: the phone and TV APKs ship in
         // the same GitHub release, told apart by file name. See
         // AppUpdateChecker.apkAssetUrl.
-        buildConfigField("String", "UPDATE_APK_PREFIX", "\"BitChord-\"")
+        buildConfigField("String", "UPDATE_APK_PREFIX", "\"HushMusic-\"")
     }
 
     splits {
@@ -247,6 +247,21 @@ android {
             // so a test of that layer fails on the logging rather than on the
             // logic it was written to check.
             isReturnDefaultValues = true
+        }
+    }
+
+    applicationVariants.all {
+        val variant = this
+        val vName = (variant.versionName ?: "1.1").removePrefix("v").removePrefix("V").replace(" ", "-")
+        val buildType = variant.buildType.name
+        val flavor = if (variant.flavorName == "prod" || variant.flavorName.isNullOrEmpty()) "" else "-${variant.flavorName}"
+
+        outputs.all {
+            val output = this as? com.android.build.gradle.api.ApkVariantOutput
+            if (output != null) {
+                val abi = output.getFilter("ABI") ?: "universal"
+                output.outputFileName = "HushMusic-v${vName}${flavor}-${abi}-${buildType}.apk"
+            }
         }
     }
 }

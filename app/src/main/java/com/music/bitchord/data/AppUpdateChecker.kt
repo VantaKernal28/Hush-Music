@@ -120,9 +120,15 @@ object AppUpdateChecker {
                 if (ours) name.removeSuffix(".apk").removeSuffix(".APK") to url else null
             }
             .orEmpty()
-        apks.firstOrNull { (name, _) -> '_' !in name }?.second
+        apks.firstOrNull { (name, _) ->
+            name.contains("universal", ignoreCase = true) || ('_' !in name && !name.contains("arm") && !name.contains("x86"))
+        }?.second
             ?: Build.SUPPORTED_ABIS.firstNotNullOfOrNull { abi ->
-                apks.firstOrNull { (name, _) -> name.endsWith("_$abi") }?.second
+                apks.firstOrNull { (name, _) ->
+                    name.endsWith("_$abi", ignoreCase = true) ||
+                        name.contains("-$abi-", ignoreCase = true) ||
+                        name.endsWith("-$abi", ignoreCase = true)
+                }?.second
             }
     }.getOrNull()
 

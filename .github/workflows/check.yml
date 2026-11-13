@@ -2,7 +2,10 @@ name: Check
 
 on:
   push:
-    branches: [main]
+    branches:
+      - main
+      - beta-1.1
+      - 'beta-*'
   pull_request:
 
 concurrency:
@@ -11,7 +14,7 @@ concurrency:
 
 jobs:
   android:
-    name: Android
+    name: Android Phone
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -43,15 +46,15 @@ jobs:
       - run: chmod +x gradlew
 
       - name: Tests
-        run: ./gradlew testDevDebugUnitTest
+        run: ./gradlew :app:testDevDebugUnitTest
 
       - name: Build the dev APK
-        run: ./gradlew assembleDevDebug
+        run: ./gradlew :app:assembleDevDebug
 
       - name: Upload the dev APK
         uses: actions/upload-artifact@v4
         with:
-          name: bitchord-dev-debug
+          name: HushMusic-dev-debug
           path: app/build/outputs/apk/dev/debug/*.apk
 
       - name: Upload test reports
