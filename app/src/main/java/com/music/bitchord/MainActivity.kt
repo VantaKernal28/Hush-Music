@@ -3139,6 +3139,7 @@ private fun BitChordApp(
                                 onEditSignatureApi = { editingSignatureApi = true },
                                 onConfirmBitPerfect = { confirmBitPerfect = it },
                                 onConfirmFixedVolume = { confirmFixedVolume = true },
+                                onBack = { navigator.pop() },
                                 contentPadding = listPadding,
                             )
                         } else if (page != null) {
@@ -3416,7 +3417,7 @@ private fun BitChordApp(
                                 recentlyPlayedLoading = homeRecentlyPlayedLoading && !hideRecents,
                                 topPicks = topPicks,
                                 topPicksLoading = topPicksLoading,
-                                listenerName = account?.name,
+                                listenerName = AppSettings.userName.value.ifBlank { account?.name },
                                 // Neither shelf is drawn without its callback.
                                 onTopPickClick = openTopPick.takeUnless { hideTopPicks },
                                 onMoodClick = playMood.takeUnless { hideHomeMoods },
@@ -5312,9 +5313,14 @@ private fun BitChordApp(
             OnboardingScreen(
                 signedIn = signedIn,
                 initialName = remember {
-                    ListenTogether.nickname().ifBlank { account?.name.orEmpty() }
+                    AppSettings.userName.value.ifBlank {
+                        ListenTogether.nickname().ifBlank { account?.name.orEmpty() }
+                    }
                 },
-                onNameChosen = ListenTogether::setNickname,
+                onNameChosen = { name ->
+                    ListenTogether.setNickname(name)
+                    AppSettings.setUserName(name)
+                },
                 onSignIn = { webSession = WebSessionMode.SIGN_IN },
                 onFinish = AppSettings::setOnboardingComplete,
             )

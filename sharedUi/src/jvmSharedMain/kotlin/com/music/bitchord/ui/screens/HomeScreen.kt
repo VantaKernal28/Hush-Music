@@ -44,9 +44,12 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberUpdatedState
+import androidx.compose.runtime.setValue
 import androidx.compose.runtime.snapshotFlow
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -190,7 +193,7 @@ fun HomeScreen(
             },
         ) {
             if (title != null) {
-                item { HomeTitle(title, festiveLogo = festiveLogo, onFestiveLogoClick = onFestiveLogoClick) }
+                item { HomeTitle(title, listenerName = listenerName, festiveLogo = festiveLogo, onFestiveLogoClick = onFestiveLogoClick) }
             }
             if (!signedIn && onSignIn != null) {
                 item {
@@ -290,13 +293,21 @@ private fun androidx.compose.foundation.lazy.LazyListScope.itemsIndexedShelves(
             if (shelf.layout == ShelfLayout.LIST ||
                 (index == 0 && shelf.title.equals(RECENTS_TITLE, ignoreCase = true))
             ) {
-                RecentShelf(
-                    shelf = shelf,
-                    onItemClick = openItem,
-                    onItemLongPress = onItemLongPress,
-                    currentSong = currentSong,
-                    isPlaying = isPlaying,
-                )
+                Column {
+                    RecentQuickGrid(
+                        items = shelf.items,
+                        onItemClick = openItem,
+                        currentSong = currentSong,
+                        isPlaying = isPlaying,
+                    )
+                    RecentShelf(
+                        shelf = shelf,
+                        onItemClick = openItem,
+                        onItemLongPress = onItemLongPress,
+                        currentSong = currentSong,
+                        isPlaying = isPlaying,
+                    )
+                }
             } else {
                 Shelf(
                     shelf = shelf,
@@ -461,40 +472,154 @@ fun CompactTrackRow(
  * font size rather than a fixed dp, so the two keep their proportion under the
  * system font scale.
  */
+/**
+ * Spotify-inspired 2-column quick access recent grid (2 columns x 3 rows).
+ */
+@Composable
+private fun RecentQuickGrid(
+    items: List<ShelfItem>,
+    onItemClick: (ShelfItem) -> Unit,
+    currentSong: Song?,
+    isPlaying: Boolean,
+) {
+    val quickItems = items.take(6)
+    if (quickItems.isEmpty()) return
+
+    Column(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(horizontal = PAGE_GUTTER, vertical = 6.dp),
+        verticalArrangement = Arrangement.spacedBy(8.dp),
+    ) {
+        val pairs = quickItems.chunked(2)
+        pairs.forEach { pair ->
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.spacedBy(8.dp),
+            ) {
+                pair.forEach { item ->
+                    val isCurrent = item.videoId != null && item.videoId == currentSong?.videoId
+                    Box(
+                        modifier = Modifier
+                            .weight(1f)
+                            .height(56.dp)
+                            .clip(RoundedCornerShape(6.dp))
+                            .background(MaterialTheme.colorScheme.surfaceVariant)
+                            .clickable { onItemClick(item) },
+                    ) {
+                        Row(
+                            modifier = Modifier.fillMaxSize(),
+                            verticalAlignment = Alignment.CenterVertically,
+                        ) {
+                            AsyncImage(
+                                model = item.thumbnailUrl.artworkAt(ROW_ART_PX),
+                                contentDescription = null,
+                                contentScale = ContentScale.Crop,
+                                modifier = Modifier
+                                    .size(56.dp)
+                                    .clip(RoundedCornerShape(topStart = 6.dp, bottomStart = 6.dp)),
+                            )
+                            Spacer(Modifier.width(10.dp))
+                            Text(
+                                text = item.title,
+                                style = MaterialTheme.typography.bodyMedium,
+                                fontWeight = FontWeight.SemiBold,
+                                color = MaterialTheme.colorScheme.onSurface,
+                                maxLines = 2,
+                                overflow = TextOverflow.Ellipsis,
+                                modifier = Modifier.weight(1f).padding(end = 6.dp),
+                            )
+                            if (isCurrent && isPlaying) {
+                                SearchPlayingBars(Modifier.padding(end = 10.dp))
+                            }
+                        }
+                    }
+                }
+                if (pair.size == 1) {
+                    Spacer(Modifier.weight(1f))
+                }
+            }
+        }
+    }
+}
+
+/**
+ * Spotify-inspired personalized greeting header with Hush branding & category pills.
+ */
 @Composable
 private fun HomeTitle(
     title: String,
+    listenerName: String? = null,
     modifier: Modifier = Modifier,
     festiveLogo: Boolean = false,
     onFestiveLogoClick: (() -> Unit)? = null,
 ) {
-    val style = MaterialTheme.typography.displayLarge
-    val logoHeight = with(LocalDensity.current) { (style.fontSize * LOGO_TO_FONT).toDp() }
-    Column(modifier = modifier.padding(horizontal = PAGE_GUTTER, vertical = 8.dp)) {
-        val logoModifier = Modifier
-            .padding(bottom = 14.dp)
-            .height(logoHeight)
-            .aspectRatio(LOGO_ASPECT)
-        if (festiveLogo) {
-            GoldenLogo(
-                painter = painterResource(Res.drawable.ic_logo),
-                modifier = logoModifier,
-                onClick = onFestiveLogoClick,
+    val hour = remember { java.util.Calendar.getInstance().get(java.util.Calendar.HOUR_OF_DAY) }
+    val greeting = when (hour) {
+        in 5..11 -> "Good morning"
+        in 12..16 -> "Good afternoon"
+        else -> "Good evening"
+    }
+    val fullGreeting = if (!listenerName.isNullOrBlank() && listenerName != "Listener") {
+        "$greeting, $listenerName"
+    } else {
+        greeting
+    }
+    var selectedFilter by remember { mutableStateOf("All") }
+
+    Column(modifier = modifier.padding(horizontal = PAGE_GUTTER, vertical = 6.dp)) {
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(bottom = 12.dp),
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.SpaceBetween,
+        ) {
+            Text(
+                text = fullGreeting,
+                style = MaterialTheme.typography.headlineMedium,
+                fontWeight = FontWeight.Bold,
+                color = MaterialTheme.colorScheme.onBackground,
             )
-        } else {
             Icon(
                 painter = painterResource(Res.drawable.ic_logo),
-                contentDescription = null,
-                tint = MaterialTheme.colorScheme.onBackground,
-                modifier = logoModifier,
+                contentDescription = "Hush Music",
+                tint = Color(0xFFFF6E40),
+                modifier = Modifier
+                    .height(24.dp)
+                    .aspectRatio(LOGO_ASPECT),
             )
         }
-        // "Listen now" is hidden for now; the wordmark above stays.
-        // Text(
-        //     text = title,
-        //     style = style,
-        //     color = MaterialTheme.colorScheme.onBackground,
-        // )
+
+        val filters = listOf("All", "Music", "Podcasts", "Made For You")
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(bottom = 10.dp),
+            horizontalArrangement = Arrangement.spacedBy(8.dp),
+        ) {
+            filters.forEach { filter ->
+                val active = selectedFilter == filter
+                Box(
+                    modifier = Modifier
+                        .clip(CircleShape)
+                        .background(
+                            if (active) MaterialTheme.colorScheme.primary
+                            else MaterialTheme.colorScheme.surfaceVariant
+                        )
+                        .clickable { selectedFilter = filter }
+                        .padding(horizontal = 16.dp, vertical = 7.dp),
+                ) {
+                    Text(
+                        text = filter,
+                        style = MaterialTheme.typography.labelLarge,
+                        fontWeight = if (active) FontWeight.Bold else FontWeight.Medium,
+                        color = if (active) MaterialTheme.colorScheme.onPrimary
+                        else MaterialTheme.colorScheme.onSurfaceVariant,
+                    )
+                }
+            }
+        }
     }
 }
 

@@ -19,32 +19,61 @@ import androidx.compose.ui.unit.sp
 import com.music.bitchord.R
 import com.music.bitchord.data.settings.AppFont
 
-// Apple Music's signature red. No longer the primary accent, but kept for the
-// spots (Replay's rank badge) that want that specific red regardless of theme.
-val AccentRed = Color(0xFFFA2D48)
+// Hush Music signature warm sunset-orange, peach, and deep-lavender aesthetic
+val HushSunsetOrange = Color(0xFFFF6E40)
+val HushPeach = Color(0xFFFFAB91)
+val HushDeepLavender = Color(0xFFB388FF)
+val HushViolet = Color(0xFF7E57C2)
+
+// Deep charcoal / AMOLED surfaces
+val HushAmoledDark = Color(0xFF0A0A0C)
+val HushCharcoalSurface = Color(0xFF121214)
+val HushSurfaceVariant = Color(0xFF1E1E24)
+val HushCardSurface = Color(0xFF26262E)
+val HushOutline = Color(0xFF32323C)
+
+// Multi-stop gradient for cards, hero accents, and brand badges
+val HushSunsetGradient = listOf(
+    Color(0xFFFF5722),
+    Color(0xFFFF7A45),
+    Color(0xFFFFAB91),
+    Color(0xFFB388FF),
+    Color(0xFF673AB7),
+)
+
+// Primary accent token
+val AccentRed = HushSunsetOrange
 
 private val DarkColors = darkColorScheme(
-    primary = Color.White,
+    primary = HushSunsetOrange,
     onPrimary = Color.Black,
-    background = Color.Black,
+    secondary = HushPeach,
+    onSecondary = Color.Black,
+    tertiary = HushDeepLavender,
+    onTertiary = Color.Black,
+    background = HushAmoledDark,
     onBackground = Color.White,
-    surface = Color(0xFF0D0D0F),
+    surface = HushCharcoalSurface,
     onSurface = Color.White,
-    surfaceVariant = Color(0xFF1C1C1E),
-    onSurfaceVariant = Color(0xFF8E8E93),
-    outline = Color(0xFF2C2C2E),
+    surfaceVariant = HushSurfaceVariant,
+    onSurfaceVariant = Color(0xFFB0B0BC),
+    outline = HushOutline,
 )
 
 private val LightColors = lightColorScheme(
-    primary = Color.Black,
+    primary = HushSunsetOrange,
     onPrimary = Color.White,
-    background = Color.White,
-    onBackground = Color.Black,
-    surface = Color(0xFFF7F7F9),
-    onSurface = Color.Black,
-    surfaceVariant = Color(0xFFF2F2F7),
-    onSurfaceVariant = Color(0xFF6E6E73),
-    outline = Color(0xFFE5E5EA),
+    secondary = Color(0xFFE64A19),
+    onSecondary = Color.White,
+    tertiary = HushDeepLavender,
+    onTertiary = Color.White,
+    background = Color(0xFFFAF9F8),
+    onBackground = Color(0xFF121214),
+    surface = Color(0xFFFFFFFF),
+    onSurface = Color(0xFF121214),
+    surfaceVariant = Color(0xFFF2F0F4),
+    onSurfaceVariant = Color(0xFF6A6A74),
+    outline = Color(0xFFE0DEE4),
 )
 
 /**
@@ -153,6 +182,14 @@ fun BitChordTheme(
         content = content,
     )
 }
+
+/** Hush Music's primary theme entrypoint. */
+@Composable
+fun HushMusicTheme(
+    darkTheme: Boolean = isSystemInDarkTheme(),
+    font: AppFont = AppFont.DEFAULT,
+    content: @Composable () -> Unit,
+) = BitChordTheme(darkTheme, font, content)
 
 /**
  * Draws the status and navigation bar glyphs dark or light.

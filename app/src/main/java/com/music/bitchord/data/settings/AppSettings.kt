@@ -437,6 +437,15 @@ object AppSettings {
      */
     val onboardingComplete = MutableStateFlow(false)
 
+    /** Personalized user display name collected during onboarding. */
+    val userName = MutableStateFlow("Listener")
+
+    /** User vibe/genre preferences chosen during onboarding. */
+    val selectedGenres = MutableStateFlow<Set<String>>(emptySet())
+
+    /** Theme accent chosen during onboarding (sunset, peach, lavender, amoled). */
+    val themeAccent = MutableStateFlow("sunset")
+
     /** Whether the one-time Diwali 2026 greeting has been seen and dismissed. */
     val diwaliGreetingShown = MutableStateFlow(false)
 
@@ -1021,6 +1030,9 @@ object AppSettings {
         showListenTogetherButton.value = prefs.getBoolean(KEY_LISTEN_TOGETHER_BUTTON, false)
         reduceAnimation.value = prefs.getBoolean(KEY_REDUCE_ANIMATION, false)
         onboardingComplete.value = prefs.getBoolean(KEY_ONBOARDING_COMPLETE, false)
+        userName.value = prefs.getString(KEY_USER_NAME, "Listener") ?: "Listener"
+        selectedGenres.value = prefs.getStringSet(KEY_SELECTED_GENRES, emptySet()) ?: emptySet()
+        themeAccent.value = prefs.getString(KEY_THEME_ACCENT, "sunset") ?: "sunset"
         diwaliGreetingShown.value = prefs.getBoolean(KEY_DIWALI_GREETING_SHOWN, false)
         highPerformanceMode.value = prefs.getBoolean(KEY_HIGH_PERFORMANCE_MODE, false)
         performanceRefreshRate.value = normalizePerformanceRefreshRate(
@@ -1422,6 +1434,27 @@ object AppSettings {
     fun setOnboardingComplete() {
         onboardingComplete.value = true
         prefs.edit().putBoolean(KEY_ONBOARDING_COMPLETE, true).apply()
+    }
+
+    fun resetOnboarding() {
+        onboardingComplete.value = false
+        prefs.edit().putBoolean(KEY_ONBOARDING_COMPLETE, false).apply()
+    }
+
+    fun setUserName(name: String) {
+        val trimmed = name.trim().ifBlank { "Listener" }
+        userName.value = trimmed
+        prefs.edit().putString(KEY_USER_NAME, trimmed).apply()
+    }
+
+    fun setSelectedGenres(genres: Set<String>) {
+        selectedGenres.value = genres
+        prefs.edit().putStringSet(KEY_SELECTED_GENRES, genres).apply()
+    }
+
+    fun setThemeAccent(accent: String) {
+        themeAccent.value = accent
+        prefs.edit().putString(KEY_THEME_ACCENT, accent).apply()
     }
 
     fun setDiwaliGreetingShown() {
@@ -2287,6 +2320,9 @@ object AppSettings {
     private const val KEY_CACHE_LIMIT = "audio_cache_limit_bytes"
     private const val KEY_REDUCE_ANIMATION = "reduce_animation"
     private const val KEY_ONBOARDING_COMPLETE = "onboarding_complete"
+    private const val KEY_USER_NAME = "hush_user_name"
+    private const val KEY_SELECTED_GENRES = "hush_selected_genres"
+    private const val KEY_THEME_ACCENT = "hush_theme_accent"
     private const val KEY_DIWALI_GREETING_SHOWN = "diwali_greeting_2026_shown"
     private const val KEY_HIGH_PERFORMANCE_MODE = "high_performance_mode"
     private const val KEY_PERFORMANCE_REFRESH_RATE = "performance_refresh_rate"

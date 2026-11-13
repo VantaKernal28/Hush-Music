@@ -14,6 +14,8 @@ import android.widget.Toast
 import androidx.compose.animation.animateColorAsState
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.horizontalScroll
@@ -48,6 +50,7 @@ import androidx.compose.material.icons.rounded.Brightness4
 import androidx.compose.material.icons.rounded.Cached
 import androidx.compose.material.icons.rounded.Check
 import androidx.compose.material.icons.rounded.ChevronRight
+import androidx.compose.material.icons.rounded.Close
 import androidx.compose.material.icons.rounded.DeleteSweep
 import androidx.compose.material.icons.rounded.Download
 import androidx.compose.material.icons.rounded.FileDownload
@@ -70,6 +73,7 @@ import androidx.compose.material.icons.rounded.Extension
 import androidx.compose.material.icons.rounded.Draw
 import androidx.compose.material.icons.rounded.Person
 import androidx.compose.material.icons.rounded.PlaylistPlay
+import androidx.compose.material.icons.rounded.Search
 import androidx.compose.material.icons.rounded.SignalCellularAlt
 import androidx.compose.material.icons.rounded.Storage
 import androidx.compose.material.icons.rounded.SurroundSound
@@ -88,6 +92,7 @@ import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Slider
@@ -223,6 +228,8 @@ fun SettingsScreen(
     onOpenSection: (SettingsCategory) -> Unit = {},
     /** Opens a choice with more options than its row can show, as a page. */
     onOpenChoice: (SettingsChoiceKind) -> Unit = {},
+    /** Close or pop back from settings */
+    onBack: () -> Unit = {},
 ) {
     val context = LocalContext.current
 
@@ -336,6 +343,7 @@ fun SettingsScreen(
     // exactly as if the field weren't there.
     // Saveable so a search survives a trip into one of the pages it found.
     var searchQuery by rememberSaveable { mutableStateOf("") }
+    var showSearchBar by rememberSaveable { mutableStateOf(false) }
     // What the last export or import did, shown on the row that did it rather
     // than as a toast: a backup is the one action here whose outcome nobody can
     // check by looking at the app afterwards. Held per direction, or an import's
@@ -447,15 +455,130 @@ fun SettingsScreen(
             .verticalScroll(scrollState)
             .padding(contentPadding),
     ) {
-        SettingsPageTitle(stringResource(section?.title ?: R.string.settings))
-        if (section == null) {
+        val currentUserName by AppSettings.userName.collectAsStateWithLifecycle()
+
+        // Hermoso-Style Header (media_1794577366727_4945977e.jpg)
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(horizontal = 20.dp, vertical = 12.dp),
+            horizontalArrangement = Arrangement.SpaceBetween,
+            verticalAlignment = Alignment.CenterVertically,
+        ) {
+            IconButton(
+                onClick = onBack,
+                modifier = Modifier
+                    .size(42.dp)
+                    .background(
+                        color = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.7f),
+                        shape = CircleShape
+                    )
+                    .border(1.dp, Color.White.copy(alpha = 0.08f), CircleShape)
+            ) {
+                Icon(
+                    imageVector = Icons.Rounded.Close,
+                    contentDescription = stringResource(R.string.close),
+                    tint = MaterialTheme.colorScheme.onSurface,
+                    modifier = Modifier.size(20.dp),
+                )
+            }
+
+            Text(
+                text = stringResource(section?.title ?: R.string.settings),
+                style = MaterialTheme.typography.titleLarge.copy(fontWeight = FontWeight.Bold),
+                color = MaterialTheme.colorScheme.onBackground,
+            )
+
+            if (section == null) {
+                IconButton(
+                    onClick = { showSearchBar = !showSearchBar },
+                    modifier = Modifier
+                        .size(42.dp)
+                        .background(
+                            color = if (showSearchBar || searchQuery.isNotBlank())
+                                Color(0xFFFF5722)
+                            else
+                                MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.7f),
+                            shape = CircleShape
+                        )
+                        .border(1.dp, Color.White.copy(alpha = 0.08f), CircleShape)
+                ) {
+                    Icon(
+                        imageVector = Icons.Rounded.Search,
+                        contentDescription = stringResource(R.string.search),
+                        tint = if (showSearchBar || searchQuery.isNotBlank())
+                            Color.White
+                        else
+                            MaterialTheme.colorScheme.onSurface,
+                        modifier = Modifier.size(20.dp),
+                    )
+                }
+            } else {
+                Spacer(Modifier.size(42.dp))
+            }
+        }
+
+        if (section == null && (showSearchBar || searchQuery.isNotBlank())) {
             SearchField(
                 query = searchQuery,
                 onQueryChange = { searchQuery = it },
                 onSubmit = {},
                 placeholder = stringResource(R.string.settings_search_hint),
-                modifier = Modifier.padding(start = 20.dp, end = 20.dp, bottom = 4.dp),
+                modifier = Modifier.padding(start = 20.dp, end = 20.dp, bottom = 12.dp),
             )
+        }
+
+        // Hermoso Profile Avatar Header (media_1794577366727_4945977e.jpg)
+        if (section == null && searchQuery.isBlank()) {
+            Column(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(vertical = 14.dp),
+                horizontalAlignment = Alignment.CenterHorizontally,
+            ) {
+                val avatarUrl = account?.thumbnailUrl?.takeIf { signedIn }
+                Box(
+                    modifier = Modifier
+                        .size(84.dp)
+                        .clip(CircleShape)
+                        .background(MaterialTheme.colorScheme.surfaceVariant)
+                        .border(2.dp, Color(0xFFFF5722).copy(alpha = 0.6f), CircleShape),
+                    contentAlignment = Alignment.Center,
+                ) {
+                    if (avatarUrl != null) {
+                        AsyncImage(
+                            model = avatarUrl,
+                            contentDescription = null,
+                            contentScale = ContentScale.Crop,
+                            modifier = Modifier.fillMaxSize().clip(CircleShape),
+                        )
+                    } else {
+                        Text(
+                            text = "@",
+                            style = MaterialTheme.typography.headlineLarge.copy(
+                                fontWeight = FontWeight.Bold,
+                                color = Color(0xFFFF5722)
+                            )
+                        )
+                    }
+                }
+                Spacer(Modifier.height(10.dp))
+                val displayName = account?.name?.takeIf { it.isNotBlank() }
+                    ?: currentUserName.takeIf { it.isNotBlank() && it != "Listener" }
+                    ?: "Hermoso"
+                Text(
+                    text = displayName,
+                    style = MaterialTheme.typography.titleLarge.copy(fontWeight = FontWeight.Bold),
+                    color = MaterialTheme.colorScheme.onBackground,
+                )
+                Text(
+                    text = account?.email?.takeIf { it.isNotBlank() }
+                        ?: if (signedIn) "@hush.music" else stringResource(R.string.not_signed_in),
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                )
+            }
+        }
 
             SearchableSettingsGroup(search) {
                 val accountTitle = stringResource(R.string.account_integrations)
@@ -1763,6 +1886,18 @@ fun SettingsScreen(
                     }
                 }
             }
+            val resetOnboardingTitle = stringResource(R.string.settings_reset_onboarding_title)
+            row(resetOnboardingTitle, "onboarding", "tour", "setup", "first boot", "welcome") {
+                SettingsRow(
+                    icon = SfIcons.Appearance,
+                    title = resetOnboardingTitle,
+                    subtitle = stringResource(R.string.settings_reset_onboarding_summary),
+                    onClick = {
+                        AppSettings.resetOnboarding()
+                        Toast.makeText(context, context.getString(R.string.onboarding_reset_toast), Toast.LENGTH_SHORT).show()
+                    },
+                )
+            }
         }
 
         if (shows(SettingsCategory.LANGUAGE)) SearchableSettingsGroup(search, header = stringResource(R.string.language)) {
@@ -1790,7 +1925,7 @@ fun SettingsScreen(
         if (section == null && searchQuery.isBlank()) {
         Text(
             text = buildAnnotatedString {
-                append("bitchord $version  ")
+                append("Hush Music $version  ")
                 val linkStyles = TextLinkStyles(
                     style = SpanStyle(
                         color = MaterialTheme.colorScheme.primary,
@@ -2168,6 +2303,7 @@ internal fun AccountCard(
                         .padding(horizontal = GROUP_INSET)
                         .clip(GroupShape)
                         .background(MaterialTheme.colorScheme.surfaceVariant)
+                        .border(1.dp, Color.White.copy(alpha = 0.08f), GroupShape)
                 },
             )
             .then(
@@ -2343,7 +2479,7 @@ private fun bitPerfectSubtitle(mode: BitPerfectMode, status: BitPerfectOutput.St
 
 // ---- Building blocks --------------------------------------------------------
 
-internal val GroupShape = RoundedCornerShape(14.dp)
+internal val GroupShape = RoundedCornerShape(22.dp)
 internal val GROUP_INSET = 16.dp
 internal val ROW_INSET = 16.dp
 internal val ICON_SIZE = 22.dp
@@ -2504,7 +2640,8 @@ internal fun SettingsGroup(
             .fillMaxWidth()
             .padding(horizontal = GROUP_INSET)
             .clip(GroupShape)
-            .background(MaterialTheme.colorScheme.surfaceVariant),
+            .background(MaterialTheme.colorScheme.surfaceVariant)
+            .border(1.dp, Color.White.copy(alpha = 0.08f), GroupShape),
     ) {
         content()
     }

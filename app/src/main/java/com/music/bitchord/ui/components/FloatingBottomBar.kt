@@ -369,26 +369,29 @@ private fun BottomBarItem(
     selectedTint: Color? = null,
     unselectedTint: Color? = null,
 ) {
-    // The same spring the indicator rides, so the glyph arriving and the glass
-    // arriving are one movement rather than two that nearly agree.
+    // Tactile bounce spring when selected
     val scale by animateFloatAsState(
         targetValue = if (selected) 1.08f else 1f,
-        animationSpec = glassSpec,
+        animationSpec = spring(dampingRatio = 0.65f, stiffness = Spring.StiffnessMediumLow),
         label = "tabScale",
     )
     val haptics = rememberHaptics()
+    val activeAccent = Color(0xFFFF5722) // Vibrant Coral / Sunset Red-Orange
+    val inactiveGray = Color(0xFF8E8E93) // Muted Gray Outline
+
     val tint by animateColorAsState(
         targetValue = if (selected) {
-            selectedTint ?: MaterialTheme.colorScheme.primary
+            selectedTint ?: activeAccent
         } else {
-            unselectedTint ?: MaterialTheme.colorScheme.onSurfaceVariant
+            unselectedTint ?: inactiveGray
         },
-        animationSpec = tween(200),
+        animationSpec = tween(180),
         label = "tabTint",
     )
 
     Column(
         horizontalAlignment = Alignment.CenterHorizontally,
+        verticalArrangement = Arrangement.Center,
         modifier = modifier
             .clip(RoundedCornerShape(percent = 50))
             .clickable(
@@ -405,16 +408,20 @@ private fun BottomBarItem(
             contentDescription = tab.label,
             tint = tint,
             modifier = Modifier
-                .size(TAB_ICON_SIZE)
+                .size(24.dp)
                 .graphicsLayer {
                     scaleX = scale
                     scaleY = scale
                 },
         )
-        Spacer(Modifier.height(TAB_ICON_LABEL_GAP))
+        Spacer(Modifier.height(3.dp))
         Text(
             text = tab.label,
-            style = tabLabelStyle(),
+            style = MaterialTheme.typography.labelSmall.copy(
+                fontSize = 11.sp,
+                fontWeight = if (selected) FontWeight.W700 else FontWeight.W500,
+                letterSpacing = 0.2.sp,
+            ),
             color = tint,
             maxLines = 1,
             overflow = TextOverflow.Ellipsis,

@@ -1,0 +1,12 @@
+{
+  "name": "hush-music-preview-server",
+  "version": "1.0.0",
+  "description": "Multi-device interactive localhost preview for Hush Music",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js"
+  },
+  "keywords": ["hush-music", "preview", "compose", "multi-device"],
+  "author": "Antigravity",
+  "license": "ISC"
+}

@@ -1730,10 +1730,10 @@ fun NowPlayingScreen(
             )
         }
         if (showListenTogetherMembers) {
-            ListenTogetherMembersSheet(
+            HushJamSheet(
                 hazeState = playerHaze,
                 onDismiss = { showListenTogetherMembers = false },
-                onManage = {
+                onManageParty = {
                     showListenTogetherMembers = false
                     onListenTogether()
                 },

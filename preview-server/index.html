@@ -1,0 +1,1809 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Hush Music · Multi-Device Interactive Preview</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --hush-sunset: #FF6E40;
+      --hush-peach: #FFAB91;
+      --hush-lavender: #B388FF;
+      --hush-violet: #7E57C2;
+      --hush-amoled: #0A0A0C;
+      --hush-charcoal: #121214;
+      --hush-surface: #1E1E24;
+      --hush-card: #26262E;
+      --hush-text: #FFFFFF;
+      --hush-subtext: rgba(255, 255, 255, 0.65);
+      --hush-gradient: linear-gradient(135deg, #FF6E40 0%, #FFAB91 50%, #B388FF 100%);
+      --accent-active: #FF6E40;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      -webkit-font-smoothing: antialiased;
+    }
+
+    body {
+      background-color: #060608;
+      color: var(--hush-text);
+      font-family: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, sans-serif;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      overflow-x: hidden;
+    }
+
+    /* Top Dev Bar */
+    header.dev-bar {
+      position: sticky;
+      top: 0;
+      z-index: 9999;
+      background: rgba(10, 10, 12, 0.88);
+      backdrop-filter: blur(20px);
+      -webkit-backdrop-filter: blur(20px);
+      border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+      padding: 12px 24px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      flex-wrap: wrap;
+      gap: 12px;
+    }
+
+    .brand-pill {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .brand-logo-icon {
+      width: 28px;
+      height: 28px;
+      border-radius: 8px;
+      background: var(--hush-gradient);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      box-shadow: 0 4px 12px rgba(255, 110, 64, 0.35);
+    }
+
+    .brand-name {
+      font-weight: 800;
+      font-size: 17px;
+      letter-spacing: -0.3px;
+      background: var(--hush-gradient);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+
+    .badge-fidelity {
+      font-size: 11px;
+      font-weight: 600;
+      background: rgba(255, 110, 64, 0.15);
+      color: var(--hush-peach);
+      border: 1px solid rgba(255, 110, 64, 0.3);
+      padding: 2px 8px;
+      border-radius: 12px;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+
+    .nav-controls {
+      display: flex;
+      align-items: center;
+      gap: 16px;
+      flex-wrap: wrap;
+    }
+
+    .segmented-control {
+      display: flex;
+      background: rgba(255, 255, 255, 0.06);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      border-radius: 30px;
+      padding: 3px;
+      gap: 3px;
+    }
+
+    .seg-btn {
+      background: transparent;
+      border: none;
+      color: var(--hush-subtext);
+      font-size: 13px;
+      font-weight: 600;
+      padding: 6px 14px;
+      border-radius: 20px;
+      cursor: pointer;
+      transition: all 0.2s ease;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .seg-btn:hover {
+      color: #fff;
+    }
+
+    .seg-btn.active {
+      background: #FFFFFF;
+      color: #000000;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.4);
+    }
+
+    .screen-pills {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .screen-pill-btn {
+      background: rgba(255, 255, 255, 0.05);
+      border: 1px solid rgba(255, 255, 255, 0.12);
+      color: rgba(255, 255, 255, 0.7);
+      font-size: 12px;
+      font-weight: 600;
+      padding: 5px 12px;
+      border-radius: 16px;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+
+    .screen-pill-btn:hover {
+      background: rgba(255, 255, 255, 0.12);
+      color: #fff;
+    }
+
+    .screen-pill-btn.active {
+      background: var(--hush-sunset);
+      border-color: var(--hush-sunset);
+      color: #000;
+      font-weight: 700;
+    }
+
+    /* Main Container */
+    main.viewport-canvas {
+      flex: 1;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 32px 16px;
+      background: radial-gradient(circle at 50% 20%, rgba(255, 110, 64, 0.08) 0%, transparent 60%);
+      transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+
+    /* Quad Grid Container */
+    .quad-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(420px, 1fr));
+      gap: 32px;
+      width: 100%;
+      max-width: 1700px;
+      align-items: start;
+      justify-items: center;
+    }
+
+    .device-container {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .device-meta-label {
+      font-size: 12px;
+      font-weight: 600;
+      color: var(--hush-subtext);
+      letter-spacing: 0.5px;
+      text-transform: uppercase;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .device-meta-label span.spec {
+      font-family: 'JetBrains Mono', monospace;
+      color: var(--hush-peach);
+      background: rgba(255, 110, 64, 0.1);
+      padding: 1px 6px;
+      border-radius: 6px;
+      font-size: 11px;
+    }
+
+    /* ==========================================================================
+       DEVICE FRAMES
+       ========================================================================== */
+
+    /* 1. PHONE (390 x 844) */
+    .frame-phone {
+      width: 390px;
+      height: 844px;
+      border-radius: 48px;
+      background: var(--hush-amoled);
+      border: 11px solid #1c1c22;
+      box-shadow: 0 25px 60px rgba(0, 0, 0, 0.8), 0 0 0 2px rgba(255, 255, 255, 0.08);
+      position: relative;
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+    }
+
+    .phone-notch {
+      position: absolute;
+      top: 12px;
+      left: 50%;
+      transform: translateX(-50%);
+      width: 110px;
+      height: 28px;
+      background: #000;
+      border-radius: 20px;
+      z-index: 1000;
+      display: flex;
+      align-items: center;
+      justify-content: flex-end;
+      padding-right: 12px;
+    }
+    .phone-notch .lens {
+      width: 10px;
+      height: 10px;
+      border-radius: 50%;
+      background: #0d0d15;
+      border: 1px solid #232330;
+    }
+
+    /* 2. TABLET (1024 x 768 scaled down 0.7x for fit) */
+    .frame-tablet {
+      width: 860px;
+      height: 645px;
+      border-radius: 32px;
+      background: var(--hush-amoled);
+      border: 12px solid #1a1a20;
+      box-shadow: 0 30px 70px rgba(0,0,0,0.85), 0 0 0 2px rgba(255,255,255,0.06);
+      position: relative;
+      overflow: hidden;
+      display: flex;
+    }
+
+    /* 3. ANDROID TV (1920 x 1080 scaled down to fit standard viewport) */
+    .frame-tv {
+      width: 960px;
+      height: 540px;
+      border-radius: 14px;
+      background: var(--hush-amoled);
+      border: 14px solid #16161c;
+      border-bottom: 24px solid #121216;
+      box-shadow: 0 40px 90px rgba(0,0,0,0.9), 0 0 0 2px rgba(255, 255, 255, 0.08);
+      position: relative;
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+    }
+
+    /* 4. WEAR OS WATCH (454 x 454 Circle) */
+    .frame-watch {
+      width: 360px;
+      height: 360px;
+      border-radius: 50%;
+      background: #000000;
+      border: 10px solid #1e1e26;
+      box-shadow: 0 20px 50px rgba(0, 0, 0, 0.9), 0 0 0 2px rgba(255, 255, 255, 0.1);
+      position: relative;
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+    }
+
+    /* Screen Layer Content */
+    .screen-root {
+      width: 100%;
+      height: 100%;
+      overflow-y: auto;
+      overflow-x: hidden;
+      display: flex;
+      flex-direction: column;
+      position: relative;
+      background: #0A0A0C;
+    }
+    .screen-root::-webkit-scrollbar {
+      display: none;
+    }
+
+    /* ==========================================================================
+       SCREENS: ONBOARDING, HOME, NOW PLAYING, JAM SHEET
+       ========================================================================== */
+
+    /* Dynamic Multi-Stop Sunset Mesh Gradient Backdrop */
+    .mesh-gradient-bg {
+      position: absolute;
+      inset: 0;
+      background: radial-gradient(circle at 10% 20%, rgba(255, 110, 64, 0.45) 0%, transparent 45%),
+                  radial-gradient(circle at 90% 30%, rgba(255, 171, 145, 0.40) 0%, transparent 40%),
+                  radial-gradient(circle at 50% 85%, rgba(179, 136, 255, 0.35) 0%, transparent 55%),
+                  #0A0A0C;
+      z-index: 1;
+      pointer-events: none;
+      animation: meshPulse 12s ease-in-out infinite alternate;
+    }
+
+    @keyframes meshPulse {
+      0% { transform: scale(1) translate(0, 0); }
+      50% { transform: scale(1.04) translate(-1%, 2%); }
+      100% { transform: scale(1.02) translate(1%, -1%); }
+    }
+
+    .screen-content {
+      position: relative;
+      z-index: 2;
+      width: 100%;
+      height: 100%;
+      display: flex;
+      flex-direction: column;
+      padding-top: 44px; /* Phone safe area top */
+      padding-bottom: 24px;
+    }
+
+    /* --- ONBOARDING FLOW --- */
+    .onboarding-container {
+      display: flex;
+      flex-direction: column;
+      flex: 1;
+      padding: 0 24px;
+    }
+
+    .step-bar {
+      display: flex;
+      gap: 6px;
+      margin-bottom: 24px;
+    }
+    .step-seg {
+      flex: 1;
+      height: 3px;
+      border-radius: 2px;
+      background: rgba(255, 255, 255, 0.2);
+      transition: background 0.3s;
+    }
+    .step-seg.active {
+      background: #FFFFFF;
+    }
+
+    .brand-reveal-box {
+      width: 76px;
+      height: 76px;
+      border-radius: 22px;
+      background: var(--hush-gradient);
+      border: 1.5px solid rgba(255, 255, 255, 0.4);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      box-shadow: 0 10px 30px rgba(255, 110, 64, 0.4);
+      margin-bottom: 20px;
+      animation: brandGlow 2.4s ease-in-out infinite alternate;
+    }
+
+    @keyframes brandGlow {
+      0% { transform: scale(0.96); box-shadow: 0 8px 24px rgba(255, 110, 64, 0.3); }
+      100% { transform: scale(1.04); box-shadow: 0 14px 40px rgba(179, 136, 255, 0.5); }
+    }
+
+    .onboard-title {
+      font-size: 26px;
+      font-weight: 800;
+      color: #fff;
+      margin-bottom: 8px;
+      letter-spacing: -0.5px;
+    }
+    .onboard-subtitle {
+      font-size: 14.5px;
+      line-height: 21px;
+      color: var(--hush-subtext);
+      margin-bottom: 22px;
+    }
+
+    .feature-list {
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+      margin-bottom: auto;
+    }
+    .feat-card {
+      background: rgba(255, 255, 255, 0.06);
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      border-radius: 14px;
+      padding: 12px 14px;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+    .feat-icon-box {
+      width: 36px;
+      height: 36px;
+      border-radius: 10px;
+      background: rgba(255, 110, 64, 0.18);
+      color: var(--hush-sunset);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    .feat-card h4 {
+      font-size: 13.5px;
+      font-weight: 700;
+      color: #fff;
+      margin-bottom: 2px;
+    }
+    .feat-card p {
+      font-size: 12px;
+      color: var(--hush-subtext);
+    }
+
+    /* Onboarding Step 2: Name Input */
+    .input-wrapper {
+      margin-top: 18px;
+      position: relative;
+    }
+    .name-input-field {
+      width: 100%;
+      background: rgba(255, 255, 255, 0.08);
+      border: 1.5px solid rgba(255, 255, 255, 0.2);
+      border-radius: 16px;
+      padding: 16px 20px;
+      font-size: 18px;
+      font-weight: 600;
+      color: #fff;
+      outline: none;
+      transition: all 0.2s;
+    }
+    .name-input-field:focus {
+      border-color: var(--hush-sunset);
+      box-shadow: 0 0 0 4px rgba(255, 110, 64, 0.2);
+      background: rgba(255, 255, 255, 0.12);
+    }
+
+    /* Onboarding Step 3: Genre & Accent Chips */
+    .chip-flow {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      margin-bottom: 20px;
+    }
+    .genre-chip {
+      background: rgba(255, 255, 255, 0.08);
+      border: 1px solid rgba(255, 255, 255, 0.12);
+      color: #fff;
+      font-size: 12.5px;
+      font-weight: 600;
+      padding: 8px 14px;
+      border-radius: 20px;
+      cursor: pointer;
+      transition: all 0.2s;
+      user-select: none;
+    }
+    .genre-chip.selected {
+      background: var(--hush-gradient);
+      color: #000;
+      border-color: var(--hush-peach);
+      font-weight: 700;
+      box-shadow: 0 4px 12px rgba(255, 110, 64, 0.35);
+    }
+
+    .accent-grid {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 8px;
+      margin-bottom: 24px;
+    }
+    .accent-card {
+      background: rgba(255, 255, 255, 0.06);
+      border: 1px solid rgba(255, 255, 255, 0.12);
+      border-radius: 12px;
+      padding: 10px 4px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 6px;
+      cursor: pointer;
+    }
+    .accent-card.active {
+      border: 2px solid var(--accent-active);
+      background: rgba(255, 255, 255, 0.14);
+    }
+    .accent-dot {
+      width: 20px;
+      height: 20px;
+      border-radius: 50%;
+      border: 1px solid rgba(255,255,255,0.4);
+    }
+    .accent-card span {
+      font-size: 10px;
+      color: var(--hush-subtext);
+      text-align: center;
+    }
+
+    .btn-pill-primary {
+      width: 100%;
+      height: 52px;
+      border-radius: 26px;
+      background: #FFFFFF;
+      color: #000000;
+      border: none;
+      font-size: 15px;
+      font-weight: 700;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: transform 0.15s, opacity 0.15s;
+    }
+    .btn-pill-primary:hover {
+      transform: scale(1.02);
+    }
+    .btn-pill-primary:active {
+      transform: scale(0.98);
+    }
+
+    /* --- HOME SCREEN --- */
+    .home-header {
+      padding: 0 16px 12px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    .home-header h2 {
+      font-size: 22px;
+      font-weight: 800;
+      letter-spacing: -0.4px;
+      color: #fff;
+    }
+
+    .category-pills-row {
+      display: flex;
+      gap: 8px;
+      padding: 0 16px 14px;
+      overflow-x: auto;
+    }
+    .category-pills-row::-webkit-scrollbar { display: none; }
+    .cat-pill {
+      background: rgba(255, 255, 255, 0.1);
+      border-radius: 20px;
+      padding: 6px 14px;
+      font-size: 12.5px;
+      font-weight: 600;
+      color: var(--hush-subtext);
+      white-space: nowrap;
+      cursor: pointer;
+    }
+    .cat-pill.active {
+      background: var(--accent-active);
+      color: #000;
+      font-weight: 700;
+    }
+
+    /* Spotify 2-Column Recents Grid */
+    .recents-grid-2col {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 8px;
+      padding: 0 16px 20px;
+    }
+    .recent-tile {
+      background: #202026;
+      border-radius: 6px;
+      display: flex;
+      align-items: center;
+      overflow: hidden;
+      cursor: pointer;
+      transition: background 0.18s;
+      height: 54px;
+    }
+    .recent-tile:hover {
+      background: #2a2a34;
+    }
+    .recent-art {
+      width: 54px;
+      height: 54px;
+      flex-shrink: 0;
+      background: var(--hush-gradient);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: #fff;
+      font-size: 18px;
+    }
+    .recent-title {
+      font-size: 12.5px;
+      font-weight: 600;
+      color: #fff;
+      padding: 0 8px;
+      line-height: 1.25;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      display: -webkit-box;
+      -webkit-line-clamp: 2;
+      -webkit-box-orient: vertical;
+    }
+
+    .shelf-section {
+      padding: 0 16px 18px;
+    }
+    .shelf-title {
+      font-size: 16px;
+      font-weight: 700;
+      margin-bottom: 10px;
+    }
+    .shelf-carousel {
+      display: flex;
+      gap: 12px;
+      overflow-x: auto;
+      padding-bottom: 4px;
+    }
+    .shelf-carousel::-webkit-scrollbar { display: none; }
+    .shelf-card {
+      width: 130px;
+      flex-shrink: 0;
+      cursor: pointer;
+    }
+    .shelf-card-art {
+      width: 130px;
+      height: 130px;
+      border-radius: 10px;
+      background: #26262E;
+      margin-bottom: 6px;
+      overflow: hidden;
+      position: relative;
+    }
+    .shelf-card-art img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+    }
+    .shelf-card-title {
+      font-size: 12.5px;
+      font-weight: 600;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+    .shelf-card-sub {
+      font-size: 11px;
+      color: var(--hush-subtext);
+    }
+
+    /* Floating Docked Mini-Player */
+    .mini-player-bar {
+      margin: auto 12px 64px 12px; /* Positioned directly above bottom nav */
+      height: 54px;
+      border-radius: 27px;
+      background: rgba(28, 28, 34, 0.9);
+      backdrop-filter: blur(25px);
+      -webkit-backdrop-filter: blur(25px);
+      border: 1px solid rgba(255, 255, 255, 0.12);
+      display: flex;
+      align-items: center;
+      padding: 6px 14px 6px 8px;
+      cursor: pointer;
+      box-shadow: 0 10px 25px rgba(0,0,0,0.5);
+      z-index: 10;
+    }
+    .mini-art {
+      width: 40px;
+      height: 40px;
+      border-radius: 8px;
+      background: var(--hush-gradient);
+      flex-shrink: 0;
+      margin-right: 10px;
+    }
+    .mini-info {
+      flex: 1;
+      overflow: hidden;
+    }
+    .mini-title {
+      font-size: 13px;
+      font-weight: 700;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+    .mini-artist {
+      font-size: 11.5px;
+      color: var(--hush-subtext);
+    }
+    .jam-pill-indicator {
+      background: rgba(255, 110, 64, 0.2);
+      border: 1px solid rgba(255, 110, 64, 0.4);
+      color: var(--hush-peach);
+      padding: 3px 8px;
+      border-radius: 12px;
+      font-size: 11px;
+      font-weight: 700;
+      margin-right: 10px;
+      display: flex;
+      align-items: center;
+      gap: 4px;
+    }
+    .jam-pill-indicator .dot {
+      width: 6px;
+      height: 6px;
+      border-radius: 50%;
+      background: var(--hush-sunset);
+      animation: dotPulse 1.2s infinite;
+    }
+
+    @keyframes dotPulse {
+      0%, 100% { opacity: 1; }
+      50% { opacity: 0.3; }
+    }
+
+    /* Floating Translucent Bottom Nav */
+    .bottom-nav-bar {
+      position: absolute;
+      bottom: 12px;
+      left: 20px;
+      right: 20px;
+      height: 48px;
+      border-radius: 24px;
+      background: rgba(18, 18, 22, 0.85);
+      backdrop-filter: blur(25px);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      display: flex;
+      align-items: center;
+      justify-content: space-around;
+      z-index: 20;
+    }
+    .nav-item {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      color: #8E8E93;
+      font-size: 10.5px;
+      font-weight: 600;
+      gap: 3px;
+      cursor: pointer;
+      transition: all 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+    }
+    .nav-item:active {
+      transform: scale(0.92);
+    }
+    .nav-item.active {
+      color: #FF5722;
+      font-weight: 700;
+    }
+
+    /* --- NOW PLAYING SCREEN --- */
+    .now-playing-page {
+      padding: 16px 24px;
+      display: flex;
+      flex-direction: column;
+      flex: 1;
+      height: 100%;
+    }
+    .np-top-bar {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 20px;
+    }
+    .np-top-bar span {
+      font-size: 12px;
+      font-weight: 700;
+      letter-spacing: 1px;
+      text-transform: uppercase;
+      color: var(--hush-subtext);
+    }
+    .np-art-box {
+      width: 100%;
+      aspect-ratio: 1;
+      border-radius: 18px;
+      background: var(--hush-gradient);
+      box-shadow: 0 20px 45px rgba(255, 110, 64, 0.35);
+      margin-bottom: 26px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      position: relative;
+      overflow: hidden;
+    }
+    .np-track-meta {
+      margin-bottom: 18px;
+    }
+    .np-track-meta h2 {
+      font-size: 23px;
+      font-weight: 800;
+      color: #fff;
+    }
+    .np-track-meta p {
+      font-size: 15px;
+      color: var(--hush-subtext);
+    }
+
+    .scrubber-bar {
+      width: 100%;
+      height: 4px;
+      background: rgba(255, 255, 255, 0.15);
+      border-radius: 2px;
+      margin-bottom: 6px;
+      position: relative;
+    }
+    .scrubber-progress {
+      width: 48%;
+      height: 100%;
+      background: var(--accent-active);
+      border-radius: 2px;
+    }
+    .time-row {
+      display: flex;
+      justify-content: space-between;
+      font-size: 11px;
+      color: var(--hush-subtext);
+      font-family: 'JetBrains Mono', monospace;
+      margin-bottom: 20px;
+    }
+
+    .transport-controls {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 24px;
+    }
+    .btn-play-circle {
+      width: 64px;
+      height: 64px;
+      border-radius: 50%;
+      background: #FFFFFF;
+      color: #000;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      box-shadow: 0 6px 20px rgba(0,0,0,0.4);
+      cursor: pointer;
+    }
+
+    /* Synced Lyrics Preview Card */
+    .synced-lyrics-preview {
+      background: rgba(255, 255, 255, 0.08);
+      border-radius: 16px;
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      padding: 16px;
+      margin-top: auto;
+    }
+    .lyrics-label {
+      font-size: 11px;
+      font-weight: 700;
+      color: var(--hush-peach);
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      margin-bottom: 6px;
+    }
+    .lyrics-line-active {
+      font-size: 17px;
+      font-weight: 700;
+      color: #FFFFFF;
+      line-height: 1.35;
+    }
+
+    /* --- HUSH JAM BOTTOM SHEET MODAL --- */
+    .jam-modal-sheet {
+      position: absolute;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      background: #141418;
+      border-top-left-radius: 28px;
+      border-top-right-radius: 28px;
+      border-top: 1px solid rgba(255, 255, 255, 0.15);
+      box-shadow: 0 -15px 40px rgba(0,0,0,0.8);
+      padding: 20px 24px 30px;
+      z-index: 100;
+      display: flex;
+      flex-direction: column;
+      animation: sheetUp 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+
+    @keyframes sheetUp {
+      from { transform: translateY(100%); }
+      to { transform: translateY(0); }
+    }
+
+    .sheet-handle {
+      width: 36px;
+      height: 4px;
+      border-radius: 2px;
+      background: rgba(255, 255, 255, 0.25);
+      margin: 0 auto 16px;
+    }
+    .jam-banner {
+      background: linear-gradient(135deg, rgba(255, 110, 64, 0.2) 0%, rgba(179, 136, 255, 0.15) 100%);
+      border: 1px solid rgba(255, 110, 64, 0.3);
+      border-radius: 14px;
+      padding: 10px 14px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 16px;
+    }
+
+    .jam-invite-row {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      background: rgba(255, 255, 255, 0.05);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      border-radius: 14px;
+      padding: 12px 14px;
+      margin-bottom: 16px;
+    }
+    .qr-mock {
+      width: 52px;
+      height: 52px;
+      background: #fff;
+      border-radius: 8px;
+      padding: 4px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .avatar-stack-row {
+      display: flex;
+      align-items: center;
+      margin-bottom: 16px;
+    }
+    .avatar-circle {
+      width: 38px;
+      height: 38px;
+      border-radius: 50%;
+      border: 2px solid #141418;
+      background: #2a2a34;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: 700;
+      font-size: 13px;
+      color: #fff;
+      margin-right: -10px;
+    }
+    .avatar-circle.host {
+      background: var(--hush-sunset);
+      color: #000;
+    }
+
+    /* ==========================================================================
+       TABLET LAYOUT SPECIFICS
+       ========================================================================== */
+    .tablet-sidebar {
+      width: 260px;
+      background: #111114;
+      border-right: 1px solid rgba(255, 255, 255, 0.08);
+      padding: 24px;
+      display: flex;
+      flex-direction: column;
+      gap: 20px;
+    }
+    .tablet-content {
+      flex: 1;
+      padding: 32px;
+      overflow-y: auto;
+    }
+
+    /* ==========================================================================
+       ANDROID TV 10-FOOT UI SPECIFICS
+       ========================================================================== */
+    .tv-content {
+      flex: 1;
+      padding: 40px 60px;
+      display: flex;
+      flex-direction: column;
+    }
+    .tv-card-row {
+      display: flex;
+      gap: 24px;
+      margin-top: 24px;
+    }
+    .tv-card {
+      flex: 1;
+      height: 230px;
+      border-radius: 14px;
+      background: #1e1e24;
+      padding: 16px;
+      display: flex;
+      flex-direction: column;
+      border: 2px solid transparent;
+      transition: transform 0.2s, border-color 0.2s;
+    }
+    .tv-card.focused {
+      border-color: var(--hush-sunset);
+      transform: scale(1.05);
+      box-shadow: 0 16px 40px rgba(255, 110, 64, 0.35);
+    }
+
+    /* ==========================================================================
+       WEAR OS WATCH SPECIFICS
+       ========================================================================== */
+    .watch-content {
+      width: 100%;
+      height: 100%;
+      padding: 32px 20px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      text-align: center;
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Top Developer / Live Switcher Bar -->
+  <header class="dev-bar">
+    <div class="brand-pill">
+      <div class="brand-logo-icon">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#000" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M9 18V5l12-2v13"></path>
+          <circle cx="6" cy="18" r="3"></circle>
+          <circle cx="18" cy="16" r="3"></circle>
+        </svg>
+      </div>
+      <span class="brand-name">Hush Music</span>
+      <span class="badge-fidelity">Compose Engine v2.0</span>
+    </div>
+
+    <div class="nav-controls">
+      <!-- Device Switcher -->
+      <div class="segmented-control" id="deviceSwitcher">
+        <button class="seg-btn active" data-device="phone">📱 Phone</button>
+        <button class="seg-btn" data-device="tablet">💻 Tablet</button>
+        <button class="seg-btn" data-device="tv">📺 TV</button>
+        <button class="seg-btn" data-device="watch">⌚ Watch</button>
+        <button class="seg-btn" data-device="quad">🔲 Quad View</button>
+      </div>
+
+      <!-- Screen Switcher (for Phone/Tablet) -->
+      <div class="screen-pills" id="screenSwitcher">
+        <button class="screen-pill-btn" data-screen="onboarding">1. Onboarding</button>
+        <button class="screen-pill-btn active" data-screen="home">2. Home</button>
+        <button class="screen-pill-btn" data-screen="nowplaying">3. Now Playing</button>
+        <button class="screen-pill-btn" data-screen="jam">4. Hush Jam</button>
+        <button class="screen-pill-btn" data-screen="googlesignin">5. Google Auth</button>
+        <button class="screen-pill-btn" data-screen="settings">6. Settings</button>
+      </div>
+    </div>
+  </header>
+
+  <!-- Viewport Canvas -->
+  <main class="viewport-canvas" id="canvas">
+
+    <!-- Active Viewport Holder -->
+    <div id="deviceViewport" class="device-container">
+      <!-- Injected by JS according to selected device & screen -->
+    </div>
+
+  </main>
+
+  <script>
+    // State management for interactive localhost preview
+    const state = {
+      device: 'phone',
+      screen: 'home',
+      userName: 'Alex',
+      selectedGenres: new Set(['Lo-Fi Beats', 'Indie Rock', 'Synthwave']),
+      themeAccent: 'sunset',
+      isPlaying: true,
+      jamActive: true,
+      onboardingStep: 1,
+    };
+
+    const canvas = document.getElementById('canvas');
+    const deviceViewport = document.getElementById('deviceViewport');
+    const deviceSwitcher = document.getElementById('deviceSwitcher');
+    const screenSwitcher = document.getElementById('screenSwitcher');
+
+    // Switch device
+    deviceSwitcher.addEventListener('click', (e) => {
+      const btn = e.target.closest('.seg-btn');
+      if (!btn) return;
+      document.querySelectorAll('#deviceSwitcher .seg-btn').forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+      state.device = btn.dataset.device;
+      render();
+    });
+
+    // Switch screen
+    screenSwitcher.addEventListener('click', (e) => {
+      const btn = e.target.closest('.screen-pill-btn');
+      if (!btn) return;
+      document.querySelectorAll('#screenSwitcher .screen-pill-btn').forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+      state.screen = btn.dataset.screen;
+      render();
+    });
+
+    function getGreeting() {
+      const hour = new Date().getHours();
+      let time = "Good evening";
+      if (hour >= 5 && hour < 12) time = "Good morning";
+      else if (hour >= 12 && hour < 17) time = "Good afternoon";
+      return state.userName ? `${time}, ${state.userName}` : time;
+    }
+
+    // Render Phone Screen HTML
+    function renderPhoneScreen(screenName) {
+      if (screenName === 'onboarding') {
+        return `
+          <div class="screen-root">
+            <div class="mesh-gradient-bg"></div>
+            <div class="screen-content">
+              <div class="onboarding-container">
+                <div class="step-bar">
+                  <div class="step-seg ${state.onboardingStep >= 1 ? 'active' : ''}"></div>
+                  <div class="step-seg ${state.onboardingStep >= 2 ? 'active' : ''}"></div>
+                  <div class="step-seg ${state.onboardingStep >= 3 ? 'active' : ''}"></div>
+                  <div class="step-seg ${state.onboardingStep >= 4 ? 'active' : ''}"></div>
+                </div>
+
+                ${state.onboardingStep === 1 ? `
+                  <div class="brand-reveal-box">
+                    <svg width="42" height="42" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+                      <path d="M9 18V5l12-2v13"></path>
+                      <circle cx="6" cy="18" r="3"></circle>
+                      <circle cx="18" cy="16" r="3"></circle>
+                    </svg>
+                  </div>
+                  <h1 class="onboard-title">Hush Music</h1>
+                  <p class="onboard-subtitle">Pure sound, shared in real time. Crafted with studio-grade fidelity and zero compromises.</p>
+                  
+                  <div class="feature-list">
+                    <div class="feat-card">
+                      <div class="feat-icon-box">⚡</div>
+                      <div>
+                        <h4>Lossless Studio Audio</h4>
+                        <p>Bit-perfect 24-bit streams & DAC direct output.</p>
+                      </div>
+                    </div>
+                    <div class="feat-card">
+                      <div class="feat-icon-box">👥</div>
+                      <div>
+                        <h4>Hush Jam Sessions</h4>
+                        <p>Live synchronized listening with room QR codes.</p>
+                      </div>
+                    </div>
+                    <div class="feat-card">
+                      <div class="feat-icon-box">✨</div>
+                      <div>
+                        <h4>Spotify-Grade Fluid UI</h4>
+                        <p>Sunset gradients, synced lyrics, and clean hierarchy.</p>
+                      </div>
+                    </div>
+                  </div>
+
+                  <button class="btn-pill-primary" onclick="state.onboardingStep = 2; render();">Get Started</button>
+                ` : state.onboardingStep === 2 ? `
+                  <h1 class="onboard-title">What should we call you?</h1>
+                  <p class="onboard-subtitle">Your name personalizes your daily feed and lets friends identify you during Hush Jam parties.</p>
+                  
+                  <div class="input-wrapper" style="margin-bottom: auto;">
+                    <input type="text" class="name-input-field" value="${state.userName}" placeholder="Your name..." oninput="state.userName = this.value;" />
+                  </div>
+
+                  <button class="btn-pill-primary" onclick="state.onboardingStep = 3; render();">Continue</button>
+                ` : state.onboardingStep === 3 ? `
+                  <h1 class="onboard-title">Tailor your sound</h1>
+                  <p class="onboard-subtitle">Select vibes you love and your signature theme accent glow.</p>
+
+                  <div style="font-size: 11px; font-weight: 700; color: rgba(255,255,255,0.6); letter-spacing: 1px; margin-bottom: 8px;">SELECT YOUR VIBES</div>
+                  <div class="chip-flow">
+                    ${['Lo-Fi Beats', 'Indie Rock', 'Synthwave', 'Hip-Hop', 'R&B / Soul', 'Electronic', 'Pop Hits', 'Acoustic', 'Ambient'].map(genre => `
+                      <div class="genre-chip ${state.selectedGenres.has(genre) ? 'selected' : ''}" onclick="toggleGenre('${genre}')">${genre}</div>
+                    `).join('')}
+                  </div>
+
+                  <div style="font-size: 11px; font-weight: 700; color: rgba(255,255,255,0.6); letter-spacing: 1px; margin-bottom: 8px;">THEME ACCENT</div>
+                  <div class="accent-grid">
+                    <div class="accent-card ${state.themeAccent === 'sunset' ? 'active' : ''}" onclick="setAccent('sunset', '#FF6E40')">
+                      <div class="accent-dot" style="background: #FF6E40;"></div>
+                      <span>Sunset</span>
+                    </div>
+                    <div class="accent-card ${state.themeAccent === 'peach' ? 'active' : ''}" onclick="setAccent('peach', '#FFAB91')">
+                      <div class="accent-dot" style="background: #FFAB91;"></div>
+                      <span>Peach</span>
+                    </div>
+                    <div class="accent-card ${state.themeAccent === 'lavender' ? 'active' : ''}" onclick="setAccent('lavender', '#B388FF')">
+                      <div class="accent-dot" style="background: #B388FF;"></div>
+                      <span>Lavender</span>
+                    </div>
+                    <div class="accent-card ${state.themeAccent === 'charcoal' ? 'active' : ''}" onclick="setAccent('charcoal', '#26262E')">
+                      <div class="accent-dot" style="background: #26262E;"></div>
+                      <span>Obsidian</span>
+                    </div>
+                  </div>
+
+                  <button class="btn-pill-primary" onclick="state.onboardingStep = 1; state.screen = 'home'; updateScreenPills('home'); render();">Launch Hush Music</button>
+                ` : ''}
+
+              </div>
+            </div>
+          </div>
+        `;
+      } else if (screenName === 'home') {
+        return `
+          <div class="screen-root">
+            <div class="screen-content" style="padding-bottom: 70px;">
+              <!-- Personalized Header -->
+              <div class="home-header">
+                <div>
+                  <h2>${getGreeting()}</h2>
+                  <div style="font-size: 11px; color: var(--hush-peach); font-weight: 600;">Hush Studio Master · Lossless 24-bit</div>
+                </div>
+                <div style="width: 28px; height: 28px; border-radius: 50%; background: var(--hush-gradient);"></div>
+              </div>
+
+              <!-- Spotify Category Pills -->
+              <div class="category-pills-row">
+                <div class="cat-pill active">All</div>
+                <div class="cat-pill">Music</div>
+                <div class="cat-pill">Podcasts</div>
+                <div class="cat-pill">Made For You</div>
+              </div>
+
+              <!-- Spotify 2-Column Recents Grid -->
+              <div class="recents-grid-2col">
+                <div class="recent-tile" onclick="openScreen('nowplaying')">
+                  <div class="recent-art">🎵</div>
+                  <div class="recent-title">Midnight City</div>
+                </div>
+                <div class="recent-tile" onclick="openScreen('nowplaying')">
+                  <div class="recent-art" style="background: linear-gradient(135deg, #7E57C2, #B388FF);">🌌</div>
+                  <div class="recent-title">Starboy</div>
+                </div>
+                <div class="recent-tile" onclick="openScreen('nowplaying')">
+                  <div class="recent-art" style="background: linear-gradient(135deg, #FF5722, #FFAB91);">🔥</div>
+                  <div class="recent-title">After Hours</div>
+                </div>
+                <div class="recent-tile" onclick="openScreen('nowplaying')">
+                  <div class="recent-art" style="background: linear-gradient(135deg, #311B92, #00E676);">⚡</div>
+                  <div class="recent-title">Resonance</div>
+                </div>
+                <div class="recent-tile" onclick="openScreen('nowplaying')">
+                  <div class="recent-art" style="background: linear-gradient(135deg, #FF6E40, #E91E63);">🎧</div>
+                  <div class="recent-title">Synthwave Chill</div>
+                </div>
+                <div class="recent-tile" onclick="openScreen('nowplaying')">
+                  <div class="recent-art" style="background: linear-gradient(135deg, #00838F, #00E676);">🌿</div>
+                  <div class="recent-title">Deep Focus Lo-Fi</div>
+                </div>
+              </div>
+
+              <!-- Shelf Carousel 1 -->
+              <div class="shelf-section">
+                <div class="shelf-title">Made For ${state.userName || 'You'}</div>
+                <div class="shelf-carousel">
+                  <div class="shelf-card" onclick="openScreen('nowplaying')">
+                    <div class="shelf-card-art" style="background: linear-gradient(135deg, #FF6E40, #B388FF);"></div>
+                    <div class="shelf-card-title">Daily Mix 1</div>
+                    <div class="shelf-card-sub">M83, The Weeknd, Kavinsky</div>
+                  </div>
+                  <div class="shelf-card" onclick="openScreen('nowplaying')">
+                    <div class="shelf-card-art" style="background: linear-gradient(135deg, #7E57C2, #1E88E5);"></div>
+                    <div class="shelf-card-title">Discover Weekly</div>
+                    <div class="shelf-card-sub">Updated every Monday</div>
+                  </div>
+                  <div class="shelf-card" onclick="openScreen('nowplaying')">
+                    <div class="shelf-card-art" style="background: linear-gradient(135deg, #FFAB91, #FF5722);"></div>
+                    <div class="shelf-card-title">Chillout Beats</div>
+                    <div class="shelf-card-sub">Pure instrumental focus</div>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Docked Mini-Player directly above bottom bar -->
+              <div class="mini-player-bar" onclick="openScreen('nowplaying')">
+                <div class="mini-art"></div>
+                <div class="mini-info">
+                  <div class="mini-title">Midnight City</div>
+                  <div class="mini-artist">M83 · Lossless</div>
+                </div>
+                <div class="jam-pill-indicator" onclick="event.stopPropagation(); openScreen('jam');">
+                  <div class="dot"></div> Jam · 3
+                </div>
+                <div style="font-size: 20px;">⏸</div>
+              </div>
+
+              <!-- Floating Bottom Navigation (media_1794577366726_ca9dc797.jpg) -->
+              <div class="bottom-nav-bar">
+                <div class="nav-item active" onclick="openScreen('home')">
+                  <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor"><path d="M10 20v-6h4v6h5v-8h3L12 3 2 12h3v8z"/></svg>
+                  Home
+                </div>
+                <div class="nav-item" onclick="openScreen('nowplaying')">
+                  <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor"><path d="M15.5 14h-.79l-.28-.27C15.41 12.59 16 11.11 16 9.5 16 5.91 13.09 3 9.5 3S3 5.91 3 9.5 5.91 16 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19l-4.99-5zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14z"/></svg>
+                  Search
+                </div>
+                <div class="nav-item" onclick="openScreen('jam')">
+                  <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor"><path d="M4 6H2v14c0 1.1.9 2 2 2h14v-2H4V6zm16-4H8c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2zm0 14H8V4h12v12z"/></svg>
+                  Library
+                </div>
+                <div class="nav-item" onclick="openScreen('settings')">
+                  <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor"><path d="M19.14 12.94c.04-.3.06-.61.06-.94 0-.32-.02-.64-.07-.94l2.03-1.58c.18-.14.23-.41.12-.61l-1.92-3.32c-.12-.22-.37-.29-.59-.22l-2.39.96c-.5-.38-1.03-.7-1.62-.94l-.36-2.54c-.04-.24-.24-.41-.48-.41h-3.84c-.24 0-.43.17-.47.41l-.36 2.54c-.59.24-1.13.57-1.62.94l-2.39-.96c-.22-.08-.47 0-.59.22L2.74 8.87c-.12.21-.08.47.12.61l2.03 1.58c-.05.3-.09.63-.09.94s.02.64.07.94l-2.03 1.58c-.18.14-.23.41-.12.61l1.92 3.32c.12.22.37.29.59.22l2.39-.96c.5.38 1.03.7 1.62.94l.36 2.54c.05.24.24.41.48.41h3.84c.24 0 .44-.17.47-.41l.36-2.54c.59-.24 1.13-.56 1.62-.94l2.39.96c.22.08.47 0 .59-.22l1.92-3.32c.12-.22.07-.47-.12-.61l-2.01-1.58zM12 15.6c-1.98 0-3.6-1.62-3.6-3.6s1.62-3.6 3.6-3.6 3.6 1.62 3.6 3.6-1.62 3.6-3.6 3.6z"/></svg>
+                  Settings
+                </div>
+              </div>
+
+            </div>
+          </div>
+        `;
+      } else if (screenName === 'nowplaying') {
+        return `
+          <div class="screen-root">
+            <div class="mesh-gradient-bg"></div>
+            <div class="screen-content" style="padding: 44px 20px 20px;">
+              <div class="np-top-bar">
+                <div onclick="openScreen('home')" style="cursor: pointer; font-size: 18px;">⌄</div>
+                <span>PLAYING FROM HUSH JAM</span>
+                <div onclick="openScreen('jam')" style="cursor: pointer; font-size: 18px;">👥</div>
+              </div>
+
+              <div class="np-art-box">
+                <div style="font-size: 64px;">🎵</div>
+              </div>
+
+              <div class="np-track-meta">
+                <h2>Midnight City</h2>
+                <p>M83 — Hurry Up, We're Dreaming</p>
+              </div>
+
+              <div class="scrubber-bar">
+                <div class="scrubber-progress"></div>
+              </div>
+              <div class="time-row">
+                <span>1:48</span>
+                <span>4:03</span>
+              </div>
+
+              <div class="transport-controls">
+                <span style="font-size: 20px; cursor: pointer;">🔀</span>
+                <span style="font-size: 26px; cursor: pointer;">⏮</span>
+                <div class="btn-play-circle" onclick="state.isPlaying = !state.isPlaying; render();">
+                  <span style="font-size: 28px;">${state.isPlaying ? '⏸' : '▶'}</span>
+                </div>
+                <span style="font-size: 26px; cursor: pointer;">⏭</span>
+                <span style="font-size: 20px; cursor: pointer;">🔁</span>
+              </div>
+
+              <div class="synced-lyrics-preview">
+                <div class="lyrics-label">Synced Lyrics · Musixmatch</div>
+                <div class="lyrics-line-active">"The city is my church, it wraps me in the sparkling twilight..."</div>
+              </div>
+            </div>
+          </div>
+        `;
+      } else if (screenName === 'jam') {
+        return `
+          <div class="screen-root">
+            <div class="mesh-gradient-bg"></div>
+            <div class="screen-content" style="padding: 44px 20px 20px;">
+              <!-- Underneath Now Playing background -->
+              <div class="np-track-meta" style="opacity: 0.35;">
+                <h2>Midnight City</h2>
+                <p>M83 — Lossless Hi-Res</p>
+              </div>
+
+              <!-- Hush Jam Bottom Sheet Modal -->
+              <div class="jam-modal-sheet">
+                <div class="sheet-handle"></div>
+
+                <div class="jam-banner">
+                  <div style="display: flex; align-items: center; gap: 8px;">
+                    <span style="width: 8px; height: 8px; border-radius: 50%; background: #FF6E40;"></span>
+                    <strong style="color: #FFAB91; font-size: 13px;">HUSH JAM LIVE</strong>
+                  </div>
+                  <span style="font-size: 12px; color: #fff;">3 Connected</span>
+                </div>
+
+                <div class="jam-invite-row">
+                  <div class="qr-mock">
+                    <svg width="44" height="44" viewBox="0 0 24 24" fill="none" stroke="#000" stroke-width="2">
+                      <rect x="3" y="3" width="7" height="7"></rect>
+                      <rect x="14" y="3" width="7" height="7"></rect>
+                      <rect x="14" y="14" width="7" height="7"></rect>
+                      <rect x="3" y="14" width="7" height="7"></rect>
+                    </svg>
+                  </div>
+                  <div style="flex: 1;">
+                    <div style="font-size: 11px; color: var(--hush-subtext);">Session Code</div>
+                    <div style="font-size: 20px; font-weight: 800; letter-spacing: 1.5px; color: #fff;">HUSH-8492</div>
+                  </div>
+                  <button style="background: rgba(255,255,255,0.12); border: none; border-radius: 50%; width: 36px; height: 36px; color: #fff; cursor: pointer;">📋</button>
+                  <button style="background: #FF6E40; border: none; border-radius: 50%; width: 36px; height: 36px; color: #000; font-weight: bold; cursor: pointer;">↗</button>
+                </div>
+
+                <div style="font-size: 11px; font-weight: 700; color: rgba(255,255,255,0.6); letter-spacing: 1px; margin-bottom: 8px;">ACTIVE LISTENERS</div>
+                <div class="avatar-stack-row">
+                  <div class="avatar-circle host" title="${state.userName} (Host)">${state.userName ? state.userName[0] : 'Y'}</div>
+                  <div class="avatar-circle" title="Sarah">S</div>
+                  <div class="avatar-circle" title="Liam">L</div>
+                  <div class="avatar-circle" style="background: #1e1e24; color: #FFAB91;">+2</div>
+                </div>
+
+                <div style="background: rgba(255,255,255,0.06); border-radius: 12px; padding: 12px; display: flex; justify-content: space-between; align-items: center; margin-bottom: 14px;">
+                  <div>
+                    <div style="font-size: 13px; font-weight: 600;">Guests can control queue</div>
+                    <div style="font-size: 11px; color: var(--hush-subtext);">Allow others to add and skip songs</div>
+                  </div>
+                  <input type="checkbox" checked style="accent-color: #FF6E40; width: 18px; height: 18px;" />
+                </div>
+
+                <button class="btn-pill-primary" style="background: rgba(255,255,255,0.1); color: #fff; height: 44px; margin-bottom: 8px;" onclick="openScreen('nowplaying');">Resync Playback to Host</button>
+                <button class="btn-pill-primary" style="background: transparent; color: #FF5252; height: 38px; font-size: 13px;" onclick="openScreen('home');">End Jam Session</button>
+              </div>
+            </div>
+          </div>
+        `;
+      } else if (screenName === 'googlesignin') {
+        return `
+          <div class="screen-root">
+            <div class="mesh-gradient-bg"></div>
+            <div class="screen-content" style="padding: 44px 20px 24px; display: flex; flex-direction: column; justify-content: space-between;">
+              <div style="display: flex; justify-content: space-between; align-items: center;">
+                <div onclick="openScreen('onboarding')" style="cursor: pointer; width: 36px; height: 36px; border-radius: 50%; background: rgba(255,255,255,0.08); display: flex; align-items: center; justify-content: center; font-size: 14px;">✕</div>
+                <div style="font-size: 12px; font-weight: 700; color: #FFAB91; letter-spacing: 1px;">CONNECTION — 4 OF 4</div>
+                <div onclick="openScreen('home')" style="cursor: pointer; font-size: 13px; font-weight: 600; color: var(--hush-subtext);">Skip</div>
+              </div>
+
+              <div style="position: relative; height: 300px; display: flex; align-items: center; justify-content: center; perspective: 1000px;">
+                <div style="position: absolute; width: 220px; height: 220px; border-radius: 50%; background: radial-gradient(circle, rgba(255,110,64,0.2) 0%, rgba(126,87,194,0.12) 60%, transparent 80%); filter: blur(30px);"></div>
+                
+                <div style="position: absolute; transform: translate(-45px, -50px) rotate(-8deg); width: 140px; height: 170px; border-radius: 18px; background: rgba(30,30,38,0.7); backdrop-filter: blur(16px); border: 1px solid rgba(255,255,255,0.15); box-shadow: 0 16px 36px rgba(0,0,0,0.5); overflow: hidden; display: flex; flex-direction: column;">
+                  <div style="height: 110px; background: linear-gradient(135deg, #FF6E40, #FFAB91); display: flex; align-items: center; justify-content: center; font-size: 34px;">🏔️</div>
+                  <div style="padding: 8px 10px; font-size: 12px; font-weight: 700; color: #fff;">Sigur Rós<br><span style="font-size: 10px; color: var(--hush-subtext); font-weight: 500;">Ágætis byrjun</span></div>
+                </div>
+
+                <div style="position: absolute; transform: translate(45px, 40px) rotate(6deg); width: 150px; height: 180px; border-radius: 18px; background: rgba(30,30,38,0.7); backdrop-filter: blur(16px); border: 1px solid rgba(255,255,255,0.15); box-shadow: 0 20px 40px rgba(0,0,0,0.6); overflow: hidden; display: flex; flex-direction: column;">
+                  <div style="height: 120px; background: linear-gradient(135deg, #7E57C2, #B388FF); display: flex; align-items: center; justify-content: center; font-size: 34px;">🎹</div>
+                  <div style="padding: 8px 10px; font-size: 12px; font-weight: 700; color: #fff;">Sampha<br><span style="font-size: 10px; color: var(--hush-subtext); font-weight: 500;">Process · Lossless</span></div>
+                </div>
+
+                <div style="position: absolute; transform: translate(5px, -15px) rotate(2deg); width: 160px; height: 195px; border-radius: 20px; background: rgba(38,38,48,0.85); backdrop-filter: blur(20px); border: 1px solid rgba(255,110,64,0.4); box-shadow: 0 24px 50px rgba(255,110,64,0.25); overflow: hidden; display: flex; flex-direction: column; z-index: 2;">
+                  <div style="height: 135px; background: linear-gradient(135deg, #E65100, #F06292); display: flex; align-items: center; justify-content: center; font-size: 38px;">🌀</div>
+                  <div style="padding: 8px 10px; font-size: 13px; font-weight: 800; color: #fff;">Tame Impala<br><span style="font-size: 11px; color: #FFAB91; font-weight: 500;">Currents · Studio Master</span></div>
+                </div>
+              </div>
+
+              <div style="text-align: center;">
+                <h2 style="font-size: 22px; font-weight: 800; margin-bottom: 6px; letter-spacing: -0.5px;">All your music.<br><span style="background: var(--hush-gradient); -webkit-background-clip: text; -webkit-text-fill-color: transparent;">Directly in Hush.</span></h2>
+                <p style="font-size: 12.5px; color: var(--hush-subtext); margin-bottom: 20px; line-height: 1.4;">Sign in to sync your YouTube Music playlists and personalized recommendations with bit-perfect sound.</p>
+
+                <button onclick="openScreen('home')" style="width: 100%; height: 50px; border-radius: 25px; background: rgba(255,255,255,0.1); backdrop-filter: blur(20px); border: 1px solid rgba(255,255,255,0.22); color: #fff; font-size: 14.5px; font-weight: 700; display: flex; align-items: center; justify-content: center; gap: 10px; cursor: pointer; box-shadow: 0 8px 24px rgba(0,0,0,0.3);">
+                  <svg width="18" height="18" viewBox="0 0 24 24"><path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/><path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/><path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.06H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.94l2.85-2.22.81-.63z"/><path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.06l3.66 2.84c.87-2.6 3.3-4.52 6.16-4.52z"/></svg>
+                  Sign in with Google
+                </button>
+                <button onclick="openScreen('home')" style="background: transparent; border: none; color: var(--hush-subtext); font-size: 13px; font-weight: 600; margin-top: 12px; cursor: pointer;">Continue in Guest Mode</button>
+              </div>
+            </div>
+          </div>
+        `;
+      } else if (screenName === 'settings') {
+        return `
+          <div class="screen-root">
+            <div class="mesh-gradient-bg"></div>
+            <div class="screen-content" style="padding: 44px 18px 24px; overflow-y: auto;">
+              <!-- Hermoso Top Bar (media_1794577366727_4945977e.jpg) -->
+              <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+                <div onclick="openScreen('home')" style="width: 42px; height: 42px; border-radius: 50%; background: rgba(255,255,255,0.08); border: 1px solid rgba(255,255,255,0.1); display: flex; align-items: center; justify-content: center; cursor: pointer; font-size: 15px;">✕</div>
+                <h3 style="font-size: 19px; font-weight: 800; color: #fff;">Settings</h3>
+                <div style="width: 42px; height: 42px; border-radius: 50%; background: rgba(255,255,255,0.08); border: 1px solid rgba(255,255,255,0.1); display: flex; align-items: center; justify-content: center; cursor: pointer; font-size: 16px;">🔍</div>
+              </div>
+
+              <!-- Hermoso Profile Header: 84dp Circular Avatar + Display Name -->
+              <div style="display: flex; flex-direction: column; align-items: center; margin-bottom: 24px;">
+                <div style="width: 84px; height: 84px; border-radius: 50%; background: #1e1e24; border: 2.5px solid #FF5722; display: flex; align-items: center; justify-content: center; font-size: 34px; font-weight: 800; color: #FF5722; box-shadow: 0 8px 24px rgba(255,87,34,0.25);">
+                  @
+                </div>
+                <div style="font-size: 20px; font-weight: 800; color: #fff; margin-top: 12px;">Hermoso</div>
+                <div style="font-size: 12px; color: var(--hush-subtext);">@hush.music · Lossless Studio</div>
+              </div>
+
+              <!-- Group 1: Account & Integrations (22dp rounded card, 1dp border) -->
+              <div style="font-size: 11px; font-weight: 700; color: var(--hush-subtext); letter-spacing: 0.8px; margin: 0 6px 8px;">ACCOUNT & PLAYBACK</div>
+              <div style="background: rgba(30,30,36,0.7); backdrop-filter: blur(20px); border-radius: 22px; border: 1px solid rgba(255,255,255,0.08); overflow: hidden; margin-bottom: 18px;">
+                <div onclick="openScreen('googlesignin')" style="padding: 14px 18px; display: flex; align-items: center; justify-content: space-between; cursor: pointer;">
+                  <div style="display: flex; align-items: center; gap: 14px;">
+                    <span style="font-size: 20px;">👤</span>
+                    <div>
+                      <div style="font-size: 14px; font-weight: 600;">Account & Scrobbling</div>
+                      <div style="font-size: 12px; color: var(--hush-subtext);">Last.fm, ListenBrainz, YouTube Music</div>
+                    </div>
+                  </div>
+                  <span style="color: var(--hush-subtext); font-size: 14px;">›</span>
+                </div>
+                <div style="height: 1px; background: rgba(255,255,255,0.06); margin-left: 50px;"></div>
+                <div style="padding: 14px 18px; display: flex; align-items: center; justify-content: space-between;">
+                  <div style="display: flex; align-items: center; gap: 14px;">
+                    <span style="font-size: 20px;">⚡</span>
+                    <div>
+                      <div style="font-size: 14px; font-weight: 600;">Bit-Perfect DAC Output</div>
+                      <div style="font-size: 12px; color: #00E676;">Active · 24-bit / 96 kHz</div>
+                    </div>
+                  </div>
+                  <input type="checkbox" checked style="accent-color: #FF5722; width: 18px; height: 18px;" />
+                </div>
+              </div>
+
+              <!-- Group 2: Audio & Downloads (22dp rounded card) -->
+              <div style="font-size: 11px; font-weight: 700; color: var(--hush-subtext); letter-spacing: 0.8px; margin: 0 6px 8px;">SMART CACHING & OFFLINE</div>
+              <div style="background: rgba(30,30,36,0.7); backdrop-filter: blur(20px); border-radius: 22px; border: 1px solid rgba(255,255,255,0.08); overflow: hidden; margin-bottom: 24px;">
+                <div style="padding: 14px 18px; display: flex; align-items: center; justify-content: space-between;">
+                  <div style="display: flex; align-items: center; gap: 14px;">
+                    <span style="font-size: 20px;">💾</span>
+                    <div>
+                      <div style="font-size: 14px; font-weight: 600;">Storage Cap</div>
+                      <div style="font-size: 12px; color: var(--hush-subtext);">Allocated: 10 GB limit</div>
+                    </div>
+                  </div>
+                  <span style="color: #FF5722; font-weight: 700; font-size: 13px;">10 GB</span>
+                </div>
+                <div style="height: 1px; background: rgba(255,255,255,0.06); margin-left: 50px;"></div>
+                <div style="padding: 14px 18px; display: flex; align-items: center; justify-content: space-between;">
+                  <div style="display: flex; align-items: center; gap: 14px;">
+                    <span style="font-size: 20px;">📶</span>
+                    <div>
+                      <div style="font-size: 14px; font-weight: 600;">Smart Downloads (Wi-Fi Only)</div>
+                      <div style="font-size: 12px; color: var(--hush-subtext);">Save cellular data automatically</div>
+                    </div>
+                  </div>
+                  <input type="checkbox" checked style="accent-color: #FF5722; width: 18px; height: 18px;" />
+                </div>
+              </div>
+            </div>
+          </div>
+        `;
+      }
+    }
+
+    // Render Tablet Layout
+    function renderTabletScreen() {
+      return `
+        <div class="frame-tablet">
+          <div class="tablet-sidebar">
+            <div style="display: flex; align-items: center; gap: 8px;">
+              <div class="brand-logo-icon" style="width: 32px; height: 32px;">🎵</div>
+              <span class="brand-name" style="font-size: 19px;">Hush Music</span>
+            </div>
+            
+            <div style="display: flex; flex-direction: column; gap: 6px; margin-top: 10px;">
+              <div style="background: rgba(255,255,255,0.1); border-radius: 10px; padding: 10px 14px; font-weight: 700; color: #FF6E40;">🏠 Home</div>
+              <div style="padding: 10px 14px; color: var(--hush-subtext);">🔍 Search</div>
+              <div style="padding: 10px 14px; color: var(--hush-subtext);">📚 Library</div>
+              <div style="padding: 10px 14px; color: #FFAB91; font-weight: 600;">👥 Hush Jam (Live: 3)</div>
+            </div>
+
+            <div style="margin-top: auto; background: rgba(255,255,255,0.06); border-radius: 12px; padding: 12px;">
+              <div style="font-size: 11px; color: var(--hush-subtext);">SESSION ROOM</div>
+              <div style="font-size: 15px; font-weight: 800; color: #FF6E40;">HUSH-8492</div>
+            </div>
+          </div>
+
+          <div class="tablet-content">
+            <h1 style="font-size: 28px; font-weight: 800; margin-bottom: 16px;">${getGreeting()}</h1>
+            
+            <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; margin-bottom: 24px;">
+              <div class="recent-tile" style="height: 64px;">
+                <div class="recent-art" style="width: 64px; height: 64px;">🎵</div>
+                <div class="recent-title" style="font-size: 14px;">Midnight City<br><span style="font-size: 12px; color: var(--hush-subtext);">M83</span></div>
+              </div>
+              <div class="recent-tile" style="height: 64px;">
+                <div class="recent-art" style="width: 64px; height: 64px; background: linear-gradient(135deg, #7E57C2, #B388FF);">🌌</div>
+                <div class="recent-title" style="font-size: 14px;">Starboy<br><span style="font-size: 12px; color: var(--hush-subtext);">The Weeknd</span></div>
+              </div>
+              <div class="recent-tile" style="height: 64px;">
+                <div class="recent-art" style="width: 64px; height: 64px; background: linear-gradient(135deg, #FF5722, #FFAB91);">🔥</div>
+                <div class="recent-title" style="font-size: 14px;">After Hours<br><span style="font-size: 12px; color: var(--hush-subtext);">The Weeknd</span></div>
+              </div>
+            </div>
+
+            <h3 style="font-size: 18px; font-weight: 700; margin-bottom: 14px;">Featured Hush Jam Mixes</h3>
+            <div style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px;">
+              <div class="shelf-card" style="width: 100%;">
+                <div class="shelf-card-art" style="width: 100%; height: 140px; background: var(--hush-gradient);"></div>
+                <div class="shelf-card-title">Synthwave Odyssey</div>
+                <div class="shelf-card-sub">Shared listening station</div>
+              </div>
+              <div class="shelf-card" style="width: 100%;">
+                <div class="shelf-card-art" style="width: 100%; height: 140px; background: linear-gradient(135deg, #311B92, #7E57C2);"></div>
+                <div class="shelf-card-title">Deep Focus Beats</div>
+                <div class="shelf-card-sub">Curated by Alex</div>
+              </div>
+              <div class="shelf-card" style="width: 100%;">
+                <div class="shelf-card-art" style="width: 100%; height: 140px; background: linear-gradient(135deg, #004D40, #00E676);"></div>
+                <div class="shelf-card-title">Studio Master Hi-Res</div>
+                <div class="shelf-card-sub">Bit-perfect 96kHz</div>
+              </div>
+              <div class="shelf-card" style="width: 100%;">
+                <div class="shelf-card-art" style="width: 100%; height: 140px; background: linear-gradient(135deg, #C2185B, #FF8A65);"></div>
+                <div class="shelf-card-title">Evening Acoustic</div>
+                <div class="shelf-card-sub">Mellow warm vocals</div>
+              </div>
+            </div>
+          </div>
+        </div>
+      `;
+    }
+
+    // Render TV Layout
+    function renderTvScreen() {
+      return `
+        <div class="frame-tv">
+          <div class="tv-content">
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+              <div>
+                <h1 style="font-size: 32px; font-weight: 900; background: var(--hush-gradient); -webkit-background-clip: text; -webkit-text-fill-color: transparent;">Hush Music TV</h1>
+                <p style="font-size: 14px; color: var(--hush-subtext);">10-Foot Leanback Interface · Lossless 96kHz / 24-bit PCM Output</p>
+              </div>
+              <div style="background: rgba(255, 110, 64, 0.2); border: 1px solid #FF6E40; padding: 6px 16px; border-radius: 20px; font-weight: bold; color: #FFAB91;">
+                LIVE JAM: 3 AUDIENCE MEMBERS
+              </div>
+            </div>
+
+            <div class="tv-card-row">
+              <div class="tv-card focused">
+                <div style="flex: 1; border-radius: 8px; background: var(--hush-gradient); margin-bottom: 12px; display: flex; align-items: center; justify-content: center; font-size: 48px;">
+                  🎵
+                </div>
+                <div style="font-size: 18px; font-weight: 800; color: #FFAB91;">Midnight City</div>
+                <div style="font-size: 13px; color: var(--hush-subtext);">Now Playing on TV Hi-Fi</div>
+              </div>
+              <div class="tv-card">
+                <div style="flex: 1; border-radius: 8px; background: linear-gradient(135deg, #311B92, #7E57C2); margin-bottom: 12px;"></div>
+                <div style="font-size: 18px; font-weight: 800; color: #fff;">Starboy</div>
+                <div style="font-size: 13px; color: var(--hush-subtext);">Up Next in Queue</div>
+              </div>
+              <div class="tv-card">
+                <div style="flex: 1; border-radius: 8px; background: linear-gradient(135deg, #004D40, #00E676); margin-bottom: 12px;"></div>
+                <div style="font-size: 18px; font-weight: 800; color: #fff;">Resonance</div>
+                <div style="font-size: 13px; color: var(--hush-subtext);">Added by Guest (Liam)</div>
+              </div>
+            </div>
+          </div>
+        </div>
+      `;
+    }
+
+    // Render Watch Layout
+    function renderWatchScreen() {
+      return `
+        <div class="frame-watch">
+          <div class="watch-content">
+            <div style="font-size: 10px; font-weight: 700; color: #FF6E40; letter-spacing: 1px; margin-bottom: 2px;">JAM LIVE · 3</div>
+            <div style="font-size: 14px; font-weight: 800; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 160px; margin-bottom: 2px;">Midnight City</div>
+            <div style="font-size: 11px; color: var(--hush-subtext); margin-bottom: 14px;">M83 · Hi-Res</div>
+
+            <div style="display: flex; align-items: center; gap: 14px; margin-bottom: 12px;">
+              <div style="width: 38px; height: 38px; border-radius: 50%; background: rgba(255,255,255,0.15); display: flex; align-items: center; justify-content: center; font-size: 14px; cursor: pointer;">⏮</div>
+              <div style="width: 52px; height: 52px; border-radius: 50%; background: var(--hush-gradient); color: #000; display: flex; align-items: center; justify-content: center; font-size: 22px; cursor: pointer; box-shadow: 0 4px 16px rgba(255,110,64,0.4);" onclick="state.isPlaying = !state.isPlaying; render();">
+                ${state.isPlaying ? '⏸' : '▶'}
+              </div>
+              <div style="width: 38px; height: 38px; border-radius: 50%; background: rgba(255,255,255,0.15); display: flex; align-items: center; justify-content: center; font-size: 14px; cursor: pointer;">⏭</div>
+            </div>
+
+            <div style="display: flex; gap: 8px;">
+              <div style="background: rgba(255,110,64,0.25); border: 1px solid #FF6E40; padding: 3px 10px; border-radius: 12px; font-size: 10px; font-weight: bold; color: #FFAB91;">ROOM 8492</div>
+            </div>
+          </div>
+        </div>
+      `;
+    }
+
+    // Primary Render Dispatcher
+    function render() {
+      if (state.device === 'phone') {
+        screenSwitcher.style.display = 'flex';
+        deviceViewport.className = 'device-container';
+        deviceViewport.innerHTML = `
+          <div class="device-meta-label">
+            <span>📱 Android Smartphone</span>
+            <span class="spec">390 × 844 px · 460 dpi</span>
+          </div>
+          <div class="frame-phone">
+            <div class="phone-notch"><div class="lens"></div></div>
+            ${renderPhoneScreen(state.screen)}
+          </div>
+        `;
+      } else if (state.device === 'tablet') {
+        screenSwitcher.style.display = 'none';
+        deviceViewport.className = 'device-container';
+        deviceViewport.innerHTML = `
+          <div class="device-meta-label">
+            <span>💻 Android Tablet (Split-Pane)</span>
+            <span class="spec">1024 × 768 px · Adaptive Master-Detail</span>
+          </div>
+          ${renderTabletScreen()}
+        `;
+      } else if (state.device === 'tv') {
+        screenSwitcher.style.display = 'none';
+        deviceViewport.className = 'device-container';
+        deviceViewport.innerHTML = `
+          <div class="device-meta-label">
+            <span>📺 Android TV 10-Foot UI</span>
+            <span class="spec">1920 × 1080 px · D-Pad Highlight State</span>
+          </div>
+          ${renderTvScreen()}
+        `;
+      } else if (state.device === 'watch') {
+        screenSwitcher.style.display = 'none';
+        deviceViewport.className = 'device-container';
+        deviceViewport.innerHTML = `
+          <div class="device-meta-label">
+            <span>⌚ Wear OS Circular Watch</span>
+            <span class="spec">454 × 454 px Circle · Rotary Transport</span>
+          </div>
+          ${renderWatchScreen()}
+        `;
+      } else if (state.device === 'quad') {
+        screenSwitcher.style.display = 'none';
+        deviceViewport.className = 'quad-grid';
+        deviceViewport.innerHTML = `
+          <div class="device-container">
+            <div class="device-meta-label"><span>📱 Phone (Home)</span> <span class="spec">390×844</span></div>
+            <div class="frame-phone" style="height: 700px;">
+              <div class="phone-notch"><div class="lens"></div></div>
+              ${renderPhoneScreen('home')}
+            </div>
+          </div>
+          <div class="device-container">
+            <div class="device-meta-label"><span>👥 Phone (Hush Jam)</span> <span class="spec">390×844</span></div>
+            <div class="frame-phone" style="height: 700px;">
+              <div class="phone-notch"><div class="lens"></div></div>
+              ${renderPhoneScreen('jam')}
+            </div>
+          </div>
+          <div class="device-container">
+            <div class="device-meta-label"><span>💻 Tablet Split-Pane</span> <span class="spec">1024×768</span></div>
+            <div style="transform: scale(0.65); transform-origin: top center;">
+              ${renderTabletScreen()}
+            </div>
+          </div>
+          <div class="device-container">
+            <div class="device-meta-label"><span>⌚ Wear OS Circle</span> <span class="spec">454×454</span></div>
+            ${renderWatchScreen()}
+          </div>
+        `;
+      }
+    }
+
+    // Helper functions for interactive events
+    window.openScreen = function(screenName) {
+      state.screen = screenName;
+      updateScreenPills(screenName);
+      render();
+    };
+
+    window.toggleGenre = function(genre) {
+      if (state.selectedGenres.has(genre)) {
+        state.selectedGenres.delete(genre);
+      } else {
+        state.selectedGenres.add(genre);
+      }
+      render();
+    };
+
+    window.setAccent = function(accentKey, colorHex) {
+      state.themeAccent = accentKey;
+      document.documentElement.style.setProperty('--accent-active', colorHex);
+      render();
+    };
+
+    function updateScreenPills(screenName) {
+      document.querySelectorAll('#screenSwitcher .screen-pill-btn').forEach(btn => {
+        if (btn.dataset.screen === screenName) btn.classList.add('active');
+        else btn.classList.remove('active');
+      });
+    }
+
+    // Initial render
+    render();
+  </script>
+</body>
+</html>

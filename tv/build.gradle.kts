@@ -229,6 +229,9 @@ android {
         targetCompatibility = JavaVersion.VERSION_17
     }
     packaging {
+        jniLibs {
+            useLegacyPackaging = false
+        }
         resources {
             // SMBJ's BouncyCastle and jspecify both ship this descriptor.
             excludes += "META-INF/versions/9/OSGI-INF/MANIFEST.MF"

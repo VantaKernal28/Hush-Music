@@ -1,5 +1,5 @@
 <resources>
-    <string name="app_name">BitChord</string>
+    <string name="app_name">Hush Music</string>
     <string name="playback_channel_name">Now playing</string>
     <string name="download_channel_name">Downloads</string>
     <string name="download_channel_description">Songs being saved to your Music folder</string>
@@ -56,7 +56,7 @@
     <string name="auto_recents">Recent</string>
     <string name="auto_liked">Liked songs</string>
     <string name="auto_login_title">Sign in to YouTube on your phone</string>
-    <string name="auto_login_subtitle">Open BitChord on your phone to sign in</string>
+    <string name="auto_login_subtitle">Open Hush Music on your phone to sign in</string>
     <string name="auto_empty_recents_title">No recent songs</string>
     <string name="auto_empty_recents_subtitle">Songs you play will appear here</string>
     <string name="auto_empty_quick_picks_title">No suggestions</string>
@@ -151,10 +151,10 @@
     <string name="dolby_atmos_open_failed">Couldn’t open Dolby Atmos settings</string>
     <string name="update_available">Update available: v%1$s</string>
     <string name="software_update">Software Update</string>
-    <string name="update_available_body">bitchord %1$s is available to download.</string>
-    <string name="update_downloading_body">Downloading bitchord %1$s…</string>
-    <string name="update_ready_body">bitchord %1$s is ready to install.</string>
-    <string name="update_failed_body">Couldn’t download bitchord %1$s.</string>
+    <string name="update_available_body">Hush Music %1$s is available to download.</string>
+    <string name="update_downloading_body">Downloading Hush Music %1$s…</string>
+    <string name="update_ready_body">Hush Music %1$s is ready to install.</string>
+    <string name="update_failed_body">Couldn’t download Hush Music %1$s.</string>
     <string name="download_now">Download Now</string>
     <string name="install_now">Install Now</string>
     <string name="later">Later</string>
@@ -172,7 +172,7 @@
     <string name="personalized_recommendations">Get personalized recommendations for you</string>
     <string name="play_next">Play next</string>
     <string name="queue">Queue</string>
-    <string name="source_unrecognised">BitChord could not tell what that link is</string>
+    <string name="source_unrecognised">Hush Music could not tell what that link is</string>
     <string name="source_already_added">Already added as %1$s</string>
     <string name="source_setup_required">Tap to finish setting up</string>
     <string name="source_skipped_by_quality">Not used on %1$s · quality is set to %2$s</string>
@@ -189,7 +189,7 @@
     <string name="widget_previous">Previous</string>
     <string name="widget_artwork">Album art</string>
     <string name="widget_nothing_played">Nothing played yet</string>
-    <string name="widget_open_bitchord">Open BitChord</string>
+    <string name="widget_open_bitchord">Open Hush Music</string>
     <string name="widget_preview_title">Song title</string>
     <string name="widget_preview_artist">Artist</string>
     <string name="widget_pill_label">Now playing 4×1</string>
@@ -224,10 +224,10 @@
     <string name="cancel_all">Cancel all</string>
     <string name="language">Language</string>
     <string name="app_language">App language</string>
-    <string name="app_language_description">Choose the language used by BitChord.</string>
+    <string name="app_language_description">Choose the language used by Hush Music.</string>
     <!-- Hidden tester-code field: tap the App language title 10 times. Not translated: testers only. -->
     <string name="tester_code_title" translatable="false">Tester code</string>
-    <string name="tester_code_message" translatable="false">For BitChord testers. Lets addon verification work on this phone with an unlocked bootloader.</string>
+    <string name="tester_code_message" translatable="false">For Hush Music testers. Lets addon verification work on this phone with an unlocked bootloader.</string>
     <string name="tester_code_message_saved" translatable="false">A tester code is saved on this phone. Enter a new one to replace it, or remove it.</string>
     <string name="tester_code_placeholder" translatable="false">XXXXX-XXXXX-XXXXX-XXXXX-XXXXX</string>
     <string name="tester_code_saved" translatable="false">Tester code saved</string>
@@ -487,7 +487,7 @@
     <string name="discord_presence_footer">The card updates when the track, position or playback state changes. It clears when playback stops.</string>
     <string name="discord_show_audio_quality">Show audio quality</string>
     <string name="discord_show_audio_quality_subtitle">Hi-Res, lossless and Dolby specs on the presence card</string>
-    <string name="discord_sign_in_footer">Signing in opens Discord\'s login page. Nothing is typed into BitChord.</string>
+    <string name="discord_sign_in_footer">Signing in opens Discord\'s login page. Nothing is typed into Hush Music.</string>
     <string name="discord_token">Discord token</string>
     <string name="discord_token_description">Paste your Discord account token. It stays encrypted on this device and is sent only to Discord.</string>
     <string name="discord_token_rejected">Discord rejected that token.</string>
@@ -756,7 +756,7 @@
     <string name="biggest_day_note">Your biggest day was %1$s with %2$s of listening.</string>
     <string name="close_replay">Close Replay</string>
     <string name="couldnt_draw_picture">Could not create the picture</string>
-    <string name="default_replay_holder">BitChord listener</string>
+    <string name="default_replay_holder">Hush Music listener</string>
     <string name="different_albums">Different albums</string>
     <string name="genres_pending">Genres will appear as your listening history grows</string>
     <string name="hour_am">%1$d AM</string>
@@ -927,7 +927,7 @@
     </plurals>
     <string name="no_local_albums">Nothing here belongs to an album or playlist yet. Download a complete album or playlist and it will appear here.</string>
     <string name="play_your_replay">Play your Replay</string>
-    <string name="counted_on_device_with_bitchord">Counted on this device with BitChord</string>
+    <string name="counted_on_device_with_bitchord">Counted on this device with Hush Music</string>
     <string name="this_month">This month</string>
     <string name="replay_this_week">This week</string>
     <string name="replay_period_weekly">Weekly</string>
@@ -1000,7 +1000,7 @@
     <string name="listen_together_code">Party code</string>
     <string name="listen_together_code_footer">Read it out or send it. O and I aren’t used, so an “oh” is always a zero.</string>
     <string name="copy_code">Copy code</string>
-    <string name="listen_together_share_text">Listen with me on BitChord — party code %1$s</string>
+    <string name="listen_together_share_text">Listen with me on Hush Music — party code %1$s</string>
     <string name="listen_together_now_playing">Now playing</string>
     <string name="listen_together_nothing_playing">Nothing playing yet</string>
     <string name="listen_together_listening">Listening · %1$d of %2$d</string>
@@ -1271,15 +1271,45 @@
     <string name="spotify_import_language_preference" translatable="false">Language preference</string>
     <string name="spotify_import_language_hint" translatable="false">e.g. Punjabi, Marathi, Korean…</string>
     <string name="spotify_library_subtitle">Your Spotify playlists</string>
-    <string name="onboarding_title">Millions of songs, stream on BitChord</string>
+    <string name="onboarding_title">Welcome to Hush Music</string>
+    <string name="onboarding_subtitle">A Spotify-style YouTube Music client with lossless Hi-Res audio, synchronized lyrics, and dynamic visual themes.</string>
+    <string name="onboarding_get_started">Get Started</string>
+    <string name="onboarding_feat_lossless_title">Hi-Res Lossless Audio</string>
+    <string name="onboarding_feat_lossless_desc">FLAC up to 24-bit/96kHz &amp; 320kbps streams with gapless crossfade.</string>
+    <string name="onboarding_feat_lyrics_title">Word-Synced Lyrics</string>
+    <string name="onboarding_feat_lyrics_desc">Apple Music-style word &amp; syllable animated karaoke highlights.</string>
+    <string name="onboarding_feat_theme_title">Dynamic Visual Theming</string>
+    <string name="onboarding_feat_theme_desc">Fluid animated mesh gradients extracted live from your album artwork.</string>
     <string name="onboarding_name_prompt">What should we call you?</string>
-    <string name="onboarding_name_hint">Your name</string>
-    <string name="onboarding_name_footer">Friends see this when you Listen Together. You can change it later in Settings.</string>
-    <string name="onboarding_next">Next</string>
-    <string name="onboarding_connect_title">Connect your YouTube account</string>
+    <string name="onboarding_name_hint">Your name or nickname</string>
+    <string name="onboarding_name_footer">Friends see this when you Listen Together. You can change it anytime in Settings.</string>
+    <string name="onboarding_quality_title">Choose Your Sound</string>
+    <string name="onboarding_quality_subtitle">Select your preferred sound quality. You can always adjust this later in Settings.</string>
+    <string name="onboarding_quality_lossless">Lossless Master</string>
+    <string name="onboarding_quality_lossless_desc">Studio Master · FLAC &amp; JioSaavn lossless, bit-exact where available.</string>
+    <string name="onboarding_quality_lossless_badge">Highest Fidelity</string>
+    <string name="onboarding_quality_lossless_data">~300+ MB/hr</string>
+    <string name="onboarding_quality_high">High Quality</string>
+    <string name="onboarding_quality_high_desc">Crystal Clear · Up to 320kbps Opus / AAC, rich dynamics &amp; fast buffering.</string>
+    <string name="onboarding_quality_high_badge">Recommended</string>
+    <string name="onboarding_quality_high_data">~140 MB/hr</string>
+    <string name="onboarding_quality_saver">Data Saver</string>
+    <string name="onboarding_quality_saver_desc">Efficient · ~128kbps Opus, best for metered cellular plans.</string>
+    <string name="onboarding_quality_saver_badge">Low Data</string>
+    <string name="onboarding_quality_saver_data">~75 MB/hr</string>
+    <string name="onboarding_perms_title">Seamless Playback</string>
+    <string name="onboarding_perms_subtitle">Enable permissions to ensure uninterrupted background audio and lock screen controls.</string>
+    <string name="onboarding_perms_notif_title">Media Notifications</string>
+    <string name="onboarding_perms_notif_desc">Required to show album art, scrubbers, and transport controls on your lockscreen.</string>
+    <string name="onboarding_perms_storage_title">Device Audio Files</string>
+    <string name="onboarding_perms_storage_desc">Optional · Allows Hush Music to browse and play local tracks stored on your device.</string>
+    <string name="onboarding_perms_allow">Allow</string>
+    <string name="onboarding_perms_granted">Active</string>
+    <string name="onboarding_next">Continue</string>
+    <string name="onboarding_connect_title">Connect Your Account</string>
     <string name="onboarding_connect_body">Bring your library, playlists and mixes with you, and start a Listen Together party with friends.</string>
     <string name="onboarding_sign_in_google">Sign in with Google</string>
-    <string name="onboarding_skip_sign_in">Skip sign in</string>
+    <string name="onboarding_skip_sign_in">Start Listening (Skip)</string>
     <string name="onboarding_back">Back</string>
     <string name="song_info">Song Info</string>
     <string name="song_info_album">Album</string>
@@ -1290,8 +1320,8 @@
     <string name="song_info_unavailable">Not available</string>
     <string name="song_info_error">Some information could not be loaded.</string>
     <string name="song_info_retry">Retry</string>
-    <!-- Settings: BitChord for Wear OS -->
-    <string name="wear_os_section">BitChord for Wear OS</string>
+    <!-- Settings: Hush Music for Wear OS -->
+    <string name="wear_os_section">Hush Music for Wear OS</string>
     <string name="wear_os_page_title">Wear OS</string>
     <string name="wear_os_your_watches">Your watches</string>
     <string name="wear_os_value_none">No watch</string>
@@ -1329,7 +1359,50 @@
     <string name="no_audio_version">No audio version found for this video</string>
     <string name="no_video_version">No video version found for this song</string>
     <string name="version_switch_in_party">Everyone in Listen Together hears the same version</string>
-    <string name="diwali_title">BitChord wishes you a Happy Diwali</string>
+    <string name="diwali_title">Hush Music wishes you a Happy Diwali</string>
     <string name="diwali_subtitle">May this festival of lights fill your home with joy and your days with music.</string>
     <string name="diwali_cta">Let\'s Celebrate</string>
+
+    <!-- Hush Jam & Spotify-inspired live session strings -->
+    <string name="hush_jam">Hush Jam</string>
+    <string name="start_a_jam">Start a Jam</string>
+    <string name="jam_active_status">Live Jam Session Active</string>
+    <string name="jam_subtitle">Listen synchronously with friends in real time</string>
+    <string name="jam_scan_qr_desc">Scan with camera or share the session link</string>
+    <string name="jam_code_label">Session Code</string>
+    <string name="jam_copy_code">Copy Code</string>
+    <string name="jam_code_copied">Session code copied to clipboard</string>
+    <string name="jam_share_link">Share Invite Link</string>
+    <string name="jam_listeners_title">In this Jam (%1$d)</string>
+    <string name="jam_host_badge">Host</string>
+    <string name="jam_guest_badge">Guest</string>
+    <string name="jam_host_controls_title">Host Session Controls</string>
+    <string name="jam_anyone_can_queue">Guests can add songs</string>
+    <string name="jam_host_only_playback">Only host controls playback</string>
+    <string name="jam_leave_session">Leave Jam</string>
+    <string name="jam_end_session">End Jam Session</string>
+
+    <!-- Spotify-inspired Home greetings & filters -->
+    <string name="greeting_morning">Good morning</string>
+    <string name="greeting_afternoon">Good afternoon</string>
+    <string name="greeting_evening">Good evening</string>
+    <string name="filter_all">All</string>
+    <string name="filter_music">Music</string>
+    <string name="filter_podcasts">Podcasts</string>
+    <string name="filter_made_for_you">Made For You</string>
+    <string name="quick_picks_title">Jump back in</string>
+
+    <!-- Onboarding Step 3 & 4 additions -->
+    <string name="onboarding_step_vibe_title">What are you in the mood for?</string>
+    <string name="onboarding_step_vibe_subtitle">Pick a few vibes to customize your initial recommendations and theme accents.</string>
+    <string name="onboarding_accent_sunset">Sunset Glow</string>
+    <string name="onboarding_accent_peach">Electric Peach</string>
+    <string name="onboarding_accent_lavender">Deep Lavender</string>
+    <string name="onboarding_accent_charcoal">AMOLED Obsidian</string>
+
+    <!-- Debug & Settings: Reset Onboarding -->
+    <string name="settings_reset_onboarding_title">Reset First-Boot Onboarding Tour</string>
+    <string name="settings_reset_onboarding_summary">Re-triggers the dynamic welcome, personalization and theme flow on next launch.</string>
+    <string name="onboarding_reset_toast">Onboarding reset! Launching tour…</string>
+
 </resources>
