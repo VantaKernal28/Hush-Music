@@ -96,7 +96,7 @@ fun PreviewPhoneHushMusic() {
                         Modifier
                             .size(36.dp)
                             .clip(CircleShape)
-                            .background(HushSunsetGradient),
+                            .background(Brush.linearGradient(HushSunsetGradient)),
                     )
                 }
 
@@ -147,7 +147,7 @@ fun PreviewPhoneHushMusic() {
                                         Box(
                                             Modifier
                                                 .size(52.dp)
-                                                .background(HushSunsetGradient),
+                                                .background(Brush.linearGradient(HushSunsetGradient)),
                                         )
                                         Spacer(Modifier.width(8.dp))
                                         Text(
@@ -182,7 +182,7 @@ fun PreviewPhoneHushMusic() {
                             Modifier
                                 .size(40.dp)
                                 .clip(RoundedCornerShape(8.dp))
-                                .background(HushSunsetGradient),
+                                .background(Brush.linearGradient(HushSunsetGradient)),
                         )
                         Spacer(Modifier.width(10.dp))
                         Column(Modifier.weight(1f)) {
@@ -313,7 +313,7 @@ fun PreviewTabletHushMusic() {
                                         .fillMaxWidth()
                                         .height(100.dp)
                                         .clip(RoundedCornerShape(8.dp))
-                                        .background(HushSunsetGradient),
+                                        .background(Brush.linearGradient(HushSunsetGradient)),
                                 )
                                 Spacer(Modifier.height(8.dp))
                                 Text(
@@ -393,7 +393,7 @@ fun PreviewAndroidTvHushMusic() {
                                         .fillMaxWidth()
                                         .height(170.dp)
                                         .clip(RoundedCornerShape(10.dp))
-                                        .background(HushSunsetGradient),
+                                        .background(Brush.linearGradient(HushSunsetGradient)),
                                 )
                                 Spacer(Modifier.height(12.dp))
                                 Text(
@@ -472,7 +472,7 @@ fun PreviewWearOsWatchHushMusic() {
                         Modifier
                             .size(46.dp)
                             .clip(CircleShape)
-                            .background(HushSunsetGradient),
+                            .background(Brush.linearGradient(HushSunsetGradient)),
                         contentAlignment = Alignment.Center,
                     ) {
                         Icon(

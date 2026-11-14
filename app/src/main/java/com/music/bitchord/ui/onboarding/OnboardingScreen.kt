@@ -1,3 +1,5 @@
+@file:OptIn(androidx.compose.foundation.layout.ExperimentalLayoutApi::class)
+
 package com.music.bitchord.ui.onboarding
 
 import android.Manifest
@@ -96,8 +98,8 @@ import androidx.compose.ui.unit.sp
 import androidx.core.content.ContextCompat
 import com.music.bitchord.R
 import com.music.bitchord.data.settings.AppSettings
-import com.music.bitchord.data.settings.DEFAULT_CACHE_LIMIT_BYTES
-import com.music.bitchord.data.settings.UNLIMITED_CACHE_LIMIT_BYTES
+import com.music.bitchord.data.settings.AppSettings.DEFAULT_CACHE_LIMIT_BYTES
+import com.music.bitchord.data.settings.AppSettings.UNLIMITED_CACHE_LIMIT_BYTES
 import com.music.bitchord.sharedui.resources.Res
 import com.music.bitchord.sharedui.resources.ic_google_g
 import org.jetbrains.compose.resources.painterResource as composePainterResource
