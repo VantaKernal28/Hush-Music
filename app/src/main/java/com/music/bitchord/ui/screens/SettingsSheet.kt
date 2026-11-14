@@ -518,18 +518,19 @@ fun SettingsScreen(
             }
         }
 
-        if (section == null && (showSearchBar || searchQuery.isNotBlank())) {
-            SearchField(
-                query = searchQuery,
-                onQueryChange = { searchQuery = it },
-                onSubmit = {},
-                placeholder = stringResource(R.string.settings_search_hint),
-                modifier = Modifier.padding(start = 20.dp, end = 20.dp, bottom = 12.dp),
-            )
-        }
+        if (section == null) {
+            if (showSearchBar || searchQuery.isNotBlank()) {
+                SearchField(
+                    query = searchQuery,
+                    onQueryChange = { searchQuery = it },
+                    onSubmit = {},
+                    placeholder = stringResource(R.string.settings_search_hint),
+                    modifier = Modifier.padding(start = 20.dp, end = 20.dp, bottom = 12.dp),
+                )
+            }
 
-        // Hermoso Profile Avatar Header (media_1794577366727_4945977e.jpg)
-        if (section == null && searchQuery.isBlank()) {
+            // Hermoso Profile Avatar Header (media_1794577366727_4945977e.jpg)
+            if (searchQuery.isBlank()) {
             Column(
                 modifier = Modifier
                     .fillMaxWidth()

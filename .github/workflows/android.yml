@@ -30,6 +30,11 @@ jobs:
         echo "LASTFM_SECRET=${{ secrets.LASTFM_SECRET }}" >> local.properties
         echo "LISTEN_TOGETHER_SERVER=${{ secrets.LISTEN_TOGETHER_SERVER }}" >> local.properties
 
+        mkdir -p ~/.android
+        if [ ! -f ~/.android/debug.keystore ]; then
+          keytool -genkey -v -keystore ~/.android/debug.keystore -alias androiddebugkey -keyalg RSA -keysize 2048 -validity 10000 -storepass android -keypass android -dname "CN=Android Debug,O=Android,C=US"
+        fi
+
         if [ -n "${{ secrets.KEYSTORE_BASE64 }}" ]; then
           echo "${{ secrets.KEYSTORE_BASE64 }}" | base64 -d > bitchord-release.jks
           {
@@ -45,6 +50,19 @@ jobs:
 
     - name: Build Signed Prod Release Phone APK
       run: ./gradlew :app:assembleProdRelease
+
+    - name: Ensure All APKs are Signed & Installable
+      run: |
+        for apk in app/build/outputs/apk/prod/release/*.apk; do
+          [ -f "$apk" ] || continue
+          echo "Checking signature for $apk..."
+          if ! apksigner verify "$apk" 2>/dev/null; then
+            echo "Signing $apk with debug keystore to make it installable..."
+            apksigner sign --ks ~/.android/debug.keystore --ks-pass pass:android --key-pass pass:android "$apk"
+          fi
+          echo "Verified APK signature:"
+          apksigner verify --verbose "$apk"
+        done
 
     - name: Upload Hush Music Phone APK Artifacts
       uses: actions/upload-artifact@v4
