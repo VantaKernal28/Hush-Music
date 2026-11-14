@@ -378,7 +378,7 @@ private fun BottomBarItem(
         label = "tabScale",
     )
     val haptics = rememberHaptics()
-    val activeAccent = Color(0xFFFF5722) // Vibrant Coral / Sunset Red-Orange
+    val activeAccent = MaterialTheme.colorScheme.primary
     val inactiveGray = Color(0xFF8E8E93) // Muted Gray Outline
 
     val tint by animateColorAsState(

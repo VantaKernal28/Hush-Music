@@ -1,6 +1,10 @@
 package com.music.bitchord.ui.screens
 
 import com.music.bitchord.ui.icons.SfIcons
+import com.music.bitchord.ui.icons.HushIcons
+import com.music.bitchord.ui.theme.HushAccents
+import androidx.compose.material3.dynamicDarkColorScheme
+import androidx.compose.ui.graphics.luminance
 import com.music.bitchord.wear.WatchInstaller
 import android.content.Context
 import androidx.annotation.StringRes
@@ -32,6 +36,7 @@ import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -134,7 +139,6 @@ import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.viewinterop.AndroidView
-import com.music.bitchord.AppIcon
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.LinkAnnotation
 import androidx.compose.ui.text.SpanStyle
@@ -496,7 +500,7 @@ fun SettingsScreen(
                         .size(42.dp)
                         .background(
                             color = if (showSearchBar || searchQuery.isNotBlank())
-                                Color(0xFFFF5722)
+                                MaterialTheme.colorScheme.primary
                             else
                                 MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.7f),
                             shape = CircleShape
@@ -543,7 +547,7 @@ fun SettingsScreen(
                         .size(84.dp)
                         .clip(CircleShape)
                         .background(MaterialTheme.colorScheme.surfaceVariant)
-                        .border(2.dp, Color(0xFFFF5722).copy(alpha = 0.6f), CircleShape),
+                        .border(2.dp, MaterialTheme.colorScheme.primary.copy(alpha = 0.6f), CircleShape),
                     contentAlignment = Alignment.Center,
                 ) {
                     if (avatarUrl != null) {
@@ -558,7 +562,7 @@ fun SettingsScreen(
                             text = "@",
                             style = MaterialTheme.typography.headlineLarge.copy(
                                 fontWeight = FontWeight.Bold,
-                                color = Color(0xFFFF5722)
+                                color = MaterialTheme.colorScheme.primary
                             )
                         )
                     }
@@ -1826,66 +1830,86 @@ fun SettingsScreen(
                     onClick = { AppSettings.setShowNerdStats(!nerdStats) },
                 )
             }
-            val appIconTitle = stringResource(R.string.app_icon)
-            row(appIconTitle, "icon", "launcher", "logo") {
-                var selectedIcon by remember { mutableStateOf(AppIcon.current(context)) }
-                SettingsRow(icon = SfIcons.Apps, title = appIconTitle)
+            val accentColorTitle = "Accent Color"
+            row(accentColorTitle, "theme", "accent", "color", "swatch", "tint", "monet") {
+                val currentAccent by AppSettings.themeAccent.collectAsStateWithLifecycle()
+                SettingsRow(
+                    icon = HushIcons.Paintbrush,
+                    title = accentColorTitle,
+                    subtitle = HushAccents.find { it.id == currentAccent }?.name ?: "Sunset Orange",
+                )
                 Row(
                     modifier = Modifier
                         .fillMaxWidth()
                         .horizontalScroll(rememberScrollState())
                         .padding(start = ROW_INSET, end = ROW_INSET, bottom = 14.dp),
-                    horizontalArrangement = Arrangement.spacedBy(12.dp),
+                    horizontalArrangement = Arrangement.spacedBy(10.dp),
                 ) {
-                    AppIcon.entries.forEach { option ->
-                        val selected = option == selectedIcon
+                    HushAccents.forEach { swatch ->
+                        val selected = swatch.id == currentAccent
+                        val swatchColor = if (swatch.isDynamic && Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
+                            dynamicDarkColorScheme(context).primary
+                        } else swatch.primary
+
                         Column(
                             modifier = Modifier
-                                .width(84.dp)
-                                .clip(RoundedCornerShape(16.dp))
-                                .clickable {
-                                    selectedIcon = option
-                                    AppIcon.apply(context, option)
-                                }
-                                .padding(vertical = 6.dp),
+                                .clickable { AppSettings.setThemeAccent(swatch.id) }
+                                .padding(vertical = 4.dp),
                             horizontalAlignment = Alignment.CenterHorizontally,
                         ) {
-                            // A glass foreground holds the finished icon in its own shape on the
-                            // central 72 of 108 dp: scaled 1.5× it fills the tile as designed.
-                            // Only the default goes through an adaptive mask.
-                            val preview = option.previewRes
-                            if (preview == null) {
-                                AndroidView(
-                                    factory = { ctx ->
-                                        android.widget.ImageView(ctx).apply { setImageResource(option.iconRes) }
-                                    },
-                                    modifier = Modifier
-                                        .size(68.dp)
-                                        .clip(RoundedCornerShape(22.dp)),
-                                )
-                            } else {
-                                Image(
-                                    painter = painterResource(preview),
-                                    contentDescription = null,
-                                    contentScale = ContentScale.Fit,
-                                    modifier = Modifier
-                                        .size(68.dp)
-                                        .scale(1.5f),
-                                )
+                            Box(
+                                modifier = Modifier
+                                    .size(42.dp)
+                                    .clip(CircleShape)
+                                    .background(swatchColor)
+                                    .then(
+                                        if (selected) {
+                                            Modifier.border(2.5.dp, Color.White, CircleShape)
+                                        } else {
+                                            Modifier.border(1.dp, Color.White.copy(alpha = 0.2f), CircleShape)
+                                        }
+                                    ),
+                                contentAlignment = Alignment.Center,
+                            ) {
+                                if (selected) {
+                                    Icon(
+                                        imageVector = Icons.Rounded.Check,
+                                        contentDescription = stringResource(R.string.selected),
+                                        tint = if (swatchColor.luminance() > 0.5f) Color.Black else Color.White,
+                                        modifier = Modifier.size(20.dp),
+                                    )
+                                }
                             }
                             Text(
-                                text = stringResource(option.labelRes),
+                                text = swatch.name,
                                 textAlign = TextAlign.Center,
-                                maxLines = 2,
-                                style = MaterialTheme.typography.labelMedium,
-                                color = if (selected) MaterialTheme.colorScheme.primary
-                                else MaterialTheme.colorScheme.onSurfaceVariant,
+                                maxLines = 1,
+                                style = MaterialTheme.typography.labelSmall,
+                                color = if (selected) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurfaceVariant,
                                 fontWeight = if (selected) FontWeight.Bold else FontWeight.Normal,
-                                modifier = Modifier.padding(top = 6.dp),
+                                modifier = Modifier.padding(top = 4.dp).widthIn(max = 68.dp),
+                                overflow = TextOverflow.Ellipsis,
                             )
                         }
                     }
                 }
+            }
+
+            val expressiveTitle = "Material 3 Expressive UI"
+            row(expressiveTitle, "expressive", "m3", "motion", "spring", "radius", "corners", "fluid") {
+                val isExpressive by AppSettings.expressiveMode.collectAsStateWithLifecycle()
+                SettingsRow(
+                    icon = HushIcons.Grid,
+                    title = expressiveTitle,
+                    subtitle = "Organic corner radii (24-28dp), richer containers & expressive springs",
+                    trailing = {
+                        IosSwitch(
+                            checked = isExpressive,
+                            onCheckedChange = AppSettings::setExpressiveMode,
+                        )
+                    },
+                    onClick = { AppSettings.setExpressiveMode(!isExpressive) },
+                )
             }
             val resetOnboardingTitle = stringResource(R.string.settings_reset_onboarding_title)
             row(resetOnboardingTitle, "onboarding", "tour", "setup", "first boot", "welcome") {
@@ -1924,39 +1948,27 @@ fun SettingsScreen(
         // The version line is the page's colophon, not a setting: it belongs to
         // the whole list, so it goes when the list is narrowed to a few rows.
         if (section == null && searchQuery.isBlank()) {
-        Text(
-            text = buildAnnotatedString {
-                append("Hush Music $version  ")
-                val linkStyles = TextLinkStyles(
-                    style = SpanStyle(
-                        color = MaterialTheme.colorScheme.primary,
-                        textDecoration = TextDecoration.Underline,
-                    ),
+            Column(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(top = 28.dp, bottom = 14.dp),
+                horizontalAlignment = Alignment.CenterHorizontally,
+            ) {
+                Text(
+                    text = "Hush Music $version",
+                    style = MaterialTheme.typography.labelMedium,
+                    fontWeight = FontWeight.SemiBold,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    textAlign = TextAlign.Center,
                 )
-                withLink(LinkAnnotation.Url("https://github.com/kushagrasinghx/BitChord", linkStyles)) {
-                    append("GitHub")
-                }
-                append("  ")
-                withLink(LinkAnnotation.Url("https://github.com/kushagrasinghx", linkStyles)) {
-                    append("Developer")
-                }
-                append("  ")
-                withLink(LinkAnnotation.Url("https://discord.gg/pDdKfrdHY6", linkStyles)) {
-                    append("Discord")
-                }
-                append("  ")
-                withLink(LinkAnnotation.Url("https://bitchord.kushagrasingh.in/", linkStyles)) {
-                    append("Website")
-                }
-                append("\n~YouTube Music & Listen Together Backend")
-            },
-            style = MaterialTheme.typography.labelSmall,
-            color = MaterialTheme.colorScheme.onSurfaceVariant,
-            textAlign = TextAlign.Center,
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(top = 24.dp, bottom = 8.dp),
-        )
+                Spacer(Modifier.height(4.dp))
+                Text(
+                    text = "Based on BitChord",
+                    style = MaterialTheme.typography.labelSmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.55f),
+                    textAlign = TextAlign.Center,
+                )
+            }
         }
     }
 
@@ -2970,16 +2982,16 @@ enum class SettingsCategory(@param:StringRes val title: Int) {
 
     val icon: ImageVector
         get() = when (this) {
-            DOWNLOADS -> SfIcons.Download
-            PLAYBACK -> SfIcons.PlayCircle
-            CONTENT_PREFERENCES -> SfIcons.Video
-            APPEARANCE -> SfIcons.Appearance
-            PERFORMANCE -> SfIcons.Performance
-            LOCAL_MUSIC -> SfIcons.LibraryMusic
-            STORAGE -> SfIcons.Storage
-            YOUR_DATA -> SfIcons.YourData
-            MISCELLANEOUS -> SfIcons.Miscellaneous
-            LANGUAGE -> SfIcons.Language
+            DOWNLOADS -> HushIcons.DownloadsBox
+            PLAYBACK -> HushIcons.Headphones
+            CONTENT_PREFERENCES -> HushIcons.Display
+            APPEARANCE -> HushIcons.Paintbrush
+            PERFORMANCE -> HushIcons.Gear
+            LOCAL_MUSIC -> HushIcons.Folder
+            STORAGE -> HushIcons.DownloadsBox
+            YOUR_DATA -> HushIcons.Lock
+            MISCELLANEOUS -> HushIcons.Grid
+            LANGUAGE -> HushIcons.Display
         }
 }
 

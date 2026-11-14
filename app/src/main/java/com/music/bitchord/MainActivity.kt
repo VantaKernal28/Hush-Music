@@ -2436,9 +2436,10 @@ private fun BitChordApp(
     // under the status bar inset, and that inset varies by device and by window,
     // so a fixed number only ever lines up on the one device it was picked on.
     // See [topBarContentPadding].
+    val navBottomInset = WindowInsets.navigationBars.asPaddingValues().calculateBottomPadding()
     val listPadding = PaddingValues(
         top = topBarContentPadding(),
-        bottom = if (player.song != null) 210.dp else 140.dp,
+        bottom = (if (player.song != null) 240.dp else 160.dp) + navBottomInset,
     )
 
     // What colour the page currently under the bars is. The fades either end
@@ -5528,27 +5529,28 @@ private fun BitChordApp(
 
         if (showAccountSelector) {
             BackHandler { showAccountSelector = false }
-            AccountProfileSelector(
-                accounts = googleAccounts,
-                activeAccountId = activeAccountId,
-                activeProfileId = activeProfileId,
-                hazeState = hazeState,
-                onSelect = { selected, profile -> viewModel.selectProfile(selected.accountId, profile.profileId) },
-                onAddAccount = {
-                    showAccountSelector = false
-                    webSession = WebSessionMode.SIGN_IN
-                },
-                onRemoveAccount = { selected ->
-                    viewModel.removeAccount(selected.accountId)
-                    showAccountSelector = false
-                },
-                onOpenSettings = {
-                    showAccountSelector = false
-                    navigator.push(AppRoute.Settings)
-                },
-                onDismiss = { showAccountSelector = false },
-            )
         }
+        AccountProfileSelector(
+            visible = showAccountSelector,
+            accounts = googleAccounts,
+            activeAccountId = activeAccountId,
+            activeProfileId = activeProfileId,
+            hazeState = hazeState,
+            onSelect = { selected, profile -> viewModel.selectProfile(selected.accountId, profile.profileId) },
+            onAddAccount = {
+                showAccountSelector = false
+                webSession = WebSessionMode.SIGN_IN
+            },
+            onRemoveAccount = { selected ->
+                viewModel.removeAccount(selected.accountId)
+                showAccountSelector = false
+            },
+            onOpenSettings = {
+                showAccountSelector = false
+                navigator.push(AppRoute.Settings)
+            },
+            onDismiss = { showAccountSelector = false },
+        )
 
         if (showAppLanguage) {
             BackHandler { showAppLanguage = false }

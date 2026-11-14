@@ -1,23 +1,35 @@
 package com.music.bitchord.ui.theme
 
 import android.app.Activity
+import android.os.Build
 import androidx.compose.foundation.isSystemInDarkTheme
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.darkColorScheme
-import androidx.compose.material3.lightColorScheme
+import androidx.compose.material3.Shapes
 import androidx.compose.material3.Typography
+import androidx.compose.material3.darkColorScheme
+import androidx.compose.material3.dynamicDarkColorScheme
+import androidx.compose.material3.dynamicLightColorScheme
+import androidx.compose.material3.lightColorScheme
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.SideEffect
+import androidx.compose.runtime.compositionLocalOf
+import androidx.compose.runtime.getValue
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalView
-import androidx.core.view.WindowCompat
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.Font
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.core.view.WindowCompat
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.music.bitchord.R
 import com.music.bitchord.data.settings.AppFont
+import com.music.bitchord.data.settings.AppSettings
 
 // Hush Music signature warm sunset-orange, peach, and deep-lavender aesthetic
 val HushSunsetOrange = Color(0xFFFF6E40)
@@ -43,6 +55,72 @@ val HushSunsetGradient = listOf(
 
 // Primary accent token
 val AccentRed = HushSunsetOrange
+
+/** Hush Brand Font Family */
+val CherryBombOne = FontFamily(
+    Font(R.font.cherry_bomb_one_regular, FontWeight.Normal),
+)
+
+/** Accent Color Swatch definition for app-wide dynamic theme customization */
+data class HushAccentSwatch(
+    val id: String,
+    val name: String,
+    val primary: Color,
+    val secondary: Color,
+    val isDynamic: Boolean = false,
+)
+
+/**
+ * 14-Color Circular Accent Swatch Palette covering every color spectrum
+ * plus Material You dynamic wallpaper Monet.
+ */
+val HushAccents = listOf(
+    HushAccentSwatch("sunset", "Sunset Orange", Color(0xFFFF6E40), Color(0xFFFFAB91)),
+    HushAccentSwatch("crimson", "Crimson Red", Color(0xFFE53935), Color(0xFFEF9A9A)),
+    HushAccentSwatch("rose", "Rose Pink", Color(0xFFE91E63), Color(0xFFF48FB1)),
+    HushAccentSwatch("purple", "Royal Purple", Color(0xFF9C27B0), Color(0xFFCE93D8)),
+    HushAccentSwatch("indigo", "Deep Indigo", Color(0xFF3F51B5), Color(0xFF9FA8DA)),
+    HushAccentSwatch("blue", "Electric Blue", Color(0xFF2196F3), Color(0xFF90CAF9)),
+    HushAccentSwatch("cyan", "Cyan / Aqua", Color(0xFF00BCD4), Color(0xFF80DEEA)),
+    HushAccentSwatch("teal", "Mint / Teal", Color(0xFF009688), Color(0xFF80CBC4)),
+    HushAccentSwatch("emerald", "Emerald Green", Color(0xFF4CAF50), Color(0xFFA5D6A7)),
+    HushAccentSwatch("lime", "Lime", Color(0xFF8BC34A), Color(0xFFC5E1A5)),
+    HushAccentSwatch("amber", "Solar Amber", Color(0xFFFFB300), Color(0xFFFFE082)),
+    HushAccentSwatch("brown", "Warm Brown", Color(0xFF8D6E63), Color(0xFFBCAAA4)),
+    HushAccentSwatch("monochrome", "Monochrome", Color(0xFF90A4AE), Color(0xFFCFD8DC)),
+    HushAccentSwatch("dynamic", "Dynamic Monet", Color(0xFFFF6E40), Color(0xFFFFAB91), isDynamic = true),
+)
+
+@Composable
+fun resolveAccentColor(accentId: String, dark: Boolean): Color {
+    val context = LocalContext.current
+    if (accentId == "dynamic" && Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
+        val scheme = if (dark) dynamicDarkColorScheme(context) else dynamicLightColorScheme(context)
+        return scheme.primary
+    }
+    return HushAccents.find { it.id == accentId }?.primary ?: HushSunsetOrange
+}
+
+/** Standard M3 corner radii */
+val StandardShapes = Shapes(
+    extraSmall = RoundedCornerShape(4.dp),
+    small = RoundedCornerShape(8.dp),
+    medium = RoundedCornerShape(12.dp),
+    large = RoundedCornerShape(16.dp),
+    extraLarge = RoundedCornerShape(20.dp),
+)
+
+/** Material 3 Expressive corner radii: expanded organic containers (24-28dp) */
+val ExpressiveShapes = Shapes(
+    extraSmall = RoundedCornerShape(8.dp),
+    small = RoundedCornerShape(14.dp),
+    medium = RoundedCornerShape(20.dp),
+    large = RoundedCornerShape(24.dp),
+    extraLarge = RoundedCornerShape(28.dp),
+)
+
+val LocalExpressiveMode = compositionLocalOf { false }
+val LocalHushAccent = compositionLocalOf { HushSunsetOrange }
 
 private val DarkColors = darkColorScheme(
     primary = HushSunsetOrange,
@@ -76,23 +154,6 @@ private val LightColors = lightColorScheme(
     outline = Color(0xFFE0DEE4),
 )
 
-/**
- * SF Pro Display, the face Apple Music itself is set in, drawn one weight
- * lighter than it is asked for.
- *
- * Measured against Apple Music's own screens, every weight here came out a
- * cut heavier than the same text there: its titles are Semibold where these
- * asked for Bold, its metadata Medium where these asked for Semibold. The
- * shift is made once, in the family, so it reaches the type scale and every
- * weight set in place alike and keeps the steps between them: Heavy draws
- * Bold, Bold draws Semibold, Semibold draws Medium, Medium draws Regular.
- * Regular stays Regular — no lighter cut is bundled, and Apple's body text is
- * Regular too. A FontWeight in this app therefore names the step it sits at in
- * the scale, not the cut it draws.
- *
- * Compose synthesises nothing, so a weight outside these falls back to the
- * nearest one listed.
- */
 val SFProDisplay = FontFamily(
     Font(R.font.sf_pro_display_regular, FontWeight.W400),
     Font(R.font.sf_pro_display_regular, FontWeight.W500),
@@ -101,15 +162,6 @@ val SFProDisplay = FontFamily(
     Font(R.font.sf_pro_display_bold, FontWeight.W800),
 )
 
-/*
- * Letter spacing measured off Apple Music's own screens: the spacing the
- * bundled Display cut needs, at the weight it draws, to set a line to the
- * width Apple sets it. Apple sets text under 20pt in SF Pro Text, which is
- * spaced looser than Display, so the small sizes open up — about +0.25 to
- * +0.4 at 12 to 14 — and the spacing closes as the size grows, to just under
- * nothing for semibold titles at 18 to 24. The large titles had nothing to
- * measure against and follow the same trend.
- */
 private val BitChordTypography = Typography(
     displayLarge = TextStyle(fontWeight = FontWeight.W800, fontSize = 34.sp, letterSpacing = (-0.5).sp),
     headlineLarge = TextStyle(fontWeight = FontWeight.W800, fontSize = 30.sp, letterSpacing = (-0.4).sp),
@@ -122,11 +174,6 @@ private val BitChordTypography = Typography(
     labelSmall = TextStyle(fontWeight = FontWeight.W600, fontSize = 11.sp, letterSpacing = 0.3.sp),
 ).withFamily(SFProDisplay)
 
-/**
- * SF Pro Display as the app first shipped it, before [SFProDisplay] moved every
- * weight a cut lighter: each weight draws its own cut, Heavy included. Kept for
- * [AppFont.LEGACY].
- */
 val SFProDisplayLegacy = FontFamily(
     Font(R.font.sf_pro_display_regular, FontWeight.W400),
     Font(R.font.sf_pro_display_medium, FontWeight.W500),
@@ -135,7 +182,6 @@ val SFProDisplayLegacy = FontFamily(
     Font(R.font.sf_pro_display_heavy, FontWeight.W800),
 )
 
-// Heavy, tight typography — the original scale [AppFont.LEGACY] restores.
 private val LegacyTypography = Typography(
     displayLarge = TextStyle(fontWeight = FontWeight.W800, fontSize = 34.sp, letterSpacing = (-0.8).sp),
     headlineLarge = TextStyle(fontWeight = FontWeight.W800, fontSize = 30.sp, letterSpacing = (-0.7).sp),
@@ -148,7 +194,6 @@ private val LegacyTypography = Typography(
     labelSmall = TextStyle(fontWeight = FontWeight.W600, fontSize = 11.sp),
 ).withFamily(SFProDisplayLegacy)
 
-/** Applies [family] to every style in the scale, so nothing is left on Roboto. */
 private fun Typography.withFamily(family: FontFamily) = Typography(
     displayLarge = displayLarge.copy(fontFamily = family),
     displayMedium = displayMedium.copy(fontFamily = family),
@@ -173,14 +218,35 @@ fun BitChordTheme(
     font: AppFont = AppFont.DEFAULT,
     content: @Composable () -> Unit,
 ) {
-    MaterialTheme(
-        colorScheme = if (darkTheme) DarkColors else LightColors,
-        typography = when (font) {
-            AppFont.DEFAULT -> BitChordTypography
-            AppFont.LEGACY -> LegacyTypography
-        },
-        content = content,
+    val currentAccentId by AppSettings.themeAccent.collectAsStateWithLifecycle()
+    val isExpressive by AppSettings.expressiveMode.collectAsStateWithLifecycle()
+    val resolvedAccent = resolveAccentColor(currentAccentId, darkTheme)
+
+    val baseScheme = if (darkTheme) DarkColors else LightColors
+    val colorScheme = baseScheme.copy(
+        primary = resolvedAccent,
+        primaryContainer = resolvedAccent.copy(alpha = if (darkTheme) 0.22f else 0.16f),
+        onPrimaryContainer = if (darkTheme) Color.White else Color.Black,
+        secondary = resolvedAccent.copy(alpha = 0.85f),
+        secondaryContainer = resolvedAccent.copy(alpha = if (darkTheme) 0.16f else 0.10f),
     )
+
+    val shapes = if (isExpressive) ExpressiveShapes else StandardShapes
+
+    CompositionLocalProvider(
+        LocalExpressiveMode provides isExpressive,
+        LocalHushAccent provides resolvedAccent,
+    ) {
+        MaterialTheme(
+            colorScheme = colorScheme,
+            typography = when (font) {
+                AppFont.DEFAULT -> BitChordTypography
+                AppFont.LEGACY -> LegacyTypography
+            },
+            shapes = shapes,
+            content = content,
+        )
+    }
 }
 
 /** Hush Music's primary theme entrypoint. */
@@ -191,16 +257,6 @@ fun HushMusicTheme(
     content: @Composable () -> Unit,
 ) = BitChordTheme(darkTheme, font, content)
 
-/**
- * Draws the status and navigation bar glyphs dark or light.
- *
- * `enableEdgeToEdge()` decides this from the *system* dark-mode setting, which
- * is the wrong input the moment the in-app theme disagrees with it: Light theme
- * on a phone in dark mode left white icons on a white bar, invisible. The bars
- * have to follow the content the app is actually painting. The player supplies
- * its own stable light-icon value and paints contrast behind it; every other
- * surface follows the theme. Hence a parameter rather than reading it here.
- */
 @Composable
 fun SystemBarIcons(dark: Boolean) {
     val view = LocalView.current
@@ -213,4 +269,3 @@ fun SystemBarIcons(dark: Boolean) {
         }
     }
 }
-

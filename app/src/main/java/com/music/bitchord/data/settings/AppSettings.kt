@@ -443,8 +443,11 @@ object AppSettings {
     /** User vibe/genre preferences chosen during onboarding. */
     val selectedGenres = MutableStateFlow<Set<String>>(emptySet())
 
-    /** Theme accent chosen during onboarding (sunset, peach, lavender, amoled). */
+    /** Theme accent chosen during onboarding (sunset, crimson, rose, purple, indigo, blue, cyan, teal, emerald, lime, amber, brown, monochrome, dynamic). */
     val themeAccent = MutableStateFlow("sunset")
+
+    /** Material 3 Expressive UI: organic corner radii (24-28dp), richer containers & expressive springs. */
+    val expressiveMode = MutableStateFlow(false)
 
     /** Whether the one-time Diwali 2026 greeting has been seen and dismissed. */
     val diwaliGreetingShown = MutableStateFlow(false)
@@ -1033,6 +1036,7 @@ object AppSettings {
         userName.value = prefs.getString(KEY_USER_NAME, "Listener") ?: "Listener"
         selectedGenres.value = prefs.getStringSet(KEY_SELECTED_GENRES, emptySet()) ?: emptySet()
         themeAccent.value = prefs.getString(KEY_THEME_ACCENT, "sunset") ?: "sunset"
+        expressiveMode.value = prefs.getBoolean(KEY_EXPRESSIVE_MODE, false)
         diwaliGreetingShown.value = prefs.getBoolean(KEY_DIWALI_GREETING_SHOWN, false)
         highPerformanceMode.value = prefs.getBoolean(KEY_HIGH_PERFORMANCE_MODE, false)
         performanceRefreshRate.value = normalizePerformanceRefreshRate(
@@ -1455,6 +1459,11 @@ object AppSettings {
     fun setThemeAccent(accent: String) {
         themeAccent.value = accent
         prefs.edit().putString(KEY_THEME_ACCENT, accent).apply()
+    }
+
+    fun setExpressiveMode(value: Boolean) {
+        expressiveMode.value = value
+        prefs.edit().putBoolean(KEY_EXPRESSIVE_MODE, value).apply()
     }
 
     fun setDiwaliGreetingShown() {
@@ -2323,6 +2332,7 @@ object AppSettings {
     private const val KEY_USER_NAME = "hush_user_name"
     private const val KEY_SELECTED_GENRES = "hush_selected_genres"
     private const val KEY_THEME_ACCENT = "hush_theme_accent"
+    private const val KEY_EXPRESSIVE_MODE = "hush_expressive_mode"
     private const val KEY_DIWALI_GREETING_SHOWN = "diwali_greeting_2026_shown"
     private const val KEY_HIGH_PERFORMANCE_MODE = "high_performance_mode"
     private const val KEY_PERFORMANCE_REFRESH_RATE = "performance_refresh_rate"

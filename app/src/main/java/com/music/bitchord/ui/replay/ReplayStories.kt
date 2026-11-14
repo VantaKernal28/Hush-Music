@@ -3,6 +3,7 @@ package com.music.bitchord.ui.replay
 import androidx.compose.animation.core.Animatable
 import androidx.compose.animation.core.LinearEasing
 import androidx.compose.animation.core.tween
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.gestures.detectTapGestures
@@ -412,16 +413,14 @@ private fun StoryChrome(
                 color = Color.White,
                 modifier = Modifier.weight(1f),
             )
-            // The mark and the word together, the way the card carries it.
-            Icon(
-                painter = painterResource(R.drawable.ic_logo),
+            Image(
+                painter = painterResource(R.drawable.ic_hush_transparent_logo),
                 contentDescription = null,
-                tint = Color.White.copy(alpha = 0.9f),
-                modifier = Modifier.size(width = 26.dp, height = 17.dp),
+                modifier = Modifier.size(24.dp),
             )
             Spacer(Modifier.width(7.dp))
             Text(
-                text = "BitChord",
+                text = "Hush Music",
                 style = MaterialTheme.typography.titleMedium,
                 fontWeight = FontWeight.W700,
                 color = Color.White.copy(alpha = 0.9f),

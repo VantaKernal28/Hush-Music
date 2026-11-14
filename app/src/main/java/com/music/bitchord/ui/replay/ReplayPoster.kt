@@ -701,7 +701,7 @@ private fun drawRuns(
  */
 internal fun drawLogo(canvas: Canvas, context: Context, right: Float, baseline: Float) {
     val logo = runCatching {
-        ResourcesCompat.getDrawable(context.resources, R.drawable.ic_logo, null)
+        ResourcesCompat.getDrawable(context.resources, R.drawable.ic_hush_transparent_logo, null)
     }.getOrNull() ?: return
     val left = right - LOGO_W
     val top = baseline - LOGO_H

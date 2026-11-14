@@ -115,7 +115,7 @@ fun GlassNavBar(
     // lambda, which the tab bar sees as a changed argument and recomposes on.
     val pillShape = remember { RoundedCornerShape(percent = 50) }
     val contentColor = glassContentColor()
-    val selectedColor = Color(0xFFFF5722) // Vibrant Coral / Sunset Red-Orange
+    val selectedColor = MaterialTheme.colorScheme.primary
     val unselectedColor = Color(0xFF8E8E93) // Muted Gray Outline
     val haptics = rememberHaptics()
 

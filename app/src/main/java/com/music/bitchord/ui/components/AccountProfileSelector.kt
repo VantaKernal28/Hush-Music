@@ -1,10 +1,21 @@
 package com.music.bitchord.ui.components
 
+import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.ExperimentalAnimationApi
+import androidx.compose.animation.animateEnterExit
+import androidx.compose.animation.core.FastOutSlowInEasing
+import androidx.compose.animation.core.Spring
+import androidx.compose.animation.core.spring
+import androidx.compose.animation.core.tween
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.scaleIn
+import androidx.compose.animation.scaleOut
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -31,6 +42,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.TransformOrigin
 import androidx.compose.ui.graphics.luminance
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.Role
@@ -51,10 +63,15 @@ import dev.chrisbanes.haze.HazeTint
 import dev.chrisbanes.haze.materials.ExperimentalHazeMaterialsApi
 import dev.chrisbanes.haze.materials.HazeMaterials
 
-/** Shared compact selector for every visible YouTube account avatar. */
-@OptIn(ExperimentalHazeMaterialsApi::class)
+/**
+ * Shared compact selector for every visible YouTube account avatar.
+ * Enhanced with smooth container-transform / shared-axis scale + fade + backdrop dim spring animation
+ * originating from the top-right profile icon.
+ */
+@OptIn(ExperimentalHazeMaterialsApi::class, ExperimentalAnimationApi::class)
 @Composable
 fun AccountProfileSelector(
+    visible: Boolean,
     accounts: List<GoogleAccountSession>,
     activeAccountId: String?,
     activeProfileId: String?,
@@ -71,9 +88,7 @@ fun AccountProfileSelector(
     val shape = MaterialTheme.shapes.extraLarge
     val surface = MaterialTheme.colorScheme.surface
     val dark = surface.luminance() < 0.5f
-    // The thin material lets too much of the page through behind the text. Dark
-    // mode gets a black wash over it; light mode a white one, which keeps the
-    // dark text readable over a busy cover instead of muddying it.
+
     val material = HazeMaterials.thin(surface)
     val style = remember(material, dark) {
         HazeStyle(
@@ -86,94 +101,164 @@ fun AccountProfileSelector(
             fallbackTint = material.fallbackTint,
         )
     }
-    Column(
-        modifier = modifier.fillMaxSize().background(MaterialTheme.colorScheme.scrim.copy(alpha = .48f))
-            .clickable(onClick = onDismiss),
-        horizontalAlignment = Alignment.CenterHorizontally,
+
+    AnimatedVisibility(
+        visible = visible,
+        enter = fadeIn(tween(220)),
+        exit = fadeOut(tween(180)),
     ) {
-        Surface(
-            color = Color.Transparent,
-            contentColor = MaterialTheme.colorScheme.onSurface,
-            shape = shape,
-            modifier = Modifier
-                .padding(top = 56.dp, start = 20.dp, end = 20.dp)
-                .fillMaxWidth()
-                .clip(shape)
-                .then(
-                    if (reduceDynamicBlur) {
-                        Modifier.background(MaterialTheme.colorScheme.surface)
-                    } else {
-                        Modifier.optimizedHazeEffect(
-                            state = hazeState,
-                            style = style,
-                        )
-                    },
-                )
-                // The same hairline the mini player and the nav bar wear.
-                .border(
-                    0.5.dp,
-                    // White on dark like the bars; a light surface has nothing
-                    // for a white hairline to show against.
-                    if (dark) Color.White.copy(alpha = 0.10f) else Color.Black.copy(alpha = 0.10f),
-                    shape,
-                )
-                .clickable(onClick = {}),
+        Column(
+            modifier = modifier
+                .fillMaxSize()
+                .background(MaterialTheme.colorScheme.scrim.copy(alpha = 0.48f))
+                .clickable(onClick = onDismiss),
+            horizontalAlignment = Alignment.CenterHorizontally,
         ) {
-            // Room under the last row to match the space between rows, so the
-            // list doesn't stop short against the card's edge.
-            LazyColumn(contentPadding = PaddingValues(bottom = 14.dp)) {
-                item { Text(stringResource(R.string.switch_account), style = MaterialTheme.typography.titleLarge,
-                    color = MaterialTheme.colorScheme.onSurface,
-                    modifier = Modifier.padding(20.dp, 18.dp, 20.dp, 8.dp)) }
-                accounts.forEach { account ->
-                item {
-                    Text(account.email.ifBlank { account.name.ifBlank { stringResource(R.string.accounts) } },
-                        style = MaterialTheme.typography.labelLarge,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant,
-                        modifier = Modifier.padding(20.dp, 12.dp, 20.dp, 4.dp))
+            Surface(
+                color = Color.Transparent,
+                contentColor = MaterialTheme.colorScheme.onSurface,
+                shape = shape,
+                modifier = Modifier
+                    .padding(top = 56.dp, start = 20.dp, end = 20.dp)
+                    .fillMaxWidth()
+                    .animateEnterExit(
+                        enter = scaleIn(
+                            animationSpec = spring(
+                                dampingRatio = Spring.DampingRatioMediumBouncy,
+                                stiffness = Spring.StiffnessMediumLow,
+                            ),
+                            initialScale = 0.65f,
+                            transformOrigin = TransformOrigin(0.92f, 0.05f),
+                        ) + fadeIn(tween(200)),
+                        exit = scaleOut(
+                            animationSpec = tween(180, easing = FastOutSlowInEasing),
+                            targetScale = 0.85f,
+                            transformOrigin = TransformOrigin(0.92f, 0.05f),
+                        ) + fadeOut(tween(160)),
+                    )
+                    .clip(shape)
+                    .then(
+                        if (reduceDynamicBlur) {
+                            Modifier.background(MaterialTheme.colorScheme.surface)
+                        } else {
+                            Modifier.optimizedHazeEffect(
+                                state = hazeState,
+                                style = style,
+                            )
+                        },
+                    )
+                    .border(
+                        0.5.dp,
+                        if (dark) Color.White.copy(alpha = 0.10f) else Color.Black.copy(alpha = 0.10f),
+                        shape,
+                    )
+                    .clickable(onClick = {}),
+            ) {
+                LazyColumn(contentPadding = PaddingValues(bottom = 14.dp)) {
+                    item {
+                        Text(
+                            stringResource(R.string.switch_account),
+                            style = MaterialTheme.typography.titleLarge,
+                            color = MaterialTheme.colorScheme.onSurface,
+                            modifier = Modifier.padding(20.dp, 18.dp, 20.dp, 8.dp),
+                        )
+                    }
+                    accounts.forEach { account ->
+                        item {
+                            Text(
+                                account.email.ifBlank { account.name.ifBlank { stringResource(R.string.accounts) } },
+                                style = MaterialTheme.typography.labelLarge,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                modifier = Modifier.padding(20.dp, 12.dp, 20.dp, 4.dp),
+                            )
+                        }
+                        items(account.profiles.size) { index ->
+                            val profile = account.profiles[index]
+                            ProfileRow(
+                                profile = profile,
+                                selected = account.accountId == activeAccountId && profile.profileId == activeProfileId,
+                                managing = managing,
+                                onClick = { onSelect(account, profile); onDismiss() },
+                                onRemove = { onRemoveAccount(account) },
+                            )
+                        }
+                    }
+                    item { SelectorAction(SfIcons.Add, stringResource(R.string.add_account), onClick = onAddAccount) }
+                    item { SelectorAction(SfIcons.Close, stringResource(R.string.manage_accounts)) { managing = !managing } }
+                    item { SelectorAction(SfIcons.Settings, stringResource(R.string.settings), onClick = onOpenSettings) }
                 }
-                items(account.profiles.size) { index ->
-                    val profile = account.profiles[index]
-                    ProfileRow(profile, account.accountId == activeAccountId && profile.profileId == activeProfileId,
-                        managing, { onSelect(account, profile); onDismiss() }, { onRemoveAccount(account) })
-                }
-                }
-                item { SelectorAction(SfIcons.Add, stringResource(R.string.add_account), onClick = onAddAccount) }
-                item { SelectorAction(SfIcons.Close, stringResource(R.string.manage_accounts)) { managing = !managing } }
-                item { SelectorAction(SfIcons.Settings, stringResource(R.string.settings), onClick = onOpenSettings) }
             }
         }
     }
 }
 
-@Composable private fun ProfileRow(profile: YouTubeProfile, selected: Boolean, managing: Boolean,
-    onClick: () -> Unit, onRemove: () -> Unit) {
+@Composable
+private fun ProfileRow(
+    profile: YouTubeProfile,
+    selected: Boolean,
+    managing: Boolean,
+    onClick: () -> Unit,
+    onRemove: () -> Unit,
+) {
     val description = stringResource(if (selected) R.string.selected_account else R.string.switch_account)
-    Row(Modifier.fillMaxWidth().heightIn(min = 56.dp).clickable(role = Role.RadioButton, onClick = if (managing) onRemove else onClick)
-        .semantics { contentDescription = description }
-        .padding(horizontal = 20.dp, vertical = 8.dp), verticalAlignment = Alignment.CenterVertically) {
-        if (profile.avatar != null) AsyncImage(profile.avatar, null, Modifier.size(38.dp).clip(MaterialTheme.shapes.extraLarge))
-        else Icon(SfIcons.AccountPlaceholder, null, Modifier.size(38.dp), tint = MaterialTheme.colorScheme.onSurfaceVariant)
-        Spacer(Modifier.width(12.dp)); Column(Modifier.weight(1f)) {
-            Text(profile.name, maxLines = 1, overflow = TextOverflow.Ellipsis)
-            Text(profile.handle.ifBlank { stringResource(if (profile.isBrandAccount) R.string.brand_account else R.string.personal) },
-                style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+    Row(
+        Modifier
+            .fillMaxWidth()
+            .heightIn(min = 56.dp)
+            .clickable(role = Role.RadioButton, onClick = if (managing) onRemove else onClick)
+            .semantics { contentDescription = description }
+            .padding(horizontal = 20.dp, vertical = 8.dp),
+        verticalAlignment = Alignment.CenterVertically,
+    ) {
+        if (profile.avatar != null) {
+            AsyncImage(
+                profile.avatar,
+                null,
+                Modifier.size(38.dp).clip(MaterialTheme.shapes.extraLarge),
+            )
+        } else {
+            Icon(
+                SfIcons.AccountPlaceholder,
+                null,
+                Modifier.size(38.dp),
+                tint = MaterialTheme.colorScheme.onSurfaceVariant,
+            )
         }
-        if (selected && !managing) Icon(Icons.Rounded.Check, stringResource(R.string.selected_account), tint = MaterialTheme.colorScheme.primary)
-        if (managing) Text(stringResource(R.string.sign_out), color = MaterialTheme.colorScheme.error)
+        Spacer(Modifier.width(12.dp))
+        Column(Modifier.weight(1f)) {
+            Text(profile.name, maxLines = 1, overflow = TextOverflow.Ellipsis)
+            Text(
+                profile.handle.ifBlank { stringResource(if (profile.isBrandAccount) R.string.brand_account else R.string.personal) },
+                style = MaterialTheme.typography.bodySmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+            )
+        }
+        if (selected) {
+            Icon(
+                Icons.Rounded.Check,
+                stringResource(R.string.selected),
+                tint = MaterialTheme.colorScheme.primary,
+            )
+        }
     }
 }
 
-@Composable private fun SelectorAction(
+@Composable
+private fun SelectorAction(
     icon: androidx.compose.ui.graphics.vector.ImageVector,
     label: String,
-    iconSize: Dp = 24.dp,
     onClick: () -> Unit,
 ) {
-    Row(Modifier.fillMaxWidth().heightIn(min = 52.dp).clickable(role = Role.Button, onClick = onClick)
-        .semantics { contentDescription = label }.padding(horizontal = 20.dp), verticalAlignment = Alignment.CenterVertically) {
-        // In the avatars' column, so the labels line up with the names above.
-        Box(Modifier.width(38.dp), contentAlignment = Alignment.Center) { Icon(icon, null, Modifier.size(iconSize)) }
-        Spacer(Modifier.width(12.dp)); Text(label)
+    Row(
+        Modifier
+            .fillMaxWidth()
+            .heightIn(min = 48.dp)
+            .clickable(onClick = onClick)
+            .padding(horizontal = 20.dp, vertical = 8.dp),
+        verticalAlignment = Alignment.CenterVertically,
+    ) {
+        Icon(icon, null, Modifier.size(22.dp), tint = MaterialTheme.colorScheme.onSurfaceVariant)
+        Spacer(Modifier.width(14.dp))
+        Text(label, style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurface)
     }
 }

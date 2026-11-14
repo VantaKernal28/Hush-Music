@@ -581,13 +581,12 @@ private fun HomeTitle(
                 fontWeight = FontWeight.Bold,
                 color = MaterialTheme.colorScheme.onBackground,
             )
-            Icon(
-                painter = painterResource(Res.drawable.ic_logo),
+            Image(
+                painter = painterResource(Res.drawable.ic_hush_transparent_logo),
                 contentDescription = "Hush Music",
-                tint = Color(0xFFFF6E40),
                 modifier = Modifier
-                    .height(24.dp)
-                    .aspectRatio(LOGO_ASPECT),
+                    .size(34.dp)
+                    .clip(CircleShape),
             )
         }
 

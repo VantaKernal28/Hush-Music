@@ -1,6 +1,7 @@
 package com.music.bitchord.ui.screens
 
 import androidx.compose.foundation.Canvas
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
@@ -353,15 +354,14 @@ private fun TopPickCard(
             }
         }
         if (branded) {
-            Icon(
-                painter = painterResource(Res.drawable.ic_logo),
+            Image(
+                painter = painterResource(Res.drawable.ic_hush_transparent_logo),
                 contentDescription = null,
-                tint = Color.White,
                 modifier = Modifier
                     .align(Alignment.TopEnd)
-                    .padding(top = 12.dp, end = 12.dp)
-                    .height(15.dp)
-                    .aspectRatio(730f / 484f),
+                    .padding(top = 10.dp, end = 10.dp)
+                    .size(20.dp)
+                    .clip(CircleShape),
             )
         }
         CardCaption(text, eyebrowColor, Modifier.align(Alignment.BottomStart))
@@ -1611,15 +1611,14 @@ private fun MoodTile(mood: TopPickMood, onClick: (TopPickMood, String) -> Unit, 
             // it — for as long as the shelf was in view; the motion is Top
             // Picks' own, one card at a time.
             MoodArt(mood, mood.style(), Modifier.fillMaxSize(), square = true, still = true)
-            Icon(
-                painter = painterResource(Res.drawable.ic_logo),
+            Image(
+                painter = painterResource(Res.drawable.ic_hush_transparent_logo),
                 contentDescription = null,
-                tint = Color.White,
                 modifier = Modifier
                     .align(Alignment.TopEnd)
                     .padding(top = 8.dp, end = 8.dp)
-                    .height(11.dp)
-                    .aspectRatio(730f / 484f),
+                    .size(16.dp)
+                    .clip(CircleShape),
             )
         }
         Spacer(Modifier.height(10.dp))
