@@ -51,7 +51,7 @@
     <string name="shuffle">Shuffle</string>
     <string name="more">More</string>
     <string name="lyrics_offset">Lyrics offset</string>
-    <string name="automix_overview">Automix overview</string>
+    <string name="automix_overview" translatable="false">Automix overview</string>
     <string name="auto_quick_picks">Quick picks</string>
     <string name="auto_recents">Recent</string>
     <string name="auto_liked">Liked songs</string>
@@ -1272,39 +1272,39 @@
     <string name="spotify_import_language_hint" translatable="false">e.g. Punjabi, Marathi, Korean…</string>
     <string name="spotify_library_subtitle">Your Spotify playlists</string>
     <string name="onboarding_title">Welcome to Hush Music</string>
-    <string name="onboarding_subtitle">A Spotify-style YouTube Music client with lossless Hi-Res audio, synchronized lyrics, and dynamic visual themes.</string>
-    <string name="onboarding_get_started">Get Started</string>
-    <string name="onboarding_feat_lossless_title">Hi-Res Lossless Audio</string>
-    <string name="onboarding_feat_lossless_desc">FLAC up to 24-bit/96kHz &amp; 320kbps streams with gapless crossfade.</string>
-    <string name="onboarding_feat_lyrics_title">Word-Synced Lyrics</string>
-    <string name="onboarding_feat_lyrics_desc">Apple Music-style word &amp; syllable animated karaoke highlights.</string>
-    <string name="onboarding_feat_theme_title">Dynamic Visual Theming</string>
-    <string name="onboarding_feat_theme_desc">Fluid animated mesh gradients extracted live from your album artwork.</string>
+    <string name="onboarding_subtitle" translatable="false">A Spotify-style YouTube Music client with lossless Hi-Res audio, synchronized lyrics, and dynamic visual themes.</string>
+    <string name="onboarding_get_started" translatable="false">Get Started</string>
+    <string name="onboarding_feat_lossless_title" translatable="false">Hi-Res Lossless Audio</string>
+    <string name="onboarding_feat_lossless_desc" translatable="false">FLAC up to 24-bit/96kHz &amp; 320kbps streams with gapless crossfade.</string>
+    <string name="onboarding_feat_lyrics_title" translatable="false">Word-Synced Lyrics</string>
+    <string name="onboarding_feat_lyrics_desc" translatable="false">Apple Music-style word &amp; syllable animated karaoke highlights.</string>
+    <string name="onboarding_feat_theme_title" translatable="false">Dynamic Visual Theming</string>
+    <string name="onboarding_feat_theme_desc" translatable="false">Fluid animated mesh gradients extracted live from your album artwork.</string>
     <string name="onboarding_name_prompt">What should we call you?</string>
     <string name="onboarding_name_hint">Your name or nickname</string>
     <string name="onboarding_name_footer">Friends see this when you Listen Together. You can change it anytime in Settings.</string>
-    <string name="onboarding_quality_title">Choose Your Sound</string>
-    <string name="onboarding_quality_subtitle">Select your preferred sound quality. You can always adjust this later in Settings.</string>
-    <string name="onboarding_quality_lossless">Lossless Master</string>
-    <string name="onboarding_quality_lossless_desc">Studio Master · FLAC &amp; JioSaavn lossless, bit-exact where available.</string>
-    <string name="onboarding_quality_lossless_badge">Highest Fidelity</string>
-    <string name="onboarding_quality_lossless_data">~300+ MB/hr</string>
-    <string name="onboarding_quality_high">High Quality</string>
-    <string name="onboarding_quality_high_desc">Crystal Clear · Up to 320kbps Opus / AAC, rich dynamics &amp; fast buffering.</string>
-    <string name="onboarding_quality_high_badge">Recommended</string>
-    <string name="onboarding_quality_high_data">~140 MB/hr</string>
-    <string name="onboarding_quality_saver">Data Saver</string>
-    <string name="onboarding_quality_saver_desc">Efficient · ~128kbps Opus, best for metered cellular plans.</string>
-    <string name="onboarding_quality_saver_badge">Low Data</string>
-    <string name="onboarding_quality_saver_data">~75 MB/hr</string>
-    <string name="onboarding_perms_title">Seamless Playback</string>
-    <string name="onboarding_perms_subtitle">Enable permissions to ensure uninterrupted background audio and lock screen controls.</string>
-    <string name="onboarding_perms_notif_title">Media Notifications</string>
-    <string name="onboarding_perms_notif_desc">Required to show album art, scrubbers, and transport controls on your lockscreen.</string>
-    <string name="onboarding_perms_storage_title">Device Audio Files</string>
-    <string name="onboarding_perms_storage_desc">Optional · Allows Hush Music to browse and play local tracks stored on your device.</string>
-    <string name="onboarding_perms_allow">Allow</string>
-    <string name="onboarding_perms_granted">Active</string>
+    <string name="onboarding_quality_title" translatable="false">Choose Your Sound</string>
+    <string name="onboarding_quality_subtitle" translatable="false">Select your preferred sound quality. You can always adjust this later in Settings.</string>
+    <string name="onboarding_quality_lossless" translatable="false">Lossless Master</string>
+    <string name="onboarding_quality_lossless_desc" translatable="false">Studio Master · FLAC &amp; JioSaavn lossless, bit-exact where available.</string>
+    <string name="onboarding_quality_lossless_badge" translatable="false">Highest Fidelity</string>
+    <string name="onboarding_quality_lossless_data" translatable="false">~300+ MB/hr</string>
+    <string name="onboarding_quality_high" translatable="false">High Quality</string>
+    <string name="onboarding_quality_high_desc" translatable="false">Crystal Clear · Up to 320kbps Opus / AAC, rich dynamics &amp; fast buffering.</string>
+    <string name="onboarding_quality_high_badge" translatable="false">Recommended</string>
+    <string name="onboarding_quality_high_data" translatable="false">~140 MB/hr</string>
+    <string name="onboarding_quality_saver" translatable="false">Data Saver</string>
+    <string name="onboarding_quality_saver_desc" translatable="false">Efficient · ~128kbps Opus, best for metered cellular plans.</string>
+    <string name="onboarding_quality_saver_badge" translatable="false">Low Data</string>
+    <string name="onboarding_quality_saver_data" translatable="false">~75 MB/hr</string>
+    <string name="onboarding_perms_title" translatable="false">Seamless Playback</string>
+    <string name="onboarding_perms_subtitle" translatable="false">Enable permissions to ensure uninterrupted background audio and lock screen controls.</string>
+    <string name="onboarding_perms_notif_title" translatable="false">Media Notifications</string>
+    <string name="onboarding_perms_notif_desc" translatable="false">Required to show album art, scrubbers, and transport controls on your lockscreen.</string>
+    <string name="onboarding_perms_storage_title" translatable="false">Device Audio Files</string>
+    <string name="onboarding_perms_storage_desc" translatable="false">Optional · Allows Hush Music to browse and play local tracks stored on your device.</string>
+    <string name="onboarding_perms_allow" translatable="false">Allow</string>
+    <string name="onboarding_perms_granted" translatable="false">Active</string>
     <string name="onboarding_next">Continue</string>
     <string name="onboarding_connect_title">Connect Your Account</string>
     <string name="onboarding_connect_body">Bring your library, playlists and mixes with you, and start a Listen Together party with friends.</string>
@@ -1359,50 +1359,50 @@
     <string name="no_audio_version">No audio version found for this video</string>
     <string name="no_video_version">No video version found for this song</string>
     <string name="version_switch_in_party">Everyone in Listen Together hears the same version</string>
-    <string name="diwali_title">Hush Music wishes you a Happy Diwali</string>
-    <string name="diwali_subtitle">May this festival of lights fill your home with joy and your days with music.</string>
-    <string name="diwali_cta">Let\'s Celebrate</string>
+    <string name="diwali_title" translatable="false">Hush Music wishes you a Happy Diwali</string>
+    <string name="diwali_subtitle" translatable="false">May this festival of lights fill your home with joy and your days with music.</string>
+    <string name="diwali_cta" translatable="false">Let\'s Celebrate</string>
 
     <!-- Hush Jam & Spotify-inspired live session strings -->
-    <string name="hush_jam">Hush Jam</string>
-    <string name="start_a_jam">Start a Jam</string>
-    <string name="jam_active_status">Live Jam Session Active</string>
-    <string name="jam_subtitle">Listen synchronously with friends in real time</string>
-    <string name="jam_scan_qr_desc">Scan with camera or share the session link</string>
-    <string name="jam_code_label">Session Code</string>
-    <string name="jam_copy_code">Copy Code</string>
-    <string name="jam_code_copied">Session code copied to clipboard</string>
-    <string name="jam_share_link">Share Invite Link</string>
-    <string name="jam_listeners_title">In this Jam (%1$d)</string>
-    <string name="jam_host_badge">Host</string>
-    <string name="jam_guest_badge">Guest</string>
-    <string name="jam_host_controls_title">Host Session Controls</string>
-    <string name="jam_anyone_can_queue">Guests can add songs</string>
-    <string name="jam_host_only_playback">Only host controls playback</string>
-    <string name="jam_leave_session">Leave Jam</string>
-    <string name="jam_end_session">End Jam Session</string>
+    <string name="hush_jam" translatable="false">Hush Jam</string>
+    <string name="start_a_jam" translatable="false">Start a Jam</string>
+    <string name="jam_active_status" translatable="false">Live Jam Session Active</string>
+    <string name="jam_subtitle" translatable="false">Listen synchronously with friends in real time</string>
+    <string name="jam_scan_qr_desc" translatable="false">Scan with camera or share the session link</string>
+    <string name="jam_code_label" translatable="false">Session Code</string>
+    <string name="jam_copy_code" translatable="false">Copy Code</string>
+    <string name="jam_code_copied" translatable="false">Session code copied to clipboard</string>
+    <string name="jam_share_link" translatable="false">Share Invite Link</string>
+    <string name="jam_listeners_title" translatable="false">In this Jam (%1$d)</string>
+    <string name="jam_host_badge" translatable="false">Host</string>
+    <string name="jam_guest_badge" translatable="false">Guest</string>
+    <string name="jam_host_controls_title" translatable="false">Host Session Controls</string>
+    <string name="jam_anyone_can_queue" translatable="false">Guests can add songs</string>
+    <string name="jam_host_only_playback" translatable="false">Only host controls playback</string>
+    <string name="jam_leave_session" translatable="false">Leave Jam</string>
+    <string name="jam_end_session" translatable="false">End Jam Session</string>
 
     <!-- Spotify-inspired Home greetings & filters -->
-    <string name="greeting_morning">Good morning</string>
-    <string name="greeting_afternoon">Good afternoon</string>
-    <string name="greeting_evening">Good evening</string>
-    <string name="filter_all">All</string>
-    <string name="filter_music">Music</string>
-    <string name="filter_podcasts">Podcasts</string>
-    <string name="filter_made_for_you">Made For You</string>
-    <string name="quick_picks_title">Jump back in</string>
+    <string name="greeting_morning" translatable="false">Good morning</string>
+    <string name="greeting_afternoon" translatable="false">Good afternoon</string>
+    <string name="greeting_evening" translatable="false">Good evening</string>
+    <string name="filter_all" translatable="false">All</string>
+    <string name="filter_music" translatable="false">Music</string>
+    <string name="filter_podcasts" translatable="false">Podcasts</string>
+    <string name="filter_made_for_you" translatable="false">Made For You</string>
+    <string name="quick_picks_title" translatable="false">Jump back in</string>
 
     <!-- Onboarding Step 3 & 4 additions -->
-    <string name="onboarding_step_vibe_title">What are you in the mood for?</string>
-    <string name="onboarding_step_vibe_subtitle">Pick a few vibes to customize your initial recommendations and theme accents.</string>
-    <string name="onboarding_accent_sunset">Sunset Glow</string>
-    <string name="onboarding_accent_peach">Electric Peach</string>
-    <string name="onboarding_accent_lavender">Deep Lavender</string>
-    <string name="onboarding_accent_charcoal">AMOLED Obsidian</string>
+    <string name="onboarding_step_vibe_title" translatable="false">What are you in the mood for?</string>
+    <string name="onboarding_step_vibe_subtitle" translatable="false">Pick a few vibes to customize your initial recommendations and theme accents.</string>
+    <string name="onboarding_accent_sunset" translatable="false">Sunset Glow</string>
+    <string name="onboarding_accent_peach" translatable="false">Electric Peach</string>
+    <string name="onboarding_accent_lavender" translatable="false">Deep Lavender</string>
+    <string name="onboarding_accent_charcoal" translatable="false">AMOLED Obsidian</string>
 
     <!-- Debug & Settings: Reset Onboarding -->
-    <string name="settings_reset_onboarding_title">Reset First-Boot Onboarding Tour</string>
-    <string name="settings_reset_onboarding_summary">Re-triggers the dynamic welcome, personalization and theme flow on next launch.</string>
-    <string name="onboarding_reset_toast">Onboarding reset! Launching tour…</string>
+    <string name="settings_reset_onboarding_title" translatable="false">Reset First-Boot Onboarding Tour</string>
+    <string name="settings_reset_onboarding_summary" translatable="false">Re-triggers the dynamic welcome, personalization and theme flow on next launch.</string>
+    <string name="onboarding_reset_toast" translatable="false">Onboarding reset! Launching tour…</string>
 
 </resources>
