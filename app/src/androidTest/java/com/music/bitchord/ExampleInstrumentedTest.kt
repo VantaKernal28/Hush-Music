@@ -19,6 +19,6 @@ class ExampleInstrumentedTest {
     fun useAppContext() {
         // Context of the app under test.
         val appContext = InstrumentationRegistry.getInstrumentation().targetContext
-        assertTrue(appContext.packageName.startsWith("com.vanta.hush"))
+        assertEquals("com.music.bitchord", appContext.packageName)
     }
 }
