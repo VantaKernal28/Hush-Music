@@ -1,16 +1,12 @@
 package com.music.bitchord.ui.components
 
 import androidx.compose.animation.AnimatedVisibility
-import androidx.compose.animation.ExperimentalAnimationApi
-import androidx.compose.animation.animateEnterExit
-import androidx.compose.animation.core.FastOutSlowInEasing
 import androidx.compose.animation.core.Spring
+import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.spring
 import androidx.compose.animation.core.tween
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
-import androidx.compose.animation.scaleIn
-import androidx.compose.animation.scaleOut
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
@@ -43,6 +39,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.TransformOrigin
+import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.graphics.luminance
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.Role
@@ -68,7 +65,7 @@ import dev.chrisbanes.haze.materials.HazeMaterials
  * Enhanced with smooth container-transform / shared-axis scale + fade + backdrop dim spring animation
  * originating from the top-right profile icon.
  */
-@OptIn(ExperimentalHazeMaterialsApi::class, ExperimentalAnimationApi::class)
+@OptIn(ExperimentalHazeMaterialsApi::class)
 @Composable
 fun AccountProfileSelector(
     visible: Boolean,
@@ -114,6 +111,14 @@ fun AccountProfileSelector(
                 .clickable(onClick = onDismiss),
             horizontalAlignment = Alignment.CenterHorizontally,
         ) {
+            val scale by animateFloatAsState(
+                targetValue = if (visible) 1f else 0.65f,
+                animationSpec = spring(
+                    dampingRatio = Spring.DampingRatioMediumBouncy,
+                    stiffness = Spring.StiffnessMediumLow,
+                ),
+                label = "accountSelectorScale",
+            )
             Surface(
                 color = Color.Transparent,
                 contentColor = MaterialTheme.colorScheme.onSurface,
@@ -121,21 +126,11 @@ fun AccountProfileSelector(
                 modifier = Modifier
                     .padding(top = 56.dp, start = 20.dp, end = 20.dp)
                     .fillMaxWidth()
-                    .animateEnterExit(
-                        enter = scaleIn(
-                            animationSpec = spring(
-                                dampingRatio = Spring.DampingRatioMediumBouncy,
-                                stiffness = Spring.StiffnessMediumLow,
-                            ),
-                            initialScale = 0.65f,
-                            transformOrigin = TransformOrigin(0.92f, 0.05f),
-                        ) + fadeIn(tween(200)),
-                        exit = scaleOut(
-                            animationSpec = tween(180, easing = FastOutSlowInEasing),
-                            targetScale = 0.85f,
-                            transformOrigin = TransformOrigin(0.92f, 0.05f),
-                        ) + fadeOut(tween(160)),
-                    )
+                    .graphicsLayer {
+                        scaleX = scale
+                        scaleY = scale
+                        transformOrigin = TransformOrigin(0.92f, 0.05f)
+                    }
                     .clip(shape)
                     .then(
                         if (reduceDynamicBlur) {
