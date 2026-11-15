@@ -84,6 +84,8 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.music.bitchord.R
 import com.music.bitchord.data.settings.AppSettings
+import com.music.bitchord.data.settings.ThemeMode
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.music.bitchord.ui.theme.CherryBombOne
 import com.music.bitchord.ui.theme.HushAccents
 import com.music.bitchord.ui.theme.resolveAccentColor
@@ -770,6 +772,55 @@ private fun StepNameAndAccentContent(
                 }
             }
         }
+
+        Spacer(Modifier.height(22.dp))
+
+        Text(
+            text = "Appearance Theme",
+            style = MaterialTheme.typography.titleSmall,
+            fontWeight = FontWeight.SemiBold,
+            color = Color.White,
+            textAlign = TextAlign.Center,
+        )
+        Spacer(Modifier.height(10.dp))
+
+        val currentThemeMode by AppSettings.themeMode.collectAsStateWithLifecycle()
+        val themeOptions = listOf(
+            ThemeMode.SYSTEM to "System",
+            ThemeMode.DARK to "Dark",
+            ThemeMode.LIGHT to "Light",
+        )
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .widthIn(max = 380.dp)
+                .clip(RoundedCornerShape(22.dp))
+                .background(Color.White.copy(alpha = 0.12f))
+                .border(1.dp, Color.White.copy(alpha = 0.20f), RoundedCornerShape(22.dp))
+                .padding(4.dp),
+            horizontalArrangement = Arrangement.spacedBy(4.dp),
+            verticalAlignment = Alignment.CenterVertically,
+        ) {
+            themeOptions.forEach { (mode, label) ->
+                val selected = currentThemeMode == mode
+                Box(
+                    modifier = Modifier
+                        .weight(1f)
+                        .clip(RoundedCornerShape(18.dp))
+                        .background(if (selected) Color.White.copy(alpha = 0.90f) else Color.Transparent)
+                        .clickable { AppSettings.setThemeMode(mode) }
+                        .padding(vertical = 10.dp),
+                    contentAlignment = Alignment.Center,
+                ) {
+                    Text(
+                        text = label,
+                        style = MaterialTheme.typography.labelMedium,
+                        fontWeight = if (selected) FontWeight.Bold else FontWeight.Medium,
+                        color = if (selected) Color(0xFF16181D) else Color.White,
+                    )
+                }
+            }
+        }
     }
 }
 
@@ -914,45 +965,15 @@ private fun StepAccountContent(
         modifier = Modifier.fillMaxWidth().widthIn(max = 380.dp),
         horizontalAlignment = Alignment.CenterHorizontally,
     ) {
-        // Centered Hush Music emblem card
-        Box(
+        // Centered Hush Music logo
+        Image(
+            painter = painterResource(R.drawable.ic_hush_transparent_logo),
+            contentDescription = null,
             modifier = Modifier
-                .fillMaxWidth(0.85f)
-                .height(110.dp)
-                .clip(RoundedCornerShape(24.dp))
-                .background(Color.White.copy(alpha = 0.16f))
-                .border(BorderStroke(1.dp, Color.White.copy(alpha = 0.35f)), RoundedCornerShape(24.dp)),
-            contentAlignment = Alignment.Center,
-        ) {
-            Row(
-                verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.Center,
-            ) {
-                Image(
-                    painter = painterResource(R.drawable.ic_hush_transparent_logo),
-                    contentDescription = null,
-                    modifier = Modifier
-                        .size(52.dp)
-                        .clip(RoundedCornerShape(14.dp)),
-                )
-                Spacer(Modifier.width(16.dp))
-                Column {
-                    Text(
-                        text = "Hush Music",
-                        fontFamily = CherryBombOne,
-                        fontSize = 22.sp,
-                        color = Color.White,
-                    )
-                    Text(
-                        text = "Lossless Audio Engine",
-                        style = MaterialTheme.typography.labelSmall,
-                        color = Color.White.copy(alpha = 0.8f),
-                    )
-                }
-            }
-        }
-
-        Spacer(Modifier.height(20.dp))
+                .size(68.dp)
+                .clip(RoundedCornerShape(16.dp)),
+        )
+        Spacer(Modifier.height(18.dp))
 
         TypewriterHeadline(
             text = "Connect your music",

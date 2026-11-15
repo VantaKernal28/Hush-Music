@@ -170,7 +170,7 @@ object AppUpdateChecker {
             val dir = File(context.cacheDir, CACHE_SUBDIR).apply { mkdirs() }
             // Drop anything left over from an earlier attempt.
             dir.listFiles()?.forEach { it.delete() }
-            val target = File(dir, "bitchord-${info.version}.apk")
+            val target = File(dir, "hushmusic-${info.version}.apk")
 
             val request = Request.Builder().url(url).build()
             Http.client.newCall(request).execute().use { response ->
@@ -254,7 +254,7 @@ object AppUpdateChecker {
         )
     }
 
-    /** A version split into its numeric dotted parts and whether it carries a "-suffix" (e.g. "-beta2"). */
+    /** A version split into its numeric parts and whether it carries a pre-release indicator. */
     private data class ParsedVersion(val parts: List<Int>, val isPreRelease: Boolean)
 
     private fun parseVersion(raw: String): ParsedVersion {
@@ -263,10 +263,13 @@ object AppUpdateChecker {
             .removePrefix("V")
             .removePrefix("beta-")
             .removePrefix("beta")
-        val dash = clean.indexOf('-')
-        val base = if (dash >= 0) clean.substring(0, dash) else clean
-        val isPre = dash >= 0 || raw.contains("beta", ignoreCase = true)
-        return ParsedVersion(base.split(".").map { it.toIntOrNull() ?: 0 }, isPre)
+        val isPre = raw.contains("beta", ignoreCase = true) ||
+            raw.contains("alpha", ignoreCase = true) ||
+            raw.contains("rc", ignoreCase = true) ||
+            clean.contains("-")
+        // Extract all numeric segments (e.g. "1.2", "1.2.0", "1.2-beta" -> [1, 2])
+        val parts = Regex("\\d+").findAll(clean).mapNotNull { it.value.toIntOrNull() }.toList()
+        return ParsedVersion(if (parts.isEmpty()) listOf(0) else parts, isPre)
     }
 
     /**
@@ -274,8 +277,7 @@ object AppUpdateChecker {
      * extra rule: a "-betaN" build (see the debug build type's
      * `versionNameSuffix` in app/build.gradle.kts) is treated as older than a
      * plain release of the same numbers, since the beta by definition predates
-     * the tag it was testing toward. Without this, a beta and the release it
-     * matches compare equal and testers never get nudged onto the real build.
+     * the tag it was testing toward.
      */
     private fun isNewer(latest: String, current: String): Boolean {
         val l = parseVersion(latest)

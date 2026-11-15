@@ -195,8 +195,10 @@ fun FloatingBottomBar(
     val materialUiMode by AppSettings.materialUiMode.collectAsStateWithLifecycle()
 
     if (materialUiMode) {
-        val m3Container = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.95f)
-        val m3Border = Color.White.copy(alpha = 0.08f)
+        val reduceDynamicBlur by AppSettings.reduceDynamicBlur.collectAsStateWithLifecycle()
+        val useGlass = LocalLiquidGlassEnabled.current && isGlassSupported()
+        val m3Container = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.78f)
+        val m3Border = Color.White.copy(alpha = 0.12f)
         val haptics = rememberHaptics()
         Box(
             modifier = modifier
@@ -205,7 +207,18 @@ fun FloatingBottomBar(
                 .padding(bottom = NAV_BAR_LIFT)
                 .fillMaxWidth()
                 .clip(pillShape)
-                .background(m3Container)
+                .then(
+                    if (reduceDynamicBlur) {
+                        Modifier.background(m3Container.copy(alpha = 0.95f))
+                    } else if (useGlass) {
+                        Modifier.liquidGlass(shape = pillShape)
+                    } else {
+                        Modifier.optimizedHazeEffect(
+                            state = hazeState,
+                            style = HazeMaterials.regular(m3Container),
+                        )
+                    },
+                )
                 .border(1.dp, m3Border, pillShape)
                 .padding(horizontal = 6.dp, vertical = 6.dp),
         ) {

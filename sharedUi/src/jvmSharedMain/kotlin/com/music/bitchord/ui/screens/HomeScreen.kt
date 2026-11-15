@@ -245,6 +245,9 @@ fun HomeScreen(
                     if (loadingMore) feedMoreSkeleton()
                 }
             }
+            item(key = "home_bottom_spacer") {
+                Spacer(Modifier.height(48.dp))
+            }
         }
     }
 

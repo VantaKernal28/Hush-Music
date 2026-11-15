@@ -11,6 +11,17 @@ import androidx.compose.ui.unit.isSpecified
 import com.music.bitchord.data.model.ArtistCredit
 import com.music.bitchord.data.model.CreditSegment
 import com.music.bitchord.data.model.creditSegments
+import androidx.compose.ui.graphics.Path
+import androidx.compose.ui.graphics.StrokeCap
+import androidx.compose.ui.graphics.StrokeJoin
+import androidx.compose.ui.graphics.drawscope.Stroke
+import androidx.compose.foundation.Canvas
+import androidx.compose.foundation.gestures.detectTapGestures
+import androidx.compose.foundation.gestures.detectHorizontalDragGestures
+import androidx.compose.ui.input.pointer.pointerInput
+import androidx.compose.runtime.mutableFloatStateOf
+import kotlin.math.PI
+import kotlin.math.sin
 import com.music.bitchord.sharedui.resources.*
 
 import org.jetbrains.compose.resources.DrawableResource
@@ -196,6 +207,142 @@ internal fun PlaybackOriginCaption(
 internal val SCRUBBER_LABEL_LIFT = 9.dp
 
 /**
+ * Material 3 Expressive squiggly / wavy progress scrubber.
+ * Draws elapsed track as a smooth sine wave terminating in a vertical pill thumb,
+ * and unplayed track as a straight line.
+ */
+@Composable
+internal fun MaterialWavyScrubber(
+    value: Float,
+    onValueChange: (Float) -> Unit,
+    modifier: Modifier = Modifier,
+    onValueChangeFinished: (() -> Unit)? = null,
+    activeColor: Color = MaterialTheme.colorScheme.primary,
+    inactiveColor: Color = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.50f),
+) {
+    val haptics = rememberHaptics()
+    var dragging by remember { mutableStateOf(false) }
+    var dragProgress by remember { mutableFloatStateOf(value) }
+    val displayValue = if (dragging) dragProgress else value
+
+    val infiniteTransition = rememberInfiniteTransition(label = "wavyScrubber")
+    val wavePhase by infiniteTransition.animateFloat(
+        initialValue = 0f,
+        targetValue = (2 * PI).toFloat(),
+        animationSpec = infiniteRepeatable(
+            animation = tween(2400, easing = LinearEasing),
+            repeatMode = RepeatMode.Restart,
+        ),
+        label = "wavePhase",
+    )
+
+    val density = LocalDensity.current
+    val trackStroke = with(density) { 4.dp.toPx() }
+    val thumbWidth = with(density) { 4.dp.toPx() }
+    val thumbHeight = with(density) { 22.dp.toPx() }
+    val thumbRadius = with(density) { 2.dp.toPx() }
+    val wavelength = with(density) { 24.dp.toPx() }
+    val amplitude = with(density) { 3.dp.toPx() }
+
+    Box(
+        modifier = modifier
+            .fillMaxWidth()
+            .height(36.dp)
+            .pointerInput(Unit) {
+                detectTapGestures(
+                    onPress = { offset ->
+                        dragging = true
+                        val newFraction = (offset.x / size.width).coerceIn(0f, 1f)
+                        dragProgress = newFraction
+                        haptics.play(Haptic.Tick)
+                        onValueChange(newFraction)
+                        tryAwaitRelease()
+                        dragging = false
+                        onValueChangeFinished?.invoke()
+                    },
+                )
+            }
+            .pointerInput(Unit) {
+                detectHorizontalDragGestures(
+                    onDragStart = { offset ->
+                        dragging = true
+                        val newFraction = (offset.x / size.width).coerceIn(0f, 1f)
+                        dragProgress = newFraction
+                        onValueChange(newFraction)
+                    },
+                    onHorizontalDrag = { change, _ ->
+                        change.consume()
+                        val newFraction = (change.position.x / size.width).coerceIn(0f, 1f)
+                        dragProgress = newFraction
+                        onValueChange(newFraction)
+                    },
+                    onDragEnd = {
+                        dragging = false
+                        onValueChangeFinished?.invoke()
+                    },
+                    onDragCancel = {
+                        dragging = false
+                    },
+                )
+            },
+        contentAlignment = Alignment.Center,
+    ) {
+        Canvas(modifier = Modifier.fillMaxWidth().height(36.dp)) {
+            val centerY = size.height / 2f
+            val width = size.width
+            val thumbX = (displayValue * width).coerceIn(0f, width)
+
+            // Draw active wavy track (sine wave)
+            if (thumbX > 0f) {
+                val path = Path()
+                path.moveTo(0f, centerY)
+                val step = maxOf(2f, wavelength / 16f)
+                var x = 0f
+                while (x < thumbX) {
+                    x += step
+                    if (x > thumbX) x = thumbX
+                    val distToThumb = thumbX - x
+                    val damp = (distToThumb / (wavelength * 0.75f)).coerceIn(0f, 1f)
+                    val progress = x / wavelength
+                    val y = centerY + amplitude * damp * sin(progress * 2 * PI - wavePhase).toFloat()
+                    path.lineTo(x, y)
+                }
+                path.lineTo(thumbX, centerY)
+                drawPath(
+                    path = path,
+                    color = activeColor,
+                    style = Stroke(
+                        width = trackStroke,
+                        cap = StrokeCap.Round,
+                        join = StrokeJoin.Round,
+                    ),
+                )
+            }
+
+            // Draw inactive track (straight line)
+            val inactiveStart = (thumbX + thumbWidth / 2f + 2.dp.toPx()).coerceAtMost(width)
+            if (inactiveStart < width) {
+                drawLine(
+                    color = inactiveColor,
+                    start = Offset(inactiveStart, centerY),
+                    end = Offset(width, centerY),
+                    strokeWidth = trackStroke,
+                    cap = StrokeCap.Round,
+                )
+            }
+
+            // Draw vertical pill thumb
+            drawRoundRect(
+                color = activeColor,
+                topLeft = Offset(thumbX - thumbWidth / 2f, centerY - thumbHeight / 2f),
+                size = Size(thumbWidth, thumbHeight),
+                cornerRadius = CornerRadius(thumbRadius, thumbRadius),
+            )
+        }
+    }
+}
+
+/**
  * The seek bar, with elapsed and remaining either side under it and
  * [centerLabel] — the quality badge — between them.
  */
@@ -227,18 +374,28 @@ internal fun PlayerScrubber(
     val mixPulse = rememberMixPulse({ mixBlend.value }, enabled = !reduceAnimation)
     val materialUi by PlayerSettings.materialUiMode.collectAsStateWithLifecycle()
     Column(Modifier.fillMaxWidth()) {
-        ThinSlider(
-            value = shown,
-            onValueChange = onScrub,
-            onValueChangeFinished = onScrubFinished,
-            loading = loading,
-            mixing = mixing,
-            mixPulse = mixPulse,
-            transitionWindow = transitionWindow,
-            idleHeight = if (materialUi) 8.dp else 7.dp,
-            activeHeight = if (materialUi) 14.dp else 12.dp,
-            activeColor = if (materialUi) MaterialTheme.colorScheme.primary else Color.White.copy(alpha = 0.92f),
-        )
+        if (materialUi) {
+            MaterialWavyScrubber(
+                value = shown,
+                onValueChange = onScrub,
+                onValueChangeFinished = onScrubFinished,
+                activeColor = MaterialTheme.colorScheme.primary,
+                inactiveColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.50f),
+            )
+        } else {
+            ThinSlider(
+                value = shown,
+                onValueChange = onScrub,
+                onValueChangeFinished = onScrubFinished,
+                loading = loading,
+                mixing = mixing,
+                mixPulse = mixPulse,
+                transitionWindow = transitionWindow,
+                idleHeight = 7.dp,
+                activeHeight = 12.dp,
+                activeColor = Color.White.copy(alpha = 0.92f),
+            )
+        }
         Box(
             modifier = Modifier
                 .fillMaxWidth()
@@ -499,9 +656,9 @@ internal fun TransportRow(
             size = skipSize,
             touchSize = skipTouch,
             heightScale = if (materialUi) 1f else PLAYER_SKIP_HEIGHT_SCALE,
-            buttonShape = if (materialUi) CircleShape else null,
-            buttonBackground = if (materialUi) Color.White.copy(alpha = 0.12f) else null,
-            iconTint = if (materialUi) Color.White else null,
+            buttonShape = if (materialUi) RoundedCornerShape(24.dp) else null,
+            buttonBackground = if (materialUi) MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.70f) else null,
+            iconTint = if (materialUi) MaterialTheme.colorScheme.onSurfaceVariant else null,
             onClick = onPrevious,
             enabled = previousEnabled,
             haptic = Haptic.SkipPrevious,
@@ -513,7 +670,7 @@ internal fun TransportRow(
                 Modifier
                     .size(playTouch)
                     .then(
-                        if (materialUi) Modifier.clip(RoundedCornerShape(24.dp)).background(primaryColor)
+                        if (materialUi) Modifier.clip(RoundedCornerShape(26.dp)).background(primaryColor)
                         else Modifier,
                     ),
                 contentAlignment = Alignment.Center,
@@ -530,7 +687,7 @@ internal fun TransportRow(
                 contentDescription = stringResource(if (isPlaying) Res.string.pause else Res.string.play),
                 size = playSize,
                 touchSize = playTouch,
-                buttonShape = if (materialUi) RoundedCornerShape(24.dp) else null,
+                buttonShape = if (materialUi) RoundedCornerShape(26.dp) else null,
                 buttonBackground = if (materialUi) primaryColor else null,
                 iconTint = if (materialUi) (if (primaryColor.luminance() > 0.5f) Color.Black else Color.White) else null,
                 onClick = onPlayPause,
@@ -543,9 +700,9 @@ internal fun TransportRow(
             size = skipSize,
             touchSize = skipTouch,
             heightScale = if (materialUi) 1f else PLAYER_SKIP_HEIGHT_SCALE,
-            buttonShape = if (materialUi) CircleShape else null,
-            buttonBackground = if (materialUi) Color.White.copy(alpha = 0.12f) else null,
-            iconTint = if (materialUi) Color.White else null,
+            buttonShape = if (materialUi) RoundedCornerShape(24.dp) else null,
+            buttonBackground = if (materialUi) MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.70f) else null,
+            iconTint = if (materialUi) MaterialTheme.colorScheme.onSurfaceVariant else null,
             onClick = onNext,
             enabled = nextEnabled,
             haptic = Haptic.SkipNext,
@@ -623,6 +780,103 @@ internal fun PlayerActionRow(
 ) {
     val showPartyButton by PlayerSettings.showListenTogetherButton.collectAsStateWithLifecycle()
     val inParty = rememberPartyBadge().inParty
+    val materialUi by PlayerSettings.materialUiMode.collectAsStateWithLifecycle()
+
+    if (materialUi) {
+        val outputName = rememberAudioOutputName(null)
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(horizontal = 8.dp),
+            horizontalArrangement = Arrangement.SpaceBetween,
+            verticalAlignment = Alignment.CenterVertically,
+        ) {
+            // Output device pill chip
+            Row(
+                modifier = Modifier
+                    .clip(RoundedCornerShape(20.dp))
+                    .background(MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.70f))
+                    .border(1.dp, Color.White.copy(alpha = 0.08f), RoundedCornerShape(20.dp))
+                    .clickable(onClick = onOpenOutput)
+                    .padding(horizontal = 14.dp, vertical = 9.dp),
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.spacedBy(8.dp),
+            ) {
+                Icon(
+                    imageVector = Icons.Rounded.Cast,
+                    contentDescription = outputName,
+                    tint = MaterialTheme.colorScheme.primary,
+                    modifier = Modifier.size(17.dp),
+                )
+                Text(
+                    text = outputName,
+                    style = MaterialTheme.typography.labelMedium.copy(fontWeight = FontWeight.SemiBold),
+                    color = MaterialTheme.colorScheme.onSurface,
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis,
+                    modifier = Modifier.widthIn(max = 140.dp),
+                )
+            }
+
+            // Lyrics button
+            Box(
+                modifier = Modifier
+                    .size(38.dp)
+                    .clip(CircleShape)
+                    .background(
+                        if (lyricsOpen) MaterialTheme.colorScheme.primary.copy(alpha = 0.20f)
+                        else MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.50f),
+                    )
+                    .border(
+                        1.dp,
+                        if (lyricsOpen) MaterialTheme.colorScheme.primary else Color.White.copy(alpha = 0.08f),
+                        CircleShape,
+                    )
+                    .clickable(onClick = onToggleLyrics),
+                contentAlignment = Alignment.Center,
+            ) {
+                Icon(
+                    imageVector = BitChordIcons.LyricsQuote,
+                    contentDescription = stringResource(if (lyricsOpen) Res.string.close_lyrics else Res.string.open_lyrics),
+                    tint = if (lyricsOpen) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurfaceVariant,
+                    modifier = Modifier.size(18.dp),
+                )
+            }
+
+            // Queue pill chip
+            Row(
+                modifier = Modifier
+                    .clip(RoundedCornerShape(20.dp))
+                    .background(
+                        if (queueOpen) MaterialTheme.colorScheme.primary.copy(alpha = 0.20f)
+                        else MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.70f),
+                    )
+                    .border(
+                        1.dp,
+                        if (queueOpen) MaterialTheme.colorScheme.primary else Color.White.copy(alpha = 0.08f),
+                        RoundedCornerShape(20.dp),
+                    )
+                    .clickable(onClick = onToggleQueue)
+                    .padding(horizontal = 14.dp, vertical = 9.dp),
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.spacedBy(8.dp),
+            ) {
+                Icon(
+                    imageVector = BitChordIcons.Queue,
+                    contentDescription = stringResource(Res.string.up_next),
+                    tint = if (queueOpen) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurfaceVariant,
+                    modifier = Modifier.size(17.dp),
+                )
+                Text(
+                    text = "Queue",
+                    style = MaterialTheme.typography.labelMedium.copy(fontWeight = FontWeight.SemiBold),
+                    color = if (queueOpen) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurface,
+                )
+            }
+        }
+        return
+    }
+
     // Just the output glyph in the middle.
     val compact = !queueOpen && !showPartyButton && !inParty
     BoxWithConstraints(Modifier.fillMaxWidth()) {

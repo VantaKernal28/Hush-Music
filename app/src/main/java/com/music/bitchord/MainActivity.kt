@@ -2440,7 +2440,7 @@ private fun BitChordApp(
     val navBottomInset = WindowInsets.navigationBars.asPaddingValues().calculateBottomPadding()
     val listPadding = PaddingValues(
         top = topBarContentPadding(),
-        bottom = (if (player.song != null) 240.dp else 160.dp) + navBottomInset,
+        bottom = (if (player.song != null) 320.dp else 200.dp) + navBottomInset,
     )
 
     // What colour the page currently under the bars is. The fades either end

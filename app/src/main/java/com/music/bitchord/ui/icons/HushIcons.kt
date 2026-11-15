@@ -535,4 +535,49 @@ object HushIcons {
             close()
         }
     }.build()
+
+    /** Information / About (Minimalist silhouette with negative space cutout) */
+    val Info: ImageVector = ImageVector.Builder(
+        name = "Hush.Info",
+        defaultWidth = 24.dp,
+        defaultHeight = 24.dp,
+        viewportWidth = 24f,
+        viewportHeight = 24f,
+    ).apply {
+        path(
+            fill = SolidColor(Color.White),
+            pathFillType = PathFillType.EvenOdd,
+        ) {
+            // Smooth solid circle
+            moveTo(12f, 2f)
+            curveTo(6.48f, 2f, 2f, 6.48f, 2f, 12f)
+            curveTo(2f, 17.52f, 6.48f, 22f, 12f, 22f)
+            curveTo(17.52f, 22f, 22f, 17.52f, 22f, 12f)
+            curveTo(22f, 6.48f, 17.52f, 2f, 12f, 2f)
+            close()
+            // Dot above 'i' (negative space cutout)
+            moveTo(12f, 6.5f)
+            curveTo(11.17f, 6.5f, 10.5f, 7.17f, 10.5f, 8f)
+            curveTo(10.5f, 8.83f, 11.17f, 9.5f, 12f, 9.5f)
+            curveTo(12.83f, 9.5f, 13.5f, 8.83f, 13.5f, 8f)
+            curveTo(13.5f, 7.17f, 12.83f, 6.5f, 12f, 6.5f)
+            close()
+            // Stem of 'i' (negative space cutout)
+            moveTo(10.75f, 11f)
+            curveTo(10.34f, 11f, 10f, 11.34f, 10f, 11.75f)
+            curveTo(10f, 12.16f, 10.34f, 12.5f, 10.75f, 12.5f)
+            lineTo(11.25f, 12.5f)
+            lineTo(11.25f, 16.25f)
+            lineTo(10.75f, 16.25f)
+            curveTo(10.34f, 16.25f, 10.0f, 16.59f, 10.0f, 17.0f)
+            curveTo(10.0f, 17.41f, 10.34f, 17.75f, 10.75f, 17.75f)
+            lineTo(13.25f, 17.75f)
+            curveTo(13.66f, 17.75f, 14.0f, 17.41f, 14.0f, 17.0f)
+            curveTo(14.0f, 16.59f, 13.66f, 16.25f, 13.25f, 16.25f)
+            lineTo(12.75f, 16.25f)
+            lineTo(12.75f, 11.75f)
+            curveTo(12.75f, 11.34f, 12.41f, 11.0f, 12.0f, 11.0f)
+            close()
+        }
+    }.build()
 }

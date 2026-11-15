@@ -2365,8 +2365,8 @@ fun NowPlayingScreen(
                 // blurred cover fading in over it for the lyrics and queue, which
                 // have no sleeve for a mesh to carry on from.
                 val legacyMeshBackdrop = !materialUi && !tabletArtworkBackdrop && !spotifyCanvasPresentation &&
-                    playerTheme == PlayerTheme.LEGACY
-                val artworkMeshBackdrop = !materialUi && !tabletArtworkBackdrop && playerTheme == PlayerTheme.DEFAULT && liveSongGradient
+                    (playerTheme == PlayerTheme.LEGACY || (playerTheme == PlayerTheme.DEFAULT && liveSongGradient))
+                val artworkMeshBackdrop = !materialUi && !tabletArtworkBackdrop && playerTheme == PlayerTheme.DEFAULT && !liveSongGradient
                 val fullArtworkBackdropAlpha by animateFloatAsState(
                     targetValue = if (
                         !legacyMeshBackdrop &&
@@ -3173,7 +3173,8 @@ fun NowPlayingScreen(
                         // it docks.
                         fun sleeveShown(): Float = bannerShown() * dockT()
                         fun sleeveCorner(): Dp {
-                            val corner = 8.dp * (1f - sleeveShown())
+                            val baseCorner = if (materialUi) 28.dp else 8.dp
+                            val corner = baseCorner * (1f - sleeveShown())
                             val t = dockT()
                             return if (dock == null || t >= 1f) corner else lerp(dock.miniArtCorner(), corner, t)
                         }

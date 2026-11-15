@@ -3,6 +3,7 @@ package com.music.bitchord.ui.screens
 import com.music.bitchord.ui.icons.SfIcons
 import com.music.bitchord.ui.icons.HushIcons
 import com.music.bitchord.ui.theme.HushAccents
+import com.music.bitchord.ui.theme.CherryBombOne
 import androidx.compose.material3.dynamicDarkColorScheme
 import androidx.compose.ui.graphics.luminance
 import com.music.bitchord.wear.WatchInstaller
@@ -2027,6 +2028,15 @@ fun SettingsScreen(
             }
         }
 
+        if (shows(SettingsCategory.ABOUT)) {
+            val aboutHeader = stringResource(R.string.about)
+            SearchableSettingsGroup(search, header = aboutHeader) {
+                row(aboutHeader, "version", "phoenix", "mukesh", "github", "release", "credits") {
+                    AboutHushMusicContent(context = context)
+                }
+            }
+        }
+
         // Read after every group above has had its turn at the query, which is
         // what makes this an accurate "nothing here" rather than a guess.
         if (searching && !search.anyMatch) {
@@ -3070,6 +3080,7 @@ enum class SettingsCategory(@param:StringRes val title: Int) {
     YOUR_DATA(R.string.your_data),
     MISCELLANEOUS(R.string.miscellaneous),
     LANGUAGE(R.string.language),
+    ABOUT(R.string.about),
     ;
 
     val icon: ImageVector
@@ -3084,6 +3095,7 @@ enum class SettingsCategory(@param:StringRes val title: Int) {
             YOUR_DATA -> HushIcons.Lock
             MISCELLANEOUS -> HushIcons.Grid
             LANGUAGE -> HushIcons.Display
+            ABOUT -> HushIcons.Info
         }
 }
 
@@ -3114,6 +3126,7 @@ private fun SettingsCategoryList(onOpen: (SettingsCategory) -> Unit) {
                 SettingsCategory.YOUR_DATA -> "Export & import backup, listening history"
                 SettingsCategory.MISCELLANEOUS -> "Debug stats, crash reporting & updater"
                 SettingsCategory.LANGUAGE -> "App interface & display language"
+                SettingsCategory.ABOUT -> "Version 1.2, developer credits & repository"
             }
             SettingsRow(
                 icon = category.icon,
@@ -3385,3 +3398,216 @@ internal fun <T> ChoiceGroup(
         }
     }
 }
+
+@Composable
+private fun AboutHushMusicContent(context: Context) {
+    Column(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(vertical = 12.dp),
+        horizontalAlignment = Alignment.CenterHorizontally,
+    ) {
+        // App Logo
+        Image(
+            painter = painterResource(R.drawable.ic_hush_logo),
+            contentDescription = "Hush Music Logo",
+            modifier = Modifier
+                .size(76.dp)
+                .clip(RoundedCornerShape(20.dp)),
+        )
+        Spacer(Modifier.height(14.dp))
+
+        // App Name & Version
+        Text(
+            text = "Hush Music",
+            fontFamily = CherryBombOne,
+            fontSize = 28.sp,
+            color = MaterialTheme.colorScheme.onSurface,
+            textAlign = TextAlign.Center,
+        )
+        Spacer(Modifier.height(6.dp))
+        Box(
+            modifier = Modifier
+                .clip(RoundedCornerShape(12.dp))
+                .background(MaterialTheme.colorScheme.primary.copy(alpha = 0.15f))
+                .border(1.dp, MaterialTheme.colorScheme.primary.copy(alpha = 0.35f), RoundedCornerShape(12.dp))
+                .padding(horizontal = 12.dp, vertical = 4.dp),
+        ) {
+            Text(
+                text = "Beta 1.2",
+                style = MaterialTheme.typography.labelSmall,
+                fontWeight = FontWeight.Bold,
+                color = MaterialTheme.colorScheme.primary,
+            )
+        }
+        Spacer(Modifier.height(20.dp))
+
+        // Credits Card
+        Column(
+            modifier = Modifier
+                .fillMaxWidth()
+                .clip(RoundedCornerShape(16.dp))
+                .background(MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.45f))
+                .border(1.dp, Color.White.copy(alpha = 0.08f), RoundedCornerShape(16.dp))
+                .padding(16.dp),
+            verticalArrangement = Arrangement.spacedBy(14.dp),
+        ) {
+            Text(
+                text = "Development Team",
+                style = MaterialTheme.typography.labelMedium,
+                fontWeight = FontWeight.Bold,
+                color = MaterialTheme.colorScheme.primary,
+            )
+            // Lead Developer
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.SpaceBetween,
+            ) {
+                Column {
+                    Text(
+                        text = "Phoenix",
+                        style = MaterialTheme.typography.bodyLarge,
+                        fontWeight = FontWeight.SemiBold,
+                        color = MaterialTheme.colorScheme.onSurface,
+                    )
+                    Text(
+                        text = "@VantaKernal28",
+                        style = MaterialTheme.typography.labelMedium,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    )
+                }
+                Box(
+                    modifier = Modifier
+                        .clip(RoundedCornerShape(8.dp))
+                        .background(MaterialTheme.colorScheme.primary.copy(alpha = 0.12f))
+                        .padding(horizontal = 8.dp, vertical = 4.dp),
+                ) {
+                    Text(
+                        text = "Lead & Creator",
+                        style = MaterialTheme.typography.labelSmall,
+                        fontWeight = FontWeight.Medium,
+                        color = MaterialTheme.colorScheme.primary,
+                    )
+                }
+            }
+
+            HorizontalDivider(color = Color.White.copy(alpha = 0.08f))
+
+            // Co-Developer
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.SpaceBetween,
+            ) {
+                Column {
+                    Text(
+                        text = "Mukesh",
+                        style = MaterialTheme.typography.bodyLarge,
+                        fontWeight = FontWeight.SemiBold,
+                        color = MaterialTheme.colorScheme.onSurface,
+                    )
+                    Text(
+                        text = "Core Contributor",
+                        style = MaterialTheme.typography.labelMedium,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    )
+                }
+                Box(
+                    modifier = Modifier
+                        .clip(RoundedCornerShape(8.dp))
+                        .background(Color.White.copy(alpha = 0.08f))
+                        .padding(horizontal = 8.dp, vertical = 4.dp),
+                ) {
+                    Text(
+                        text = "Co-Developer",
+                        style = MaterialTheme.typography.labelSmall,
+                        fontWeight = FontWeight.Medium,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    )
+                }
+            }
+        }
+
+        Spacer(Modifier.height(14.dp))
+
+        // GitHub Button
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .clip(RoundedCornerShape(16.dp))
+                .background(MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.65f))
+                .border(1.dp, Color.White.copy(alpha = 0.10f), RoundedCornerShape(16.dp))
+                .clickable {
+                    runCatching {
+                        context.startActivity(
+                            Intent(Intent.ACTION_VIEW, Uri.parse("https://github.com/VantaKernal28/Hush-Music"))
+                                .addFlags(Intent.FLAG_ACTIVITY_NEW_TASK),
+                        )
+                    }
+                }
+                .padding(horizontal = 16.dp, vertical = 14.dp),
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.SpaceBetween,
+        ) {
+            Row(
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.spacedBy(12.dp),
+            ) {
+                Icon(
+                    imageVector = HushIcons.Grid,
+                    contentDescription = null,
+                    tint = MaterialTheme.colorScheme.primary,
+                    modifier = Modifier.size(22.dp),
+                )
+                Column {
+                    Text(
+                        text = "GitHub Repository",
+                        style = MaterialTheme.typography.bodyLarge,
+                        fontWeight = FontWeight.SemiBold,
+                        color = MaterialTheme.colorScheme.onSurface,
+                    )
+                    Text(
+                        text = "VantaKernal28/Hush-Music",
+                        style = MaterialTheme.typography.labelSmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    )
+                }
+            }
+            Icon(
+                imageVector = Icons.Rounded.ChevronRight,
+                contentDescription = null,
+                tint = MaterialTheme.colorScheme.onSurfaceVariant,
+                modifier = Modifier.size(20.dp),
+            )
+        }
+
+        Spacer(Modifier.height(14.dp))
+
+        // Upstream Attribution & Build Info Card
+        Column(
+            modifier = Modifier
+                .fillMaxWidth()
+                .clip(RoundedCornerShape(16.dp))
+                .background(MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.35f))
+                .border(1.dp, Color.White.copy(alpha = 0.06f), RoundedCornerShape(16.dp))
+                .padding(16.dp),
+            horizontalAlignment = Alignment.CenterHorizontally,
+            verticalArrangement = Arrangement.spacedBy(6.dp),
+        ) {
+            Text(
+                text = "Built on the foundation of BitChord by kushagrasinghx",
+                style = MaterialTheme.typography.labelMedium,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                textAlign = TextAlign.Center,
+            )
+            Text(
+                text = "Version 1.2 (Build 42) · Release Channel: Beta",
+                style = MaterialTheme.typography.labelSmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.7f),
+                textAlign = TextAlign.Center,
+            )
+        }
+    }
+}
+
