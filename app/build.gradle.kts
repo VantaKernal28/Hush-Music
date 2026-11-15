@@ -75,7 +75,7 @@ android {
     compileSdk = 37
 
     defaultConfig {
-        applicationId = "com.vantakernal.hushmusic"
+        applicationId = "com.vanta.hush"
         // 26 keeps reach wide; real-time blur (RenderEffect) kicks in on API 31+,
         // Haze falls back to a translucent scrim below that.
         minSdk = 26
@@ -136,12 +136,12 @@ android {
     productFlavors {
         create("dev") {
             dimension = "env"
-            applicationId = "com.vantakernal.hushmusic.dev"
+            applicationId = "com.vanta.hush.dev"
             resValue("string", "app_name", "Hush Music")
         }
         create("prod") {
             dimension = "env"
-            applicationId = "com.vantakernal.hushmusic"
+            applicationId = "com.vanta.hush"
         }
     }
 
@@ -231,7 +231,14 @@ android {
         }
         resources {
             // SMBJ's BouncyCastle and jspecify both ship this descriptor.
-            excludes += "META-INF/versions/9/OSGI-INF/MANIFEST.MF"
+            excludes += setOf(
+                "META-INF/versions/9/OSGI-INF/MANIFEST.MF",
+                "META-INF/*.version",
+                "META-INF/DEPENDENCIES",
+                "META-INF/INDEX.LIST",
+                "DebugProbesKt.bin",
+                "kotlin-tooling-metadata.json",
+            )
             // The three BouncyCastle jars (bcprov, bcutil, bcpkix) ship one licence between them.
             pickFirsts += setOf("META-INF/LICENSE.md", "META-INF/LICENSE.txt", "META-INF/NOTICE.md")
         }
