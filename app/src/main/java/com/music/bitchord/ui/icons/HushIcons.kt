@@ -506,7 +506,7 @@ object HushIcons {
         viewportWidth = 24f,
         viewportHeight = 24f,
     ).apply {
-        materialPath {
+        path(fill = SolidColor(Color.White)) {
             moveTo(9f, 3f)
             lineTo(7.17f, 5f)
             lineTo(4f, 5f)
