@@ -105,6 +105,7 @@ import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Slider
 import androidx.compose.material3.SliderDefaults
 import com.music.bitchord.ui.components.IosSwitch
+import com.music.bitchord.ui.components.expressive.expressiveClickable
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
@@ -2357,6 +2358,7 @@ private fun PlayerTheme.description(): String = stringResource(
 private fun AppFont.localizedLabel(): String = when (this) {
     AppFont.DEFAULT -> stringResource(R.string.font_default)
     AppFont.LEGACY -> stringResource(R.string.font_legacy)
+    AppFont.PIXEL_ROUND -> "Pixel Round (Google Sans Rounded)"
     AppFont.CUSTOM -> "Custom Font (.ttf / .otf)"
 }
 
@@ -2365,6 +2367,7 @@ private fun AppFont.localizedLabel(): String = when (this) {
 private fun AppFont.description(): String = when (this) {
     AppFont.DEFAULT -> stringResource(R.string.font_default_subtitle)
     AppFont.LEGACY -> stringResource(R.string.font_legacy_subtitle)
+    AppFont.PIXEL_ROUND -> "Material 3 Expressive clean rounded geometry"
     AppFont.CUSTOM -> {
         val customFontPath by AppSettings.customFontPath.collectAsStateWithLifecycle()
         if (customFontPath != null) {
@@ -2840,7 +2843,7 @@ internal fun SettingsRow(
             .then(
                 if (onClick != null && enabled) {
                     if (materialUiMode) {
-                        Modifier.com.music.bitchord.ui.components.expressive.expressiveClickable(enabled = enabled, onClick = onClick)
+                        Modifier.expressiveClickable(enabled = enabled, onClick = onClick)
                     } else {
                         Modifier.clickable(onClick = onClick)
                     }
@@ -2898,27 +2901,6 @@ internal fun SettingsRow(
                 Text(
                     text = title,
                     style = if (iconBadgeColor != null) MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.SemiBold) else MaterialTheme.typography.bodyLarge,
-                    color = MaterialTheme.colorScheme.onBackground,
-                    maxLines = 1,
-                    overflow = TextOverflow.Ellipsis,
-                )
-                if (badge != null) {
-                    Spacer(Modifier.width(8.dp))
-                    Badge(badge)
-                }
-            }
-            if (subtitleContent != null) {
-                subtitleContent()
-            } else if (subtitle != null) {
-                Text(
-                    text = subtitle,
-                    style = MaterialTheme.typography.bodyMedium,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant,
-                    maxLines = 5,
-                )
-            }
-        }
-                    style = MaterialTheme.typography.bodyLarge,
                     color = MaterialTheme.colorScheme.onBackground,
                     maxLines = 1,
                     overflow = TextOverflow.Ellipsis,
