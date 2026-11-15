@@ -12,6 +12,7 @@ import { useHistorySettings } from '@/playback/historyReporting';
 import { Select } from '@/components/Select';
 import { AUTOMIX_BARS } from '@/playback/automix/choices';
 import { CROSSFADE_CHOICES, usePlayer } from '@/state/player';
+import { useUi } from '@/state/ui';
 import { AppleMusicIntegration, AppleMusicToggles, CanvasToggle, DiscordIntegration, LyricSourcesAccess, SpotifyIntegration, Toggle } from './IntegrationSettings';
 import { settingsUi } from './settingsStyles';
 
@@ -66,6 +67,8 @@ export default function SettingsPage() {
   const shareHistory = useHistorySettings((s) => s.share);
   const setShareHistory = useHistorySettings((s) => s.setShare);
   const { setAutoplay, setCrossfade, setAutomix, setAutomixBars, setShowNerdStats } = usePlayer.getState();
+  const themeMode = useUi((s) => s.themeMode);
+  const setThemeMode = useUi((s) => s.setThemeMode);
   const [lyrics, setLyrics] = useState(false);
   const present = extension.state === 'present';
   const discordText =
@@ -81,6 +84,47 @@ export default function SettingsPage() {
     <div className={settingsUi.centered}>
       <PageHeader title="Settings" />
       <div className={settingsUi.body}>
+        <h2 className={settingsUi.sectionHeader}>Interface Style</h2>
+        <section className={settingsUi.group}>
+          <div className="grid grid-cols-2 gap-2 p-2 max-sm:grid-cols-1">
+            <button
+              type="button"
+              onClick={() => setThemeMode('classic')}
+              className={`flex flex-col items-start gap-1 p-3 rounded-[14px] border text-left transition-all ${
+                themeMode === 'classic'
+                  ? 'border-key bg-quinary shadow-sm'
+                  : 'border-transparent bg-transparent hover:bg-quinary/50 opacity-70'
+              }`}
+            >
+              <div className="flex items-center justify-between w-full">
+                <span className="font-bold text-[14px]">BitChord Classic</span>
+                <span className="text-[9px] font-bold px-1.5 py-0.5 rounded-full bg-quaternary uppercase">Classic</span>
+              </div>
+              <p className="text-[12px] text-secondary leading-tight">
+                Frosted glass aesthetic, Apple-inspired depth & fluid mesh blurs
+              </p>
+            </button>
+
+            <button
+              type="button"
+              onClick={() => setThemeMode('m3e')}
+              className={`flex flex-col items-start gap-1 p-3 rounded-[18px] border text-left transition-all ${
+                themeMode === 'm3e'
+                  ? 'border-key bg-key/10 shadow-sm ring-1 ring-key'
+                  : 'border-transparent bg-transparent hover:bg-quinary/50 opacity-70'
+              }`}
+            >
+              <div className="flex items-center justify-between w-full">
+                <span className="font-bold text-[14px]">Hush M3E</span>
+                <span className="text-[9px] font-bold px-1.5 py-0.5 rounded-full bg-key text-black uppercase">M3E</span>
+              </div>
+              <p className="text-[12px] text-secondary leading-tight">
+                Organic M3E shapes, bouncy spring physics, Pixel Round font & dynamic Monet
+              </p>
+            </button>
+          </div>
+        </section>
+
         <h2 className={settingsUi.sectionHeader}>Account & Integrations</h2>
         <section className={settingsUi.group}>
           <div className={settingsUi.integration}>
@@ -99,7 +143,7 @@ export default function SettingsPage() {
           <LinkRow
             to="/extension"
             icon={<Glyph Icon={MdOutlineExtension} color="#636366" />}
-            title="BitChord Extension"
+            title="Hush Music Extension"
             value={present ? `v${extension.extension.info.version}` : 'Not installed'}
           />
         </section>
@@ -108,7 +152,7 @@ export default function SettingsPage() {
             label="Share Listening Activity to YouTube"
             detail={
               present && !extension.extension.info.capabilities.includes('yt.stats')
-                ? 'Update the BitChord extension to share: this version can’t send plays to YouTube.'
+                ? 'Update the Hush Music extension to share: this version can’t send plays to YouTube.'
                 : 'Songs you play here go to your YouTube Music history and shape its recommendations.'
             }
             checked={shareHistory}

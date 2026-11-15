@@ -1,16 +1,15 @@
-import markSvg from '@/assets/logo-mark.svg?raw';
+import hushLogoUrl from '@/assets/hush-logo.png';
 
-// BitChord's mark, the same file the desktop app ships, recoloured to
-// currentColor so it follows the text colour it sits in.
-const markup = markSvg.replace(/width="\d+" height="\d+"/, 'width="100%" height="100%"');
-
-export function LogoMark({ size = 20, className }: { size?: number; className?: string }) {
+/**
+ * Hush Music logo mark from the Android application assets.
+ */
+export function LogoMark({ size = 22, className }: { size?: number; className?: string }) {
   return (
-    <span
-      aria-hidden="true"
-      className={className}
-      style={{ display: 'inline-flex', width: size, height: (size * 484) / 730 }}
-      dangerouslySetInnerHTML={{ __html: markup }}
+    <img
+      src={hushLogoUrl}
+      alt="Hush Music"
+      className={`inline-block shrink-0 ${className || ''}`}
+      style={{ width: size, height: size, objectFit: 'contain' }}
     />
   );
 }

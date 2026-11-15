@@ -1,6 +1,10 @@
 import { create } from 'zustand';
 
 export type SidePanel = 'up-next' | 'lyrics' | null;
+export type ThemeMode = 'classic' | 'm3e';
+
+const THEME_KEY = 'hush:theme-mode';
+const BANNER_KEY = 'hush:install-banner-dismissed';
 
 interface UiState {
   /** The right-hand glass panel (report §7); one of Up Next or Lyrics at a time. */
@@ -16,9 +20,13 @@ interface UiState {
   /** The extension install banner, dismissed for this tab only. */
   installBannerDismissed: boolean;
   dismissInstallBanner: () => void;
+  /** UI Style: 'classic' (BitChord Apple Music Frosted Glass) or 'm3e' (Hush Material 3 Expressive) */
+  themeMode: ThemeMode;
+  setThemeMode: (mode: ThemeMode) => void;
+  toggleThemeMode: () => void;
 }
 
-const BANNER_KEY = 'bitchord:install-banner-dismissed';
+const initialTheme = (typeof window !== 'undefined' && (localStorage.getItem(THEME_KEY) as ThemeMode)) || 'm3e';
 
 export const useUi = create<UiState>()((set) => ({
   sidePanel: null,
@@ -28,12 +36,33 @@ export const useUi = create<UiState>()((set) => ({
   setFullScreen: (fullScreen) => set({ fullScreen }),
   drawerOpen: false,
   setDrawerOpen: (drawerOpen) => set({ drawerOpen }),
-  installBannerDismissed: sessionStorage.getItem(BANNER_KEY) === '1',
+  installBannerDismissed: typeof window !== 'undefined' && sessionStorage.getItem(BANNER_KEY) === '1',
   dismissInstallBanner: () => {
     sessionStorage.setItem(BANNER_KEY, '1');
     set({ installBannerDismissed: true });
   },
+  themeMode: initialTheme,
+  setThemeMode: (themeMode) => {
+    if (typeof window !== 'undefined') {
+      localStorage.setItem(THEME_KEY, themeMode);
+      document.documentElement.dataset.theme = themeMode;
+    }
+    set({ themeMode });
+  },
+  toggleThemeMode: () =>
+    set((s) => {
+      const next: ThemeMode = s.themeMode === 'm3e' ? 'classic' : 'm3e';
+      if (typeof window !== 'undefined') {
+        localStorage.setItem(THEME_KEY, next);
+        document.documentElement.dataset.theme = next;
+      }
+      return { themeMode: next };
+    }),
 }));
+
+if (typeof window !== 'undefined') {
+  document.documentElement.dataset.theme = initialTheme;
+}
 
 // For browser-driven tests, next to __bcPlayer.
 if (import.meta.env.DEV) Object.assign(window, { __bcUi: useUi });

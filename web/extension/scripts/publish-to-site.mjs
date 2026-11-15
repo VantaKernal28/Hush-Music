@@ -1,11 +1,11 @@
 // Zips the built extension for the site's Extension page and writes the
 // manifest the page checks for updates:
 //
-//   web/app/public/downloads/bitchord-extension-chrome (<version>).zip
-//   web/app/public/downloads/bitchord-extension-firefox (<version>).zip
+//   web/app/public/downloads/hush-extension-chrome (<version>).zip
+//   web/app/public/downloads/hush-extension-firefox (<version>).zip
 //   web/app/public/downloads/extension.json    { version, builtAt, files }
 //
-// Each zip holds a single folder (bitchord-extension-<browser> (<version>)/) rather than
+// Each zip holds a single folder (hush-extension-<browser> (<version>)/) rather than
 // loose files, so "Extract here" leaves one tidy folder to load unpacked.
 //
 //   corepack pnpm --dir web/extension package   (builds both, then runs this)
@@ -19,7 +19,7 @@ const output = fileURLToPath(new URL('../.output/', import.meta.url));
 const target = fileURLToPath(new URL('../../app/public/downloads/', import.meta.url));
 mkdirSync(target, { recursive: true });
 // Each version's zips are named for it; the previous ones go.
-for (const name of readdirSync(target)) if (/^bitchord-extension-.*\.zip$/.test(name)) rmSync(join(target, name));
+for (const name of readdirSync(target)) if (/^(hush|bitchord)-extension-.*\.zip$/.test(name)) rmSync(join(target, name));
 
 function filesUnder(dir) {
   return readdirSync(dir).flatMap((name) => {
@@ -40,14 +40,17 @@ for (const [browser, folder] of Object.entries(builds)) {
   }
   version = manifest.version;
 
-  // The version in brackets, on the zip and the folder inside it: "bitchord-extension-chrome (0.4.3)".
-  const parent = `bitchord-extension-${browser} (${manifest.version})`;
+  // The version in brackets, on the zip and the folder inside it: "hush-extension-chrome (0.4.3)".
+  const parent = `hush-extension-${browser} (${manifest.version})`;
   const entries = {};
   for (const file of filesUnder(root)) {
     entries[`${parent}/${relative(root, file).split(sep).join('/')}`] = readFileSync(file);
   }
   const name = `${parent}.zip`;
-  writeFileSync(join(target, name), zipSync(entries, { level: 9 }));
+  const zipped = zipSync(entries, { level: 9 });
+  writeFileSync(join(target, name), zipped);
+  writeFileSync(join(target, `hush-extension-${browser}.zip`), zipped);
+  writeFileSync(join(target, `bitchord-extension-${browser}.zip`), zipped);
   files[browser] = name;
   console.log(`${folder} -> app/public/downloads/${name} (${parent}/, v${version})`);
 }
