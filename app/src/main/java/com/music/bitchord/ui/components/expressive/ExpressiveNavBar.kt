@@ -3,9 +3,11 @@ package com.music.bitchord.ui.components.expressive
 import androidx.compose.animation.animateColorAsState
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.spring
+import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.interaction.collectIsPressedAsState
 import androidx.compose.foundation.layout.Arrangement
@@ -64,7 +66,7 @@ import dev.chrisbanes.haze.hazeEffect
  * - Individual tab press squish & overshoot recoil using [expressiveClickable] and tactile haptics.
  * - Bold chunky icon and label hierarchy matching M3E standards.
  */
-@OptIn(ExperimentalHazeMaterialsApi::class)
+@OptIn(ExperimentalHazeMaterialsApi::class, ExperimentalFoundationApi::class)
 @Composable
 fun ExpressiveNavBar(
     tabs: List<BottomTab>,
@@ -72,6 +74,7 @@ fun ExpressiveNavBar(
     onTabSelected: (Int) -> Unit,
     modifier: Modifier = Modifier,
     hazeState: HazeState? = null,
+    onTabLongClick: ((Int) -> Unit)? = null,
 ) {
     val haptic = LocalHapticFeedback.current
     val density = LocalDensity.current
@@ -165,7 +168,7 @@ fun ExpressiveNavBar(
                     modifier = Modifier
                         .weight(1f)
                         .clip(pillShape)
-                        .clickable(
+                        .combinedClickable(
                             interactionSource = interactionSource,
                             indication = null,
                             onClick = {
@@ -173,6 +176,10 @@ fun ExpressiveNavBar(
                                     haptic.performHapticFeedback(HapticFeedbackType.TextHandleMove)
                                     onTabSelected(index)
                                 }
+                            },
+                            onLongClick = {
+                                haptic.performHapticFeedback(HapticFeedbackType.LongPress)
+                                onTabLongClick?.invoke(index)
                             },
                         )
                         .graphicsLayer {

@@ -6,7 +6,12 @@ import com.music.bitchord.ui.AppUi
 import com.music.bitchord.ui.LocalMaterialUiMode
 import com.music.bitchord.ui.components.expressive.M3EShapes
 import com.music.bitchord.ui.components.expressive.expressiveClickable
+import com.music.bitchord.ui.components.expressive.m3eSquish
 import com.music.bitchord.ui.components.expressive.AnimatedEqualizerIndicator
+import androidx.compose.foundation.border
+import com.music.bitchord.ui.haptics.Haptic
+import com.music.bitchord.ui.haptics.rememberHaptics
+import androidx.compose.material.icons.rounded.Settings
 import com.music.bitchord.sharedui.resources.*
 import org.jetbrains.compose.resources.painterResource
 import com.music.bitchord.ui.festive.GoldenLogo
@@ -196,8 +201,28 @@ fun HomeScreen(
                 contentPadding
             },
         ) {
-            if (title != null) {
-                item { HomeTitle(title, listenerName = listenerName, festiveLogo = festiveLogo, onFestiveLogoClick = onFestiveLogoClick) }
+            val isM3E = LocalMaterialUiMode.current
+            if (isM3E) {
+                item(key = "m3e-hero") {
+                    val heroTrack = topPicks?.firstOrNull()
+                    val satelliteTracks = topPicks?.drop(1)?.take(2).orEmpty()
+                    M3EHeroMixSection(
+                        heroTrack = heroTrack,
+                        satelliteTracks = satelliteTracks,
+                        onPlayShuffle = {
+                            if (!topPicks.isNullOrEmpty() && onTopPickClick != null) {
+                                onTopPickClick(topPicks.random(), "Your Mix")
+                            }
+                        },
+                        onTrackClick = { pick ->
+                            onTopPickClick?.invoke(pick, "Your Mix")
+                        },
+                    )
+                }
+            } else {
+                if (title != null) {
+                    item { HomeTitle(title, listenerName = listenerName, festiveLogo = festiveLogo, onFestiveLogoClick = onFestiveLogoClick) }
+                }
             }
             if (!signedIn && onSignIn != null) {
                 item {
@@ -210,7 +235,7 @@ fun HomeScreen(
                     )
                 }
             }
-            if (onTopPickClick != null) {
+            if (!isM3E && onTopPickClick != null) {
                 when {
                     !topPicks.isNullOrEmpty() -> item(key = "top-picks") {
                         TopPicksShelf(
@@ -1249,5 +1274,201 @@ internal fun ShelfCard(
             maxLines = 1,
             overflow = TextOverflow.Ellipsis,
         )
+    }
+}
+
+@Composable
+private fun M3EHeroMixSection(
+    heroTrack: TopPick?,
+    satelliteTracks: List<TopPick>,
+    onPlayShuffle: () -> Unit,
+    onTrackClick: (TopPick) -> Unit,
+) {
+    val haptics = rememberHaptics()
+    Column(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(horizontal = PAGE_GUTTER)
+            .padding(top = 10.dp, bottom = 18.dp),
+    ) {
+        // Top row matching Image 2: β Beta on left, Feed and Settings chips on right
+        Row(
+            modifier = Modifier.fillMaxWidth().padding(bottom = 18.dp),
+            horizontalArrangement = Arrangement.SpaceBetween,
+            verticalAlignment = Alignment.CenterVertically,
+        ) {
+            // Beta pill chip
+            Box(
+                modifier = Modifier
+                    .clip(RoundedCornerShape(18.dp))
+                    .background(Color.White.copy(alpha = 0.10f))
+                    .border(1.dp, Color.White.copy(alpha = 0.15f), RoundedCornerShape(18.dp))
+                    .padding(horizontal = 14.dp, vertical = 7.dp),
+            ) {
+                Text(
+                    text = "β  Beta",
+                    style = MaterialTheme.typography.labelMedium,
+                    fontWeight = FontWeight.Bold,
+                    color = Color.White.copy(alpha = 0.90f),
+                )
+            }
+
+            // Right pill chips: News/Explore and Settings
+            Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
+                Box(
+                    modifier = Modifier
+                        .size(40.dp)
+                        .clip(CircleShape)
+                        .background(Color.White.copy(alpha = 0.10f))
+                        .border(1.dp, Color.White.copy(alpha = 0.15f), CircleShape)
+                        .m3eSquish(),
+                    contentAlignment = Alignment.Center,
+                ) {
+                    Icon(
+                        imageVector = BitChordIcons.Explore,
+                        contentDescription = "Explore",
+                        tint = Color.White.copy(alpha = 0.85f),
+                        modifier = Modifier.size(18.dp),
+                    )
+                }
+                Box(
+                    modifier = Modifier
+                        .size(40.dp)
+                        .clip(CircleShape)
+                        .background(Color.White.copy(alpha = 0.10f))
+                        .border(1.dp, Color.White.copy(alpha = 0.15f), CircleShape)
+                        .m3eSquish(),
+                    contentAlignment = Alignment.Center,
+                ) {
+                    Icon(
+                        imageVector = Icons.Rounded.Settings,
+                        contentDescription = "Settings",
+                        tint = Color.White.copy(alpha = 0.85f),
+                        modifier = Modifier.size(18.dp),
+                    )
+                }
+            }
+        }
+
+        // Headline & Shuffle FAB row matching Image 2
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.SpaceBetween,
+            verticalAlignment = Alignment.CenterVertically,
+        ) {
+            Column {
+                Text(
+                    text = "Your\nMix",
+                    style = MaterialTheme.typography.displayLarge.copy(
+                        fontSize = 42.sp,
+                        lineHeight = 44.sp,
+                        fontWeight = FontWeight.W900,
+                        letterSpacing = (-0.8).sp,
+                    ),
+                    color = Color.White,
+                )
+                Spacer(Modifier.height(4.dp))
+                Text(
+                    text = "Today's Mix for you",
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = Color.White.copy(alpha = 0.65f),
+                )
+            }
+
+            // Shuffle FAB in accented olive/primary color matching Image 2
+            Box(
+                modifier = Modifier
+                    .size(68.dp)
+                    .clip(CircleShape)
+                    .background(Color(0xFF5B6528))
+                    .m3eSquish()
+                    .clickable {
+                        haptics.play(Haptic.Select)
+                        onPlayShuffle()
+                    },
+                contentAlignment = Alignment.Center,
+            ) {
+                Icon(
+                    imageVector = BitChordIcons.Shuffle,
+                    contentDescription = "Shuffle Mix",
+                    tint = Color.White,
+                    modifier = Modifier.size(28.dp),
+                )
+            }
+        }
+
+        Spacer(Modifier.height(24.dp))
+
+        // Center Shapes Collage matching Image 2
+        Box(
+            modifier = Modifier
+                .fillMaxWidth()
+                .height(310.dp),
+            contentAlignment = Alignment.Center,
+        ) {
+            val diagonalShape = M3EShapes.AllExpressiveShapes[3]
+            val circleShape = CircleShape
+            val starShape = M3EShapes.AllExpressiveShapes[4]
+
+            // Satellite Top-Left Shape
+            if (satelliteTracks.isNotEmpty()) {
+                Box(
+                    modifier = Modifier
+                        .align(Alignment.TopStart)
+                        .padding(start = 12.dp, top = 20.dp)
+                        .size(80.dp)
+                        .clip(circleShape)
+                        .m3eSquish()
+                        .clickable { onTrackClick(satelliteTracks[0]) },
+                ) {
+                    AsyncImage(
+                        model = satelliteTracks[0].thumbnailUrl,
+                        contentDescription = null,
+                        contentScale = ContentScale.Crop,
+                        modifier = Modifier.fillMaxSize(),
+                    )
+                }
+            }
+
+            // Central Hero Diagonal / Expressive Pill Cover
+            if (heroTrack != null) {
+                Box(
+                    modifier = Modifier
+                        .align(Alignment.Center)
+                        .size(width = 210.dp, height = 270.dp)
+                        .clip(diagonalShape)
+                        .border(1.5.dp, Color.White.copy(alpha = 0.20f), diagonalShape)
+                        .m3eSquish()
+                        .clickable { onTrackClick(heroTrack) },
+                ) {
+                    AsyncImage(
+                        model = heroTrack.thumbnailUrl,
+                        contentDescription = null,
+                        contentScale = ContentScale.Crop,
+                        modifier = Modifier.fillMaxSize(),
+                    )
+                }
+            }
+
+            // Satellite Bottom-Right Shape
+            if (satelliteTracks.size > 1) {
+                Box(
+                    modifier = Modifier
+                        .align(Alignment.BottomEnd)
+                        .padding(end = 16.dp, bottom = 14.dp)
+                        .size(88.dp)
+                        .clip(starShape)
+                        .m3eSquish()
+                        .clickable { onTrackClick(satelliteTracks[1]) },
+                ) {
+                    AsyncImage(
+                        model = satelliteTracks[1].thumbnailUrl,
+                        contentDescription = null,
+                        contentScale = ContentScale.Crop,
+                        modifier = Modifier.fillMaxSize(),
+                    )
+                }
+            }
+        }
     }
 }

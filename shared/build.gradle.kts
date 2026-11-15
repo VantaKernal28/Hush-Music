@@ -23,6 +23,10 @@ kotlin {
     // common.
     applyDefaultHierarchyTemplate()
 
+    compilerOptions {
+        freeCompilerArgs.addAll("-Xskip-metadata-version-check", "-Xskip-prerelease-check")
+    }
+
     sourceSets {
         val jvmSharedMain by creating {
             dependsOn(commonMain.get())

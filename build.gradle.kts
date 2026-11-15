@@ -42,7 +42,7 @@ buildscript {
  * release tag's alone.
  */
 extra["bitchordVersionCode"] = 40
-extra["bitchordVersionName"] = "1.1"
+extra["bitchordVersionName"] = "1.3"
 
 /*
  * Bump this by hand before cutting each sideloaded test build ("beta2",

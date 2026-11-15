@@ -463,12 +463,21 @@ class MainActivity : AppCompatActivity() {
                     )
 
                     val themeTransitionActive by AppSettings.themeTransitionActive.collectAsStateWithLifecycle()
+                    val themeTransitionTarget by AppSettings.themeTransitionTarget.collectAsStateWithLifecycle()
                     if (themeTransitionActive) {
-                        com.music.bitchord.ui.components.expressive.HushThemeTransitionOverlay(
-                            onAnimationComplete = {
-                                AppSettings.themeTransitionActive.value = false
-                            },
-                        )
+                        if (themeTransitionTarget) {
+                            com.music.bitchord.ui.components.expressive.HushThemeTransitionOverlay(
+                                onAnimationComplete = {
+                                    AppSettings.themeTransitionActive.value = false
+                                },
+                            )
+                        } else {
+                            com.music.bitchord.ui.components.expressive.BitChordThemeTransitionOverlay(
+                                onAnimationComplete = {
+                                    AppSettings.themeTransitionActive.value = false
+                                },
+                            )
+                        }
                     }
                 }
                 }
@@ -759,6 +768,7 @@ private fun BitChordApp(
     var offlinePlaylistTarget by remember { mutableStateOf<Song?>(null) }
     var creatingOfflinePlaylist by remember { mutableStateOf(false) }
     var showSpotifyImportDialog by remember { mutableStateOf(false) }
+    var showAiPlaylistMaker by remember { mutableStateOf(false) }
     // Which album or playlist the collection menu is open on, or null when it
     // is shut. One slot for every surface that can open it — the shelves on
     // three tabs, the search rows, the artist page's carousels, the release
@@ -4279,12 +4289,18 @@ private fun BitChordApp(
                         }
                         Spacer(Modifier.height(8.dp))
                     }
+                    val onTabLongClick: (Int) -> Unit = { index ->
+                        if (index == 1) { // Long press Explore tab
+                            showAiPlaylistMaker = true
+                        }
+                    }
                     if (expressiveUiEnabled) {
                         com.music.bitchord.ui.components.expressive.ExpressiveNavBar(
                             tabs = tabs,
                             selectedIndex = selectedTab,
                             hazeState = hazeState,
                             onTabSelected = onTabSelected,
+                            onTabLongClick = onTabLongClick,
                         )
                     } else {
                         FloatingBottomBar(
@@ -4292,6 +4308,7 @@ private fun BitChordApp(
                             selectedIndex = selectedTab,
                             hazeState = hazeState,
                             onTabSelected = onTabSelected,
+                            onTabLongClick = onTabLongClick,
                         )
                     }
                 }
@@ -4955,6 +4972,34 @@ private fun BitChordApp(
                     menuFromHistory = false
                 }
             }
+        }
+
+        // ---- AI Playlist Maker ----
+        if (showAiPlaylistMaker) {
+            val historyState by viewModel.history.collectAsStateWithLifecycle()
+            val availableSongs = remember(historyState, topDetail, queueSongs) {
+                val fromHistory = (historyState as? com.music.bitchord.data.model.UiState.Success)?.data.orEmpty()
+                val fromDetail = topDetail?.songs.orEmpty()
+                val fromQueue = queueSongs
+                (fromHistory + fromDetail + fromQueue).distinctBy { it.videoId }
+            }
+            com.music.bitchord.ui.playlist.AiPlaylistMakerSheet(
+                availableSongs = availableSongs,
+                onDismiss = { showAiPlaylistMaker = false },
+                onCreatePlaylist = { title, songIds, songs, playImmediately ->
+                    viewModel.createPlaylistWithVideoIds(
+                        title = title,
+                        privacy = com.music.bitchord.data.model.PlaylistPrivacy.PRIVATE,
+                        videoIds = songIds,
+                        songs = songs,
+                    ) { _, createdTitle, _ ->
+                        showQueueNotice("Saved playlist: $createdTitle")
+                        if (playImmediately && songs.isNotEmpty()) {
+                            play(songs, 0)
+                        }
+                    }
+                },
+            )
         }
 
         // ---- Add to playlist / new playlist ----

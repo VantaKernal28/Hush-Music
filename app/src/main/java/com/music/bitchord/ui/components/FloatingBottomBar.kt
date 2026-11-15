@@ -14,7 +14,8 @@ import androidx.compose.animation.fadeOut
 import androidx.compose.animation.shrinkHorizontally
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
-import androidx.compose.foundation.clickable
+import androidx.compose.foundation.ExperimentalFoundationApi
+import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.gestures.detectHorizontalDragGestures
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Arrangement
@@ -181,7 +182,7 @@ internal const val STRETCH = 0.16f
  */
 internal const val SQUASH = 0.5f
 
-@OptIn(ExperimentalHazeMaterialsApi::class)
+@OptIn(ExperimentalHazeMaterialsApi::class, ExperimentalFoundationApi::class)
 @Composable
 fun FloatingBottomBar(
     tabs: List<BottomTab>,
@@ -189,6 +190,7 @@ fun FloatingBottomBar(
     onTabSelected: (Int) -> Unit,
     hazeState: HazeState,
     modifier: Modifier = Modifier,
+    onTabLongClick: ((Int) -> Unit)? = null,
 ) {
     val pillShape = RoundedCornerShape(percent = 50)
     val container = MaterialTheme.colorScheme.surface
@@ -226,13 +228,18 @@ fun FloatingBottomBar(
                             .then(
                                 if (selected) Modifier.background(activeContainer) else Modifier
                             )
-                            .clickable(
+                            .combinedClickable(
                                 interactionSource = remember { MutableInteractionSource() },
                                 indication = null,
-                            ) {
-                                if (!selected) haptics.play(Haptic.Select)
-                                onTabSelected(index)
-                            }
+                                onClick = {
+                                    if (!selected) haptics.play(Haptic.Select)
+                                    onTabSelected(index)
+                                },
+                                onLongClick = {
+                                    haptics.play(Haptic.Hold)
+                                    onTabLongClick?.invoke(index)
+                                },
+                            )
                             .padding(
                                 horizontal = if (selected) 16.dp else 12.dp,
                                 vertical = 10.dp,
@@ -437,6 +444,7 @@ fun FloatingBottomBar(
                     selectedTint = adaptiveTint,
                     unselectedTint = adaptiveTint?.copy(alpha = 0.65f),
                     onClick = { onTabSelected(index) },
+                    onLongClick = { onTabLongClick?.invoke(index) },
                     modifier = Modifier.weight(1f),
                 )
             }
@@ -444,12 +452,14 @@ fun FloatingBottomBar(
     }
 }
 
+@OptIn(ExperimentalFoundationApi::class)
 @Composable
 private fun BottomBarItem(
     tab: BottomTab,
     selected: Boolean,
     glassSpec: AnimationSpec<Float>,
     onClick: () -> Unit,
+    onLongClick: (() -> Unit)? = null,
     modifier: Modifier = Modifier,
     /** Overrides the theme's primary/onSurfaceVariant tint — see the glass branch above. */
     selectedTint: Color? = null,
@@ -479,13 +489,18 @@ private fun BottomBarItem(
         contentAlignment = Alignment.Center,
         modifier = modifier
             .clip(RoundedCornerShape(percent = 50))
-            .clickable(
+            .combinedClickable(
                 interactionSource = remember { MutableInteractionSource() },
                 indication = null,
-            ) {
-                if (!selected) haptics.play(Haptic.Select)
-                onClick()
-            }
+                onClick = {
+                    if (!selected) haptics.play(Haptic.Select)
+                    onClick()
+                },
+                onLongClick = {
+                    haptics.play(Haptic.Hold)
+                    onLongClick?.invoke()
+                },
+            )
             .padding(vertical = 12.dp),
     ) {
         Icon(

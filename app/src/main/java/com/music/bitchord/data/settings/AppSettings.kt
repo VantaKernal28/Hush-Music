@@ -455,8 +455,9 @@ object AppSettings {
     /** Material UI Theme Mode: tactile Google/M3 expanded tab bar, squircle player buttons, segmented timeline. */
     val materialUiMode = MutableStateFlow(false)
 
-    /** Active when playing the Hush Music logo transition animation while switching theme. */
+    /** Active when playing the Hush / BitChord logo transition animation while switching theme. */
     val themeTransitionActive = MutableStateFlow(false)
+    val themeTransitionTarget = MutableStateFlow(true)
 
     /** Live Song-Reactive Color Gradient: extracts artwork tones and flows ambient animated gradients in the player. */
     val liveSongColorGradient = MutableStateFlow(true)
@@ -526,8 +527,8 @@ object AppSettings {
      */
     val disableBlendEffects = MutableStateFlow(false)
 
-    /** Real backdrop-sampled glass (blur, lens refraction) on the floating nav bar, Android 12+ only. */
-    val liquidGlass = MutableStateFlow(false)
+    /** Real backdrop-sampled glass (blur, lens refraction) on the floating nav bar, Android 12+ only. Default ON for BitChord mode. */
+    val liquidGlass = MutableStateFlow(true)
 
     /**
      * Frosts the glass instead of refracting it, for phones the lens shader is too
@@ -1082,7 +1083,7 @@ object AppSettings {
         smartVersionAlignment.value = prefs.getBoolean(KEY_SMART_VERSION_ALIGNMENT, true)
         reduceDynamicBlur.value = prefs.getBoolean(KEY_REDUCE_BLUR, false)
         disableBlendEffects.value = prefs.getBoolean(KEY_DISABLE_BLEND_EFFECTS, false)
-        liquidGlass.value = prefs.getBoolean(KEY_LIQUID_GLASS, false)
+        liquidGlass.value = prefs.getBoolean(KEY_LIQUID_GLASS, true)
         glassPerformance.value = prefs.getBoolean(KEY_GLASS_PERFORMANCE, false)
         progressiveBlur.value = prefs.getBoolean(KEY_PROGRESSIVE_BLUR, false)
         lyricsBlur.value = prefs.getBoolean(KEY_LYRICS_BLUR, true)
@@ -1499,8 +1500,17 @@ object AppSettings {
         prefs.edit().putBoolean(KEY_MATERIAL_UI_MODE, value).apply()
     }
 
-    fun triggerMaterialUiTransition() {
+    fun triggerThemeTransition(toM3E: Boolean) {
+        themeTransitionTarget.value = toM3E
         themeTransitionActive.value = true
+    }
+
+    fun triggerMaterialUiTransition() {
+        triggerThemeTransition(true)
+    }
+
+    fun triggerBitChordTransition() {
+        triggerThemeTransition(false)
     }
 
     fun setLiveSongColorGradient(value: Boolean) {

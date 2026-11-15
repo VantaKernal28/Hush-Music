@@ -491,14 +491,99 @@ internal fun TransportRow(
     compact: Boolean = false,
 ) {
     val materialUi by PlayerSettings.materialUiMode.collectAsStateWithLifecycle()
-    val primaryColor = MaterialTheme.colorScheme.primary
 
-    val playSize = if (materialUi) (if (compact) 32.dp else 36.dp) else (if (compact) 58.dp else 74.dp)
-    val playTouchWidth = if (materialUi) (if (compact) 64.dp else 78.dp) else (if (compact) 76.dp else 92.dp)
-    val playTouchHeight = if (materialUi) (if (compact) 48.dp else 54.dp) else (if (compact) 76.dp else 92.dp)
-    val skipSize = if (materialUi) (if (compact) 24.dp else 28.dp) else (if (compact) 44.dp else PLAYER_SKIP_ICON_SIZE)
-    val skipTouch = if (materialUi) (if (compact) 46.dp else 52.dp) else PLAYER_SKIP_TOUCH_SIZE
-    val m3PlayColor = Color(0xFFFFE082) // Warm pastel yellow/cream matching Material You
+    if (materialUi) {
+        val qsCorner by animateDpAsState(
+            targetValue = if (isPlaying) 26.dp else 36.dp,
+            animationSpec = spring(dampingRatio = 0.60f, stiffness = 420f),
+            label = "qsCorner",
+        )
+        val qsScale by animateFloatAsState(
+            targetValue = if (isPlaying) 1.0f else 0.94f,
+            animationSpec = spring(dampingRatio = 0.50f, stiffness = 450f),
+            label = "qsScale",
+        )
+        val qsShape = RoundedCornerShape(qsCorner)
+        val qsPillShape = RoundedCornerShape(22.dp)
+        val sideContainerColor = Color.White.copy(alpha = 0.12f)
+        val primaryPlayColor = MaterialTheme.colorScheme.primary
+
+        Row(
+            modifier = Modifier.fillMaxWidth().padding(horizontal = 12.dp),
+            horizontalArrangement = Arrangement.SpaceBetween,
+            verticalAlignment = Alignment.CenterVertically,
+        ) {
+            // Previous button in squarish rounded container
+            Box(
+                modifier = Modifier
+                    .size(width = 76.dp, height = 66.dp)
+                    .clip(qsPillShape)
+                    .background(sideContainerColor)
+                    .clickable(enabled = previousEnabled, onClick = onPrevious),
+                contentAlignment = Alignment.Center,
+            ) {
+                Icon(
+                    painter = painterResource(Res.drawable.ic_player_previous),
+                    contentDescription = stringResource(Res.string.widget_previous),
+                    tint = Color.White,
+                    modifier = Modifier.size(28.dp),
+                )
+            }
+
+            // Center Pixel QS Animated Play/Pause button
+            Box(
+                modifier = Modifier
+                    .size(width = 104.dp, height = 70.dp)
+                    .graphicsLayer {
+                        scaleX = qsScale
+                        scaleY = qsScale
+                    }
+                    .clip(qsShape)
+                    .background(primaryPlayColor)
+                    .clickable(onClick = onPlayPause),
+                contentAlignment = Alignment.Center,
+            ) {
+                if (isLoading) {
+                    CircularProgressIndicator(
+                        color = MaterialTheme.colorScheme.onPrimary,
+                        strokeWidth = 3.dp,
+                        modifier = Modifier.size(30.dp),
+                    )
+                } else {
+                    Icon(
+                        painter = painterResource(if (isPlaying) Res.drawable.ic_player_pause else Res.drawable.ic_player_play),
+                        contentDescription = stringResource(if (isPlaying) Res.string.pause else Res.string.play),
+                        tint = MaterialTheme.colorScheme.onPrimary,
+                        modifier = Modifier.size(32.dp),
+                    )
+                }
+            }
+
+            // Next button in squarish rounded container
+            Box(
+                modifier = Modifier
+                    .size(width = 76.dp, height = 66.dp)
+                    .clip(qsPillShape)
+                    .background(sideContainerColor)
+                    .clickable(enabled = nextEnabled, onClick = onNext),
+                contentAlignment = Alignment.Center,
+            ) {
+                Icon(
+                    painter = painterResource(Res.drawable.ic_player_next),
+                    contentDescription = stringResource(Res.string.widget_next),
+                    tint = Color.White,
+                    modifier = Modifier.size(28.dp),
+                )
+            }
+        }
+        return
+    }
+
+    val playSize = if (compact) 58.dp else 74.dp
+    val playTouchWidth = if (compact) 76.dp else 92.dp
+    val playTouchHeight = if (compact) 76.dp else 92.dp
+    val skipSize = if (compact) 44.dp else PLAYER_SKIP_ICON_SIZE
+    val skipTouch = PLAYER_SKIP_TOUCH_SIZE
 
     Row(
         modifier = Modifier.fillMaxWidth(),
@@ -582,6 +667,77 @@ internal fun VolumeRow(
     onValueChange: (Float) -> Unit,
     onValueChangeFinished: () -> Unit,
 ) {
+    val materialUi by PlayerSettings.materialUiMode.collectAsStateWithLifecycle()
+    if (materialUi) {
+        val currentVol = value()
+        Row(
+            modifier = Modifier.fillMaxWidth().padding(horizontal = 4.dp),
+            horizontalArrangement = Arrangement.spacedBy(10.dp),
+            verticalAlignment = Alignment.CenterVertically,
+        ) {
+            Box(
+                modifier = Modifier
+                    .weight(0.85f)
+                    .clip(RoundedCornerShape(22.dp))
+                    .background(Color.White.copy(alpha = 0.12f))
+                    .clickable {
+                        onValueChange(0f)
+                        onValueChangeFinished()
+                    }
+                    .padding(vertical = 12.dp),
+                contentAlignment = Alignment.Center,
+            ) {
+                Icon(
+                    Icons.AutoMirrored.Rounded.VolumeMute,
+                    contentDescription = "Mute",
+                    tint = if (currentVol <= 0.05f) MaterialTheme.colorScheme.primary else Color.White,
+                    modifier = Modifier.size(20.dp),
+                )
+            }
+            Box(
+                modifier = Modifier
+                    .weight(1.1f)
+                    .clip(RoundedCornerShape(22.dp))
+                    .background(Color.White.copy(alpha = 0.12f))
+                    .clickable {
+                        val next = (currentVol - 0.15f).coerceAtLeast(0f)
+                        onValueChange(next)
+                        onValueChangeFinished()
+                    }
+                    .padding(vertical = 12.dp),
+                contentAlignment = Alignment.Center,
+            ) {
+                Icon(
+                    Icons.AutoMirrored.Rounded.VolumeDown,
+                    contentDescription = "Volume Down",
+                    tint = Color.White,
+                    modifier = Modifier.size(20.dp),
+                )
+            }
+            Box(
+                modifier = Modifier
+                    .weight(1.1f)
+                    .clip(RoundedCornerShape(22.dp))
+                    .background(Color.White.copy(alpha = 0.12f))
+                    .clickable {
+                        val next = (currentVol + 0.15f).coerceAtMost(1f)
+                        onValueChange(next)
+                        onValueChangeFinished()
+                    }
+                    .padding(vertical = 12.dp),
+                contentAlignment = Alignment.Center,
+            ) {
+                Icon(
+                    Icons.AutoMirrored.Rounded.VolumeUp,
+                    contentDescription = "Volume Up",
+                    tint = Color.White,
+                    modifier = Modifier.size(20.dp),
+                )
+            }
+        }
+        return
+    }
+
     val chrome = LocalPlayerChrome.current
     Row(
         modifier = Modifier.fillMaxWidth(),
@@ -636,6 +792,65 @@ internal fun PlayerActionRow(
     /** Opens [ListenTogetherMembersSheet] rather than settings directly. */
     onOpenListenTogetherMembers: () -> Unit,
 ) {
+    val materialUi by PlayerSettings.materialUiMode.collectAsStateWithLifecycle()
+    if (materialUi) {
+        val outputGlyph = rememberOutputGlyph()
+        Row(
+            modifier = Modifier.fillMaxWidth().padding(horizontal = 8.dp),
+            horizontalArrangement = Arrangement.SpaceBetween,
+            verticalAlignment = Alignment.CenterVertically,
+        ) {
+            Box(
+                modifier = Modifier
+                    .clip(RoundedCornerShape(20.dp))
+                    .background(Color.White.copy(alpha = 0.14f))
+                    .clickable(onClick = onOpenOutput)
+                    .padding(horizontal = 14.dp, vertical = 9.dp),
+            ) {
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    Icon(
+                        imageVector = outputGlyph.icon,
+                        contentDescription = "Output",
+                        tint = Color.White,
+                        modifier = Modifier.size(16.dp),
+                    )
+                    Spacer(Modifier.width(8.dp))
+                    Text(
+                        text = "Audio output",
+                        style = MaterialTheme.typography.labelMedium,
+                        fontWeight = FontWeight.Medium,
+                        color = Color.White,
+                    )
+                }
+            }
+
+            Box(
+                modifier = Modifier
+                    .clip(RoundedCornerShape(20.dp))
+                    .background(if (queueOpen) MaterialTheme.colorScheme.primary else Color.White.copy(alpha = 0.14f))
+                    .clickable(onClick = onToggleQueue)
+                    .padding(horizontal = 14.dp, vertical = 9.dp),
+            ) {
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    Icon(
+                        imageVector = BitChordIcons.Queue,
+                        contentDescription = "Queue",
+                        tint = if (queueOpen) MaterialTheme.colorScheme.onPrimary else Color.White,
+                        modifier = Modifier.size(16.dp),
+                    )
+                    Spacer(Modifier.width(8.dp))
+                    Text(
+                        text = "Queue",
+                        style = MaterialTheme.typography.labelMedium,
+                        fontWeight = FontWeight.Medium,
+                        color = if (queueOpen) MaterialTheme.colorScheme.onPrimary else Color.White,
+                    )
+                }
+            }
+        }
+        return
+    }
+
     val showPartyButton by PlayerSettings.showListenTogetherButton.collectAsStateWithLifecycle()
     val inParty = rememberPartyBadge().inParty
     // Just the output glyph in the middle.

@@ -182,9 +182,9 @@ fun ReplayCreditCard(
                 )
                 Spacer(Modifier.width(10.dp))
                 Image(
-                    painter = painterResource(Res.drawable.ic_hush_transparent_logo),
+                    painter = painterResource(if (isM3E) Res.drawable.ic_hush_transparent_logo else Res.drawable.ic_logo),
                     contentDescription = null,
-                    modifier = Modifier.size(26.dp),
+                    modifier = Modifier.size(if (isM3E) 26.dp else 24.dp),
                 )
             }
 

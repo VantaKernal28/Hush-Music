@@ -53,7 +53,7 @@ kotlin {
     applyDefaultHierarchyTemplate()
 
     compilerOptions {
-        freeCompilerArgs.add("-Xexpect-actual-classes")
+        freeCompilerArgs.addAll("-Xexpect-actual-classes", "-Xskip-metadata-version-check", "-Xskip-prerelease-check")
     }
 
     sourceSets {

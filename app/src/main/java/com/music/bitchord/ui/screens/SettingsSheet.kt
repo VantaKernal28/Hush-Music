@@ -1288,32 +1288,40 @@ fun SettingsScreen(
                     onClick = { onOpenChoice(SettingsChoiceKind.FONT) },
                 )
             }
-            val materialUiModeTitle = "Material UI Mode"
-            row(materialUiModeTitle, "material", "m3", "toggle", "pill", "squircle", "tab") {
-                SettingsRow(
-                    icon = SfIcons.Apps,
-                    title = materialUiModeTitle,
-                    subtitle = "Dual UI Mode: switch from BitChord frosted glass to full Material You pastel squircle UI with Hush animation",
-                    trailing = {
-                        IosSwitch(
-                            checked = materialUiMode,
-                            onCheckedChange = { enable ->
-                                if (enable) {
-                                    AppSettings.triggerMaterialUiTransition()
-                                } else {
-                                    AppSettings.setMaterialUiMode(false)
-                                }
-                            },
-                        )
-                    },
-                    onClick = {
-                        if (!materialUiMode) {
-                            AppSettings.triggerMaterialUiTransition()
-                        } else {
-                            AppSettings.setMaterialUiMode(false)
-                        }
-                    },
-                )
+            val materialUiModeTitle = "Interface Style"
+            row(materialUiModeTitle, "material", "m3", "toggle", "pill", "squircle", "tab", "bitchord", "classic", "style") {
+                Column(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(horizontal = ROW_INSET, vertical = 8.dp),
+                    verticalArrangement = Arrangement.spacedBy(10.dp),
+                ) {
+                    UiStyleOptionCard(
+                        title = "BitChord Classic",
+                        badge = "CLASSIC",
+                        description = "Frosted glass aesthetic, Apple-inspired depth & fluid mesh blurs",
+                        iconRes = R.drawable.ic_logo,
+                        selected = !materialUiMode,
+                        onClick = {
+                            if (materialUiMode) {
+                                AppSettings.triggerBitChordTransition()
+                            }
+                        },
+                    )
+
+                    UiStyleOptionCard(
+                        title = "Material 3 Expressive",
+                        badge = "HUSH M3E",
+                        description = "12 organic M3E shapes, bouncy spring physics, Pixel Round font & dynamic Monet",
+                        iconRes = R.drawable.ic_hush_transparent_logo,
+                        selected = materialUiMode,
+                        onClick = {
+                            if (!materialUiMode) {
+                                AppSettings.triggerMaterialUiTransition()
+                            }
+                        },
+                    )
+                }
             }
             val liveSongGradientTitle = "Live Song-Reactive Gradient"
             row(liveSongGradientTitle, "gradient", "player", "color", "mesh", "artwork", "ambient") {
@@ -2837,6 +2845,7 @@ internal fun SettingsRow(
     trailing: (@Composable () -> Unit)? = null,
 ) {
     val materialUiMode by AppSettings.materialUiMode.collectAsStateWithLifecycle()
+    val effectiveBadgeColor = if (materialUiMode) iconBadgeColor else null
     Row(
         modifier = Modifier
             .fillMaxWidth()
@@ -2850,18 +2859,18 @@ internal fun SettingsRow(
                 } else Modifier
             )
             .alpha(if (enabled) 1f else 0.45f)
-            .heightIn(min = if (iconBadgeColor != null) 60.dp else 52.dp)
-            .padding(horizontal = ROW_INSET, vertical = if (iconBadgeColor != null) 10.dp else 12.dp),
+            .heightIn(min = if (effectiveBadgeColor != null) 60.dp else 52.dp)
+            .padding(horizontal = ROW_INSET, vertical = if (effectiveBadgeColor != null) 10.dp else 12.dp),
         verticalAlignment = Alignment.CenterVertically,
     ) {
         if (iconContent != null) {
             iconContent()
-        } else if (iconBadgeColor != null) {
+        } else if (effectiveBadgeColor != null) {
             Box(
                 modifier = Modifier
                     .size(38.dp)
                     .clip(CircleShape)
-                    .background(iconBadgeColor),
+                    .background(effectiveBadgeColor),
                 contentAlignment = Alignment.Center,
             ) {
                 if (iconPainter != null) {
@@ -2895,12 +2904,12 @@ internal fun SettingsRow(
                 modifier = Modifier.size(ICON_SIZE),
             )
         }
-        Spacer(Modifier.width(if (iconBadgeColor != null) 16.dp else ICON_GAP))
+        Spacer(Modifier.width(if (effectiveBadgeColor != null) 16.dp else ICON_GAP))
         Column(Modifier.weight(1f)) {
             Row(verticalAlignment = Alignment.CenterVertically) {
                 Text(
                     text = title,
-                    style = if (iconBadgeColor != null) MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.SemiBold) else MaterialTheme.typography.bodyLarge,
+                    style = if (effectiveBadgeColor != null) MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.SemiBold) else MaterialTheme.typography.bodyLarge,
                     color = MaterialTheme.colorScheme.onBackground,
                     maxLines = 1,
                     overflow = TextOverflow.Ellipsis,
@@ -3502,6 +3511,86 @@ internal fun <T> ChoiceGroup(
                         modifier = Modifier.size(20.dp),
                     )
                 }
+            }
+        }
+    }
+}
+
+@Composable
+private fun UiStyleOptionCard(
+    title: String,
+    badge: String,
+    description: String,
+    iconRes: Int,
+    selected: Boolean,
+    onClick: () -> Unit,
+) {
+    val activeAccent = MaterialTheme.colorScheme.primary
+    Box(
+        modifier = Modifier
+            .fillMaxWidth()
+            .clip(RoundedCornerShape(20.dp))
+            .background(
+                if (selected) MaterialTheme.colorScheme.primary.copy(alpha = 0.15f)
+                else MaterialTheme.colorScheme.surfaceVariant,
+            )
+            .border(
+                width = if (selected) 2.dp else 1.dp,
+                color = if (selected) activeAccent else Color.White.copy(alpha = 0.08f),
+                shape = RoundedCornerShape(20.dp),
+            )
+            .clickable(onClick = onClick)
+            .padding(14.dp),
+    ) {
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            verticalAlignment = Alignment.CenterVertically,
+        ) {
+            Box(
+                modifier = Modifier
+                    .size(46.dp)
+                    .clip(RoundedCornerShape(14.dp))
+                    .background(Color.White.copy(alpha = 0.10f)),
+                contentAlignment = Alignment.Center,
+            ) {
+                Image(
+                    painter = painterResource(iconRes),
+                    contentDescription = null,
+                    modifier = Modifier.size(28.dp),
+                )
+            }
+            Spacer(Modifier.width(14.dp))
+            Column(Modifier.weight(1f)) {
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    Text(
+                        text = title,
+                        style = MaterialTheme.typography.titleMedium,
+                        fontWeight = FontWeight.Bold,
+                        color = MaterialTheme.colorScheme.onSurface,
+                    )
+                    Spacer(Modifier.width(8.dp))
+                    Box(
+                        modifier = Modifier
+                            .clip(RoundedCornerShape(8.dp))
+                            .background(
+                                if (selected) activeAccent else MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.4f),
+                            )
+                            .padding(horizontal = 6.dp, vertical = 2.dp),
+                    ) {
+                        Text(
+                            text = badge,
+                            style = MaterialTheme.typography.labelSmall.copy(fontSize = 9.sp, fontWeight = FontWeight.Bold),
+                            color = if (selected) MaterialTheme.colorScheme.onPrimary else MaterialTheme.colorScheme.onSurfaceVariant,
+                        )
+                    }
+                }
+                Spacer(Modifier.height(2.dp))
+                Text(
+                    text = description,
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    lineHeight = 16.sp,
+                )
             }
         }
     }

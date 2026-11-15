@@ -295,7 +295,7 @@ fun OnboardingScreen(
                                             val chosen = name.trim().ifBlank { "Listener" }
                                             focusManager.clearFocus()
                                             onNameChosen(chosen)
-                                            phase = OnboardingPhase.POST_NAME_REVEAL
+                                            phase = OnboardingPhase.STEP_UI_STYLE
                                         },
                                     )
                                 }
@@ -358,7 +358,7 @@ fun OnboardingScreen(
                                             val chosen = name.trim().ifBlank { "Listener" }
                                             focusManager.clearFocus()
                                             onNameChosen(chosen)
-                                            phase = OnboardingPhase.POST_NAME_REVEAL
+                                            phase = OnboardingPhase.STEP_UI_STYLE
                                         },
                                     )
                                     PillButtonSecondary(

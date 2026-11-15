@@ -208,12 +208,22 @@ private val LegacyTypography = Typography(
 
 val PixelRoundFontFamily: FontFamily = try {
     FontFamily(
-        androidx.compose.ui.text.font.Typeface(
-            android.graphics.Typeface.create("sans-serif-rounded", android.graphics.Typeface.NORMAL),
-        ),
+        Font(R.font.google_sans_rounded_regular, FontWeight.W400),
+        Font(R.font.google_sans_rounded_medium, FontWeight.W500),
+        Font(R.font.google_sans_rounded_medium, FontWeight.W600),
+        Font(R.font.google_sans_rounded_bold, FontWeight.W700),
+        Font(R.font.google_sans_rounded_bold, FontWeight.W800),
     )
 } catch (_: Throwable) {
-    FontFamily.SansSerif
+    try {
+        FontFamily(
+            androidx.compose.ui.text.font.Typeface(
+                android.graphics.Typeface.create("sans-serif-rounded", android.graphics.Typeface.NORMAL),
+            ),
+        )
+    } catch (_: Throwable) {
+        FontFamily.SansSerif
+    }
 }
 
 val PixelRoundTypography = Typography(
