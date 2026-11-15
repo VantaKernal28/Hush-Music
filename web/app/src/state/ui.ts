@@ -24,6 +24,10 @@ interface UiState {
   themeMode: ThemeMode;
   setThemeMode: (mode: ThemeMode) => void;
   toggleThemeMode: () => void;
+  /** AI Playlist Maker Modal */
+  aiPlaylistModalOpen: boolean;
+  openAiPlaylistModal: () => void;
+  closeAiPlaylistModal: () => void;
 }
 
 const initialTheme = (typeof window !== 'undefined' && (localStorage.getItem(THEME_KEY) as ThemeMode)) || 'm3e';
@@ -58,6 +62,9 @@ export const useUi = create<UiState>()((set) => ({
       }
       return { themeMode: next };
     }),
+  aiPlaylistModalOpen: false,
+  openAiPlaylistModal: () => set({ aiPlaylistModalOpen: true }),
+  closeAiPlaylistModal: () => set({ aiPlaylistModalOpen: false }),
 }));
 
 if (typeof window !== 'undefined') {

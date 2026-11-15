@@ -279,10 +279,13 @@
 
 /* ---- Hush Music: Material 3 Expressive (M3E) Theme ---- */
 :root[data-theme='m3e'] {
-  --font-family: 'Google Sans Rounded', 'Pixel Round', 'DM Sans', system-ui, -apple-system, sans-serif;
-  --key-color: #d0bcff;
-  --key-color-pressed: #b69df8;
-  --key-color-tinted: #d0bcff26;
+  --font-family: 'Google Sans Flex', 'Google Sans Rounded', 'DM Sans', system-ui, -apple-system, sans-serif;
+  --keyColor: #d0bcff;
+  --keyColor-rgb: 208, 188, 255;
+  --keyColor-rollover: #e8def8;
+  --keyColor-pressed: #b69df8;
+  --keyColorBG: #d0bcff;
+  --selectionColor: #d0bcff;
   --radius-artwork-small: 14px;
   --radius-artwork-medium: 22px;
   --radius-artwork-large: 30px;
@@ -291,4 +294,12 @@
   --radius-pill: 9999px;
   --ease-out-panel: cubic-bezier(0.34, 1.35, 0.64, 1);
   --duration-panel: 0.35s;
+
+  --m3e-olive: #707c2a;
+  --m3e-olive-hover: #82922e;
+  --m3e-primary: #d0bcff;
+  --m3e-on-primary: #381e72;
+  --m3e-primary-container: #4f378b;
+  --m3e-surface-container: #211f26;
+  --m3e-surface-container-high: #2b2930;
 }

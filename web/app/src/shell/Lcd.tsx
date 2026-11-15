@@ -98,6 +98,7 @@ export function Lcd() {
   const status = usePlayer((s) => s.status);
   const error = usePlayer((s) => s.error);
   const openFullScreen = useUi((s) => s.setFullScreen);
+  const themeMode = useUi((s) => s.themeMode);
   // The queue's row for what's playing: it carries the album and each artist's channel.
   const track = usePlayer((s) => {
     const entry = s.queue[s.index]?.track;
@@ -122,7 +123,7 @@ export function Lcd() {
       {/* As Apple's: the artwork opens the full-screen player, with an expand glyph on hover. */}
       <button
         // A music video plays here in small, at 16:9.
-        className={`group/art relative block h-[34px] overflow-hidden rounded-[6px] bg-joe p-0 transition-[filter,opacity] ${video ? 'w-[60px] bg-black' : 'w-[34px]'}`}
+        className={`group/art relative block h-[34px] overflow-hidden ${themeMode === 'm3e' ? 'rounded-[12px]' : 'rounded-[6px]'} bg-joe p-0 transition-[filter,opacity] ${video ? 'w-[60px] bg-black' : 'w-[34px]'}`}
         aria-label="Open full screen player"
         onClick={() => openFullScreen(true)}
       >
@@ -188,6 +189,7 @@ const time =
  */
 function Progress() {
   const { bar, elapsed, remaining, dragging, handlers } = useScrubber();
+  const themeMode = useUi((s) => s.themeMode);
   return (
     // The hit area: taller than the 2px line it carries.
     <div
@@ -199,11 +201,11 @@ function Progress() {
       <span ref={elapsed} className={`${time} left-0`} />
       <span ref={remaining} className={`${time} right-0`} />
       <div
-        className="absolute inset-x-0 bottom-1.5 h-0.5 overflow-hidden rounded-[1px] bg-quaternary transition-[height,left,right] duration-100 ease-in group-hover/scrub:bottom-[5px] group-hover/scrub:h-1 group-data-dragging/scrub:bottom-[5px] group-data-dragging/scrub:h-1"
+        className={`absolute inset-x-0 bottom-1.5 h-0.5 overflow-hidden ${themeMode === 'm3e' ? 'rounded-full' : 'rounded-[1px]'} bg-quaternary transition-[height,left,right] duration-100 ease-in group-hover/scrub:bottom-[5px] group-hover/scrub:h-1 group-data-dragging/scrub:bottom-[5px] group-data-dragging/scrub:h-1`}
         aria-hidden="true"
       >
         <MixWindowHighlight />
-        <div ref={bar} className="relative size-full origin-left scale-x-(--progress) bg-secondary [--progress:0]" />
+        <div ref={bar} className={`relative size-full origin-left scale-x-(--progress) ${themeMode === 'm3e' ? 'bg-[#d0bcff]' : 'bg-secondary'} [--progress:0]`} />
       </div>
     </div>
   );

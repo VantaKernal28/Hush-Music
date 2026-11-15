@@ -1,9 +1,12 @@
-import { useEffect, useRef } from 'react';
+import { useEffect, useMemo, useRef } from 'react';
 import { PageHeader } from '@/components/PageHeader';
 import { Shelves, TrackShelf } from '@/components/music/ShelfView';
 import { LoadError, LoadMoreError, NeedsExtension } from '@/components/music/States';
+import { M3eHomeHero } from '@/components/music/M3eHomeHero';
 import { useHome, useLibrary, useYouTubeReady } from '@/data/music/queries';
 import type { Track } from '@/data/music/types';
+import { usePlayer } from '@/state/player';
+import { useUi } from '@/state/ui';
 import { HomeSkeleton } from '@/skeletons/PageSkeletons';
 import { ShelfSkeleton } from '@/skeletons/ShelfSkeleton';
 
@@ -28,7 +31,47 @@ export default function HomePage() {
   const { missing } = useYouTubeReady();
   const home = useHome();
   const recent = useRecentlyPlayed();
+  const themeMode = useUi((s) => s.themeMode);
   const sentinel = useRef<HTMLDivElement>(null);
+
+  const mixTracks = useMemo(() => {
+    const list: Track[] = [...recent];
+    if (home.data) {
+      for (const page of home.data.pages) {
+        for (const shelf of page.data) {
+          if ('items' in shelf && Array.isArray(shelf.items)) {
+            for (const item of shelf.items) {
+              if (item.id && (item.kind === 'song' || item.kind === 'video')) {
+                list.push({
+                  videoId: item.id,
+                  title: item.title,
+                  artists: item.artists ?? [],
+                  album: item.album ?? null,
+                  durationSec: item.durationSec ?? null,
+                  thumbnail: item.thumbnail ?? null,
+                  explicit: item.explicit ?? false,
+                  index: null,
+                  plays: null,
+                });
+              }
+            }
+          }
+        }
+      }
+    }
+    const seen = new Set<string>();
+    return list.filter((t) => !seen.has(t.videoId) && seen.add(t.videoId)).slice(0, 30);
+  }, [recent, home.data]);
+
+  const handleShufflePlay = () => {
+    if (mixTracks.length === 0) return;
+    const shuffled = [...mixTracks].sort(() => Math.random() - 0.5);
+    usePlayer.getState().playTracks(shuffled, 0, { title: 'Your Mix', type: 'home' });
+  };
+
+  const handleTrackPlay = (_track: Track, index: number) => {
+    usePlayer.getState().playTracks(mixTracks, index, { title: 'Your Mix', type: 'home' });
+  };
 
   // Loads the next shelves before the bottom comes into view; after a failed
   // page it waits for Try Again rather than retrying on every scroll.
@@ -70,7 +113,11 @@ export default function HomePage() {
     .filter((shelf) => !(recent.length > 0 && shelf.title.trim().toLowerCase() === RECENT_TITLE.toLowerCase()));
   return (
     <>
-      <PageHeader title="Home" />
+      {themeMode === 'm3e' ? (
+        <M3eHomeHero tracks={mixTracks} onShufflePlay={handleShufflePlay} onTrackPlay={handleTrackPlay} />
+      ) : (
+        <PageHeader title="Home" />
+      )}
       {recent.length > 0 && <TrackShelf title={RECENT_TITLE} to="/library/recent" tracks={recent} source={RECENT_SOURCE} />}
       <Shelves shelves={shelves} />
       <div ref={sentinel} />

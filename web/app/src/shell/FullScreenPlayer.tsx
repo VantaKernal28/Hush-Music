@@ -33,6 +33,8 @@ import { MixWindowHighlight, NerdStats } from './NerdStats';
 import { useScrubber } from './useScrubber';
 import { VideoQuality } from './VideoQuality';
 import { fadeForVolume, VolumeControl } from './VolumeControl';
+import { M3eWavyScrubber } from '@/components/music/M3eWavyScrubber';
+import { M3eTransport } from '@/components/music/M3eTransport';
 
 function useBrowserFullScreen(): boolean {
   return useSyncExternalStore(
@@ -147,6 +149,7 @@ export function FullScreenPlayer() {
   const openedAt = useRef(pathname);
   const playing = usePlayer((s) => s.status === 'playing' || s.status === 'buffering');
   const setFullScreen = useUi((s) => s.setFullScreen);
+  const themeMode = useUi((s) => s.themeMode);
   const video = useHasVideo(nowPlaying?.videoId);
   // The right-hand column: the lyrics, Up Next, or nothing. Lyrics toggle bottom left, Up Next bottom right.
   // A music video opens on its own, without the lyrics.
@@ -290,7 +293,7 @@ export function FullScreenPlayer() {
         >
           {/* Shrinks a touch while paused, as Apple's does. Beside a column, a music video plays here at 16:9. */}
           <div
-            className={`relative w-(--art) rounded-[10px] transition-[scale] duration-450 ease-[cubic-bezier(0.34,1.3,0.64,1)] motion-reduce:transition-none${
+            className={`relative w-(--art) ${themeMode === 'm3e' ? 'rounded-[28px] overflow-hidden' : 'rounded-[10px]'} transition-[scale] duration-450 ease-[cubic-bezier(0.34,1.3,0.64,1)] motion-reduce:transition-none${
               video ? ' aspect-video overflow-hidden bg-black' : ' aspect-square'
             }${playing ? '' : ' scale-92'}${column ? ' max-md:hidden' : ''}${theater ? ' hidden' : ''}`}
           >
@@ -371,8 +374,17 @@ export function FullScreenPlayer() {
             )}
           </div>
 
-          <Scrubber />
-          <Transport />
+          {themeMode === 'm3e' ? (
+            <>
+              <M3eWavyScrubber />
+              <M3eTransport onToggleQueue={() => togglePanel('queue')} />
+            </>
+          ) : (
+            <>
+              <Scrubber />
+              <Transport />
+            </>
+          )}
         </section>
 
         {showLyrics && (

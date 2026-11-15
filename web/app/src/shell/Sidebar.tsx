@@ -1,4 +1,4 @@
-import { ArrowUpRight, ListMusic, Settings } from 'lucide-react';
+import { ArrowUpRight, ListMusic, Settings, Sparkles } from 'lucide-react';
 import { MdOutlineExtension } from 'react-icons/md';
 import { PrefetchLink, PrefetchNavLink } from '@/components/PrefetchLink';
 import { LogoMark } from '@/components/icons/LogoMark';
@@ -137,6 +137,7 @@ function SpotifyNav({ onNavigate }: { onNavigate: () => void }) {
 export function Sidebar() {
   const drawerOpen = useUi((s) => s.drawerOpen);
   const setDrawerOpen = useUi((s) => s.setDrawerOpen);
+  const openAiPlaylist = useUi((s) => s.openAiPlaylistModal);
   const update = useExtensionUpdate();
   const signedIn = useSignedIn();
   const spotifySignedIn = useSpotifySignedIn();
@@ -158,6 +159,22 @@ export function Sidebar() {
         </div>
         <div className="min-h-0 flex-1 overflow-y-auto pr-3 pl-5 [scrollbar-width:none]">
           <NavList items={PRIMARY} onNavigate={close} />
+          <button
+            type="button"
+            onClick={() => {
+              openAiPlaylist();
+              close();
+            }}
+            className="group flex h-9 w-full items-center gap-2 mb-2 p-1 rounded-nav type-body-reduced text-primary hover:bg-quinary transition-colors"
+          >
+            <span className="inline-grid size-6 flex-none place-items-center text-[#707c2a] dark:text-[#d0bcff]">
+              <Sparkles size={17} />
+            </span>
+            <span className="min-w-0 truncate font-semibold">AI Playlist Maker</span>
+            <span className="ml-auto text-[10px] font-bold px-1.5 py-0.5 rounded-full bg-[#707c2a]/15 text-[#707c2a] dark:text-[#d0bcff]">
+              AI
+            </span>
+          </button>
           {signedIn && <LibraryNav onNavigate={close} />}
           {spotifySignedIn && <SpotifyNav onNavigate={close} />}
         </div>

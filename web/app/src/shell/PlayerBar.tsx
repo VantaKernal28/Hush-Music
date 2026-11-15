@@ -30,6 +30,7 @@ const fading = `${action} ${fadeForVolume}`;
 export function PlayerBar() {
   const sidePanel = useUi((s) => s.sidePanel);
   const toggleSidePanel = useUi((s) => s.toggleSidePanel);
+  const themeMode = useUi((s) => s.themeMode);
   const hasTrack = usePlayer((s) => s.nowPlaying !== null);
   const videoId = usePlayer((s) => s.nowPlaying?.videoId ?? null);
   // The queue's entry for what's playing: the track menu needs the full track.
@@ -63,8 +64,17 @@ export function PlayerBar() {
             <button className={transport} disabled={!hasTrack} aria-label="Previous" onClick={previous}>
               <BackwardIcon size={26} />
             </button>
-            <button className={transport} disabled={!hasTrack} aria-label={playing ? 'Pause' : 'Play'} onClick={togglePlay}>
-              {playing ? <PauseIcon size={28} /> : <PlayIcon size={28} />}
+            <button
+              className={
+                themeMode === 'm3e'
+                  ? 'grid place-items-center h-8 w-11 rounded-[14px] bg-[#d0bcff] hover:bg-[#e8def8] active:scale-90 text-[#381e72] shadow-sm transition-all disabled:opacity-40'
+                  : transport
+              }
+              disabled={!hasTrack}
+              aria-label={playing ? 'Pause' : 'Play'}
+              onClick={togglePlay}
+            >
+              {playing ? <PauseIcon size={24} /> : <PlayIcon size={24} />}
             </button>
             <button className={transport} disabled={!hasTrack || !hasNext} aria-label="Next" onClick={next}>
               <ForwardIcon size={26} />

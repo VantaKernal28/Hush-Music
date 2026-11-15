@@ -21,6 +21,7 @@ import {
 } from '@/extension/useSpotifyAuth';
 import { settingsUi } from './settingsStyles';
 import { Select } from '@/components/Select';
+import { useUi } from '@/state/ui';
 
 /** Allowed, or an Allow button that opens the extension's permission page. */
 function HostAccessValue({ access, request }: ReturnType<typeof useHostAccess>) {
@@ -141,13 +142,50 @@ function discordText(status: DiscordStatus): string {
 }
 
 export function Toggle({ label, detail, checked, onChange }: { label: string; detail?: string; checked: boolean; onChange: (on: boolean) => void }) {
+  const themeMode = useUi((s) => s.themeMode);
   return (
     <label className={settingsUi.controlRow}>
       <span className={settingsUi.rowText}>
         <span>{label}</span>
         {detail && <span className={settingsUi.rowDetail}>{detail}</span>}
       </span>
-      <input type="checkbox" className={settingsUi.switch} checked={checked} onChange={(e) => onChange(e.currentTarget.checked)} />
+      {themeMode === 'm3e' ? (
+        <button
+          type="button"
+          role="switch"
+          aria-checked={checked}
+          onClick={(e) => {
+            e.preventDefault();
+            onChange(!checked);
+          }}
+          className={`relative h-[32px] w-[52px] flex-none rounded-full transition-colors duration-200 cursor-pointer p-1 flex items-center ${
+            checked
+              ? 'bg-[#d0bcff] dark:bg-[#d0bcff]'
+              : 'bg-black/10 dark:bg-[#36343b] border border-secondary/30'
+          }`}
+        >
+          <div
+            className={`flex items-center justify-center rounded-full transition-all duration-200 ${
+              checked
+                ? 'size-6 translate-x-5 bg-[#381e72] text-[#d0bcff]'
+                : 'size-5 translate-x-0.5 bg-secondary dark:bg-[#938f99] text-[#1d1b20]'
+            }`}
+          >
+            {checked ? (
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round">
+                <polyline points="20 6 9 17 4 12" />
+              </svg>
+            ) : (
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round">
+                <line x1="18" y1="6" x2="6" y2="18" />
+                <line x1="6" y1="6" x2="18" y2="18" />
+              </svg>
+            )}
+          </div>
+        </button>
+      ) : (
+        <input type="checkbox" className={settingsUi.switch} checked={checked} onChange={(e) => onChange(e.currentTarget.checked)} />
+      )}
     </label>
   );
 }

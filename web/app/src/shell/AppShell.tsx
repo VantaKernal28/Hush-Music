@@ -16,6 +16,8 @@ import { MobileTopBar } from './MobileTopBar';
 import { PlayerBar } from './PlayerBar';
 import { SidePanel } from './SidePanel';
 import { Sidebar } from './Sidebar';
+import { M3eShapeDefs } from '@/components/music/M3eShapes';
+import { AiPlaylistMakerModal } from '@/components/music/AiPlaylistMakerModal';
 
 const mobile = isMobileBrowser();
 
@@ -78,6 +80,7 @@ export function AppShell() {
 
   return (
     <div className="grid h-full grid-rows-[minmax(0,1fr)_auto]">
+      <M3eShapeDefs />
       {/* The side panel slides in from beyond the right edge; never let it scroll the page. */}
       <div className="relative min-h-0 overflow-hidden">
         <Sidebar />
@@ -96,6 +99,7 @@ export function AppShell() {
         <SidePanel />
       </div>
       {banner}
+      <AiPlaylistMakerModal />
       {fullScreen && (
         <Suspense fallback={null}>
           <FullScreenPlayer />

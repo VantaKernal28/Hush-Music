@@ -11,7 +11,7 @@ export const settingsUi = {
   /** The page title and its rows as one column, centred in the page. */
   centered: 'mx-auto max-w-[calc(640px+2*var(--body-gutter))]',
   body: 'mx-(--body-gutter) mt-5 mb-[120px] max-w-[640px]',
-  group: 'overflow-hidden rounded-[10px] bg-quinary',
+  group: 'overflow-hidden rounded-[10px] bg-quinary [html[data-theme=m3e]_&]:rounded-[26px] [html[data-theme=m3e]_&]:border [html[data-theme=m3e]_&]:border-black/5 dark:[html[data-theme=m3e]_&]:border-white/5 [html[data-theme=m3e]_&]:shadow-sm',
   sectionHeader: 'mx-4 mt-7 mb-2 type-subhead-emphasized uppercase text-secondary',
   footer: 'mx-4 mt-2 type-callout text-secondary',
 
