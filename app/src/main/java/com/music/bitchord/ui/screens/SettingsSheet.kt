@@ -3073,12 +3073,15 @@ private fun SettingsCategoryList(onOpen: (SettingsCategory) -> Unit) {
             if (index > 0) RowDivider()
             val categorySubtitle = when (category) {
                 SettingsCategory.APPEARANCE -> "Theme, accent color, font & motion effects"
-                SettingsCategory.AUDIO_QUALITY -> "Streaming quality on Wi-Fi, mobile data & bit-perfect DAC"
                 SettingsCategory.PLAYBACK -> "Equalizer, loudness normalization, crossfade & automix"
-                SettingsCategory.SOURCES -> "Streaming engines, addons, JioSaavn, WebDAV & SMB"
+                SettingsCategory.CONTENT_PREFERENCES -> "Home screen moods, top picks & recents"
                 SettingsCategory.DOWNLOADS -> "Offline storage directory, quality & audio cache"
                 SettingsCategory.LOCAL_MUSIC -> "Internal device storage, folders & library index"
-                SettingsCategory.MISCELLANEOUS -> "Cache clearance, debug logs, crash reporting & updater"
+                SettingsCategory.PERFORMANCE -> "Refresh rate, animation scale & blur effects"
+                SettingsCategory.STORAGE -> "Clear cache, local database & offline tracks"
+                SettingsCategory.YOUR_DATA -> "Export & import backup, listening history"
+                SettingsCategory.MISCELLANEOUS -> "Debug stats, crash reporting & updater"
+                SettingsCategory.LANGUAGE -> "App interface & display language"
             }
             SettingsRow(
                 icon = category.icon,
@@ -3105,6 +3108,7 @@ fun SettingsChoicePage(
     contentPadding: PaddingValues,
     modifier: Modifier = Modifier,
 ) {
+    val context = LocalContext.current
     Column(
         modifier
             .fillMaxWidth()
