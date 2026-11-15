@@ -1404,6 +1404,6 @@
     <string name="settings_reset_onboarding_title" translatable="false">Reset First-Boot Onboarding Tour</string>
     <string name="settings_reset_onboarding_summary" translatable="false">Re-triggers the dynamic welcome, personalization and theme flow on next launch.</string>
     <string name="onboarding_reset_toast" translatable="false">Onboarding reset! Launching tour…</string>
-    <string name="about">About</string>
-    <string name="about_hush_title">Hush Music</string>
+    <string name="about" translatable="false">About</string>
+    <string name="about_hush_title" translatable="false">Hush Music</string>
 </resources>
