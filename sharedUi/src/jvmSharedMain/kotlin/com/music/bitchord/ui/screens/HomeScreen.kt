@@ -21,6 +21,7 @@ import org.jetbrains.compose.resources.DrawableResource
 import androidx.compose.foundation.Image
 import org.jetbrains.compose.resources.stringResource
 import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.unit.sp
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -189,6 +190,7 @@ fun HomeScreen(
         state = pullState,
         modifier = modifier,
     ) {
+        val isM3E = LocalMaterialUiMode.current
         LazyColumn(
             state = listState,
             modifier = Modifier.fillMaxSize(),
@@ -203,7 +205,6 @@ fun HomeScreen(
                 contentPadding
             },
         ) {
-            val isM3E = LocalMaterialUiMode.current
             if (isM3E) {
                 item(key = "m3e-hero") {
                     val heroTrack = topPicks?.firstOrNull()
@@ -1428,7 +1429,7 @@ private fun M3EHeroMixSection(
                         .clickable { onTrackClick(satelliteTracks[0]) },
                 ) {
                     AsyncImage(
-                        model = satelliteTracks[0].thumbnailUrl,
+                        model = satelliteTracks[0].images.firstOrNull(),
                         contentDescription = null,
                         contentScale = ContentScale.Crop,
                         modifier = Modifier.fillMaxSize(),
@@ -1449,7 +1450,7 @@ private fun M3EHeroMixSection(
                         .clickable { onTrackClick(heroTrack) },
                 ) {
                     AsyncImage(
-                        model = heroTrack.thumbnailUrl,
+                        model = heroTrack.images.firstOrNull(),
                         contentDescription = null,
                         contentScale = ContentScale.Crop,
                         modifier = Modifier.fillMaxSize(),
@@ -1470,7 +1471,7 @@ private fun M3EHeroMixSection(
                         .clickable { onTrackClick(satelliteTracks[1]) },
                 ) {
                     AsyncImage(
-                        model = satelliteTracks[1].thumbnailUrl,
+                        model = satelliteTracks[1].images.firstOrNull(),
                         contentDescription = null,
                         contentScale = ContentScale.Crop,
                         modifier = Modifier.fillMaxSize(),

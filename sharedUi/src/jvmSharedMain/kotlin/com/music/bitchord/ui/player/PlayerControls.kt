@@ -25,6 +25,7 @@ import androidx.compose.animation.core.Animatable
 import androidx.compose.animation.core.LinearEasing
 import androidx.compose.animation.core.RepeatMode
 import androidx.compose.animation.core.Spring
+import androidx.compose.animation.core.animateDpAsState
 import androidx.compose.animation.core.animateFloat
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.infiniteRepeatable
@@ -59,6 +60,7 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.rounded.VolumeDown
+import androidx.compose.material.icons.automirrored.rounded.VolumeOff
 import androidx.compose.material.icons.automirrored.rounded.VolumeUp
 import androidx.compose.material.icons.rounded.Cast
 import androidx.compose.material.icons.rounded.CastConnected
@@ -495,7 +497,7 @@ internal fun TransportRow(
     if (materialUi) {
         val qsCorner by animateDpAsState(
             targetValue = if (isPlaying) 26.dp else 36.dp,
-            animationSpec = spring(dampingRatio = 0.60f, stiffness = 420f),
+            animationSpec = spring<Dp>(dampingRatio = 0.60f, stiffness = 420f),
             label = "qsCorner",
         )
         val qsScale by animateFloatAsState(
@@ -597,10 +599,7 @@ internal fun TransportRow(
             contentDescription = stringResource(Res.string.widget_previous),
             size = skipSize,
             touchSize = skipTouch,
-            heightScale = if (materialUi) 1f else PLAYER_SKIP_HEIGHT_SCALE,
-            buttonShape = if (materialUi) CircleShape else null,
-            buttonBackground = if (materialUi) Color.White.copy(alpha = 0.14f) else null,
-            iconTint = if (materialUi) Color.White else null,
+            heightScale = PLAYER_SKIP_HEIGHT_SCALE,
             onClick = onPrevious,
             enabled = previousEnabled,
             haptic = Haptic.SkipPrevious,
@@ -609,16 +608,11 @@ internal fun TransportRow(
             // Same footprint as the play/pause target — a smaller box here
             // would shunt everything below it on every load.
             Box(
-                Modifier
-                    .size(width = playTouchWidth, height = playTouchHeight)
-                    .then(
-                        if (materialUi) Modifier.clip(RoundedCornerShape(27.dp)).background(m3PlayColor)
-                        else Modifier,
-                    ),
+                Modifier.size(width = playTouchWidth, height = playTouchHeight),
                 contentAlignment = Alignment.Center,
             ) {
                 CircularProgressIndicator(
-                    color = if (materialUi) Color(0xFF261900) else Color.White,
+                    color = Color.White,
                     strokeWidth = 3.dp,
                     modifier = Modifier.size(if (compact) 26.dp else 32.dp),
                 )
@@ -630,9 +624,6 @@ internal fun TransportRow(
                 size = playSize,
                 touchWidth = playTouchWidth,
                 touchHeight = playTouchHeight,
-                buttonShape = if (materialUi) RoundedCornerShape(27.dp) else null,
-                buttonBackground = if (materialUi) m3PlayColor else null,
-                iconTint = if (materialUi) Color(0xFF261900) else null,
                 onClick = onPlayPause,
                 haptic = if (isPlaying) Haptic.Pause else Haptic.Resume,
             )
@@ -642,10 +633,7 @@ internal fun TransportRow(
             contentDescription = stringResource(Res.string.widget_next),
             size = skipSize,
             touchSize = skipTouch,
-            heightScale = if (materialUi) 1f else PLAYER_SKIP_HEIGHT_SCALE,
-            buttonShape = if (materialUi) CircleShape else null,
-            buttonBackground = if (materialUi) Color.White.copy(alpha = 0.14f) else null,
-            iconTint = if (materialUi) Color.White else null,
+            heightScale = PLAYER_SKIP_HEIGHT_SCALE,
             onClick = onNext,
             enabled = nextEnabled,
             haptic = Haptic.SkipNext,
@@ -688,7 +676,7 @@ internal fun VolumeRow(
                 contentAlignment = Alignment.Center,
             ) {
                 Icon(
-                    Icons.AutoMirrored.Rounded.VolumeMute,
+                    Icons.AutoMirrored.Rounded.VolumeOff,
                     contentDescription = "Mute",
                     tint = if (currentVol <= 0.05f) MaterialTheme.colorScheme.primary else Color.White,
                     modifier = Modifier.size(20.dp),

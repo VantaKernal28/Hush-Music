@@ -1807,23 +1807,15 @@ internal fun LyricsPanel(
     val clock = rememberLyricClock(trackKey, playhead, panelPlaying)
     val subReveal = rememberSubLyricsReveal(subLines, trackKey)
     val materialUi by PlayerSettings.materialUiMode.collectAsStateWithLifecycle()
-    val m3eRoundedFamily = remember {
-        try {
-            FontFamily(
-                Font(Res.font.google_sans_rounded_bold, FontWeight.W800),
-                Font(Res.font.google_sans_rounded_medium, FontWeight.W600),
-                Font(Res.font.google_sans_rounded_regular, FontWeight.W400),
-            )
-        } catch (_: Throwable) {
-            FontFamily.SansSerif
-        }
+    val fontBold = Font(Res.font.google_sans_rounded_bold, FontWeight.W800)
+    val fontMedium = Font(Res.font.google_sans_rounded_medium, FontWeight.W600)
+    val fontRegular = Font(Res.font.google_sans_rounded_regular, FontWeight.W400)
+    val m3eRoundedFamily = remember(fontBold, fontMedium, fontRegular) {
+        FontFamily(fontBold, fontMedium, fontRegular)
     }
-    val m3eDisplayFamily = remember {
-        try {
-            FontFamily(Font(Res.font.cherry_bomb_one_regular, FontWeight.Normal))
-        } catch (_: Throwable) {
-            m3eRoundedFamily
-        }
+    val fontCherry = Font(Res.font.cherry_bomb_one_regular, FontWeight.Normal)
+    val m3eDisplayFamily = remember(fontCherry) {
+        FontFamily(fontCherry)
     }
 
     val isSynced = remember(lines) { lines.any { it.timeMs > 0L } }

@@ -122,6 +122,15 @@ fun Modifier.expressiveSquish(
 }
 
 /**
+ * Material 3 Expressive tactile squish modifier with its own internal interaction source.
+ */
+fun Modifier.m3eSquish(pressScale: Float = 0.92f): Modifier = composed {
+    val interactionSource = remember { MutableInteractionSource() }
+    val isPressed by interactionSource.collectIsPressedAsState()
+    expressiveSquish(isPressed = isPressed, pressScale = pressScale)
+}
+
+/**
  * Material 3 Expressive generous container modifier with bold tactile corners and subtle elevation tint.
  */
 fun Modifier.expressiveTonalCard(
