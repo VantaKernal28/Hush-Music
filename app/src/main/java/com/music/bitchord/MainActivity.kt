@@ -554,6 +554,7 @@ private fun BitChordApp(
     val reduceDynamicBlur by AppSettings.reduceDynamicBlur.collectAsStateWithLifecycle()
     val progressiveBlur by AppSettings.progressiveBlur.collectAsStateWithLifecycle()
     val expressiveUiEnabled by AppSettings.expressiveUiEnabled.collectAsStateWithLifecycle()
+    val materialUiMode by AppSettings.materialUiMode.collectAsStateWithLifecycle()
     val glassSamplesBackdrop = glassActive && !reduceDynamicBlur
     // What folds [GlassNavBar] between its expanded and inline shapes. Held here
     // rather than inside the bar because the page's scroll is what drives it,
