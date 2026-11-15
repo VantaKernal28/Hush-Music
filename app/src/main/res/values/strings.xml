@@ -116,7 +116,7 @@
     </plurals>
     <string name="source">Sources</string>
     <string name="direct_source_stream">Direct Source Stream</string>
-    <string name="direct_source_stream_in_party">Off while you\'re in a Listen Together party</string>
+    <string name="direct_source_stream_in_party">Off while you\'re in a Hush Jam</string>
     <string name="lossless_audio">Lossless audio</string>
     <string name="prefer_lossless">Prefer lossless</string>
     <string name="lossless_source_subtitle">FLAC and ALAC straight from the source</string>
@@ -338,7 +338,7 @@
     <string name="eq_preset_custom">Custom</string>
     <string name="show_nerd_stats">Show stats for nerds</string>
     <string name="show_nerd_stats_subtitle">Codec, bitrate and sample rate on the player</string>
-    <string name="show_listen_together_button">Show Listen Together button</string>
+    <string name="show_listen_together_button">Show Hush Jam button</string>
     <string name="show_listen_together_button_subtitle">Off, the player shows only the audio output button between lyrics and the queue</string>
     <string name="app_icon">App icon</string>
     <string name="app_icon_default">Default</string>
@@ -955,10 +955,10 @@
     <string name="profile_unavailable">No signed-in profile is available on this page yet.</string>
 
     <!-- Listen together -->
-    <string name="listen_together">Listen together</string>
-    <string name="listen_together_subtitle">Share a code and play the same music, in time</string>
-    <string name="listen_together_in_party">In a party · %1$s</string>
-    <string name="listen_together_sign_in_footer">Listening together needs an account, so everyone in the party can see who else is in it.</string>
+    <string name="listen_together">Hush Jam</string>
+    <string name="listen_together_subtitle">Share a code and jam together in real time</string>
+    <string name="listen_together_in_party">In a Jam · %1$s</string>
+    <string name="listen_together_sign_in_footer">Hush Jam needs an account, so everyone in the party can see who else is in it.</string>
     <string name="listen_together_server">Party server</string>
     <string name="listen_together_server_online">Online · %1$d ms</string>
     <string name="listen_together_server_online_fallback">Online (default fallback) · %1$d ms</string>
@@ -1000,7 +1000,7 @@
     <string name="listen_together_code">Party code</string>
     <string name="listen_together_code_footer">Read it out or send it. O and I aren’t used, so an “oh” is always a zero.</string>
     <string name="copy_code">Copy code</string>
-    <string name="listen_together_share_text">Listen with me on Hush Music — party code %1$s</string>
+    <string name="listen_together_share_text">Jam with me on Hush Music — party code %1$s</string>
     <string name="listen_together_now_playing">Now playing</string>
     <string name="listen_together_nothing_playing">Nothing playing yet</string>
     <string name="listen_together_listening">Listening · %1$d of %2$d</string>
@@ -1008,9 +1008,9 @@
     <string name="listen_together_you">You</string>
     <string name="listen_together_host">Host</string>
     <string name="listen_together_away">Away — their slot is held</string>
-    <string name="listen_together_landing_title">Start a party</string>
-    <string name="listen_together_landing_subtitle">Because music sounds better together. Invite friends to listen and add songs in real time, wherever they are.</string>
-    <string name="listen_together_create_action">Create a party</string>
+    <string name="listen_together_landing_title">Start a Jam</string>
+    <string name="listen_together_landing_subtitle">Because music sounds better together. Invite friends to jam and add songs in real time, wherever they are.</string>
+    <string name="listen_together_create_action">Start a Jam</string>
     <string name="listen_together_join_existing">Join existing</string>
     <string name="listen_together_create_sheet_subtitle">Pick how you’ll show up, and how many can join.</string>
     <string name="listen_together_creating">Creating…</string>
@@ -1020,7 +1020,7 @@
     <string name="listen_together_join_question_unnamed">Join this party?</string>
     <string name="listen_together_not_now">Not now</string>
     <string name="listen_together_preview_footer">People in the party will see your name and profile picture.</string>
-    <string name="listen_together_invite_title">Invite friends to your party</string>
+    <string name="listen_together_invite_title">Invite friends to your Jam</string>
     <string name="listen_together_share_link">Share link</string>
     <string name="listen_together_scan_qr">Scan QR code</string>
     <string name="listen_together_scan_qr_subtitle">Let friends scan this to join.</string>
@@ -1282,7 +1282,7 @@
     <string name="onboarding_feat_theme_desc" translatable="false">Fluid animated mesh gradients extracted live from your album artwork.</string>
     <string name="onboarding_name_prompt">What should we call you?</string>
     <string name="onboarding_name_hint">Your name or nickname</string>
-    <string name="onboarding_name_footer">Friends see this when you Listen Together. You can change it anytime in Settings.</string>
+    <string name="onboarding_name_footer">Friends see this when you join a Hush Jam. You can change it anytime in Settings.</string>
     <string name="onboarding_quality_title" translatable="false">Choose Your Sound</string>
     <string name="onboarding_quality_subtitle" translatable="false">Select your preferred sound quality. You can always adjust this later in Settings.</string>
     <string name="onboarding_quality_lossless" translatable="false">Lossless Master</string>
@@ -1307,7 +1307,7 @@
     <string name="onboarding_perms_granted" translatable="false">Active</string>
     <string name="onboarding_next">Continue</string>
     <string name="onboarding_connect_title">Connect Your Account</string>
-    <string name="onboarding_connect_body">Bring your library, playlists and mixes with you, and start a Listen Together party with friends.</string>
+    <string name="onboarding_connect_body">Bring your library, playlists and mixes with you, and start a Hush Jam with friends.</string>
     <string name="onboarding_sign_in_google">Sign in with Google</string>
     <string name="onboarding_skip_sign_in">Start Listening (Skip)</string>
     <string name="onboarding_back">Back</string>
@@ -1358,7 +1358,7 @@
     <string name="find_your_mood">Find Your Mood</string>
     <string name="no_audio_version">No audio version found for this video</string>
     <string name="no_video_version">No video version found for this song</string>
-    <string name="version_switch_in_party">Everyone in Listen Together hears the same version</string>
+    <string name="version_switch_in_party">Everyone in Hush Jam hears the same version</string>
     <string name="diwali_title" translatable="false">Hush Music wishes you a Happy Diwali</string>
     <string name="diwali_subtitle" translatable="false">May this festival of lights fill your home with joy and your days with music.</string>
     <string name="diwali_cta" translatable="false">Let\'s Celebrate</string>

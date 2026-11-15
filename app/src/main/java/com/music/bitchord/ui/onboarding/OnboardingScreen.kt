@@ -156,6 +156,7 @@ fun OnboardingScreen(
 
             OnboardingPhase.POST_NAME_REVEAL -> {
                 PostNameIdentityRevealAnimation(
+                    accentColor = activeAccentColor,
                     onAnimationComplete = { phase = OnboardingPhase.STEP_VIBE_AUDIO },
                 )
             }
@@ -210,26 +211,27 @@ fun OnboardingScreen(
                         }
 
                         // Centered Hush emblem & brand typography
-                        Spacer(Modifier.height(18.dp))
+                        val isCompactStep = phase == OnboardingPhase.STEP_NAME_ACCENT
+                        Spacer(Modifier.height(if (isCompactStep) 8.dp else 18.dp))
                         Image(
                             painter = painterResource(R.drawable.ic_hush_transparent_logo),
                             contentDescription = "Hush Music",
                             modifier = Modifier
-                                .size(76.dp)
-                                .clip(RoundedCornerShape(22.dp)),
+                                .size(if (isCompactStep) 62.dp else 76.dp)
+                                .clip(RoundedCornerShape(18.dp)),
                         )
-                        Spacer(Modifier.height(12.dp))
+                        Spacer(Modifier.height(if (isCompactStep) 8.dp else 12.dp))
                         Text(
                             text = "hush music",
                             fontFamily = CherryBombOne,
-                            fontSize = 32.sp,
+                            fontSize = if (isCompactStep) 28.sp else 32.sp,
                             color = Color.White,
                             textAlign = TextAlign.Center,
                             letterSpacing = (-0.5).sp,
                         )
 
                         // 3-dot pagination indicator
-                        Spacer(Modifier.height(14.dp))
+                        Spacer(Modifier.height(if (isCompactStep) 10.dp else 14.dp))
                         PaginationDots(
                             currentIndex = when (phase) {
                                 OnboardingPhase.STEP_NAME_ACCENT -> 0
@@ -239,7 +241,7 @@ fun OnboardingScreen(
                             accentColor = activeAccentColor,
                         )
 
-                        Spacer(Modifier.height(16.dp))
+                        Spacer(Modifier.height(if (isCompactStep) 10.dp else 16.dp))
 
                         // Dynamic content area per step
                         Box(
@@ -370,35 +372,40 @@ fun OnboardingScreen(
 
 /**
  * Phase A: Native Compose Entrance Animation inspired by Back out [799BDC4].mp4
- * Smooth ease-out logo entrance, balanced pause, then horizontal blur exit into setup.
+ * Smooth deliberate logo entrance (~1.5s), calm pause, then soft horizontal blur exit into setup.
  */
 @Composable
 private fun EntranceLaunchAnimation(
     onAnimationComplete: () -> Unit,
 ) {
-    val scale = remember { Animatable(0.92f) }
+    val scale = remember { Animatable(0.88f) }
     val alpha = remember { Animatable(0f) }
+    val entranceBlur = remember { Animatable(16f) }
     val exitOffset = remember { Animatable(0f) }
     val exitBlur = remember { Animatable(0f) }
     val exitAlpha = remember { Animatable(1f) }
 
     LaunchedEffect(Unit) {
-        // Logo Entrance
-        scale.animateTo(1.0f, animationSpec = tween(650, easing = FastOutSlowInEasing))
+        // Logo Entrance: calm, luxurious scale-up 0.88f -> 1.0f
+        scale.animateTo(1.0f, animationSpec = tween(1500, easing = FastOutSlowInEasing))
     }
     LaunchedEffect(Unit) {
-        alpha.animateTo(1.0f, animationSpec = tween(550, easing = FastOutSlowInEasing))
-        delay(600)
-        // Exit Transition with horizontal blur
-        exitBlur.animateTo(16f, animationSpec = tween(420, easing = FastOutSlowInEasing))
+        alpha.animateTo(1.0f, animationSpec = tween(1000, easing = FastOutSlowInEasing))
     }
     LaunchedEffect(Unit) {
-        delay(1150)
-        exitOffset.animateTo(-100f, animationSpec = tween(380, easing = FastOutSlowInEasing))
+        entranceBlur.animateTo(0f, animationSpec = tween(1300, easing = FastOutSlowInEasing))
+        // Deliberate hold before exit transition
+        delay(700)
+        // Soft horizontal blur-fade exit
+        exitBlur.animateTo(18f, animationSpec = tween(450, easing = FastOutSlowInEasing))
     }
     LaunchedEffect(Unit) {
-        delay(1200)
-        exitAlpha.animateTo(0f, animationSpec = tween(350, easing = FastOutSlowInEasing))
+        delay(2000)
+        exitOffset.animateTo(-90f, animationSpec = tween(420, easing = FastOutSlowInEasing))
+    }
+    LaunchedEffect(Unit) {
+        delay(2050)
+        exitAlpha.animateTo(0f, animationSpec = tween(380, easing = FastOutSlowInEasing))
         onAnimationComplete()
     }
 
@@ -419,7 +426,7 @@ private fun EntranceLaunchAnimation(
                     scaleX = scale.value
                     scaleY = scale.value
                 }
-                .blur(exitBlur.value.dp),
+                .blur(if (entranceBlur.value > 0.1f) entranceBlur.value.dp else exitBlur.value.dp),
         ) {
             Image(
                 painter = painterResource(R.drawable.ic_hush_transparent_logo),
@@ -443,11 +450,12 @@ private fun EntranceLaunchAnimation(
 
 /**
  * Phase C: Post-Name Entry Identity Reveal Animation
- * Plain pure white (#FFFFFF) background, blur radius down to 0dp, scale 0.92 -> 1.0f,
- * and progressive left-to-right wordmark reveal in CherryBombOne-Regular.ttf.
+ * Smooth, subtle radial ambient gradient tinted with the user's selected accent color,
+ * blur radius down to 0dp, scale 0.92 -> 1.0f, and progressive left-to-right wordmark reveal in crisp white.
  */
 @Composable
 private fun PostNameIdentityRevealAnimation(
+    accentColor: Color,
     onAnimationComplete: () -> Unit,
 ) {
     val logoProgress = remember { Animatable(0f) }
@@ -455,26 +463,36 @@ private fun PostNameIdentityRevealAnimation(
     val fadeOutAll = remember { Animatable(1f) }
 
     LaunchedEffect(Unit) {
-        delay(200) // Brief hold on white
+        delay(150)
         // Logo blur-to-sharp resolution & subtle scale
-        logoProgress.animateTo(1f, animationSpec = tween(850, easing = FastOutSlowInEasing))
+        logoProgress.animateTo(1f, animationSpec = tween(900, easing = FastOutSlowInEasing))
         // Progressive left-to-right wordmark reveal
-        textProgress.animateTo(1f, animationSpec = tween(900, easing = FastOutSlowInEasing))
-        delay(850)
-        fadeOutAll.animateTo(0f, animationSpec = tween(350, easing = FastOutSlowInEasing))
+        textProgress.animateTo(1f, animationSpec = tween(950, easing = FastOutSlowInEasing))
+        delay(900)
+        fadeOutAll.animateTo(0f, animationSpec = tween(380, easing = FastOutSlowInEasing))
         onAnimationComplete()
     }
 
     val iconAlpha = logoProgress.value
-    val iconScale = 0.92f + 0.08f * logoProgress.value
-    val iconBlur = (26f * (1f - logoProgress.value)).dp
+    val iconScale = 0.90f + 0.10f * logoProgress.value
+    val iconBlur = (24f * (1f - logoProgress.value)).dp
 
     val brandName = "Hush Music"
+    val ambientGradient = remember(accentColor) {
+        Brush.radialGradient(
+            colors = listOf(
+                accentColor.copy(alpha = 0.38f),
+                Color(0xFF13151B),
+                Color(0xFF090A0D),
+            ),
+            radius = 1200f,
+        )
+    }
 
     Box(
         modifier = Modifier
             .fillMaxSize()
-            .background(Color.White)
+            .background(ambientGradient)
             .graphicsLayer { alpha = fadeOutAll.value },
         contentAlignment = Alignment.Center,
     ) {
@@ -486,7 +504,7 @@ private fun PostNameIdentityRevealAnimation(
                 painter = painterResource(R.drawable.ic_hush_transparent_logo),
                 contentDescription = "Hush Music",
                 modifier = Modifier
-                    .size(92.dp)
+                    .size(96.dp)
                     .graphicsLayer {
                         scaleX = iconScale
                         scaleY = iconScale
@@ -512,8 +530,8 @@ private fun PostNameIdentityRevealAnimation(
                     Text(
                         text = char.toString(),
                         fontFamily = CherryBombOne,
-                        fontSize = 36.sp,
-                        color = Color(0xFF16181D),
+                        fontSize = 38.sp,
+                        color = Color.White,
                         modifier = Modifier
                             .graphicsLayer { alpha = charAlpha }
                             .blur(charBlur),

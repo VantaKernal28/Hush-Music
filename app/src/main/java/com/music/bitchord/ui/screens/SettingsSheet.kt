@@ -91,6 +91,8 @@ import androidx.compose.material.icons.rounded.Waves
 import androidx.compose.material.icons.rounded.Wifi
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
+import androidx.activity.result.PickVisualMediaRequest
+import java.io.File
 import androidx.appcompat.app.AppCompatDelegate
 import com.music.bitchord.data.lyrics.translationLanguageName
 import androidx.compose.material3.AlertDialog
@@ -415,6 +417,23 @@ fun SettingsScreen(
             )
         }
     }
+    val photoPickerLauncher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.PickVisualMedia(),
+    ) { uri ->
+        if (uri != null) {
+            try {
+                val avatarDir = File(context.filesDir, "avatar")
+                if (!avatarDir.exists()) avatarDir.mkdirs()
+                val avatarFile = File(avatarDir, "profile_avatar.jpg")
+                context.contentResolver.openInputStream(uri)?.use { input ->
+                    avatarFile.outputStream().use { output ->
+                        input.copyTo(output)
+                    }
+                }
+                AppSettings.setCustomAvatarPath(avatarFile.absolutePath)
+            } catch (_: Exception) {}
+        }
+    }
     var showListenBrainzTokenDialog by remember { mutableStateOf(false) }
     var showLastfmLoginDialog by remember { mutableStateOf(false) }
     val scrobbleScope = rememberCoroutineScope()
@@ -533,57 +552,101 @@ fun SettingsScreen(
                 )
             }
 
-            // Hermoso Profile Avatar Header (media_1794577366727_4945977e.jpg)
+            // Hermoso Profile Avatar Header
             if (searchQuery.isBlank()) {
-            Column(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(vertical = 14.dp),
-                horizontalAlignment = Alignment.CenterHorizontally,
-            ) {
-                val avatarUrl = account?.thumbnailUrl?.takeIf { signedIn }
-                Box(
-                    modifier = Modifier
-                        .size(84.dp)
-                        .clip(CircleShape)
-                        .background(MaterialTheme.colorScheme.surfaceVariant)
-                        .border(2.dp, MaterialTheme.colorScheme.primary.copy(alpha = 0.6f), CircleShape),
-                    contentAlignment = Alignment.Center,
-                ) {
-                    if (avatarUrl != null) {
-                        AsyncImage(
-                            model = avatarUrl,
-                            contentDescription = null,
-                            contentScale = ContentScale.Crop,
-                            modifier = Modifier.fillMaxSize().clip(CircleShape),
-                        )
+                val customAvatarPath by AppSettings.customAvatarPath.collectAsStateWithLifecycle()
+                val avatarModel = remember(customAvatarPath, account?.thumbnailUrl, signedIn) {
+                    if (!customAvatarPath.isNullOrBlank()) {
+                        val file = File(customAvatarPath!!)
+                        if (file.exists()) file else (if (signedIn) account?.thumbnailUrl else null)
                     } else {
-                        Text(
-                            text = "@",
-                            style = MaterialTheme.typography.headlineLarge.copy(
-                                fontWeight = FontWeight.Bold,
-                                color = MaterialTheme.colorScheme.primary
-                            )
-                        )
+                        if (signedIn) account?.thumbnailUrl else null
                     }
                 }
-                Spacer(Modifier.height(10.dp))
-                val displayName = account?.name?.takeIf { it.isNotBlank() }
-                    ?: currentUserName.takeIf { it.isNotBlank() && it != "Listener" }
-                    ?: "Hermoso"
-                Text(
-                    text = displayName,
-                    style = MaterialTheme.typography.titleLarge.copy(fontWeight = FontWeight.Bold),
-                    color = MaterialTheme.colorScheme.onBackground,
-                )
-                Text(
-                    text = account?.email?.takeIf { it.isNotBlank() }
-                        ?: if (signedIn) "@hush.music" else stringResource(R.string.not_signed_in),
-                    style = MaterialTheme.typography.bodyMedium,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant,
-                )
+                Column(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(vertical = 14.dp),
+                    horizontalAlignment = Alignment.CenterHorizontally,
+                ) {
+                    Box(
+                        modifier = Modifier
+                            .size(88.dp)
+                            .clip(CircleShape)
+                            .background(MaterialTheme.colorScheme.surfaceVariant)
+                            .border(2.5.dp, MaterialTheme.colorScheme.primary, CircleShape)
+                            .clickable {
+                                photoPickerLauncher.launch(
+                                    PickVisualMediaRequest(ActivityResultContracts.PickVisualMedia.ImageOnly)
+                                )
+                            },
+                        contentAlignment = Alignment.Center,
+                    ) {
+                        if (avatarModel != null) {
+                            AsyncImage(
+                                model = avatarModel,
+                                contentDescription = "Profile photo",
+                                contentScale = ContentScale.Crop,
+                                modifier = Modifier.fillMaxSize().clip(CircleShape),
+                            )
+                        } else {
+                            Text(
+                                text = "@",
+                                style = MaterialTheme.typography.headlineLarge.copy(
+                                    fontWeight = FontWeight.Bold,
+                                    color = MaterialTheme.colorScheme.primary,
+                                )
+                            )
+                        }
+
+                        // Camera / edit overlay badge at bottom-right
+                        Box(
+                            modifier = Modifier
+                                .align(Alignment.BottomEnd)
+                                .size(28.dp)
+                                .clip(CircleShape)
+                                .background(MaterialTheme.colorScheme.primary)
+                                .border(2.dp, MaterialTheme.colorScheme.surface, CircleShape),
+                            contentAlignment = Alignment.Center,
+                        ) {
+                            Icon(
+                                imageVector = HushIcons.Camera,
+                                contentDescription = "Upload profile picture",
+                                tint = Color.White,
+                                modifier = Modifier.size(15.dp),
+                            )
+                        }
+                    }
+                    if (customAvatarPath != null) {
+                        Text(
+                            text = "Reset custom photo",
+                            style = MaterialTheme.typography.labelSmall,
+                            color = MaterialTheme.colorScheme.primary,
+                            modifier = Modifier
+                                .padding(top = 4.dp)
+                                .clickable {
+                                    runCatching { File(customAvatarPath!!).delete() }
+                                    AppSettings.setCustomAvatarPath(null)
+                                },
+                        )
+                    }
+                    Spacer(Modifier.height(8.dp))
+                    val displayName = account?.name?.takeIf { it.isNotBlank() }
+                        ?: currentUserName.takeIf { it.isNotBlank() && it != "Listener" }
+                        ?: "Hermoso"
+                    Text(
+                        text = displayName,
+                        style = MaterialTheme.typography.titleLarge.copy(fontWeight = FontWeight.Bold),
+                        color = MaterialTheme.colorScheme.onBackground,
+                    )
+                    Text(
+                        text = account?.email?.takeIf { it.isNotBlank() }
+                            ?: if (signedIn) "@hush.music" else stringResource(R.string.not_signed_in),
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    )
+                }
             }
-        }
 
             SearchableSettingsGroup(search) {
                 val accountTitle = stringResource(R.string.account_integrations)
@@ -665,6 +728,7 @@ fun SettingsScreen(
                     SettingsRow(
                         icon = SfIcons.Wifi,
                         title = onWifiTitle,
+                        subtitle = "Streaming fidelity when connected to Wi-Fi networks",
                         badge = stringResource(R.string.in_use).takeIf { metered == false },
                         value = wifiQuality.localizedLabel(),
                         onClick = { onOpenChoice(SettingsChoiceKind.AUDIO_QUALITY_WIFI) },
@@ -675,6 +739,7 @@ fun SettingsScreen(
                     SettingsRow(
                         icon = SfIcons.SignalCellularAlt,
                         title = onMobileDataTitle,
+                        subtitle = "Streaming fidelity and data budget on cellular connections",
                         badge = stringResource(R.string.in_use).takeIf { metered == true },
                         value = cellularQuality.localizedLabel(),
                         onClick = { onOpenChoice(SettingsChoiceKind.AUDIO_QUALITY_CELLULAR) },
@@ -1057,6 +1122,7 @@ fun SettingsScreen(
                 SettingsRow(
                     icon = SfIcons.VisibilityOff,
                     title = hideRecentsTitle,
+                    subtitle = "Don't display your recently played albums and songs on the Home feed",
                     trailing = {
                         IosSwitch(
                             checked = hideRecents,
@@ -1086,6 +1152,7 @@ fun SettingsScreen(
                 SettingsRow(
                     icon = SfIcons.AutoAwesome,
                     title = hideTopPicksTitle,
+                    subtitle = "Hide algorithmic recommendations and top picks from your Home feed",
                     trailing = {
                         IosSwitch(
                             checked = hideTopPicks,
@@ -1100,6 +1167,7 @@ fun SettingsScreen(
                 SettingsRow(
                     icon = SfIcons.Star,
                     title = hideHomeMoodsTitle,
+                    subtitle = "Hide curated mood categories and genre shelves on Home",
                     trailing = {
                         IosSwitch(
                             checked = hideHomeMoods,
@@ -1129,13 +1197,81 @@ fun SettingsScreen(
         if (shows(SettingsCategory.APPEARANCE)) SearchableSettingsGroup(search, header = stringResource(R.string.appearance)) {
             val themeTitle = stringResource(R.string.theme)
             row(themeTitle, "dark mode", "light mode") {
-                SettingsRow(icon = Icons.Rounded.Brightness4, title = themeTitle)
+                SettingsRow(
+                    icon = Icons.Rounded.Brightness4,
+                    title = themeTitle,
+                    subtitle = "Select light, dark, or system matching theme",
+                )
                 SegmentedControl(
                     options = ThemeMode.entries.map { it.localizedLabel() },
                     selectedIndex = ThemeMode.entries.indexOf(theme),
                     onSelect = { AppSettings.setThemeMode(ThemeMode.entries[it]) },
                     modifier = Modifier.padding(start = ROW_INSET, end = ROW_INSET, bottom = 14.dp),
                 )
+            }
+            val accentColorTitle = "Accent Color"
+            row(accentColorTitle, "theme", "accent", "color", "swatch", "tint", "monet") {
+                val currentAccent by AppSettings.themeAccent.collectAsStateWithLifecycle()
+                SettingsRow(
+                    icon = HushIcons.Paintbrush,
+                    title = accentColorTitle,
+                    subtitle = HushAccents.find { it.id == currentAccent }?.name ?: "Coral Sunset",
+                )
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .horizontalScroll(rememberScrollState())
+                        .padding(start = ROW_INSET, end = ROW_INSET, bottom = 14.dp),
+                    horizontalArrangement = Arrangement.spacedBy(10.dp),
+                ) {
+                    HushAccents.forEach { swatch ->
+                        val selected = swatch.id == currentAccent
+                        val swatchColor = if (swatch.isDynamic && Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
+                            dynamicDarkColorScheme(context).primary
+                        } else swatch.primary
+
+                        Column(
+                            modifier = Modifier
+                                .clickable { AppSettings.setThemeAccent(swatch.id) }
+                                .padding(vertical = 4.dp),
+                            horizontalAlignment = Alignment.CenterHorizontally,
+                        ) {
+                            Box(
+                                modifier = Modifier
+                                    .size(42.dp)
+                                    .clip(CircleShape)
+                                    .background(swatchColor)
+                                    .then(
+                                        if (selected) {
+                                            Modifier.border(2.5.dp, Color.White, CircleShape)
+                                        } else {
+                                            Modifier.border(1.dp, Color.White.copy(alpha = 0.2f), CircleShape)
+                                        }
+                                    ),
+                                contentAlignment = Alignment.Center,
+                            ) {
+                                if (selected) {
+                                    Icon(
+                                        imageVector = Icons.Rounded.Check,
+                                        contentDescription = stringResource(R.string.selected),
+                                        tint = if (swatchColor.luminance() > 0.5f) Color.Black else Color.White,
+                                        modifier = Modifier.size(20.dp),
+                                    )
+                                }
+                            }
+                            Text(
+                                text = swatch.name,
+                                textAlign = TextAlign.Center,
+                                maxLines = 1,
+                                style = MaterialTheme.typography.labelSmall,
+                                color = if (selected) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurfaceVariant,
+                                fontWeight = if (selected) FontWeight.Bold else FontWeight.Normal,
+                                modifier = Modifier.padding(top = 4.dp).widthIn(max = 68.dp),
+                                overflow = TextOverflow.Ellipsis,
+                            )
+                        }
+                    }
+                }
             }
             val fontTitle = stringResource(R.string.font)
             row(fontTitle, "typeface", "sf pro", "legacy") {
@@ -1489,6 +1625,7 @@ fun SettingsScreen(
                     SettingsRow(
                         icon = SfIcons.FrameRate,
                         title = refreshRateTitle,
+                        subtitle = "Lock peak display refresh rate for fluid scrolling",
                     )
                     SegmentedControl(
                         options = supportedRefreshRates.map { "$it Hz" },
@@ -1829,88 +1966,6 @@ fun SettingsScreen(
                     },
                     onClick = { AppSettings.setShowNerdStats(!nerdStats) },
                 )
-            }
-            val accentColorTitle = "Accent Color"
-            row(accentColorTitle, "theme", "accent", "color", "swatch", "tint", "monet") {
-                val currentAccent by AppSettings.themeAccent.collectAsStateWithLifecycle()
-                SettingsRow(
-                    icon = HushIcons.Paintbrush,
-                    title = accentColorTitle,
-                    subtitle = HushAccents.find { it.id == currentAccent }?.name ?: "Sunset Orange",
-                )
-                Row(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .horizontalScroll(rememberScrollState())
-                        .padding(start = ROW_INSET, end = ROW_INSET, bottom = 14.dp),
-                    horizontalArrangement = Arrangement.spacedBy(10.dp),
-                ) {
-                    HushAccents.forEach { swatch ->
-                        val selected = swatch.id == currentAccent
-                        val swatchColor = if (swatch.isDynamic && Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
-                            dynamicDarkColorScheme(context).primary
-                        } else swatch.primary
-
-                        Column(
-                            modifier = Modifier
-                                .clickable { AppSettings.setThemeAccent(swatch.id) }
-                                .padding(vertical = 4.dp),
-                            horizontalAlignment = Alignment.CenterHorizontally,
-                        ) {
-                            Box(
-                                modifier = Modifier
-                                    .size(42.dp)
-                                    .clip(CircleShape)
-                                    .background(swatchColor)
-                                    .then(
-                                        if (selected) {
-                                            Modifier.border(2.5.dp, Color.White, CircleShape)
-                                        } else {
-                                            Modifier.border(1.dp, Color.White.copy(alpha = 0.2f), CircleShape)
-                                        }
-                                    ),
-                                contentAlignment = Alignment.Center,
-                            ) {
-                                if (selected) {
-                                    Icon(
-                                        imageVector = Icons.Rounded.Check,
-                                        contentDescription = stringResource(R.string.selected),
-                                        tint = if (swatchColor.luminance() > 0.5f) Color.Black else Color.White,
-                                        modifier = Modifier.size(20.dp),
-                                    )
-                                }
-                            }
-                            Text(
-                                text = swatch.name,
-                                textAlign = TextAlign.Center,
-                                maxLines = 1,
-                                style = MaterialTheme.typography.labelSmall,
-                                color = if (selected) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurfaceVariant,
-                                fontWeight = if (selected) FontWeight.Bold else FontWeight.Normal,
-                                modifier = Modifier.padding(top = 4.dp).widthIn(max = 68.dp),
-                                overflow = TextOverflow.Ellipsis,
-                            )
-                        }
-                    }
-                }
-            }
-
-            val expressiveTitle = "Material 3 Expressive UI"
-            row(expressiveTitle, "expressive", "m3", "motion", "spring", "radius", "corners", "fluid") {
-                val isExpressive by AppSettings.expressiveMode.collectAsStateWithLifecycle()
-                SettingsRow(
-                    icon = HushIcons.Grid,
-                    title = expressiveTitle,
-                    subtitle = "Organic corner radii (24-28dp), richer containers & expressive springs",
-                    trailing = {
-                        IosSwitch(
-                            checked = isExpressive,
-                            onCheckedChange = AppSettings::setExpressiveMode,
-                        )
-                    },
-                    onClick = { AppSettings.setExpressiveMode(!isExpressive) },
-                )
-            }
             val resetOnboardingTitle = stringResource(R.string.settings_reset_onboarding_title)
             row(resetOnboardingTitle, "onboarding", "tour", "setup", "first boot", "welcome") {
                 SettingsRow(
@@ -2237,21 +2292,25 @@ private fun PlayerTheme.description(): String = stringResource(
 )
 
 @Composable
-private fun AppFont.localizedLabel(): String = stringResource(
-    when (this) {
-        AppFont.DEFAULT -> R.string.font_default
-        AppFont.LEGACY -> R.string.font_legacy
-    },
-)
+private fun AppFont.localizedLabel(): String = when (this) {
+    AppFont.DEFAULT -> stringResource(R.string.font_default)
+    AppFont.LEGACY -> stringResource(R.string.font_legacy)
+    AppFont.CUSTOM -> "Custom Font (.ttf / .otf)"
+}
 
 /** The typeface each [AppFont] sets, named under its label. */
 @Composable
-private fun AppFont.description(): String = stringResource(
-    when (this) {
-        AppFont.DEFAULT -> R.string.font_default_subtitle
-        AppFont.LEGACY -> R.string.font_legacy_subtitle
-    },
-)
+private fun AppFont.description(): String = when (this) {
+    AppFont.DEFAULT -> stringResource(R.string.font_default_subtitle)
+    AppFont.LEGACY -> stringResource(R.string.font_legacy_subtitle)
+    AppFont.CUSTOM -> {
+        val customFontPath by AppSettings.customFontPath.collectAsStateWithLifecycle()
+        if (customFontPath != null) {
+            val file = File(customFontPath!!)
+            if (file.exists()) file.name else "Tap to choose a .ttf or .otf font"
+        } else "Tap to choose a .ttf or .otf font"
+    }
+}
 
 @Composable
 private fun AutomixPerformanceMode.localizedLabel(): String = stringResource(
@@ -3011,9 +3070,19 @@ private fun SettingsCategoryList(onOpen: (SettingsCategory) -> Unit) {
     SettingsGroup {
         SettingsCategory.entries.forEachIndexed { index, category ->
             if (index > 0) RowDivider()
+            val categorySubtitle = when (category) {
+                SettingsCategory.APPEARANCE -> "Theme, accent color, font & motion effects"
+                SettingsCategory.AUDIO_QUALITY -> "Streaming quality on Wi-Fi, mobile data & bit-perfect DAC"
+                SettingsCategory.PLAYBACK -> "Equalizer, loudness normalization, crossfade & automix"
+                SettingsCategory.SOURCES -> "Streaming engines, addons, JioSaavn, WebDAV & SMB"
+                SettingsCategory.DOWNLOADS -> "Offline storage directory, quality & audio cache"
+                SettingsCategory.LOCAL_MUSIC -> "Internal device storage, folders & library index"
+                SettingsCategory.MISCELLANEOUS -> "Cache clearance, debug logs, crash reporting & updater"
+            }
             SettingsRow(
                 icon = category.icon,
                 title = stringResource(category.title),
+                subtitle = categorySubtitle,
                 onClick = { onOpen(category) },
             )
         }
@@ -3124,6 +3193,26 @@ fun SettingsChoicePage(
 
             SettingsChoiceKind.FONT -> {
                 val selected by AppSettings.appFont.collectAsStateWithLifecycle()
+                val customFontPath by AppSettings.customFontPath.collectAsStateWithLifecycle()
+                val fontPickerLauncher = rememberLauncherForActivityResult(
+                    contract = ActivityResultContracts.OpenDocument(),
+                ) { uri ->
+                    if (uri != null) {
+                        try {
+                            val fontDir = File(context.filesDir, "fonts")
+                            if (!fontDir.exists()) fontDir.mkdirs()
+                            val fontFile = File(fontDir, "custom_user_font.ttf")
+                            context.contentResolver.openInputStream(uri)?.use { input ->
+                                fontFile.outputStream().use { output ->
+                                    input.copyTo(output)
+                                }
+                            }
+                            AppSettings.setCustomFontPath(fontFile.absolutePath)
+                            AppSettings.setAppFont(AppFont.CUSTOM)
+                            onChosen()
+                        } catch (_: Exception) {}
+                    }
+                }
                 ChoiceGroup(
                     options = AppFont.entries,
                     selected = selected,
@@ -3131,8 +3220,60 @@ fun SettingsChoicePage(
                     detail = { it.description() },
                     footer = stringResource(R.string.font_footer),
                 ) { font ->
-                    AppSettings.setAppFont(font)
-                    onChosen()
+                    if (font == AppFont.CUSTOM) {
+                        if (customFontPath == null || !File(customFontPath!!).exists()) {
+                            fontPickerLauncher.launch(
+                                arrayOf(
+                                    "font/ttf",
+                                    "font/otf",
+                                    "application/x-font-ttf",
+                                    "application/x-font-otf",
+                                    "application/octet-stream",
+                                )
+                            )
+                        } else {
+                            AppSettings.setAppFont(AppFont.CUSTOM)
+                            onChosen()
+                        }
+                    } else {
+                        AppSettings.setAppFont(font)
+                        onChosen()
+                    }
+                }
+                if (selected == AppFont.CUSTOM) {
+                    Spacer(Modifier.height(14.dp))
+                    Row(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(horizontal = ROW_INSET),
+                        horizontalArrangement = Arrangement.spacedBy(10.dp),
+                    ) {
+                        TextButton(
+                            onClick = {
+                                fontPickerLauncher.launch(
+                                    arrayOf(
+                                        "font/ttf",
+                                        "font/otf",
+                                        "application/x-font-ttf",
+                                        "application/x-font-otf",
+                                        "application/octet-stream",
+                                    )
+                                )
+                            },
+                            modifier = Modifier.weight(1f),
+                        ) {
+                            Text("Choose New Font File", color = MaterialTheme.colorScheme.primary)
+                        }
+                        TextButton(
+                            onClick = {
+                                runCatching { customFontPath?.let { File(it).delete() } }
+                                AppSettings.setCustomFontPath(null)
+                                AppSettings.setAppFont(AppFont.DEFAULT)
+                            },
+                        ) {
+                            Text("Reset to Default", color = MaterialTheme.colorScheme.onSurfaceVariant)
+                        }
+                    }
                 }
             }
         }

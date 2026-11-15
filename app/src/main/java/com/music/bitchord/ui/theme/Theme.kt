@@ -71,23 +71,32 @@ data class HushAccentSwatch(
 )
 
 /**
- * 14-Color Circular Accent Swatch Palette covering every color spectrum
+ * 23-Color Circular Accent Swatch Palette covering every color spectrum
  * plus Material You dynamic wallpaper Monet.
  */
 val HushAccents = listOf(
-    HushAccentSwatch("sunset", "Sunset Orange", Color(0xFFFF6E40), Color(0xFFFFAB91)),
-    HushAccentSwatch("crimson", "Crimson Red", Color(0xFFE53935), Color(0xFFEF9A9A)),
-    HushAccentSwatch("rose", "Rose Pink", Color(0xFFE91E63), Color(0xFFF48FB1)),
+    HushAccentSwatch("sunset", "Coral Sunset", Color(0xFFFF6E40), Color(0xFFFFAB91)),
+    HushAccentSwatch("crimson", "Crimson", Color(0xFFE53935), Color(0xFFEF9A9A)),
+    HushAccentSwatch("ruby", "Ruby", Color(0xFFD81B60), Color(0xFFF48FB1)),
+    HushAccentSwatch("rose", "Rose Pink", Color(0xFFEC407A), Color(0xFFF8BBD0)),
+    HushAccentSwatch("sakura", "Sakura", Color(0xFFF06292), Color(0xFFFCE4EC)),
+    HushAccentSwatch("magenta", "Magenta", Color(0xFFE040FB), Color(0xFFEA80FC)),
+    HushAccentSwatch("violet", "Electric Violet", Color(0xFF7C4DFF), Color(0xFFB388FF)),
     HushAccentSwatch("purple", "Royal Purple", Color(0xFF9C27B0), Color(0xFFCE93D8)),
     HushAccentSwatch("indigo", "Deep Indigo", Color(0xFF3F51B5), Color(0xFF9FA8DA)),
-    HushAccentSwatch("blue", "Electric Blue", Color(0xFF2196F3), Color(0xFF90CAF9)),
-    HushAccentSwatch("cyan", "Cyan / Aqua", Color(0xFF00BCD4), Color(0xFF80DEEA)),
-    HushAccentSwatch("teal", "Mint / Teal", Color(0xFF009688), Color(0xFF80CBC4)),
-    HushAccentSwatch("emerald", "Emerald Green", Color(0xFF4CAF50), Color(0xFFA5D6A7)),
-    HushAccentSwatch("lime", "Lime", Color(0xFF8BC34A), Color(0xFFC5E1A5)),
+    HushAccentSwatch("cobalt", "Cobalt Blue", Color(0xFF1E88E5), Color(0xFF90CAF9)),
+    HushAccentSwatch("sky", "Sky Blue", Color(0xFF03A9F4), Color(0xFF81D4FA)),
+    HushAccentSwatch("cyan", "Cyan", Color(0xFF00BCD4), Color(0xFF80DEEA)),
+    HushAccentSwatch("mint", "Aqua Mint", Color(0xFF26A69A), Color(0xFF80CBC4)),
+    HushAccentSwatch("emerald", "Emerald", Color(0xFF43A047), Color(0xFFA5D6A7)),
+    HushAccentSwatch("forest", "Forest Green", Color(0xFF2E7D32), Color(0xFF81C784)),
+    HushAccentSwatch("lime", "Lime", Color(0xFF7CB342), Color(0xFFC5E1A5)),
     HushAccentSwatch("amber", "Solar Amber", Color(0xFFFFB300), Color(0xFFFFE082)),
-    HushAccentSwatch("brown", "Warm Brown", Color(0xFF8D6E63), Color(0xFFBCAAA4)),
-    HushAccentSwatch("monochrome", "Monochrome", Color(0xFF90A4AE), Color(0xFFCFD8DC)),
+    HushAccentSwatch("tangerine", "Tangerine", Color(0xFFFF9800), Color(0xFFFFCC80)),
+    HushAccentSwatch("terracotta", "Warm Terracotta", Color(0xFFD84315), Color(0xFFFFAB91)),
+    HushAccentSwatch("espresso", "Espresso", Color(0xFF6D4C41), Color(0xFFBCAAA4)),
+    HushAccentSwatch("slate", "Slate Gray", Color(0xFF607D8B), Color(0xFFB0BEC5)),
+    HushAccentSwatch("monochrome", "Pure Monochrome", Color(0xFF9E9E9E), Color(0xFFE0E0E0)),
     HushAccentSwatch("dynamic", "Dynamic Monet", Color(0xFFFF6E40), Color(0xFFFFAB91), isDynamic = true),
 )
 
@@ -219,7 +228,6 @@ fun BitChordTheme(
     content: @Composable () -> Unit,
 ) {
     val currentAccentId by AppSettings.themeAccent.collectAsStateWithLifecycle()
-    val isExpressive by AppSettings.expressiveMode.collectAsStateWithLifecycle()
     val resolvedAccent = resolveAccentColor(currentAccentId, darkTheme)
 
     val baseScheme = if (darkTheme) DarkColors else LightColors
@@ -231,18 +239,36 @@ fun BitChordTheme(
         secondaryContainer = resolvedAccent.copy(alpha = if (darkTheme) 0.16f else 0.10f),
     )
 
-    val shapes = if (isExpressive) ExpressiveShapes else StandardShapes
+    val customFontPath by AppSettings.customFontPath.collectAsStateWithLifecycle()
+    val customTypography = remember(customFontPath) {
+        if (!customFontPath.isNullOrBlank()) {
+            val file = java.io.File(customFontPath!!)
+            if (file.exists() && file.canRead()) {
+                try {
+                    val customFamily = FontFamily(Font(file))
+                    BitChordTypography.withFamily(customFamily)
+                } catch (_: Throwable) {
+                    null
+                }
+            } else null
+        } else null
+    }
+
+    val resolvedTypography = when (font) {
+        AppFont.DEFAULT -> BitChordTypography
+        AppFont.LEGACY -> LegacyTypography
+        AppFont.CUSTOM -> customTypography ?: BitChordTypography
+    }
+
+    val shapes = StandardShapes
 
     CompositionLocalProvider(
-        LocalExpressiveMode provides isExpressive,
+        LocalExpressiveMode provides false,
         LocalHushAccent provides resolvedAccent,
     ) {
         MaterialTheme(
             colorScheme = colorScheme,
-            typography = when (font) {
-                AppFont.DEFAULT -> BitChordTypography
-                AppFont.LEGACY -> LegacyTypography
-            },
+            typography = resolvedTypography,
             shapes = shapes,
             content = content,
         )

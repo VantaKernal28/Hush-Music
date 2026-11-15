@@ -54,7 +54,7 @@ android {
         create("dev") {
             dimension = "env"
             applicationId = "com.dev.bitchord"
-            resValue("string", "app_name", "Hush Music Dev")
+            resValue("string", "app_name", "Hush Music")
         }
         create("prod") {
             dimension = "env"

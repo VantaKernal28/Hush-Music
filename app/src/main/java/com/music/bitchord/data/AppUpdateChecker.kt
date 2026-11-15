@@ -13,6 +13,7 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.withContext
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.JsonObject
+import kotlinx.serialization.json.booleanOrNull
 import kotlinx.serialization.json.contentOrNull
 import kotlinx.serialization.json.jsonArray
 import kotlinx.serialization.json.jsonPrimitive
@@ -42,8 +43,8 @@ object AppUpdateChecker {
 
     private const val CACHE_SUBDIR = "updates"
 
-    private const val LATEST_RELEASE_URL =
-        "https://api.github.com/repos/kushagrasinghx/BitChord/releases/latest"
+    private const val RELEASES_URL =
+        "https://api.github.com/repos/VantaKernal28/Hush-Music/releases"
 
     private val json = Json { ignoreUnknownKeys = true }
 
@@ -67,20 +68,41 @@ object AppUpdateChecker {
 
     suspend fun check() = withContext(Dispatchers.IO) {
         runCatching {
-            val request = Request.Builder().url(LATEST_RELEASE_URL).build()
+            val request = Request.Builder().url(RELEASES_URL).build()
             val body = Http.client.newCall(request).execute().use { response ->
                 if (!response.isSuccessful) null else response.body?.string()
             } ?: return@runCatching
-            val release = json.parseToJsonElement(body) as? JsonObject ?: return@runCatching
+
+            val parsed = json.parseToJsonElement(body)
+            val release = when (parsed) {
+                is kotlinx.serialization.json.JsonArray -> {
+                    parsed.mapNotNull { it as? JsonObject }
+                        .firstOrNull { it["draft"]?.jsonPrimitive?.booleanOrNull != true }
+                }
+                is JsonObject -> parsed
+                else -> null
+            } ?: return@runCatching
+
             val tag = release["tag_name"]?.jsonPrimitive?.contentOrNull ?: return@runCatching
             val url = release["html_url"]?.jsonPrimitive?.contentOrNull ?: return@runCatching
             val apkUrl = apkAssetUrl(release)
-            val notes = release["body"]?.jsonPrimitive?.contentOrNull
-            val latest = tag.removePrefix("v")
+            val rawNotes = release["body"]?.jsonPrimitive?.contentOrNull
+            val cleanNotes = cleanNotes(rawNotes)
+            val latest = tag.removePrefix("v").removePrefix("beta-").removePrefix("beta")
             if (isNewer(latest, BuildConfig.VERSION_NAME)) {
-                _available.value = UpdateInfo(latest, url, apkUrl, notes)
+                _available.value = UpdateInfo(tag, url, apkUrl, cleanNotes)
             }
         }
+    }
+
+    /** Strips raw image links / HTML img tags from release notes so only clean markdown text renders */
+    private fun cleanNotes(notes: String?): String? {
+        if (notes.isNullOrBlank()) return null
+        val stripped = notes
+            .replace(Regex("!\\[[^\\]]*\\]\\([^)]*\\)"), "")
+            .replace(Regex("<img[^>]*>"), "")
+            .trim()
+        return stripped.ifBlank { "Hush Music update with latest performance improvements and features." }
     }
 
     /**
@@ -236,9 +258,15 @@ object AppUpdateChecker {
     private data class ParsedVersion(val parts: List<Int>, val isPreRelease: Boolean)
 
     private fun parseVersion(raw: String): ParsedVersion {
-        val dash = raw.indexOf('-')
-        val base = if (dash >= 0) raw.substring(0, dash) else raw
-        return ParsedVersion(base.split(".").map { it.toIntOrNull() ?: 0 }, dash >= 0)
+        val clean = raw.trim()
+            .removePrefix("v")
+            .removePrefix("V")
+            .removePrefix("beta-")
+            .removePrefix("beta")
+        val dash = clean.indexOf('-')
+        val base = if (dash >= 0) clean.substring(0, dash) else clean
+        val isPre = dash >= 0 || raw.contains("beta", ignoreCase = true)
+        return ParsedVersion(base.split(".").map { it.toIntOrNull() ?: 0 }, isPre)
     }
 
     /**

@@ -4,6 +4,11 @@ import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.background
+import androidx.compose.animation.core.animateFloatAsState
+import androidx.compose.animation.core.spring
+import androidx.compose.animation.core.Spring
+import androidx.compose.foundation.interaction.MutableInteractionSource
+import androidx.compose.foundation.interaction.collectIsPressedAsState
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.BoxWithConstraints
@@ -280,8 +285,19 @@ private fun TopPickCard(
 ) {
     val text = cardText(pick, listenerName)
     val longPress = onLongPress?.let { { it(pick) } }
+    val interactionSource = remember { MutableInteractionSource() }
+    val isPressed by interactionSource.collectIsPressedAsState()
+    val pressScale by animateFloatAsState(
+        targetValue = if (isPressed) 0.96f else 1.0f,
+        animationSpec = spring(stiffness = Spring.StiffnessMediumLow),
+        label = "topPickCardPressScale",
+    )
     Box(
         modifier = modifier
+            .graphicsLayer {
+                scaleX = pressScale
+                scaleY = pressScale
+            }
             .aspectRatio(TOP_PICK_RATIO)
             .clip(TopPickShape)
             .thumbnailBorder(TopPickShape)
@@ -871,37 +887,122 @@ private class MoodStyle(
     val stroke: Color,
     val periodMs: Int,
     val eyebrow: Color = lerp(stroke, Color.White, 0.35f),
+    val gradientColors: List<Color> = listOf(background, background),
 )
 
 private fun TopPickMood.style(): MoodStyle = when (this) {
-    TopPickMood.ENERGY -> MoodStyle(Color(0xFF1EBD38), Color(0xFFE2F6A2), 3_000, Color(0xFFE8FF9C))
-    TopPickMood.RELAX -> MoodStyle(Color(0xFF31AFF3), Color(0xFFB4E9FF), 5_600, Color(0xFFD6F3FF))
-    TopPickMood.FEELING_BLUE -> MoodStyle(Color(0xFF253AB2), Color(0xFF6CC4FF), 3_700, Color(0xFFA9DBFF))
-    TopPickMood.FEEL_GOOD -> MoodStyle(Color(0xFFF2A900), Color(0xFFFFE8A0), 4_000, Color(0xFFFFF27A))
-    TopPickMood.FOCUS -> MoodStyle(Color(0xFFF28400), Color(0xFFFFD6A4), 3_600, Color(0xFFFFE2B8))
-    TopPickMood.HEARTBREAK -> MoodStyle(Color(0xFFEA3520), Color(0xFFFFA690), 2_700, Color(0xFFFFC9BC))
-    TopPickMood.LOVE -> MoodStyle(Color(0xFFF34CA0), Color(0xFFFFB8DC), 1_700, Color(0xFFFFD0EA))
-    TopPickMood.AFTER_HOURS -> MoodStyle(Color(0xFF3A1F78), Color(0xFFC9B6FF), 4_500)
-    TopPickMood.ALONE_TIME -> MoodStyle(Color(0xFF2C6E8C), Color(0xFFA9E2F5), 4_000)
-    TopPickMood.CHILL -> MoodStyle(Color(0xFF138A86), Color(0xFFA6F0E6), 5_000)
-    TopPickMood.COMMUTING -> MoodStyle(Color(0xFF17855F), Color(0xFFA8EFD0), 2_400)
-    TopPickMood.EATING_COOKING -> MoodStyle(Color(0xFFD9621A), Color(0xFFFFD3A8), 3_200)
-    TopPickMood.EVENING -> MoodStyle(Color(0xFF2A3A8C), Color(0xFFB8C6FF), 6_000)
-    TopPickMood.FITNESS -> MoodStyle(Color(0xFF8DB014), Color(0xFFEFFFA8), 2_000)
-    TopPickMood.GAMING -> MoodStyle(Color(0xFF239A2A), Color(0xFFB8FFB0), 6_000)
-    TopPickMood.HOME -> MoodStyle(Color(0xFF0E8A6C), Color(0xFFA8F2DB), 4_000)
-    TopPickMood.MORNING -> MoodStyle(Color(0xFFF08C1A), Color(0xFFFFE2A6), 5_000)
-    TopPickMood.MOTIVATION -> MoodStyle(Color(0xFFC01E4A), Color(0xFFFFB3C6), 1_800)
-    TopPickMood.OUTDOORS -> MoodStyle(Color(0xFF4C8A1E), Color(0xFFD4F5A8), 6_000)
-    TopPickMood.PARTY -> MoodStyle(Color(0xFFC2287A), Color(0xFFFFC0E0), 3_000)
-    TopPickMood.SLEEP -> MoodStyle(Color(0xFF26266E), Color(0xFFC2C6FF), 4_500)
-    TopPickMood.SOCIAL -> MoodStyle(Color(0xFFE0507A), Color(0xFFFFD0DE), 3_000)
-    TopPickMood.SPORTS -> MoodStyle(Color(0xFF1C6CD0), Color(0xFFB8D8FF), 3_000)
-    TopPickMood.SUMMERTIME -> MoodStyle(Color(0xFFFF8C00), Color(0xFFFFE6A8), 8_000)
-    TopPickMood.HOLIDAY -> MoodStyle(Color(0xFFC62828), Color(0xFFFFC8C8), 8_000)
-    TopPickMood.WEEKEND -> MoodStyle(Color(0xFF7A3CC2), Color(0xFFE2CCFF), 2_400)
-    TopPickMood.WELLBEING -> MoodStyle(Color(0xFF36A98A), Color(0xFFC6F7E6), 5_000)
-    TopPickMood.WORK -> MoodStyle(Color(0xFF3E63C9), Color(0xFFC4D2FF), 2_000)
+    TopPickMood.ENERGY -> MoodStyle(
+        Color(0xFF1EBD38), Color(0xFFE2F6A2), 3_000, Color(0xFFE8FF9C),
+        gradientColors = listOf(Color(0xFF831843), Color(0xFFBE185D), Color(0xFFE11D48), Color(0xFFFF5722))
+    )
+    TopPickMood.RELAX -> MoodStyle(
+        Color(0xFF31AFF3), Color(0xFFB4E9FF), 5_600, Color(0xFFD6F3FF),
+        gradientColors = listOf(Color(0xFF0F172A), Color(0xFF1E1B4B), Color(0xFF312E81), Color(0xFF4C1D95))
+    )
+    TopPickMood.FEELING_BLUE -> MoodStyle(
+        Color(0xFF253AB2), Color(0xFF6CC4FF), 3_700, Color(0xFFA9DBFF),
+        gradientColors = listOf(Color(0xFF0B192C), Color(0xFF1E3E62), Color(0xFF1B5A90), Color(0xFF253AB2))
+    )
+    TopPickMood.FEEL_GOOD -> MoodStyle(
+        Color(0xFFF2A900), Color(0xFFFFE8A0), 4_000, Color(0xFFFFF27A),
+        gradientColors = listOf(Color(0xFF78350F), Color(0xFFB45309), Color(0xFFF59E0B), Color(0xFFFBBF24))
+    )
+    TopPickMood.FOCUS -> MoodStyle(
+        Color(0xFFF28400), Color(0xFFFFD6A4), 3_600, Color(0xFFFFE2B8),
+        gradientColors = listOf(Color(0xFF022C22), Color(0xFF064E3B), Color(0xFF0F766E), Color(0xFF14B8A6))
+    )
+    TopPickMood.HEARTBREAK -> MoodStyle(
+        Color(0xFFEA3520), Color(0xFFFFA690), 2_700, Color(0xFFFFC9BC),
+        gradientColors = listOf(Color(0xFF450A0A), Color(0xFF7F1D1D), Color(0xFFB91C1C), Color(0xFFEA3520))
+    )
+    TopPickMood.LOVE -> MoodStyle(
+        Color(0xFFF34CA0), Color(0xFFFFB8DC), 1_700, Color(0xFFFFD0EA),
+        gradientColors = listOf(Color(0xFF701A75), Color(0xFF9D174D), Color(0xFFDB2777), Color(0xFFF472B6))
+    )
+    TopPickMood.AFTER_HOURS -> MoodStyle(
+        Color(0xFF3A1F78), Color(0xFFC9B6FF), 4_500,
+        gradientColors = listOf(Color(0xFF450A0A), Color(0xFF78350F), Color(0xFFB45309), Color(0xFFD97706))
+    )
+    TopPickMood.ALONE_TIME -> MoodStyle(
+        Color(0xFF2C6E8C), Color(0xFFA9E2F5), 4_000,
+        gradientColors = listOf(Color(0xFF0F172A), Color(0xFF1E293B), Color(0xFF155E75), Color(0xFF0E7490))
+    )
+    TopPickMood.CHILL -> MoodStyle(
+        Color(0xFF138A86), Color(0xFFA6F0E6), 5_000,
+        gradientColors = listOf(Color(0xFF0F172A), Color(0xFF1E1B4B), Color(0xFF312E81), Color(0xFF4C1D95))
+    )
+    TopPickMood.COMMUTING -> MoodStyle(
+        Color(0xFF17855F), Color(0xFFA8EFD0), 2_400,
+        gradientColors = listOf(Color(0xFF064E3B), Color(0xFF047857), Color(0xFF059669), Color(0xFF10B981))
+    )
+    TopPickMood.EATING_COOKING -> MoodStyle(
+        Color(0xFFD9621A), Color(0xFFFFD3A8), 3_200,
+        gradientColors = listOf(Color(0xFF7C2D12), Color(0xFF9A3412), Color(0xFFC2410C), Color(0xFFEA580C))
+    )
+    TopPickMood.EVENING -> MoodStyle(
+        Color(0xFF2A3A8C), Color(0xFFB8C6FF), 6_000,
+        gradientColors = listOf(Color(0xFF450A0A), Color(0xFF78350F), Color(0xFFB45309), Color(0xFFD97706))
+    )
+    TopPickMood.FITNESS -> MoodStyle(
+        Color(0xFF8DB014), Color(0xFFEFFFA8), 2_000,
+        gradientColors = listOf(Color(0xFF14532D), Color(0xFF166534), Color(0xFF15803D), Color(0xFF65A30D))
+    )
+    TopPickMood.GAMING -> MoodStyle(
+        Color(0xFF239A2A), Color(0xFFB8FFB0), 6_000,
+        gradientColors = listOf(Color(0xFF1E1B4B), Color(0xFF312E81), Color(0xFF1E3A8A), Color(0xFF0D9488))
+    )
+    TopPickMood.HOME -> MoodStyle(
+        Color(0xFF0E8A6C), Color(0xFFA8F2DB), 4_000,
+        gradientColors = listOf(Color(0xFF022C22), Color(0xFF064E3B), Color(0xFF0F766E), Color(0xFF14B8A6))
+    )
+    TopPickMood.MORNING -> MoodStyle(
+        Color(0xFFF08C1A), Color(0xFFFFE2A6), 5_000,
+        gradientColors = listOf(Color(0xFF450A0A), Color(0xFF78350F), Color(0xFFB45309), Color(0xFFD97706))
+    )
+    TopPickMood.MOTIVATION -> MoodStyle(
+        Color(0xFFC01E4A), Color(0xFFFFB3C6), 1_800,
+        gradientColors = listOf(Color(0xFF831843), Color(0xFFBE185D), Color(0xFFE11D48), Color(0xFFFF5722))
+    )
+    TopPickMood.OUTDOORS -> MoodStyle(
+        Color(0xFF4C8A1E), Color(0xFFD4F5A8), 6_000,
+        gradientColors = listOf(Color(0xFF14532D), Color(0xFF166534), Color(0xFF3F6212), Color(0xFF4D7C0F))
+    )
+    TopPickMood.PARTY -> MoodStyle(
+        Color(0xFFC2287A), Color(0xFFFFC0E0), 3_000,
+        gradientColors = listOf(Color(0xFF831843), Color(0xFFBE185D), Color(0xFFE11D48), Color(0xFFFF5722))
+    )
+    TopPickMood.SLEEP -> MoodStyle(
+        Color(0xFF26266E), Color(0xFFC2C6FF), 4_500,
+        gradientColors = listOf(Color(0xFF0F172A), Color(0xFF1E1B4B), Color(0xFF312E81), Color(0xFF4C1D95))
+    )
+    TopPickMood.SOCIAL -> MoodStyle(
+        Color(0xFFE0507A), Color(0xFFFFD0DE), 3_000,
+        gradientColors = listOf(Color(0xFF831843), Color(0xFF9F1239), Color(0xFFBE123C), Color(0xFFE11D48))
+    )
+    TopPickMood.SPORTS -> MoodStyle(
+        Color(0xFF1C6CD0), Color(0xFFB8D8FF), 3_000,
+        gradientColors = listOf(Color(0xFF172554), Color(0xFF1E3A8A), Color(0xFF1D4ED8), Color(0xFF2563EB))
+    )
+    TopPickMood.SUMMERTIME -> MoodStyle(
+        Color(0xFFFF8C00), Color(0xFFFFE6A8), 8_000,
+        gradientColors = listOf(Color(0xFF7C2D12), Color(0xFFC2410C), Color(0xFFD97706), Color(0xFFF59E0B))
+    )
+    TopPickMood.HOLIDAY -> MoodStyle(
+        Color(0xFFC62828), Color(0xFFFFC8C8), 8_000,
+        gradientColors = listOf(Color(0xFF450A0A), Color(0xFF7F1D1D), Color(0xFF991B1B), Color(0xFFDC2626))
+    )
+    TopPickMood.WEEKEND -> MoodStyle(
+        Color(0xFF7A3CC2), Color(0xFFE2CCFF), 2_400,
+        gradientColors = listOf(Color(0xFF2E1065), Color(0xFF4C1D95), Color(0xFF6B21A8), Color(0xFF86198F))
+    )
+    TopPickMood.WELLBEING -> MoodStyle(
+        Color(0xFF36A98A), Color(0xFFC6F7E6), 5_000,
+        gradientColors = listOf(Color(0xFF022C22), Color(0xFF064E3B), Color(0xFF0F766E), Color(0xFF14B8A6))
+    )
+    TopPickMood.WORK -> MoodStyle(
+        Color(0xFF3E63C9), Color(0xFFC4D2FF), 2_000,
+        gradientColors = listOf(Color(0xFF0F172A), Color(0xFF1E293B), Color(0xFF1E3A8A), Color(0xFF2563EB))
+    )
 }
 
 internal fun TopPickMood.titleRes() = when (this) {
@@ -993,9 +1094,15 @@ private fun MoodArt(
     val loop = if (still) null else loopPhase(style.periodMs)
     val cache = remember(mood) { EmblemCache() }
     Canvas(if (still) modifier else modifier.then(RetainedArt)) {
-        drawRect(style.background)
         val w = size.width
         val h = size.height
+        drawRect(
+            brush = Brush.linearGradient(
+                colors = style.gradientColors,
+                start = Offset.Zero,
+                end = Offset(w, h),
+            )
+        )
         val f = if (square) {
             val side = w * 0.70f
             Frame(left = (w - side) / 2f, top = (h - side) / 2f, side = side)
@@ -1090,22 +1197,22 @@ private fun DrawScope.drawEmblem(
             drawPath(path, color, style = stroke)
         }
         TopPickMood.RELAX -> {
-            // Three stones, balanced and swaying a little out of step.
-            val stones = listOf(
-                Triple(0.17f, 0.44f, 0.18f),
-                Triple(0.38f, 0.68f, 0.28f),
-                Triple(0.66f, 0.84f, 0.36f),
-            )
-            stones.forEachIndexed { index, (cy, width, height) ->
-                val sway = wave(phase, index * 0.22f)
-                val center = Offset(f.x(0.5f + 0.015f * sway), f.y(cy))
-                rotate(degrees = 4f * sway, pivot = center) {
-                    drawOval(
-                        color = color,
-                        topLeft = Offset(center.x - side * width / 2f, center.y - side * height / 2f),
-                        size = Size(side * width, side * height),
-                        style = stroke,
+            // Smooth harmonic flowing cubic wave paths swaying gently
+            clipRect(f.left, f.top, f.x(1f), f.y(1f)) {
+                listOf(0.28f, 0.48f, 0.68f).forEachIndexed { index, cy ->
+                    val sway = wave(phase, index * 0.25f)
+                    path.reset()
+                    val y0 = f.y(cy + 0.04f * sway)
+                    val yMid1 = f.y(cy - 0.08f * sway)
+                    val yMid2 = f.y(cy + 0.08f * sway)
+                    val yEnd = f.y(cy - 0.04f * sway)
+                    path.moveTo(f.x(0.08f), y0)
+                    path.cubicTo(
+                        f.x(0.32f), yMid1,
+                        f.x(0.68f), yMid2,
+                        f.x(0.92f), yEnd
                     )
+                    drawPath(path, color.copy(alpha = 0.85f - index * 0.15f), style = stroke)
                 }
             }
         }
@@ -1175,15 +1282,15 @@ private fun DrawScope.drawEmblem(
                 }
         }
         TopPickMood.ALONE_TIME -> {
-            // A drop's ripples spreading out across still water.
-            val center = f.at(0.5f, 0.55f)
+            // Clean radiant circles radiating outward like ripples in water
+            val center = f.at(0.5f, 0.5f)
             for (i in 0 until 4) {
-                val share = (i + phase) / 4
-                val rx = side * 0.5f * share
-                drawOval(
-                    color.copy(alpha = edgeFade(share)),
-                    topLeft = Offset(center.x - rx, center.y - rx * 0.42f),
-                    size = Size(rx * 2f, rx * 0.84f),
+                val share = (i + phase) / 4f
+                val radius = side * 0.46f * share
+                drawCircle(
+                    color = color.copy(alpha = edgeFade(share)),
+                    radius = radius,
+                    center = center,
                     style = stroke,
                 )
             }

@@ -1,5 +1,5 @@
 <resources>
-    <string name="app_name">BitChord</string>
+    <string name="app_name">Hush Music</string>
     <string name="playback_channel_name">अभी चल रहा है</string>
     <string name="download_channel_name">डाउनलोड</string>
     <string name="download_channel_description">आपके संगीत फ़ोल्डर में सेव हो रहे गाने</string>
@@ -505,7 +505,7 @@
     <string name="biggest_day_note">आपका सबसे बड़ा दिन %1$s था, जिसमें %2$s सुना गया।</string>
     <string name="close_replay">Replay बंद करें</string>
     <string name="couldnt_draw_picture">तस्वीर नहीं बन सकी</string>
-    <string name="default_replay_holder">BitChord श्रोता</string>
+    <string name="default_replay_holder">Hush Music श्रोता</string>
     <string name="different_albums">अलग-अलग एल्बम</string>
     <string name="genres_pending">आपके सुनने का इतिहास बढ़ने पर शैलियां दिखेंगी</string>
     <string name="hour_am">%1$d AM</string>
@@ -666,7 +666,7 @@
     </plurals>
     <string name="no_local_albums">यहां अभी तक कुछ भी किसी एल्बम या प्लेलिस्ट का हिस्सा नहीं है। पूरा एल्बम या प्लेलिस्ट डाउनलोड करें और यह यहां दिखेगा।</string>
     <string name="play_your_replay">अपना Replay चलाएं</string>
-    <string name="counted_on_device_with_bitchord">इस डिवाइस पर BitChord के साथ गिना गया</string>
+    <string name="counted_on_device_with_bitchord">इस डिवाइस पर Hush Music के साथ गिना गया</string>
     <string name="this_month">इस महीने</string>
     <string name="this_year">इस साल</string>
     <string name="all_time">अब तक</string>

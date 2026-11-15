@@ -555,15 +555,32 @@ private fun HomeTitle(
     onFestiveLogoClick: (() -> Unit)? = null,
 ) {
     val hour = remember { java.util.Calendar.getInstance().get(java.util.Calendar.HOUR_OF_DAY) }
-    val greeting = when (hour) {
-        in 5..11 -> "Good morning"
-        in 12..16 -> "Good afternoon"
-        else -> "Good evening"
-    }
-    val fullGreeting = if (!listenerName.isNullOrBlank() && listenerName != "Listener") {
-        "$greeting, $listenerName"
-    } else {
-        greeting
+    val name = listenerName?.takeIf { it.isNotBlank() && it != "Listener" }
+    val fullGreeting = remember(name, hour) {
+        val prompts = when (hour) {
+            in 5..11 -> listOf(
+                if (name != null) "Discover something fresh today, $name?" else "Discover something fresh today?",
+                if (name != null) "Ready to wake up with fresh beats, $name?" else "Ready for morning beats?",
+                if (name != null) "Good morning, $name" else "Good morning",
+            )
+            in 12..16 -> listOf(
+                if (name != null) "Wanna hop into Jazz, $name?" else "Wanna hop into Jazz today?",
+                if (name != null) "Turn up the energy, $name?" else "Turn up the energy today?",
+                if (name != null) "Good afternoon, $name" else "Good afternoon",
+            )
+            in 17..21 -> listOf(
+                if (name != null) "Ready to unwind with Lo-Fi, $name?" else "Ready to unwind with Lo-Fi?",
+                if (name != null) "Wanna sink into something smooth, $name?" else "Craving smooth melodies?",
+                if (name != null) "Good evening, $name" else "Good evening",
+            )
+            else -> listOf(
+                if (name != null) "Craving some late-night Indie, $name?" else "Craving some late-night Indie?",
+                if (name != null) "Ready to unwind with Lo-Fi, $name?" else "Ready to unwind with Lo-Fi?",
+                if (name != null) "Late night listening session, $name?" else "Late night listening session",
+            )
+        }
+        val seed = (System.currentTimeMillis() / (1000 * 60 * 30)).toInt()
+        prompts[kotlin.math.abs(seed) % prompts.size]
     }
     var selectedFilter by remember { mutableStateOf("All") }
 

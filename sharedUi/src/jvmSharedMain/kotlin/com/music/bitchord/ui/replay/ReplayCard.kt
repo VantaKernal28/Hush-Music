@@ -2,6 +2,7 @@ package com.music.bitchord.ui.replay
 
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -101,11 +102,24 @@ fun ReplayCreditCard(
     modifier: Modifier = Modifier,
 ) {
     val palette = rememberArtworkColors(artworkUrl)
+    val accentColor = MaterialTheme.colorScheme.primary
     Box(
         modifier = modifier
             .aspectRatio(CARD_RATIO)
             .shadow(16.dp, CardShape, clip = false)
             .clip(CardShape)
+            .background(Color(0xFF0F1116))
+            .border(
+                width = 1.dp,
+                brush = Brush.linearGradient(
+                    listOf(
+                        Color.White.copy(alpha = 0.22f),
+                        accentColor.copy(alpha = 0.35f),
+                        Color.White.copy(alpha = 0.06f),
+                    )
+                ),
+                shape = CardShape,
+            )
             .clickable(onClick = onClick),
     ) {
         MeshGradientBackground(
@@ -114,17 +128,30 @@ fun ReplayCreditCard(
             blurRadius = 34.dp,
             animated = false,
         )
-        // Deepened towards the foot, where the embossed lines are: the mesh is
-        // built to be bright and those lines are pale, and without this the
-        // cardholder name lands on whichever blob happened to drift under it.
+        // Sleek frosted overlay with subtle accent radial glow
+        Box(
+            Modifier
+                .fillMaxSize()
+                .background(
+                    Brush.radialGradient(
+                        colors = listOf(
+                            accentColor.copy(alpha = 0.25f),
+                            Color.Transparent,
+                        ),
+                        center = Offset(0f, 0f),
+                        radius = 480f,
+                    )
+                )
+        )
+        // Deepened towards the foot, where the embossed lines are
         Box(
             Modifier
                 .fillMaxSize()
                 .background(
                     Brush.verticalGradient(
-                        0.0f to Color.Black.copy(alpha = 0.18f),
-                        0.55f to Color.Black.copy(alpha = 0.30f),
-                        1.0f to Color.Black.copy(alpha = 0.55f),
+                        0.0f to Color.Black.copy(alpha = 0.28f),
+                        0.55f to Color.Black.copy(alpha = 0.42f),
+                        1.0f to Color.Black.copy(alpha = 0.68f),
                     ),
                 ),
         )

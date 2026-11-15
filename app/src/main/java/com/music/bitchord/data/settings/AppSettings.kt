@@ -132,7 +132,7 @@ enum class ThemeMode(val label: String) {
  * lighter and spaces it to Apple Music's own screens; [LEGACY] is the cut the
  * app shipped with before that, every weight its own and spaced tight.
  */
-enum class AppFont { DEFAULT, LEGACY }
+enum class AppFont { DEFAULT, LEGACY, CUSTOM }
 
 /**
  * Which of the equaliser's two tabs is driving the sound.
@@ -448,6 +448,12 @@ object AppSettings {
 
     /** Material 3 Expressive UI: organic corner radii (24-28dp), richer containers & expressive springs. */
     val expressiveMode = MutableStateFlow(false)
+
+    /** Path to user-imported custom font (.ttf or .otf), if any. */
+    val customFontPath = MutableStateFlow<String?>(null)
+
+    /** Path to user-uploaded custom profile avatar image, if any. */
+    val customAvatarPath = MutableStateFlow<String?>(null)
 
     /** Whether the one-time Diwali 2026 greeting has been seen and dismissed. */
     val diwaliGreetingShown = MutableStateFlow(false)
@@ -1037,6 +1043,8 @@ object AppSettings {
         selectedGenres.value = prefs.getStringSet(KEY_SELECTED_GENRES, emptySet()) ?: emptySet()
         themeAccent.value = prefs.getString(KEY_THEME_ACCENT, "sunset") ?: "sunset"
         expressiveMode.value = prefs.getBoolean(KEY_EXPRESSIVE_MODE, false)
+        customFontPath.value = prefs.getString(KEY_CUSTOM_FONT_PATH, null)
+        customAvatarPath.value = prefs.getString(KEY_CUSTOM_AVATAR_PATH, null)
         diwaliGreetingShown.value = prefs.getBoolean(KEY_DIWALI_GREETING_SHOWN, false)
         highPerformanceMode.value = prefs.getBoolean(KEY_HIGH_PERFORMANCE_MODE, false)
         performanceRefreshRate.value = normalizePerformanceRefreshRate(
@@ -1464,6 +1472,24 @@ object AppSettings {
     fun setExpressiveMode(value: Boolean) {
         expressiveMode.value = value
         prefs.edit().putBoolean(KEY_EXPRESSIVE_MODE, value).apply()
+    }
+
+    fun setCustomFontPath(path: String?) {
+        customFontPath.value = path
+        if (path == null) {
+            prefs.edit().remove(KEY_CUSTOM_FONT_PATH).apply()
+        } else {
+            prefs.edit().putString(KEY_CUSTOM_FONT_PATH, path).apply()
+        }
+    }
+
+    fun setCustomAvatarPath(path: String?) {
+        customAvatarPath.value = path
+        if (path == null) {
+            prefs.edit().remove(KEY_CUSTOM_AVATAR_PATH).apply()
+        } else {
+            prefs.edit().putString(KEY_CUSTOM_AVATAR_PATH, path).apply()
+        }
     }
 
     fun setDiwaliGreetingShown() {
@@ -2333,6 +2359,8 @@ object AppSettings {
     private const val KEY_SELECTED_GENRES = "hush_selected_genres"
     private const val KEY_THEME_ACCENT = "hush_theme_accent"
     private const val KEY_EXPRESSIVE_MODE = "hush_expressive_mode"
+    private const val KEY_CUSTOM_FONT_PATH = "hush_custom_font_path"
+    private const val KEY_CUSTOM_AVATAR_PATH = "hush_custom_avatar_path"
     private const val KEY_DIWALI_GREETING_SHOWN = "diwali_greeting_2026_shown"
     private const val KEY_HIGH_PERFORMANCE_MODE = "high_performance_mode"
     private const val KEY_PERFORMANCE_REFRESH_RATE = "performance_refresh_rate"

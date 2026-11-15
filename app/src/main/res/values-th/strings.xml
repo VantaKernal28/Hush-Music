@@ -1,5 +1,5 @@
 <resources>
-    <string name="app_name">BitChord</string>
+    <string name="app_name">Hush Music</string>
     <string name="playback_channel_name">กำลังเล่น</string>
     <string name="download_channel_name">การดาวน์โหลด</string>
     <string name="download_channel_description">เพลงที่กำลังบันทึกลงในโฟลเดอร์เพลงของคุณ</string>
@@ -518,7 +518,7 @@
     <string name="biggest_day_note">วันที่คุณฟังมากที่สุดคือ %1$s ด้วยเวลาฟัง %2$s</string>
     <string name="close_replay">ปิด Replay</string>
     <string name="couldnt_draw_picture">สร้างภาพไม่สำเร็จ</string>
-    <string name="default_replay_holder">ผู้ฟัง BitChord</string>
+    <string name="default_replay_holder">ผู้ฟัง Hush Music</string>
     <string name="different_albums">อัลบั้มที่แตกต่างกัน</string>
     <string name="genres_pending">แนวเพลงจะปรากฏขึ้นเมื่อประวัติการฟังของคุณเพิ่มมากขึ้น</string>
     <string name="hour_am">%1$d โมงเช้า</string>
@@ -675,7 +675,7 @@
     </plurals>
     <string name="no_local_albums">ยังไม่มีอะไรที่นี่เป็นของอัลบั้มหรือเพลย์ลิสต์ ดาวน์โหลดอัลบั้มหรือเพลย์ลิสต์ทั้งชุดแล้วจะปรากฏที่นี่</string>
     <string name="play_your_replay">เล่น Replay ของคุณ</string>
-    <string name="counted_on_device_with_bitchord">นับบนอุปกรณ์นี้ด้วย BitChord</string>
+    <string name="counted_on_device_with_bitchord">นับบนอุปกรณ์นี้ด้วย Hush Music</string>
     <string name="this_month">เดือนนี้</string>
     <string name="this_year">ปีนี้</string>
     <string name="all_time">ตลอดเวลา</string>

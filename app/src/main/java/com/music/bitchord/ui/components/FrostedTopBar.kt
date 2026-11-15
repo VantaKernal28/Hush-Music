@@ -553,10 +553,18 @@ fun TopBarAccountButton(
                 )
             },
     ) {
-        val photo = account?.thumbnailUrl
-        if (photo != null) {
+        val customAvatarPath by AppSettings.customAvatarPath.collectAsStateWithLifecycle()
+        val avatarModel = remember(customAvatarPath, account?.thumbnailUrl) {
+            if (!customAvatarPath.isNullOrBlank()) {
+                val file = java.io.File(customAvatarPath!!)
+                if (file.exists()) file else account?.thumbnailUrl
+            } else {
+                account?.thumbnailUrl
+            }
+        }
+        if (avatarModel != null) {
             AsyncImage(
-                model = photo,
+                model = avatarModel,
                 contentDescription = stringResource(R.string.switch_account),
                 contentScale = ContentScale.Crop,
                 modifier = Modifier

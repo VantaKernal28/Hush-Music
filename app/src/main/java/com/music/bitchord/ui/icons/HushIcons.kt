@@ -498,4 +498,41 @@ object HushIcons {
             close()
         }
     }.build()
+
+    val Camera: ImageVector = ImageVector.Builder(
+        name = "Camera",
+        defaultWidth = 24.dp,
+        defaultHeight = 24.dp,
+        viewportWidth = 24f,
+        viewportHeight = 24f,
+    ).apply {
+        materialPath {
+            moveTo(9f, 3f)
+            lineTo(7.17f, 5f)
+            lineTo(4f, 5f)
+            curveTo(2.9f, 5f, 2f, 5.9f, 2f, 7f)
+            lineTo(2f, 19f)
+            curveTo(2f, 20.1f, 2.9f, 21f, 4f, 21f)
+            lineTo(20f, 21f)
+            curveTo(21.1f, 21f, 22f, 20.1f, 22f, 19f)
+            lineTo(22f, 7f)
+            curveTo(22f, 5.9f, 21.1f, 5f, 20f, 5f)
+            lineTo(16.83f, 5f)
+            lineTo(15f, 3f)
+            lineTo(9f, 3f)
+            close()
+            moveTo(12f, 17f)
+            curveTo(9.24f, 17f, 7f, 14.76f, 7f, 12f)
+            curveTo(7f, 9.24f, 9.24f, 7f, 12f, 7f)
+            curveTo(14.76f, 7f, 17f, 9.24f, 17f, 12f)
+            curveTo(17f, 14.76f, 14.76f, 17f, 12f, 17f)
+            close()
+            moveTo(12f, 9f)
+            curveTo(10.34f, 9f, 9f, 10.34f, 9f, 12f)
+            curveTo(9f, 13.66f, 10.34f, 15f, 12f, 15f)
+            curveTo(13.66f, 15f, 15f, 13.66f, 15f, 12f)
+            curveTo(15f, 10.34f, 13.66f, 9f, 12f, 9f)
+            close()
+        }
+    }.build()
 }
