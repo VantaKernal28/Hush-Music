@@ -270,6 +270,8 @@ fun SettingsScreen(
     val fullBleedArtwork by AppSettings.fullBleedArtwork.collectAsStateWithLifecycle()
     val fullBleedDetailArtwork by AppSettings.fullBleedDetailArtwork.collectAsStateWithLifecycle()
     val playerTheme by AppSettings.playerTheme.collectAsStateWithLifecycle()
+    val materialUiMode by AppSettings.materialUiMode.collectAsStateWithLifecycle()
+    val liveSongColorGradient by AppSettings.liveSongColorGradient.collectAsStateWithLifecycle()
     val syncedLyrics by AppSettings.syncedLyrics.collectAsStateWithLifecycle()
     val lyricsSources by AppSettings.lyricsSources.collectAsStateWithLifecycle()
     val translationLanguage by AppSettings.translationLanguage.collectAsStateWithLifecycle()
@@ -1281,6 +1283,36 @@ fun SettingsScreen(
                     subtitle = appFont.description(),
                     value = appFont.localizedLabel(),
                     onClick = { onOpenChoice(SettingsChoiceKind.FONT) },
+                )
+            }
+            val materialUiModeTitle = "Material UI Mode"
+            row(materialUiModeTitle, "material", "m3", "toggle", "pill", "squircle", "tab") {
+                SettingsRow(
+                    icon = SfIcons.Apps,
+                    title = materialUiModeTitle,
+                    subtitle = "Dual UI Mode: switch from default frosted glass to Material 3 tactile expanded tab bar and squircle controls",
+                    trailing = {
+                        IosSwitch(
+                            checked = materialUiMode,
+                            onCheckedChange = AppSettings::setMaterialUiMode,
+                        )
+                    },
+                    onClick = { AppSettings.setMaterialUiMode(!materialUiMode) },
+                )
+            }
+            val liveSongGradientTitle = "Live Song-Reactive Gradient"
+            row(liveSongGradientTitle, "gradient", "player", "color", "mesh", "artwork", "ambient") {
+                SettingsRow(
+                    icon = SfIcons.Gradient,
+                    title = liveSongGradientTitle,
+                    subtitle = "Sample active album art tones to animate ambient player backdrop",
+                    trailing = {
+                        IosSwitch(
+                            checked = liveSongColorGradient,
+                            onCheckedChange = AppSettings::setLiveSongColorGradient,
+                        )
+                    },
+                    onClick = { AppSettings.setLiveSongColorGradient(!liveSongColorGradient) },
                 )
             }
             val reduceAnimationTitle = stringResource(R.string.reduce_animation)

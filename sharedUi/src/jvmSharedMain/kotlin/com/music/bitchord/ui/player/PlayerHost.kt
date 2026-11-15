@@ -260,6 +260,8 @@ interface PlayerSettingsSource {
     /** Turns [LocalPlayerChrome] off: glyphs and text over the artwork in plain white. */
     val disableBlendEffects: StateFlow<Boolean>
     val showNerdStats: StateFlow<Boolean>
+    val materialUiMode: StateFlow<Boolean>
+    val liveSongColorGradient: StateFlow<Boolean>
     /** Whether the output / Listen Together pill sits under the transport. */
     val showListenTogetherButton: StateFlow<Boolean>
     val smartAnalysis: StateFlow<SmartAnalysis>

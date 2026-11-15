@@ -449,6 +449,12 @@ object AppSettings {
     /** Material 3 Expressive UI: organic corner radii (24-28dp), richer containers & expressive springs. */
     val expressiveMode = MutableStateFlow(false)
 
+    /** Material UI Theme Mode: tactile Google/M3 expanded tab bar, squircle player buttons, segmented timeline. */
+    val materialUiMode = MutableStateFlow(false)
+
+    /** Live Song-Reactive Color Gradient: extracts artwork tones and flows ambient animated gradients in the player. */
+    val liveSongColorGradient = MutableStateFlow(true)
+
     /** Path to user-imported custom font (.ttf or .otf), if any. */
     val customFontPath = MutableStateFlow<String?>(null)
 
@@ -1043,6 +1049,8 @@ object AppSettings {
         selectedGenres.value = prefs.getStringSet(KEY_SELECTED_GENRES, emptySet()) ?: emptySet()
         themeAccent.value = prefs.getString(KEY_THEME_ACCENT, "sunset") ?: "sunset"
         expressiveMode.value = prefs.getBoolean(KEY_EXPRESSIVE_MODE, false)
+        materialUiMode.value = prefs.getBoolean(KEY_MATERIAL_UI_MODE, false)
+        liveSongColorGradient.value = prefs.getBoolean(KEY_LIVE_SONG_COLOR_GRADIENT, true)
         customFontPath.value = prefs.getString(KEY_CUSTOM_FONT_PATH, null)
         customAvatarPath.value = prefs.getString(KEY_CUSTOM_AVATAR_PATH, null)
         diwaliGreetingShown.value = prefs.getBoolean(KEY_DIWALI_GREETING_SHOWN, false)
@@ -1472,6 +1480,16 @@ object AppSettings {
     fun setExpressiveMode(value: Boolean) {
         expressiveMode.value = value
         prefs.edit().putBoolean(KEY_EXPRESSIVE_MODE, value).apply()
+    }
+
+    fun setMaterialUiMode(value: Boolean) {
+        materialUiMode.value = value
+        prefs.edit().putBoolean(KEY_MATERIAL_UI_MODE, value).apply()
+    }
+
+    fun setLiveSongColorGradient(value: Boolean) {
+        liveSongColorGradient.value = value
+        prefs.edit().putBoolean(KEY_LIVE_SONG_COLOR_GRADIENT, value).apply()
     }
 
     fun setCustomFontPath(path: String?) {
@@ -2359,6 +2377,8 @@ object AppSettings {
     private const val KEY_SELECTED_GENRES = "hush_selected_genres"
     private const val KEY_THEME_ACCENT = "hush_theme_accent"
     private const val KEY_EXPRESSIVE_MODE = "hush_expressive_mode"
+    private const val KEY_MATERIAL_UI_MODE = "hush_material_ui_mode"
+    private const val KEY_LIVE_SONG_COLOR_GRADIENT = "hush_live_song_color_gradient"
     private const val KEY_CUSTOM_FONT_PATH = "hush_custom_font_path"
     private const val KEY_CUSTOM_AVATAR_PATH = "hush_custom_avatar_path"
     private const val KEY_DIWALI_GREETING_SHOWN = "diwali_greeting_2026_shown"

@@ -996,6 +996,8 @@ fun NowPlayingScreen(
     val canvasCover = remember(canvas?.url) { mutableFloatStateOf(0f) }
     // What the main player stands on — see [PlayerTheme].
     val playerTheme by PlayerSettings.playerTheme.collectAsStateWithLifecycle()
+    val materialUi by PlayerSettings.materialUiMode.collectAsStateWithLifecycle()
+    val liveSongGradient by PlayerSettings.liveSongColorGradient.collectAsStateWithLifecycle()
     // Both meshes follow a playing clip's colours. The blurred still cover has
     // nothing to re-tint, and each read is a GPU readback.
     val tintsOffClip = playerTheme != PlayerTheme.SIMPLE
@@ -2362,9 +2364,9 @@ fun NowPlayingScreen(
                 // Default: the artwork's own mesh under the main player, with the
                 // blurred cover fading in over it for the lyrics and queue, which
                 // have no sleeve for a mesh to carry on from.
-                val legacyMeshBackdrop = !tabletArtworkBackdrop && !spotifyCanvasPresentation &&
+                val legacyMeshBackdrop = !materialUi && !tabletArtworkBackdrop && !spotifyCanvasPresentation &&
                     playerTheme == PlayerTheme.LEGACY
-                val artworkMeshBackdrop = !tabletArtworkBackdrop && playerTheme == PlayerTheme.DEFAULT
+                val artworkMeshBackdrop = !materialUi && !tabletArtworkBackdrop && playerTheme == PlayerTheme.DEFAULT && liveSongGradient
                 val fullArtworkBackdropAlpha by animateFloatAsState(
                     targetValue = if (
                         !legacyMeshBackdrop &&
@@ -2375,6 +2377,13 @@ fun NowPlayingScreen(
                     animationSpec = tween(durationMillis = 360, easing = FastOutSlowInEasing),
                     label = "fullArtworkBackdropCrossfade",
                 )
+                if (materialUi) {
+                    Box(
+                        modifier = Modifier
+                            .fillMaxSize()
+                            .background(MaterialTheme.colorScheme.surface),
+                    )
+                }
                 if (legacyMeshBackdrop) {
                     // v1.5's backdrop, restored verbatim: no seam, because the blobs
                     // are not anchored to anything on screen — they fill the player and

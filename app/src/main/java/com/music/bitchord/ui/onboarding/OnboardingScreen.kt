@@ -6,6 +6,7 @@ import android.os.Build
 import androidx.activity.compose.BackHandler
 import androidx.compose.animation.AnimatedContent
 import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.animateColorAsState
 import androidx.compose.animation.core.Animatable
 import androidx.compose.animation.core.FastOutSlowInEasing
 import androidx.compose.animation.core.Spring
@@ -58,6 +59,7 @@ import androidx.compose.material3.dynamicDarkColorScheme
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
@@ -103,10 +105,6 @@ private enum class OnboardingPhase {
 
 private const val NAME_LIMIT = 24
 
-// Serene cool slate / muted blue canvas from Inspired setup.jpg
-private val CanvasTop = Color(0xFF8CA8B5)
-private val CanvasBottom = Color(0xFF9FB7C3)
-
 @Composable
 fun OnboardingScreen(
     signedIn: Boolean,
@@ -127,6 +125,24 @@ fun OnboardingScreen(
     val context = LocalContext.current
 
     val activeAccentColor = resolveAccentColor(currentAccentId, dark = false)
+    val animatedAccentColor by animateColorAsState(
+        targetValue = activeAccentColor,
+        animationSpec = tween(650, easing = FastOutSlowInEasing),
+        label = "onboardingAmbientAccent",
+    )
+    val ambientGradientBrush = remember(animatedAccentColor) {
+        Brush.verticalGradient(
+            colors = listOf(
+                Color(0xFF0F1117),
+                Color(
+                    red = (0.07f + animatedAccentColor.red * 0.16f).coerceIn(0f, 1f),
+                    green = (0.08f + animatedAccentColor.green * 0.16f).coerceIn(0f, 1f),
+                    blue = (0.12f + animatedAccentColor.blue * 0.16f).coerceIn(0f, 1f),
+                ),
+                Color(0xFF08090D),
+            ),
+        )
+    }
 
     BackHandler(enabled = phase != OnboardingPhase.ENTRANCE && phase != OnboardingPhase.POST_NAME_REVEAL) {
         when (phase) {
@@ -145,6 +161,8 @@ fun OnboardingScreen(
     Box(
         modifier = modifier
             .fillMaxSize()
+            .background(Color(0xFF08090D))
+            .background(ambientGradientBrush)
             .pointerInput(Unit) { detectTapGestures { focusManager.clearFocus() } },
     ) {
         when (phase) {
@@ -166,9 +184,7 @@ fun OnboardingScreen(
                 Box(
                     modifier = Modifier
                         .fillMaxSize()
-                        .background(
-                            Brush.verticalGradient(listOf(CanvasTop, CanvasBottom)),
-                        )
+                        .background(ambientGradientBrush)
                         .systemBarsPadding()
                         .imePadding(),
                 ) {
@@ -243,14 +259,20 @@ fun OnboardingScreen(
 
                         Spacer(Modifier.height(if (isCompactStep) 10.dp else 16.dp))
 
-                        // Dynamic content area per step
-                        Box(
+                        // Dynamic content area per step with smooth transitions
+                        AnimatedContent(
+                            targetState = phase,
+                            transitionSpec = {
+                                (fadeIn(tween(350, easing = FastOutSlowInEasing)) + slideInHorizontally(tween(350)) { it / 6 })
+                                    .togetherWith(fadeOut(tween(250, easing = FastOutSlowInEasing)) + slideOutHorizontally(tween(250)) { -it / 6 })
+                            },
+                            label = "onboardingPhaseTransition",
                             modifier = Modifier
                                 .fillMaxWidth()
                                 .weight(1f),
                             contentAlignment = Alignment.Center,
-                        ) {
-                            when (phase) {
+                        ) { currentPhase ->
+                            when (currentPhase) {
                                 OnboardingPhase.STEP_NAME_ACCENT -> {
                                     StepNameAndAccentContent(
                                         name = name,
@@ -412,8 +434,15 @@ private fun EntranceLaunchAnimation(
     Box(
         modifier = Modifier
             .fillMaxSize()
+            .background(Color(0xFF08090D))
             .background(
-                Brush.verticalGradient(listOf(CanvasTop, CanvasBottom)),
+                Brush.verticalGradient(
+                    listOf(
+                        Color(0xFF0F1117),
+                        Color(0xFF131720),
+                        Color(0xFF08090D),
+                    ),
+                ),
             ),
         contentAlignment = Alignment.Center,
     ) {
@@ -567,6 +596,51 @@ private fun PaginationDots(
     }
 }
 
+/** Character-by-character headline typing animation with soft blinking cursor that fades out on completion */
+@Composable
+private fun TypewriterHeadline(
+    text: String,
+    modifier: Modifier = Modifier,
+    style: androidx.compose.ui.text.TextStyle = MaterialTheme.typography.titleMedium,
+    fontWeight: FontWeight = FontWeight.SemiBold,
+    color: Color = Color.White,
+    charDelayMs: Long = 30L,
+) {
+    var visibleCount by remember(text) { mutableIntStateOf(0) }
+    var cursorVisible by remember(text) { mutableStateOf(true) }
+    var isDone by remember(text) { mutableStateOf(false) }
+
+    LaunchedEffect(text) {
+        visibleCount = 0
+        cursorVisible = true
+        isDone = false
+        for (i in 1..text.length) {
+            delay(charDelayMs)
+            visibleCount = i
+        }
+        isDone = true
+        repeat(2) {
+            cursorVisible = false
+            delay(300)
+            cursorVisible = true
+            delay(300)
+        }
+        cursorVisible = false
+    }
+
+    Text(
+        text = buildString {
+            append(text.take(visibleCount))
+            if (cursorVisible && !isDone) append("▍")
+        },
+        style = style,
+        fontWeight = fontWeight,
+        color = color,
+        textAlign = TextAlign.Center,
+        modifier = modifier,
+    )
+}
+
 /** Step 1: Display Name + Circular Accent Swatches right at the start */
 @Composable
 private fun StepNameAndAccentContent(
@@ -585,12 +659,11 @@ private fun StepNameAndAccentContent(
             .verticalScroll(scrollState),
         horizontalAlignment = Alignment.CenterHorizontally,
     ) {
-        Text(
+        TypewriterHeadline(
             text = "What should we call you?",
             style = MaterialTheme.typography.titleMedium,
             fontWeight = FontWeight.SemiBold,
             color = Color.White,
-            textAlign = TextAlign.Center,
         )
         Spacer(Modifier.height(10.dp))
 
@@ -718,12 +791,11 @@ private fun StepVibeAudioContent(
             .verticalScroll(scrollState),
         horizontalAlignment = Alignment.CenterHorizontally,
     ) {
-        Text(
+        TypewriterHeadline(
             text = "Tailor your sound",
             style = MaterialTheme.typography.titleMedium,
             fontWeight = FontWeight.SemiBold,
             color = Color.White,
-            textAlign = TextAlign.Center,
         )
         Spacer(Modifier.height(12.dp))
 
@@ -734,17 +806,31 @@ private fun StepVibeAudioContent(
         ) {
             genres.forEach { genre ->
                 val selected = selectedGenres.contains(genre)
+                val interactionSource = remember { MutableInteractionSource() }
+                val isPressed by interactionSource.collectIsPressedAsState()
+                val chipScale by animateFloatAsState(
+                    targetValue = if (isPressed) 0.93f else 1f,
+                    animationSpec = spring(dampingRatio = 0.65f, stiffness = Spring.StiffnessMediumLow),
+                    label = "chipScale",
+                )
                 Box(
                     modifier = Modifier
+                        .graphicsLayer {
+                            scaleX = chipScale
+                            scaleY = chipScale
+                        }
                         .clip(RoundedCornerShape(20.dp))
                         .background(
-                            if (selected) Color.White.copy(alpha = 0.90f) else Color.White.copy(alpha = 0.16f),
+                            if (selected) Color.White.copy(alpha = 0.90f) else Color.White.copy(alpha = 0.12f),
                         )
                         .border(
-                            BorderStroke(1.dp, if (selected) Color.White else Color.White.copy(alpha = 0.35f)),
+                            BorderStroke(1.dp, if (selected) Color.White else Color.White.copy(alpha = 0.20f)),
                             RoundedCornerShape(20.dp),
                         )
-                        .clickable { onToggleGenre(genre) }
+                        .clickable(
+                            interactionSource = interactionSource,
+                            indication = null,
+                        ) { onToggleGenre(genre) }
                         .padding(horizontal = 16.dp, vertical = 9.dp),
                     contentAlignment = Alignment.Center,
                 ) {
@@ -868,12 +954,11 @@ private fun StepAccountContent(
 
         Spacer(Modifier.height(20.dp))
 
-        Text(
-            text = "Connect Your Account",
+        TypewriterHeadline(
+            text = "Connect your music",
             style = MaterialTheme.typography.titleLarge,
             fontWeight = FontWeight.Bold,
             color = Color.White,
-            textAlign = TextAlign.Center,
         )
         Spacer(Modifier.height(8.dp))
         Text(

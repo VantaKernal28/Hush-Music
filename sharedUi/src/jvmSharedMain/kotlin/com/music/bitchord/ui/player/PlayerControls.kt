@@ -92,6 +92,7 @@ import androidx.compose.ui.geometry.CornerRadius
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Shadow
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.luminance
 import androidx.compose.ui.graphics.painter.Painter
 import androidx.compose.ui.graphics.vector.ImageVector
 import org.jetbrains.compose.resources.painterResource
@@ -224,6 +225,7 @@ internal fun PlayerScrubber(
     val reduceAnimation by PlayerSettings.reduceAnimation.collectAsStateWithLifecycle()
     // One clock for the bar and the "Mixing" label, so they breathe on the same beat.
     val mixPulse = rememberMixPulse({ mixBlend.value }, enabled = !reduceAnimation)
+    val materialUi by PlayerSettings.materialUiMode.collectAsStateWithLifecycle()
     Column(Modifier.fillMaxWidth()) {
         ThinSlider(
             value = shown,
@@ -233,6 +235,9 @@ internal fun PlayerScrubber(
             mixing = mixing,
             mixPulse = mixPulse,
             transitionWindow = transitionWindow,
+            idleHeight = if (materialUi) 8.dp else 7.dp,
+            activeHeight = if (materialUi) 14.dp else 12.dp,
+            activeColor = if (materialUi) MaterialTheme.colorScheme.primary else Color.White.copy(alpha = 0.92f),
         )
         Box(
             modifier = Modifier
@@ -473,9 +478,14 @@ internal fun TransportRow(
     onNext: () -> Unit,
     compact: Boolean = false,
 ) {
-    val playSize = if (compact) 58.dp else 74.dp
-    val playTouch = if (compact) 76.dp else 92.dp
-    val skipSize = if (compact) 44.dp else PLAYER_SKIP_ICON_SIZE
+    val materialUi by PlayerSettings.materialUiMode.collectAsStateWithLifecycle()
+    val primaryColor = MaterialTheme.colorScheme.primary
+
+    val playSize = if (materialUi) (if (compact) 32.dp else 36.dp) else (if (compact) 58.dp else 74.dp)
+    val playTouch = if (materialUi) (if (compact) 60.dp else 72.dp) else (if (compact) 76.dp else 92.dp)
+    val skipSize = if (materialUi) (if (compact) 24.dp else 28.dp) else (if (compact) 44.dp else PLAYER_SKIP_ICON_SIZE)
+    val skipTouch = if (materialUi) (if (compact) 46.dp else 54.dp) else PLAYER_SKIP_TOUCH_SIZE
+
     Row(
         modifier = Modifier.fillMaxWidth(),
         // SpaceAround, not SpaceEvenly: the outer margins take half a gap, so
@@ -487,8 +497,11 @@ internal fun TransportRow(
             icon = Res.drawable.ic_player_previous,
             contentDescription = stringResource(Res.string.widget_previous),
             size = skipSize,
-            touchSize = PLAYER_SKIP_TOUCH_SIZE,
-            heightScale = PLAYER_SKIP_HEIGHT_SCALE,
+            touchSize = skipTouch,
+            heightScale = if (materialUi) 1f else PLAYER_SKIP_HEIGHT_SCALE,
+            buttonShape = if (materialUi) CircleShape else null,
+            buttonBackground = if (materialUi) Color.White.copy(alpha = 0.12f) else null,
+            iconTint = if (materialUi) Color.White else null,
             onClick = onPrevious,
             enabled = previousEnabled,
             haptic = Haptic.SkipPrevious,
@@ -496,11 +509,19 @@ internal fun TransportRow(
         if (isLoading) {
             // Same footprint as the play/pause target — a smaller box here
             // would shunt everything below it on every load.
-            Box(Modifier.size(playTouch), contentAlignment = Alignment.Center) {
+            Box(
+                Modifier
+                    .size(playTouch)
+                    .then(
+                        if (materialUi) Modifier.clip(RoundedCornerShape(24.dp)).background(primaryColor)
+                        else Modifier,
+                    ),
+                contentAlignment = Alignment.Center,
+            ) {
                 CircularProgressIndicator(
-                    color = Color.White,
+                    color = if (materialUi) (if (primaryColor.luminance() > 0.5f) Color.Black else Color.White) else Color.White,
                     strokeWidth = 3.dp,
-                    modifier = Modifier.size(if (compact) 30.dp else 38.dp),
+                    modifier = Modifier.size(if (compact) 26.dp else 32.dp),
                 )
             }
         } else {
@@ -509,6 +530,9 @@ internal fun TransportRow(
                 contentDescription = stringResource(if (isPlaying) Res.string.pause else Res.string.play),
                 size = playSize,
                 touchSize = playTouch,
+                buttonShape = if (materialUi) RoundedCornerShape(24.dp) else null,
+                buttonBackground = if (materialUi) primaryColor else null,
+                iconTint = if (materialUi) (if (primaryColor.luminance() > 0.5f) Color.Black else Color.White) else null,
                 onClick = onPlayPause,
                 haptic = if (isPlaying) Haptic.Pause else Haptic.Resume,
             )
@@ -517,8 +541,11 @@ internal fun TransportRow(
             icon = Res.drawable.ic_player_next,
             contentDescription = stringResource(Res.string.widget_next),
             size = skipSize,
-            touchSize = PLAYER_SKIP_TOUCH_SIZE,
-            heightScale = PLAYER_SKIP_HEIGHT_SCALE,
+            touchSize = skipTouch,
+            heightScale = if (materialUi) 1f else PLAYER_SKIP_HEIGHT_SCALE,
+            buttonShape = if (materialUi) CircleShape else null,
+            buttonBackground = if (materialUi) Color.White.copy(alpha = 0.12f) else null,
+            iconTint = if (materialUi) Color.White else null,
             onClick = onNext,
             enabled = nextEnabled,
             haptic = Haptic.SkipNext,
@@ -804,6 +831,9 @@ private fun TransportGlyph(
     haptic: Haptic = Haptic.Tap,
     /** Vertical squash of the glyph alone; its width and touch box are untouched. */
     heightScale: Float = 1f,
+    buttonShape: androidx.compose.ui.graphics.Shape? = null,
+    buttonBackground: Color? = null,
+    iconTint: Color? = null,
 ) {
     val haptics = rememberHaptics()
     // Faded rather than hidden: the row keeps its shape at the ends of a queue.
@@ -814,6 +844,13 @@ private fun TransportGlyph(
     Box(
         modifier = Modifier
             .size(touchSize)
+            .then(
+                if (buttonShape != null && buttonBackground != null) {
+                    Modifier
+                        .clip(buttonShape)
+                        .background(buttonBackground)
+                } else Modifier,
+            )
             .clickable(
                 interactionSource = remember { MutableInteractionSource() },
                 indication = null,
@@ -827,7 +864,7 @@ private fun TransportGlyph(
         Icon(
             painter = painterResource(icon),
             contentDescription = contentDescription,
-            tint = Color.White.copy(alpha = alpha),
+            tint = (iconTint ?: Color.White).copy(alpha = alpha),
             modifier = Modifier
                 .size(size)
                 .then(if (heightScale != 1f) Modifier.graphicsLayer { scaleY = heightScale } else Modifier),
@@ -856,7 +893,7 @@ private val BOTTOM_ICON_SIZE = 26.dp
  * little over half strength so the artwork still colours it.
  */
 private val BOTTOM_ACTIVE_TILE_SIZE = 35.dp
-private val BOTTOM_ACTIVE_TILE_CORNER = 7.dp
+private val BOTTOM_ACTIVE_TILE_CORNER = 18.dp
 private const val BOTTOM_ACTIVE_TILE_ALPHA = 0.62f
 
 /**

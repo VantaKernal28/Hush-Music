@@ -1,5 +1,6 @@
 package com.music.bitchord.ui.components
 
+import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.animateColorAsState
 import androidx.compose.animation.core.AnimationSpec
 import androidx.compose.animation.core.Spring
@@ -7,6 +8,10 @@ import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.snap
 import androidx.compose.animation.core.spring
 import androidx.compose.animation.core.tween
+import androidx.compose.animation.expandHorizontally
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.shrinkHorizontally
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
@@ -43,6 +48,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.luminance
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.input.pointer.pointerInput
@@ -186,6 +192,84 @@ fun FloatingBottomBar(
 ) {
     val pillShape = RoundedCornerShape(percent = 50)
     val container = MaterialTheme.colorScheme.surface
+    val materialUiMode by AppSettings.materialUiMode.collectAsStateWithLifecycle()
+
+    if (materialUiMode) {
+        val m3Container = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.95f)
+        val m3Border = Color.White.copy(alpha = 0.08f)
+        val haptics = rememberHaptics()
+        Box(
+            modifier = modifier
+                .windowInsetsPadding(floatingBarInsets)
+                .padding(horizontal = NAV_BAR_GUTTER)
+                .padding(bottom = NAV_BAR_LIFT)
+                .fillMaxWidth()
+                .clip(pillShape)
+                .background(m3Container)
+                .border(1.dp, m3Border, pillShape)
+                .padding(horizontal = 6.dp, vertical = 6.dp),
+        ) {
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically,
+            ) {
+                tabs.forEachIndexed { index, tab ->
+                    val selected = index == selectedIndex
+                    val activeContainer = MaterialTheme.colorScheme.primary
+                    val onActiveContainer = if (activeContainer.luminance() > 0.5f) Color.Black else Color.White
+                    val inactiveColor = MaterialTheme.colorScheme.onSurfaceVariant
+
+                    Row(
+                        modifier = Modifier
+                            .clip(pillShape)
+                            .then(
+                                if (selected) Modifier.background(activeContainer) else Modifier
+                            )
+                            .clickable(
+                                interactionSource = remember { MutableInteractionSource() },
+                                indication = null,
+                            ) {
+                                if (!selected) haptics.play(Haptic.Select)
+                                onTabSelected(index)
+                            }
+                            .padding(
+                                horizontal = if (selected) 16.dp else 12.dp,
+                                vertical = 10.dp,
+                            ),
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.Center,
+                    ) {
+                        Icon(
+                            imageVector = tab.icon,
+                            contentDescription = tab.label,
+                            tint = if (selected) onActiveContainer else inactiveColor,
+                            modifier = Modifier.size(22.dp),
+                        )
+                        AnimatedVisibility(
+                            visible = selected,
+                            enter = fadeIn(tween(180)) + expandHorizontally(spring(dampingRatio = 0.72f, stiffness = 320f)),
+                            exit = fadeOut(tween(120)) + shrinkHorizontally(spring(dampingRatio = 0.72f, stiffness = 320f)),
+                        ) {
+                            Row {
+                                Spacer(Modifier.width(8.dp))
+                                Text(
+                                    text = tab.label,
+                                    style = MaterialTheme.typography.labelMedium.copy(
+                                        fontWeight = FontWeight.Bold,
+                                        fontSize = 12.sp,
+                                    ),
+                                    color = onActiveContainer,
+                                    maxLines = 1,
+                                )
+                            }
+                        }
+                    }
+                }
+            }
+        }
+        return
+    }
     val reduceDynamicBlur by AppSettings.reduceDynamicBlur.collectAsStateWithLifecycle()
     val useGlass = LocalLiquidGlassEnabled.current && isGlassSupported()
     val reduceAnimation by AppSettings.reduceAnimation.collectAsStateWithLifecycle()
@@ -391,9 +475,8 @@ private fun BottomBarItem(
         label = "tabTint",
     )
 
-    Column(
-        horizontalAlignment = Alignment.CenterHorizontally,
-        verticalArrangement = Arrangement.Center,
+    Box(
+        contentAlignment = Alignment.Center,
         modifier = modifier
             .clip(RoundedCornerShape(percent = 50))
             .clickable(
@@ -403,30 +486,18 @@ private fun BottomBarItem(
                 if (!selected) haptics.play(Haptic.Select)
                 onClick()
             }
-            .padding(vertical = TAB_VERTICAL_PADDING),
+            .padding(vertical = 12.dp),
     ) {
         Icon(
             imageVector = tab.icon,
             contentDescription = tab.label,
             tint = tint,
             modifier = Modifier
-                .size(24.dp)
+                .size(26.dp)
                 .graphicsLayer {
                     scaleX = scale
                     scaleY = scale
                 },
-        )
-        Spacer(Modifier.height(3.dp))
-        Text(
-            text = tab.label,
-            style = MaterialTheme.typography.labelSmall.copy(
-                fontSize = 11.sp,
-                fontWeight = if (selected) FontWeight.W700 else FontWeight.W500,
-                letterSpacing = 0.2.sp,
-            ),
-            color = tint,
-            maxLines = 1,
-            overflow = TextOverflow.Ellipsis,
         )
     }
 }
