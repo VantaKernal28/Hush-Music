@@ -763,12 +763,14 @@ object ListenTogether {
     }
 
     /** Whether this device has an account it can jam as. */
-    fun canJoin(): Boolean = identity() != null
+    fun canJoin(): Boolean = if (::prefs.isInitialized) identity() != null else false
 
-    fun nickname(): String = prefs.getString(KEY_NICKNAME, null).orEmpty()
+    fun nickname(): String = if (::prefs.isInitialized) prefs.getString(KEY_NICKNAME, null).orEmpty() else ""
 
     fun setNickname(value: String) {
-        prefs.edit().putString(KEY_NICKNAME, value.trim().take(80)).apply()
+        if (::prefs.isInitialized) {
+            prefs.edit().putString(KEY_NICKNAME, value.trim().take(80)).apply()
+        }
     }
 
     /**

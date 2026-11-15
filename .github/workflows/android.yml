@@ -69,5 +69,5 @@ jobs:
     - name: Upload Hush Music Phone APK Artifacts
       uses: actions/upload-artifact@v4
       with:
-        name: HushMusic-v1.1-beta-release
+        name: HushMusic-beta-1.2-release
         path: app/build/outputs/apk/prod/release/*.apk

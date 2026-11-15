@@ -58,7 +58,9 @@ object SearchHistory {
 
     private fun saveAddon(value: List<String>) {
         _addonRecent.value = value
-        prefs.edit().putString(KEY_ADDON_HISTORY, json.encodeToString(addonSerializer, value)).apply()
+        if (this::prefs.isInitialized) {
+            prefs.edit().putString(KEY_ADDON_HISTORY, json.encodeToString(addonSerializer, value)).apply()
+        }
     }
 
     fun init(context: Context) {
@@ -101,7 +103,9 @@ object SearchHistory {
 
     private fun save(value: List<SearchHistoryEntity>) {
         _recent.value = value
-        prefs.edit().putString(KEY_HISTORY, json.encodeToString(serializer, value)).apply()
+        if (this::prefs.isInitialized) {
+            prefs.edit().putString(KEY_HISTORY, json.encodeToString(serializer, value)).apply()
+        }
     }
 
     private const val KEY_HISTORY = "search_history"

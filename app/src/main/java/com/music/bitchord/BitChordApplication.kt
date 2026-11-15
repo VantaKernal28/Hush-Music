@@ -127,29 +127,34 @@ class BitChordApplication : Application(), SingletonImageLoader.Factory, Configu
             }
         }
 
-        // Heavy stores, caches, and telemetry are initialized on a background thread
-        // so Application.onCreate() completes in single-digit milliseconds and the first
-        // frame renders instantaneously without a cold-start black freeze.
-        thread(name = "startup-init", priority = Thread.NORM_PRIORITY) {
-            SourceRegistry.init(this)
-            AndroidStreamHooks.initInnerTubeX(this)
-            CanvasCache.init(this)
-            com.music.bitchord.data.sources.addon.AddonAuth.init(this)
-            com.music.bitchord.playback.audio.LosslessOutput.init(this)
-            AudioCache.init(this)
-            ListenTogether.init(this)
-            SearchHistory.init(this)
-            LastPlayed.init(this)
-            BoundedContextPersistence.init(this)
-            com.music.bitchord.playback.PartyPersonalQueueStash.init(this)
-            OriginalVersion.init(this)
-            Downloads.init(this)
-            PlaylistSync.init(this)
-            ListeningStats.init(this)
-            ArtistFacts.init(this)
-            initLastfm()
-            com.music.bitchord.data.presence.AndroidPresence.install(this)
+        // Opened off the main thread: none of these reads a setting or the session,
+        // and between them they are the slowest opens at startup. Joined before onCreate returns.
+        val backgroundInit = thread(name = "startup-init") {
+            runCatching { SourceRegistry.init(this) }
+            runCatching { AndroidStreamHooks.initInnerTubeX(this) }
+            runCatching { CanvasCache.init(this) }
         }
+
+        // Essential app stores and singletons initialized safely on main thread to prevent
+        // UninitializedPropertyAccessException during early Compose first-frame rendering.
+        runCatching { com.music.bitchord.data.sources.addon.AddonAuth.init(this) }
+        runCatching { com.music.bitchord.playback.audio.LosslessOutput.init(this) }
+        runCatching { ListenTogether.init(this) }
+        runCatching { SearchHistory.init(this) }
+        runCatching { LastPlayed.init(this) }
+        runCatching { BoundedContextPersistence.init(this) }
+        runCatching { com.music.bitchord.playback.PartyPersonalQueueStash.init(this) }
+        runCatching { OriginalVersion.init(this) }
+        runCatching { Downloads.init(this) }
+        runCatching { PlaylistSync.init(this) }
+        runCatching { ListeningStats.init(this) }
+        runCatching { ArtistFacts.init(this) }
+        runCatching { AudioCache.init(this) }
+        runCatching { initLastfm() }
+        runCatching { com.music.bitchord.data.presence.AndroidPresence.install(this) }
+
+        // Await background initialization before returning so no service sees them half-open
+        runCatching { backgroundInit.join() }
     }
 
     /**

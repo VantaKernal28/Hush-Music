@@ -451,11 +451,11 @@ private fun EntranceLaunchAnimation(
             modifier = Modifier
                 .graphicsLayer {
                     translationX = exitOffset.value
-                    this.alpha = alpha.value * exitAlpha.value
-                    scaleX = scale.value
-                    scaleY = scale.value
+                    this.alpha = (alpha.value * exitAlpha.value).coerceIn(0f, 1f)
+                    scaleX = scale.value.coerceAtLeast(0.01f)
+                    scaleY = scale.value.coerceAtLeast(0.01f)
                 }
-                .blur(if (entranceBlur.value > 0.1f) entranceBlur.value.dp else exitBlur.value.dp),
+                .blur(maxOf(0f, if (entranceBlur.value > 0.1f) entranceBlur.value else exitBlur.value).dp),
         ) {
             Image(
                 painter = painterResource(R.drawable.ic_hush_transparent_logo),
@@ -502,9 +502,9 @@ private fun PostNameIdentityRevealAnimation(
         onAnimationComplete()
     }
 
-    val iconAlpha = logoProgress.value
-    val iconScale = 0.90f + 0.10f * logoProgress.value
-    val iconBlur = (24f * (1f - logoProgress.value)).dp
+    val iconAlpha = logoProgress.value.coerceIn(0f, 1f)
+    val iconScale = (0.90f + 0.10f * logoProgress.value).coerceAtLeast(0.01f)
+    val iconBlur = (24f * (1f - logoProgress.value)).coerceAtLeast(0f).dp
 
     val brandName = "Hush Music"
     val ambientGradient = remember(accentColor) {
@@ -522,7 +522,7 @@ private fun PostNameIdentityRevealAnimation(
         modifier = Modifier
             .fillMaxSize()
             .background(ambientGradient)
-            .graphicsLayer { alpha = fadeOutAll.value },
+            .graphicsLayer { alpha = fadeOutAll.value.coerceIn(0f, 1f) },
         contentAlignment = Alignment.Center,
     ) {
         Column(
@@ -553,8 +553,8 @@ private fun PostNameIdentityRevealAnimation(
                 brandName.forEachIndexed { index, char ->
                     val charThreshold = index.toFloat() / brandName.length.toFloat()
                     val charProgress = ((textProgress.value - charThreshold * 0.45f) / 0.55f).coerceIn(0f, 1f)
-                    val charAlpha = charProgress
-                    val charBlur = (14f * (1f - charProgress)).dp
+                    val charAlpha = charProgress.coerceIn(0f, 1f)
+                    val charBlur = (14f * (1f - charProgress)).coerceAtLeast(0f).dp
 
                     Text(
                         text = char.toString(),
@@ -816,8 +816,8 @@ private fun StepVibeAudioContent(
                 Box(
                     modifier = Modifier
                         .graphicsLayer {
-                            scaleX = chipScale
-                            scaleY = chipScale
+                            scaleX = chipScale.coerceAtLeast(0.01f)
+                            scaleY = chipScale.coerceAtLeast(0.01f)
                         }
                         .clip(RoundedCornerShape(20.dp))
                         .background(

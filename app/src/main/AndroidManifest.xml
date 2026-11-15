@@ -235,6 +235,9 @@
                 <category android:name="android.intent.category.DEFAULT" />
                 <category android:name="android.intent.category.BROWSABLE" />
                 <data
+                    android:scheme="hushmusic"
+                    android:host="party" />
+                <data
                     android:scheme="bitchord"
                     android:host="party" />
             </intent-filter>

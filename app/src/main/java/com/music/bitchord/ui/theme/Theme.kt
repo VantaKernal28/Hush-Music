@@ -58,9 +58,11 @@ val HushSunsetGradient = listOf(
 val AccentRed = HushSunsetOrange
 
 /** Hush Brand Font Family */
-val CherryBombOne = FontFamily(
-    Font(R.font.cherry_bomb_one_regular, FontWeight.Normal),
-)
+val CherryBombOne: FontFamily = try {
+    FontFamily(Font(R.font.cherry_bomb_one_regular, FontWeight.Normal))
+} catch (_: Throwable) {
+    FontFamily.Default
+}
 
 /** Accent Color Swatch definition for app-wide dynamic theme customization */
 data class HushAccentSwatch(
