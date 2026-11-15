@@ -35,6 +35,7 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
+import androidx.compose.foundation.interaction.collectIsPressedAsState
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.BoxScope
@@ -214,6 +215,7 @@ internal fun PlayerScrubber(
     transitionWindow: ClosedFloatingPointRange<Float>?,
     onScrub: (Float) -> Unit,
     onScrubFinished: () -> Unit,
+    isPlaying: Boolean = true,
     centerLabel: @Composable BoxScope.() -> Unit = {},
 ) {
     val shown = shown()
@@ -223,22 +225,32 @@ internal fun PlayerScrubber(
     // canvas needs.
     val mixBlend = PlayerSettings.smartMixBlend.collectAsStateWithLifecycle()
     val reduceAnimation by PlayerSettings.reduceAnimation.collectAsStateWithLifecycle()
+    val expressiveUi by PlayerSettings.expressiveUiEnabled.collectAsStateWithLifecycle()
     // One clock for the bar and the "Mixing" label, so they breathe on the same beat.
     val mixPulse = rememberMixPulse({ mixBlend.value }, enabled = !reduceAnimation)
     val materialUi by PlayerSettings.materialUiMode.collectAsStateWithLifecycle()
     Column(Modifier.fillMaxWidth()) {
-        ThinSlider(
-            value = shown,
-            onValueChange = onScrub,
-            onValueChangeFinished = onScrubFinished,
-            loading = loading,
-            mixing = mixing,
-            mixPulse = mixPulse,
-            transitionWindow = transitionWindow,
-            idleHeight = if (materialUi) 8.dp else 7.dp,
-            activeHeight = if (materialUi) 14.dp else 12.dp,
-            activeColor = if (materialUi) MaterialTheme.colorScheme.primary else Color.White.copy(alpha = 0.92f),
-        )
+        if (expressiveUi) {
+            com.music.bitchord.ui.components.expressive.WavyProgressSlider(
+                value = shown,
+                onValueChange = onScrub,
+                onValueChangeFinished = onScrubFinished,
+                isPlaying = isPlaying,
+            )
+        } else {
+            ThinSlider(
+                value = shown,
+                onValueChange = onScrub,
+                onValueChangeFinished = onScrubFinished,
+                loading = loading,
+                mixing = mixing,
+                mixPulse = mixPulse,
+                transitionWindow = transitionWindow,
+                idleHeight = if (materialUi) 8.dp else 7.dp,
+                activeHeight = if (materialUi) 14.dp else 12.dp,
+                activeColor = if (materialUi) MaterialTheme.colorScheme.primary else Color.White.copy(alpha = 0.92f),
+            )
+        }
         Box(
             modifier = Modifier
                 .fillMaxWidth()
@@ -836,6 +848,14 @@ private fun TransportGlyph(
     iconTint: Color? = null,
 ) {
     val haptics = rememberHaptics()
+    val expressiveUi by PlayerSettings.expressiveUiEnabled.collectAsStateWithLifecycle()
+    val interactionSource = remember { MutableInteractionSource() }
+    val isPressed by interactionSource.collectIsPressedAsState()
+    val pressScale by animateFloatAsState(
+        targetValue = if (expressiveUi && isPressed) 0.88f else 1f,
+        animationSpec = com.music.bitchord.ui.components.expressive.ExpressiveMotion.TactilePressSpring,
+        label = "transportPressScale",
+    )
     // Faded rather than hidden: the row keeps its shape at the ends of a queue.
     val alpha by animateFloatAsState(
         targetValue = if (enabled) 1f else 0.3f,
@@ -852,7 +872,7 @@ private fun TransportGlyph(
                 } else Modifier,
             )
             .clickable(
-                interactionSource = remember { MutableInteractionSource() },
+                interactionSource = interactionSource,
                 indication = null,
                 enabled = enabled,
             ) {
@@ -867,7 +887,10 @@ private fun TransportGlyph(
             tint = (iconTint ?: Color.White).copy(alpha = alpha),
             modifier = Modifier
                 .size(size)
-                .then(if (heightScale != 1f) Modifier.graphicsLayer { scaleY = heightScale } else Modifier),
+                .graphicsLayer {
+                    scaleX = pressScale
+                    scaleY = pressScale * heightScale
+                },
         )
     }
 }

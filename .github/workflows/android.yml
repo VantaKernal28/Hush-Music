@@ -6,6 +6,7 @@ on:
       - main
       - beta-1.1
       - 'beta-*'
+      - BETA1.3
   workflow_dispatch:
 
 jobs:

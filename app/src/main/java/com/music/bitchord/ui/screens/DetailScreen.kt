@@ -6,6 +6,7 @@ import com.music.bitchord.R
 
 import androidx.compose.animation.AnimatedContent
 import androidx.compose.animation.animateContentSize
+import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.tween
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
@@ -13,6 +14,8 @@ import androidx.compose.animation.togetherWith
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.interaction.MutableInteractionSource
+import androidx.compose.foundation.interaction.collectIsPressedAsState
 import androidx.compose.foundation.gestures.snapping.rememberSnapFlingBehavior
 import com.music.bitchord.ui.components.liquidGlassRim
 import com.music.bitchord.ui.components.continuous
@@ -1611,12 +1614,24 @@ private fun ActionRow(
             size = ARTIST_SIDE_BUTTON,
         )
 
-        PlayCircle(
-            onClick = onPlay,
-            size = ARTIST_PLAY_BUTTON,
-            iconScale = ARTIST_PLAY_ICON_SCALE,
-            containerColor = playColor ?: Color.White,
-        )
+        val expressiveUi by AppSettings.expressiveUiEnabled.collectAsStateWithLifecycle()
+        if (expressiveUi) {
+            com.music.bitchord.ui.components.expressive.ScallopedFab(
+                onClick = onPlay,
+                containerColor = playColor ?: MaterialTheme.colorScheme.primary,
+                contentColor = if (playColor != null) Color.Black else MaterialTheme.colorScheme.onPrimary,
+                size = ARTIST_PLAY_BUTTON,
+                iconSize = 34.dp,
+                contentDescription = stringResource(R.string.play),
+            )
+        } else {
+            PlayCircle(
+                onClick = onPlay,
+                size = ARTIST_PLAY_BUTTON,
+                iconScale = ARTIST_PLAY_ICON_SCALE,
+                containerColor = playColor ?: Color.White,
+            )
+        }
 
         if (subscription != null) {
             CircleIconButton(
@@ -1659,9 +1674,21 @@ private fun ActionPill(
     // Resume rather than a flat tap: both start a queue, and the rising pair
     // says so.
     val haptics = rememberHaptics()
+    val expressiveUi by AppSettings.expressiveUiEnabled.collectAsStateWithLifecycle()
+    val interactionSource = remember { MutableInteractionSource() }
+    val isPressed by interactionSource.collectIsPressedAsState()
+    val pressScale by animateFloatAsState(
+        targetValue = if (expressiveUi && isPressed) 0.94f else 1f,
+        animationSpec = com.music.bitchord.ui.components.expressive.ExpressiveMotion.TactilePressSpring,
+        label = "actionPillScale",
+    )
     val content = if (filled) Color.Black else MaterialTheme.colorScheme.onSurface
     Row(
         modifier = modifier
+            .graphicsLayer {
+                scaleX = pressScale
+                scaleY = pressScale
+            }
             .height(size)
             .clip(CircleShape)
             .then(
@@ -1674,7 +1701,10 @@ private fun ActionPill(
                         .border(1.dp, Color.White.copy(alpha = TOP_RELEASE_EDGE_ALPHA), CircleShape)
                 },
             )
-            .clickable {
+            .clickable(
+                interactionSource = interactionSource,
+                indication = null,
+            ) {
                 haptics.play(Haptic.Resume)
                 onClick()
             }

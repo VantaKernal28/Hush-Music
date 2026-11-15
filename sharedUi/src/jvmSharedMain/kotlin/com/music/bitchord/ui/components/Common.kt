@@ -335,27 +335,48 @@ fun SongRow(
      */
     trailing: (@Composable () -> Unit)? = null,
 ) {
+    val expressiveUi by com.music.bitchord.ui.player.PlayerSettings.expressiveUiEnabled.collectAsStateWithLifecycle()
     SwipeToQueueBox(
         onSwipeToQueue = onSwipeToQueue,
         modifier = modifier,
     ) {
-        SongRowContent(
-            song = song,
-            onClick = onClick,
-            onLongPress = onLongPress,
-            onMore = onMore ?: onLongPress,
-            modifier = if (onSwipeToQueue != null) Modifier.background(rowBackground) else modifier,
-            trackNumber = trackNumber,
-            subtitleColor = subtitleColor,
-            downloadedTint = downloadedTint,
-            isCurrent = isCurrent,
-            isPlaying = isPlaying,
-            activeTint = activeTint,
-            searchPlayingStyle = searchPlayingStyle,
-            selected = selected,
-            showSourceQuality = showSourceQuality,
-            trailing = trailing,
-        )
+        if (expressiveUi) {
+            com.music.bitchord.ui.components.expressive.MorphingTrackItem(
+                song = song,
+                onClick = onClick,
+                onLongPress = onLongPress,
+                onMore = onMore ?: onLongPress,
+                modifier = if (onSwipeToQueue != null) Modifier.background(rowBackground) else modifier,
+                trackNumber = trackNumber,
+                subtitleColor = subtitleColor,
+                downloadedTint = downloadedTint,
+                isCurrent = isCurrent,
+                isPlaying = isPlaying,
+                activeTint = activeTint,
+                searchPlayingStyle = searchPlayingStyle,
+                selected = selected,
+                showSourceQuality = showSourceQuality,
+                trailing = trailing,
+            )
+        } else {
+            SongRowContent(
+                song = song,
+                onClick = onClick,
+                onLongPress = onLongPress,
+                onMore = onMore ?: onLongPress,
+                modifier = if (onSwipeToQueue != null) Modifier.background(rowBackground) else modifier,
+                trackNumber = trackNumber,
+                subtitleColor = subtitleColor,
+                downloadedTint = downloadedTint,
+                isCurrent = isCurrent,
+                isPlaying = isPlaying,
+                activeTint = activeTint,
+                searchPlayingStyle = searchPlayingStyle,
+                selected = selected,
+                showSourceQuality = showSourceQuality,
+                trailing = trailing,
+            )
+        }
     }
 }
 

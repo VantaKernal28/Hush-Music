@@ -255,6 +255,7 @@ fun SettingsScreen(
     val spatialAudio by AppSettings.spatialAudio.collectAsStateWithLifecycle()
     val nerdStats by AppSettings.showNerdStats.collectAsStateWithLifecycle()
     val listenTogetherButton by AppSettings.showListenTogetherButton.collectAsStateWithLifecycle()
+    val expressiveUiEnabled by AppSettings.expressiveUiEnabled.collectAsStateWithLifecycle()
     val reduceAnimation by AppSettings.reduceAnimation.collectAsStateWithLifecycle()
     val reduceDynamicBlur by AppSettings.reduceDynamicBlur.collectAsStateWithLifecycle()
     val disableBlendEffects by AppSettings.disableBlendEffects.collectAsStateWithLifecycle()
@@ -1313,6 +1314,21 @@ fun SettingsScreen(
                         )
                     },
                     onClick = { AppSettings.setLiveSongColorGradient(!liveSongColorGradient) },
+                )
+            }
+            val expressiveUiTitle = "Material 3 Expressive UI"
+            row(expressiveUiTitle, "expressive", "m3e", "spring", "wavy", "morph") {
+                SettingsRow(
+                    icon = SfIcons.AutoAwesome,
+                    title = expressiveUiTitle,
+                    subtitle = "Bold tactile shapes, spring physics, wavy seekbar, and morphing player components",
+                    trailing = {
+                        IosSwitch(
+                            checked = expressiveUiEnabled,
+                            onCheckedChange = AppSettings::setExpressiveUiEnabled,
+                        )
+                    },
+                    onClick = { AppSettings.setExpressiveUiEnabled(!expressiveUiEnabled) },
                 )
             }
             val reduceAnimationTitle = stringResource(R.string.reduce_animation)

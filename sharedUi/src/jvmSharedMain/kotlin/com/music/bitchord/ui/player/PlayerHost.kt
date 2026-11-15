@@ -287,6 +287,8 @@ interface PlayerSettingsSource {
     val syncedLyrics: StateFlow<Boolean>
     val translationLanguage: StateFlow<String>
     val versionAlignmentInProgress: StateFlow<Boolean>
+    /** Material 3 Expressive (M3E) UI styling and motion physics toggle. */
+    val expressiveUiEnabled: StateFlow<Boolean> get() = MutableStateFlow(true)
 
     fun setLastPlayerScreen(value: LastPlayerScreen)
     fun setLyricsOffsetMs(value: Int)
