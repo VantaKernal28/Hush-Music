@@ -43,6 +43,8 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.IntSize
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.music.bitchord.data.settings.AppSettings
 import com.music.bitchord.ui.components.BottomTab
 import com.music.bitchord.ui.components.NAV_BAR_GUTTER
 import com.music.bitchord.ui.components.NAV_BAR_LIFT
@@ -73,6 +75,7 @@ fun ExpressiveNavBar(
 ) {
     val haptic = LocalHapticFeedback.current
     val density = LocalDensity.current
+    val materialUi by AppSettings.materialUiMode.collectAsStateWithLifecycle()
     val pillShape = remember { RoundedCornerShape(percent = 50) }
     val tabCount = tabs.size
 
@@ -101,13 +104,13 @@ fun ExpressiveNavBar(
             .shadow(elevation = 12.dp, shape = pillShape, ambientColor = Color.Black.copy(alpha = 0.25f))
             .clip(pillShape)
             .then(
-                if (hazeState != null) {
+                if (materialUi || hazeState == null) {
+                    Modifier.background(MaterialTheme.colorScheme.surfaceContainer)
+                } else {
                     Modifier.hazeEffect(
                         state = hazeState,
                         style = HazeMaterials.regular(MaterialTheme.colorScheme.surfaceContainerHigh),
                     )
-                } else {
-                    Modifier.background(MaterialTheme.colorScheme.surfaceContainerHigh)
                 },
             )
             .border(

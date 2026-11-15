@@ -3175,7 +3175,8 @@ fun NowPlayingScreen(
                         // it docks.
                         fun sleeveShown(): Float = bannerShown() * dockT()
                         fun sleeveCorner(): Dp {
-                            val corner = 8.dp * (1f - sleeveShown())
+                            val baseCorner = if (materialUi) 28.dp else 8.dp
+                            val corner = baseCorner * (1f - sleeveShown())
                             val t = dockT()
                             return if (dock == null || t >= 1f) corner else lerp(dock.miniArtCorner(), corner, t)
                         }

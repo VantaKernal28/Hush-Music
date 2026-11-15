@@ -455,6 +455,9 @@ object AppSettings {
     /** Material UI Theme Mode: tactile Google/M3 expanded tab bar, squircle player buttons, segmented timeline. */
     val materialUiMode = MutableStateFlow(false)
 
+    /** Active when playing the Hush Music logo transition animation while switching theme. */
+    val themeTransitionActive = MutableStateFlow(false)
+
     /** Live Song-Reactive Color Gradient: extracts artwork tones and flows ambient animated gradients in the player. */
     val liveSongColorGradient = MutableStateFlow(true)
 
@@ -1494,6 +1497,10 @@ object AppSettings {
     fun setMaterialUiMode(value: Boolean) {
         materialUiMode.value = value
         prefs.edit().putBoolean(KEY_MATERIAL_UI_MODE, value).apply()
+    }
+
+    fun triggerMaterialUiTransition() {
+        themeTransitionActive.value = true
     }
 
     fun setLiveSongColorGradient(value: Boolean) {

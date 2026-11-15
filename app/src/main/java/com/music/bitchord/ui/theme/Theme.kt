@@ -232,15 +232,63 @@ fun BitChordTheme(
 ) {
     val currentAccentId by AppSettings.themeAccent.collectAsStateWithLifecycle()
     val resolvedAccent = resolveAccentColor(currentAccentId, darkTheme)
+    val materialUiMode by AppSettings.materialUiMode.collectAsStateWithLifecycle()
+    val context = LocalContext.current
 
     val baseScheme = if (darkTheme) DarkColors else LightColors
-    val colorScheme = baseScheme.copy(
+    val standardScheme = baseScheme.copy(
         primary = resolvedAccent,
         primaryContainer = resolvedAccent.copy(alpha = if (darkTheme) 0.22f else 0.16f),
         onPrimaryContainer = if (darkTheme) Color.White else Color.Black,
         secondary = resolvedAccent.copy(alpha = 0.85f),
         secondaryContainer = resolvedAccent.copy(alpha = if (darkTheme) 0.16f else 0.10f),
     )
+
+    val colorScheme = if (materialUiMode) {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
+            val dyn = if (darkTheme) dynamicDarkColorScheme(context) else dynamicLightColorScheme(context)
+            dyn.copy(
+                primaryContainer = Color(0xFFFFE082),
+                onPrimaryContainer = Color(0xFF261900),
+                secondaryContainer = if (darkTheme) Color(0xFF233525) else Color(0xFFE8F5E9),
+                onSecondaryContainer = if (darkTheme) Color(0xFFD6E8D2) else Color(0xFF101F10),
+            )
+        } else {
+            if (darkTheme) {
+                DarkColors.copy(
+                    background = Color(0xFF111411),
+                    surface = Color(0xFF111411),
+                    surfaceVariant = Color(0xFF2B312B),
+                    surfaceContainer = Color(0xFF1D221D),
+                    surfaceContainerHigh = Color(0xFF282E27),
+                    primary = resolvedAccent,
+                    primaryContainer = Color(0xFFFFE082),
+                    onPrimaryContainer = Color(0xFF261900),
+                    secondary = Color(0xFFB9CCB5),
+                    secondaryContainer = Color(0xFF233525),
+                    onSecondaryContainer = Color(0xFFD6E8D2),
+                    onSurface = Color(0xFFE1E3DF),
+                    onSurfaceVariant = Color(0xFFC3C8BD),
+                )
+            } else {
+                LightColors.copy(
+                    background = Color(0xFFFBFDF8),
+                    surface = Color(0xFFFBFDF8),
+                    surfaceVariant = Color(0xFFE1E4DD),
+                    surfaceContainer = Color(0xFFEFF3EB),
+                    surfaceContainerHigh = Color(0xFFE7ECE3),
+                    primary = resolvedAccent,
+                    primaryContainer = Color(0xFFFFE082),
+                    onPrimaryContainer = Color(0xFF261900),
+                    secondary = Color(0xFF526350),
+                    secondaryContainer = Color(0xFFE8F5E9),
+                    onSecondaryContainer = Color(0xFF101F10),
+                    onSurface = Color(0xFF191C19),
+                    onSurfaceVariant = Color(0xFF43483F),
+                )
+            }
+        }
+    } else standardScheme
 
     val customFontPath by AppSettings.customFontPath.collectAsStateWithLifecycle()
     val customTypography = remember(customFontPath) {
@@ -263,10 +311,10 @@ fun BitChordTheme(
         AppFont.CUSTOM -> customTypography ?: BitChordTypography
     }
 
-    val shapes = StandardShapes
+    val shapes = if (materialUiMode) ExpressiveShapes else StandardShapes
 
     CompositionLocalProvider(
-        LocalExpressiveMode provides false,
+        LocalExpressiveMode provides materialUiMode,
         LocalHushAccent provides resolvedAccent,
     ) {
         MaterialTheme(

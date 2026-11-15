@@ -25,6 +25,8 @@ import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.music.bitchord.data.settings.AppSettings
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
@@ -94,7 +96,10 @@ fun ExpressiveMiniPlayer(
 ) {
     val haptic = LocalHapticFeedback.current
     val haptics = rememberHaptics()
-    val shape = remember { RoundedCornerShape(percent = 50) }
+    val materialUi by AppSettings.materialUiMode.collectAsStateWithLifecycle()
+    val shape = remember(materialUi) {
+        if (materialUi) RoundedCornerShape(24.dp) else RoundedCornerShape(percent = 50)
+    }
 
     // Breathing artwork scale during playback
     val artworkScale by animateFloatAsState(
@@ -119,16 +124,23 @@ fun ExpressiveMiniPlayer(
                 locked = controlsLocked,
                 onBlocked = onBlockedControl,
             )
-            .shadow(elevation = 14.dp, shape = shape, ambientColor = Color.Black.copy(alpha = 0.3f))
+            .shadow(elevation = 12.dp, shape = shape, ambientColor = Color.Black.copy(alpha = 0.25f))
             .clip(shape)
-            .hazeEffect(
-                state = hazeState,
-                style = HazeMaterials.regular(MaterialTheme.colorScheme.surfaceContainerHigh),
-            )
-            .border(
-                width = 1.dp,
-                color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.35f),
-                shape = shape,
+            .then(
+                if (materialUi) {
+                    Modifier.background(MaterialTheme.colorScheme.secondaryContainer)
+                } else {
+                    Modifier
+                        .hazeEffect(
+                            state = hazeState,
+                            style = HazeMaterials.regular(MaterialTheme.colorScheme.surfaceContainerHigh),
+                        )
+                        .border(
+                            width = 1.dp,
+                            color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.35f),
+                            shape = shape,
+                        )
+                },
             )
             .clickable(onClick = onExpand),
     ) {

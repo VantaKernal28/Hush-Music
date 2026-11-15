@@ -435,9 +435,10 @@ class MainActivity : AppCompatActivity() {
                     }
                 }
                 val appBackdrop = rememberLayerBackdrop(onDraw = paintBackdrop)
+                val materialUiMode by AppSettings.materialUiMode.collectAsStateWithLifecycle()
                 CompositionLocalProvider(
                     LocalOverscrollFactory provides iosOverscrollFactory,
-                    LocalLiquidGlassEnabled provides liquidGlassEnabled,
+                    LocalLiquidGlassEnabled provides (liquidGlassEnabled && !materialUiMode),
                     LocalAppBackdrop provides appBackdrop,
                 ) {
                 // The window's width, measured rather than asked for.
@@ -458,6 +459,15 @@ class MainActivity : AppCompatActivity() {
                         windowHeight = maxHeight,
                         appBackdrop = appBackdrop,
                     )
+
+                    val themeTransitionActive by AppSettings.themeTransitionActive.collectAsStateWithLifecycle()
+                    if (themeTransitionActive) {
+                        com.music.bitchord.ui.components.expressive.HushThemeTransitionOverlay(
+                            onAnimationComplete = {
+                                AppSettings.themeTransitionActive.value = false
+                            },
+                        )
+                    }
                 }
                 }
             }
@@ -3385,7 +3395,7 @@ private fun BitChordApp(
                                 listState = homeListState,
                                 currentSong = player.song,
                                 isPlaying = player.isPlaying,
-                                title = stringResource(R.string.listen_now),
+                                title = if (materialUiMode) "Discover" else stringResource(R.string.listen_now),
                                 festiveLogo = diwaliFestive,
                                 onFestiveLogoClick = { showDiwali = true },
                                 signedIn = signedIn,

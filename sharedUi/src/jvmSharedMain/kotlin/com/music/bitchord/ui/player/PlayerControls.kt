@@ -494,9 +494,11 @@ internal fun TransportRow(
     val primaryColor = MaterialTheme.colorScheme.primary
 
     val playSize = if (materialUi) (if (compact) 32.dp else 36.dp) else (if (compact) 58.dp else 74.dp)
-    val playTouch = if (materialUi) (if (compact) 60.dp else 72.dp) else (if (compact) 76.dp else 92.dp)
+    val playTouchWidth = if (materialUi) (if (compact) 64.dp else 78.dp) else (if (compact) 76.dp else 92.dp)
+    val playTouchHeight = if (materialUi) (if (compact) 48.dp else 54.dp) else (if (compact) 76.dp else 92.dp)
     val skipSize = if (materialUi) (if (compact) 24.dp else 28.dp) else (if (compact) 44.dp else PLAYER_SKIP_ICON_SIZE)
-    val skipTouch = if (materialUi) (if (compact) 46.dp else 54.dp) else PLAYER_SKIP_TOUCH_SIZE
+    val skipTouch = if (materialUi) (if (compact) 46.dp else 52.dp) else PLAYER_SKIP_TOUCH_SIZE
+    val m3PlayColor = Color(0xFFFFE082) // Warm pastel yellow/cream matching Material You
 
     Row(
         modifier = Modifier.fillMaxWidth(),
@@ -512,7 +514,7 @@ internal fun TransportRow(
             touchSize = skipTouch,
             heightScale = if (materialUi) 1f else PLAYER_SKIP_HEIGHT_SCALE,
             buttonShape = if (materialUi) CircleShape else null,
-            buttonBackground = if (materialUi) Color.White.copy(alpha = 0.12f) else null,
+            buttonBackground = if (materialUi) Color.White.copy(alpha = 0.14f) else null,
             iconTint = if (materialUi) Color.White else null,
             onClick = onPrevious,
             enabled = previousEnabled,
@@ -523,15 +525,15 @@ internal fun TransportRow(
             // would shunt everything below it on every load.
             Box(
                 Modifier
-                    .size(playTouch)
+                    .size(width = playTouchWidth, height = playTouchHeight)
                     .then(
-                        if (materialUi) Modifier.clip(RoundedCornerShape(24.dp)).background(primaryColor)
+                        if (materialUi) Modifier.clip(RoundedCornerShape(27.dp)).background(m3PlayColor)
                         else Modifier,
                     ),
                 contentAlignment = Alignment.Center,
             ) {
                 CircularProgressIndicator(
-                    color = if (materialUi) (if (primaryColor.luminance() > 0.5f) Color.Black else Color.White) else Color.White,
+                    color = if (materialUi) Color(0xFF261900) else Color.White,
                     strokeWidth = 3.dp,
                     modifier = Modifier.size(if (compact) 26.dp else 32.dp),
                 )
@@ -541,10 +543,11 @@ internal fun TransportRow(
                 icon = if (isPlaying) Res.drawable.ic_player_pause else Res.drawable.ic_player_play,
                 contentDescription = stringResource(if (isPlaying) Res.string.pause else Res.string.play),
                 size = playSize,
-                touchSize = playTouch,
-                buttonShape = if (materialUi) RoundedCornerShape(24.dp) else null,
-                buttonBackground = if (materialUi) primaryColor else null,
-                iconTint = if (materialUi) (if (primaryColor.luminance() > 0.5f) Color.Black else Color.White) else null,
+                touchWidth = playTouchWidth,
+                touchHeight = playTouchHeight,
+                buttonShape = if (materialUi) RoundedCornerShape(27.dp) else null,
+                buttonBackground = if (materialUi) m3PlayColor else null,
+                iconTint = if (materialUi) Color(0xFF261900) else null,
                 onClick = onPlayPause,
                 haptic = if (isPlaying) Haptic.Pause else Haptic.Resume,
             )
@@ -556,7 +559,7 @@ internal fun TransportRow(
             touchSize = skipTouch,
             heightScale = if (materialUi) 1f else PLAYER_SKIP_HEIGHT_SCALE,
             buttonShape = if (materialUi) CircleShape else null,
-            buttonBackground = if (materialUi) Color.White.copy(alpha = 0.12f) else null,
+            buttonBackground = if (materialUi) Color.White.copy(alpha = 0.14f) else null,
             iconTint = if (materialUi) Color.White else null,
             onClick = onNext,
             enabled = nextEnabled,
@@ -838,6 +841,8 @@ private fun TransportGlyph(
     contentDescription: String,
     size: androidx.compose.ui.unit.Dp,
     touchSize: androidx.compose.ui.unit.Dp = size,
+    touchWidth: androidx.compose.ui.unit.Dp = touchSize,
+    touchHeight: androidx.compose.ui.unit.Dp = touchSize,
     onClick: () -> Unit,
     enabled: Boolean = true,
     haptic: Haptic = Haptic.Tap,
@@ -863,7 +868,7 @@ private fun TransportGlyph(
     )
     Box(
         modifier = Modifier
-            .size(touchSize)
+            .size(width = touchWidth, height = touchHeight)
             .then(
                 if (buttonShape != null && buttonBackground != null) {
                     Modifier

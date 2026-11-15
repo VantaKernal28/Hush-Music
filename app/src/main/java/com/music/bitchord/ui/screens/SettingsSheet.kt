@@ -1291,14 +1291,26 @@ fun SettingsScreen(
                 SettingsRow(
                     icon = SfIcons.Apps,
                     title = materialUiModeTitle,
-                    subtitle = "Dual UI Mode: switch from default frosted glass to Material 3 tactile expanded tab bar and squircle controls",
+                    subtitle = "Dual UI Mode: switch from BitChord frosted glass to full Material You pastel squircle UI with Hush animation",
                     trailing = {
                         IosSwitch(
                             checked = materialUiMode,
-                            onCheckedChange = AppSettings::setMaterialUiMode,
+                            onCheckedChange = { enable ->
+                                if (enable) {
+                                    AppSettings.triggerMaterialUiTransition()
+                                } else {
+                                    AppSettings.setMaterialUiMode(false)
+                                }
+                            },
                         )
                     },
-                    onClick = { AppSettings.setMaterialUiMode(!materialUiMode) },
+                    onClick = {
+                        if (!materialUiMode) {
+                            AppSettings.triggerMaterialUiTransition()
+                        } else {
+                            AppSettings.setMaterialUiMode(false)
+                        }
+                    },
                 )
             }
             val liveSongGradientTitle = "Live Song-Reactive Gradient"
