@@ -1,13 +1,24 @@
 package com.music.bitchord.ui.components.expressive
 
+import androidx.compose.animation.core.FastOutSlowInEasing
+import androidx.compose.animation.core.LinearEasing
+import androidx.compose.animation.core.RepeatMode
+import androidx.compose.animation.core.animateFloat
+import androidx.compose.animation.core.infiniteRepeatable
+import androidx.compose.animation.core.rememberInfiniteTransition
+import androidx.compose.animation.core.tween
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Rect
 import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Outline
 import androidx.compose.ui.graphics.Path
 import androidx.compose.ui.graphics.Shape
+import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.unit.Density
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.LayoutDirection
@@ -67,6 +78,64 @@ object M3EShapes {
     fun get(index: Int): Shape = allShapes[abs(index) % allShapes.size]
 
     fun get(key: String): Shape = get(key.hashCode())
+
+    fun isRotational(index: Int): Boolean = when (abs(index) % allShapes.size) {
+        1, 2, 5, 7, 8, 9 -> true
+        else -> false
+    }
+
+    fun isRotational(key: String): Boolean = isRotational(key.hashCode())
+}
+
+/**
+ * Expressive continuous rotation modifier for M3E shapes (scallops, flowers, starbursts).
+ * Provides gentle kinetic rotation while respecting battery and reduce-animation settings.
+ */
+@Composable
+fun Modifier.m3eRotating(
+    enabled: Boolean = true,
+    durationMs: Int = 24000,
+    clockwise: Boolean = true,
+): Modifier {
+    if (!enabled) return this
+    val infiniteTransition = rememberInfiniteTransition(label = "m3eShapeRotation")
+    val angle by infiniteTransition.animateFloat(
+        initialValue = if (clockwise) 0f else 360f,
+        targetValue = if (clockwise) 360f else 0f,
+        animationSpec = infiniteRepeatable(
+            animation = tween(durationMillis = durationMs, easing = LinearEasing),
+            repeatMode = RepeatMode.Restart,
+        ),
+        label = "rotationAngle",
+    )
+    return this.graphicsLayer { rotationZ = angle }
+}
+
+/**
+ * Expressive gentle breathing / pulse modifier for M3E hero cards & active shapes.
+ */
+@Composable
+fun Modifier.m3eBreathing(
+    enabled: Boolean = true,
+    minScale: Float = 0.97f,
+    maxScale: Float = 1.03f,
+    durationMs: Int = 3600,
+): Modifier {
+    if (!enabled) return this
+    val infiniteTransition = rememberInfiniteTransition(label = "m3eShapeBreathing")
+    val scale by infiniteTransition.animateFloat(
+        initialValue = minScale,
+        targetValue = maxScale,
+        animationSpec = infiniteRepeatable(
+            animation = tween(durationMillis = durationMs, easing = FastOutSlowInEasing),
+            repeatMode = RepeatMode.Reverse,
+        ),
+        label = "pulseScale",
+    )
+    return this.graphicsLayer {
+        scaleX = scale
+        scaleY = scale
+    }
 }
 
 /**

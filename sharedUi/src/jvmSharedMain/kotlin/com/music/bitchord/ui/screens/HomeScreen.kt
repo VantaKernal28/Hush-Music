@@ -5,6 +5,8 @@ import com.music.bitchord.ui.components.contextClick
 import com.music.bitchord.ui.AppUi
 import com.music.bitchord.ui.LocalMaterialUiMode
 import com.music.bitchord.ui.components.expressive.M3EShapes
+import com.music.bitchord.ui.components.expressive.m3eRotating
+import com.music.bitchord.ui.components.expressive.m3eBreathing
 import com.music.bitchord.ui.components.expressive.expressiveClickable
 import com.music.bitchord.ui.components.expressive.m3eSquish
 import com.music.bitchord.ui.components.expressive.AnimatedEqualizerIndicator
@@ -1154,8 +1156,9 @@ internal fun ShelfCard(
     isPlaying: Boolean = false,
 ) {
     val isM3E = LocalMaterialUiMode.current
+    val itemKey = item.title.ifEmpty { item.browseId ?: "m3e" }
     val cardShape = if (isM3E) {
-        M3EShapes.get(item.title.ifEmpty { item.browseId ?: "m3e" })
+        M3EShapes.get(itemKey)
     } else {
         RoundedCornerShape(12.dp)
     }
@@ -1216,10 +1219,12 @@ internal fun ShelfCard(
                 icon = Icons.Rounded.Storage,
             )
             else -> {
+                val isRot = isM3E && M3EShapes.isRotational(itemKey)
                 Box(
                     modifier = Modifier
                         .fillMaxWidth()
                         .aspectRatio(1f)
+                        .then(if (isRot) Modifier.m3eRotating(durationMs = 32000) else Modifier)
                         .clip(cardShape)
                         .thumbnailBorder(cardShape)
                         .background(MaterialTheme.colorScheme.surfaceVariant),
@@ -1406,18 +1411,19 @@ private fun M3EHeroMixSection(
                 .height(310.dp),
             contentAlignment = Alignment.Center,
         ) {
-            val diagonalShape = M3EShapes.AllExpressiveShapes[3]
-            val circleShape = CircleShape
-            val starShape = M3EShapes.AllExpressiveShapes[4]
+            val diagonalShape = M3EShapes.allShapes[3]
+            val scallopShape = M3EShapes.allShapes[1]
+            val starShape = M3EShapes.allShapes[8]
 
-            // Satellite Top-Left Shape
+            // Satellite Top-Left Shape: Animated rotating scallop
             if (satelliteTracks.isNotEmpty()) {
                 Box(
                     modifier = Modifier
                         .align(Alignment.TopStart)
                         .padding(start = 12.dp, top = 20.dp)
-                        .size(80.dp)
-                        .clip(circleShape)
+                        .size(84.dp)
+                        .m3eRotating(enabled = true, durationMs = 24000, clockwise = true)
+                        .clip(scallopShape)
                         .m3eSquish()
                         .clickable { onTrackClick(satelliteTracks[0]) },
                 ) {
@@ -1430,12 +1436,13 @@ private fun M3EHeroMixSection(
                 }
             }
 
-            // Central Hero Diagonal / Expressive Pill Cover
+            // Central Hero Diagonal / Expressive Pill Cover: Animated breathing
             if (heroTrack != null) {
                 Box(
                     modifier = Modifier
                         .align(Alignment.Center)
                         .size(width = 210.dp, height = 270.dp)
+                        .m3eBreathing(enabled = true, minScale = 0.985f, maxScale = 1.015f, durationMs = 3800)
                         .clip(diagonalShape)
                         .border(1.5.dp, Color.White.copy(alpha = 0.20f), diagonalShape)
                         .m3eSquish()
@@ -1450,13 +1457,14 @@ private fun M3EHeroMixSection(
                 }
             }
 
-            // Satellite Bottom-Right Shape
+            // Satellite Bottom-Right Shape: Animated rotating starburst
             if (satelliteTracks.size > 1) {
                 Box(
                     modifier = Modifier
                         .align(Alignment.BottomEnd)
                         .padding(end = 16.dp, bottom = 14.dp)
-                        .size(88.dp)
+                        .size(92.dp)
+                        .m3eRotating(enabled = true, durationMs = 28000, clockwise = false)
                         .clip(starShape)
                         .m3eSquish()
                         .clickable { onTrackClick(satelliteTracks[1]) },

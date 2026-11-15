@@ -22,6 +22,10 @@ import androidx.compose.animation.togetherWith
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.LocalIndication
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
+import com.music.bitchord.ui.components.expressive.M3EShapes
+import com.music.bitchord.ui.components.expressive.m3eRotating
+import com.music.bitchord.ui.components.expressive.m3eSquish
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.gestures.animateScrollBy
@@ -1802,6 +1806,25 @@ internal fun LyricsPanel(
     val panelPlaying = isPlaying && active
     val clock = rememberLyricClock(trackKey, playhead, panelPlaying)
     val subReveal = rememberSubLyricsReveal(subLines, trackKey)
+    val materialUi by PlayerSettings.materialUiMode.collectAsStateWithLifecycle()
+    val m3eRoundedFamily = remember {
+        try {
+            FontFamily(
+                Font(Res.font.google_sans_rounded_bold, FontWeight.W800),
+                Font(Res.font.google_sans_rounded_medium, FontWeight.W600),
+                Font(Res.font.google_sans_rounded_regular, FontWeight.W400),
+            )
+        } catch (_: Throwable) {
+            FontFamily.SansSerif
+        }
+    }
+    val m3eDisplayFamily = remember {
+        try {
+            FontFamily(Font(Res.font.cherry_bomb_one_regular, FontWeight.Normal))
+        } catch (_: Throwable) {
+            m3eRoundedFamily
+        }
+    }
 
     val isSynced = remember(lines) { lines.any { it.timeMs > 0L } }
     // Only a song that actually names a second voice is laid out as one. A
@@ -2170,62 +2193,128 @@ internal fun LyricsPanel(
                     label = "gapSwell",
                 )
                 val instrumental = stringResource(Res.string.instrumental)
-                Box(
-                    contentAlignment = Alignment.CenterStart,
-                    modifier = Modifier
-                        .height((GAP_ROW_HEIGHT + GAP_ROW_SPACING) * swell)
-                        .clipToBounds(),
-                ) {
-                Box(
-                    modifier = Modifier
-                        .blur(blur, BlurredEdgeTreatment.Unbounded)
-                        .clip(RoundedCornerShape(10.dp))
-                        // A gap is nothing to pick, so it only ever seeks — and
-                        // not even that while a pick is open, where a stray tap
-                        // in the silence would jump the song.
-                        .clickable(enabled = isSynced && !picking) { onSeekToLine(line.timeMs) }
-                        // Matches the inset every sung line carries, so the
-                        // rhythm of the list doesn't break at a break.
-                        .padding(GLOW_ROOM)
-                        .size(
-                            width = GAP_DOT_SIZE * 3 + GAP_DOT_GAP * 2,
-                            height = GAP_DOT_SIZE,
+                if (materialUi) {
+                    val gapColor = MaterialTheme.colorScheme.primary
+                    Row(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(vertical = 8.dp)
+                            .clip(RoundedCornerShape(22.dp))
+                            .background(MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.25f))
+                            .border(1.2.dp, gapColor.copy(alpha = 0.4f), RoundedCornerShape(22.dp))
+                            .clickable(enabled = isSynced && !picking) { onSeekToLine(line.timeMs) }
+                            .padding(horizontal = 16.dp, vertical = 9.dp),
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.spacedBy(10.dp),
+                    ) {
+                        Box(
+                            modifier = Modifier
+                                .size(24.dp)
+                                .m3eRotating(durationMs = 9000)
+                                .clip(M3EShapes.Scallop12)
+                                .background(gapColor),
+                            contentAlignment = Alignment.Center,
+                        ) {
+                            Box(Modifier.size(8.dp).clip(CircleShape).background(MaterialTheme.colorScheme.onPrimary))
+                        }
+                        Text(
+                            text = "Instrumental Interlude",
+                            style = MaterialTheme.typography.labelMedium.copy(
+                                fontFamily = m3eRoundedFamily,
+                                fontWeight = FontWeight.Bold,
+                                fontSize = 13.5.sp,
+                                letterSpacing = 0.5.sp,
+                            ),
+                            color = MaterialTheme.colorScheme.onPrimaryContainer,
                         )
-                        .graphicsLayer {
-                            val grow = GAP_REST_SCALE + (1f - GAP_REST_SCALE) * swell
-                            scaleX = grow
-                            scaleY = grow
-                            transformOrigin = TransformOrigin(0f, 0.5f)
-                            alpha = lineAlpha * swell
-                        }
-                        .drawBehind {
-                            // Read here rather than in composition: the fill
-                            // moves every frame, and this way a break costs a
-                            // redraw of three circles, not a recomposition.
-                            val span = (until - line.timeMs).coerceAtLeast(1L)
-                            val through = gapFill.value.takeUnless { it == GAP_RUNNING }
-                                ?: ((clock.longValue - line.timeMs).toFloat() / span).coerceIn(0f, 1f)
-                            val radius = GAP_DOT_SIZE.toPx() / 2f
-                            val stride = (GAP_DOT_SIZE + GAP_DOT_GAP).toPx()
-                            repeat(GAP_DOTS) { dot ->
-                                // Each dot owns its share of the break and
-                                // fills across it, so they light left to right.
-                                val lit = (through * GAP_DOTS - dot).coerceIn(0f, 1f)
-                                drawCircle(
-                                    color = Color.White.copy(
-                                        alpha = GAP_DOT_REST + (1f - GAP_DOT_REST) * lit,
-                                    ),
-                                    radius = radius,
-                                    center = Offset(radius + dot * stride, size.height / 2f),
-                                )
+                    }
+                } else {
+                    Box(
+                        contentAlignment = Alignment.CenterStart,
+                        modifier = Modifier
+                            .height((GAP_ROW_HEIGHT + GAP_ROW_SPACING) * swell)
+                            .clipToBounds(),
+                    ) {
+                    Box(
+                        modifier = Modifier
+                            .blur(blur, BlurredEdgeTreatment.Unbounded)
+                            .clip(RoundedCornerShape(10.dp))
+                            // A gap is nothing to pick, so it only ever seeks — and
+                            // not even that while a pick is open, where a stray tap
+                            // in the silence would jump the song.
+                            .clickable(enabled = isSynced && !picking) { onSeekToLine(line.timeMs) }
+                            // Matches the inset every sung line carries, so the
+                            // rhythm of the list doesn't break at a break.
+                            .padding(GLOW_ROOM)
+                            .size(
+                                width = GAP_DOT_SIZE * 3 + GAP_DOT_GAP * 2,
+                                height = GAP_DOT_SIZE,
+                            )
+                            .graphicsLayer {
+                                val grow = GAP_REST_SCALE + (1f - GAP_REST_SCALE) * swell
+                                scaleX = grow
+                                scaleY = grow
+                                transformOrigin = TransformOrigin(0f, 0.5f)
+                                alpha = lineAlpha * swell
                             }
-                        }
-                        .semantics { contentDescription = instrumental },
-                )
+                            .drawBehind {
+                                // Read here rather than in composition: the fill
+                                // moves every frame, and this way a break costs a
+                                // redraw of three circles, not a recomposition.
+                                val span = (until - line.timeMs).coerceAtLeast(1L)
+                                val through = gapFill.value.takeUnless { it == GAP_RUNNING }
+                                    ?: ((clock.longValue - line.timeMs).toFloat() / span).coerceIn(0f, 1f)
+                                val radius = GAP_DOT_SIZE.toPx() / 2f
+                                val stride = (GAP_DOT_SIZE + GAP_DOT_GAP).toPx()
+                                repeat(GAP_DOTS) { dot ->
+                                    // Each dot owns its share of the break and
+                                    // fills across it, so they light left to right.
+                                    val lit = (through * GAP_DOTS - dot).coerceIn(0f, 1f)
+                                    drawCircle(
+                                        color = Color.White.copy(
+                                            alpha = GAP_DOT_REST + (1f - GAP_DOT_REST) * lit,
+                                        ),
+                                        radius = radius,
+                                        center = Offset(radius + dot * stride, size.height / 2f),
+                                    )
+                                }
+                            }
+                            .semantics { contentDescription = instrumental },
+                    )
+                    }
                 }
             } else {
                 val alignEnd = duet && line.alignment == LyricAlignment.End
-                val style = if (isSynced) {
+                val style = if (materialUi) {
+                    if (isActive) {
+                        MaterialTheme.typography.headlineLarge.copy(
+                            fontFamily = m3eRoundedFamily,
+                            fontSize = 35.sp,
+                            lineHeight = 43.sp,
+                            fontWeight = FontWeight.ExtraBold,
+                            letterSpacing = (-0.6).sp,
+                            textAlign = if (alignEnd) TextAlign.End else TextAlign.Start,
+                        )
+                    } else if (alignEnd) {
+                        MaterialTheme.typography.headlineMedium.copy(
+                            fontFamily = m3eDisplayFamily,
+                            fontSize = 28.sp,
+                            lineHeight = 36.sp,
+                            fontWeight = FontWeight.Medium,
+                            letterSpacing = 0.sp,
+                            textAlign = TextAlign.End,
+                        )
+                    } else {
+                        MaterialTheme.typography.headlineMedium.copy(
+                            fontFamily = m3eRoundedFamily,
+                            fontSize = 29.sp,
+                            lineHeight = 37.sp,
+                            fontWeight = if (abs(index - focusLine) <= 1) FontWeight.Bold else FontWeight.Medium,
+                            letterSpacing = (-0.3).sp,
+                            textAlign = TextAlign.Start,
+                        )
+                    }
+                } else if (isSynced) {
                     MaterialTheme.typography.headlineLarge.copy(
                         fontSize = 34.sp,
                         lineHeight = 41.sp,
@@ -2321,19 +2410,22 @@ internal fun LyricsPanel(
                         }
                     }
                     .blur(blur, BlurredEdgeTreatment.Unbounded)
-                    .clip(RoundedCornerShape(10.dp))
-                    // The chosen lines are marked on the row itself rather
-                    // than with a mark beside it: a lane down the side would
-                    // have to be reserved for every line whether or not
-                    // anybody was picking, and this panel is words from edge
-                    // to edge. Everything else dims a little instead, so what
-                    // is picked is read against what isn't.
-                    .background(
-                        when {
-                            index in picked -> Color.White.copy(alpha = 0.16f)
-                            picking -> Color.White.copy(alpha = 0.05f)
-                            else -> Color.Transparent
-                        },
+                    .clip(if (materialUi) (if (isActive) RoundedCornerShape(24.dp) else RoundedCornerShape(16.dp)) else RoundedCornerShape(10.dp))
+                    .then(
+                        if (materialUi && isActive) {
+                            Modifier
+                                .background(MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.35f))
+                                .border(1.5.dp, MaterialTheme.colorScheme.primary.copy(alpha = 0.45f), RoundedCornerShape(24.dp))
+                                .padding(horizontal = 14.dp, vertical = 7.dp)
+                        } else {
+                            Modifier.background(
+                                when {
+                                    index in picked -> Color.White.copy(alpha = 0.16f)
+                                    picking -> Color.White.copy(alpha = 0.05f)
+                                    else -> Color.Transparent
+                                },
+                            )
+                        }
                     )
                     // A combined click because long-press is the way in: a list
                     // of words gives no sign that pressing one does anything
