@@ -1966,6 +1966,7 @@ fun SettingsScreen(
                     },
                     onClick = { AppSettings.setShowNerdStats(!nerdStats) },
                 )
+            }
             val resetOnboardingTitle = stringResource(R.string.settings_reset_onboarding_title)
             row(resetOnboardingTitle, "onboarding", "tour", "setup", "first boot", "welcome") {
                 SettingsRow(
