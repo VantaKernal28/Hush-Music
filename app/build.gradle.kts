@@ -268,7 +268,7 @@ android {
         outputs.all {
             val output = this as? com.android.build.gradle.api.ApkVariantOutput
             if (output != null) {
-                val abi = output.getFilter("ABI")
+                val abi = output.getFilter(FilterType.ABI)
                 val abiPart = if (abi != null) "-$abi" else ""
                 output.outputFileName = "hushmusic-${vName}${flavor}${abiPart}-${buildType}.apk"
             }
