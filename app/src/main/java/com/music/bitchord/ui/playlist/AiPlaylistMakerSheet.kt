@@ -179,7 +179,7 @@ fun AiPlaylistMakerSheet(
                     targetPrompt.lowercase(Locale.ROOT).split(" ", ",", "-", "_").filter { it.length > 2 }
 
                 val scored = availableSongs.map { song ->
-                    val fullText = "${song.title} ${song.artist} ${song.album.orEmpty()}".lowercase(Locale.ROOT)
+                    val fullText = "${song.title} ${song.artist} ${song.albumName.orEmpty()}".lowercase(Locale.ROOT)
                     var score = 0
                     for (kw in keywords) {
                         if (fullText.contains(kw)) score += 3

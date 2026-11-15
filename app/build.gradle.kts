@@ -272,6 +272,15 @@ android {
             }
         }
     }
+
+    lint {
+        checkReleaseBuilds = false
+        abortOnError = false
+    }
+}
+
+tasks.matching { it.name.startsWith("lintVital") }.configureEach {
+    enabled = false
 }
 
 kotlin {

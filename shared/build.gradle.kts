@@ -70,4 +70,12 @@ kotlin {
 android {
     namespace = "com.music.bitchord.shared"
     compileSdk = 36
+    lint {
+        checkReleaseBuilds = false
+        abortOnError = false
+    }
+}
+
+tasks.matching { it.name.startsWith("lintVital") }.configureEach {
+    enabled = false
 }

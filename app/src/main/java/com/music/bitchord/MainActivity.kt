@@ -4977,11 +4977,12 @@ private fun BitChordApp(
         // ---- AI Playlist Maker ----
         if (showAiPlaylistMaker) {
             val historyState by viewModel.history.collectAsStateWithLifecycle()
-            val availableSongs = remember(historyState, topDetail, queueSongs) {
-                val fromHistory = (historyState as? com.music.bitchord.data.model.UiState.Success)?.data.orEmpty()
-                val fromDetail = topDetail?.songs.orEmpty()
-                val fromQueue = queueSongs
-                (fromHistory + fromDetail + fromQueue).distinctBy { it.videoId }
+            val availableSongs = remember(historyState, topDetail, player.queue, player.song) {
+                val fromHistory: List<Song> = (historyState as? com.music.bitchord.data.model.UiState.Success<List<Song>>)?.data.orEmpty()
+                val fromDetail: List<Song> = (topDetail?.songs as? com.music.bitchord.data.model.UiState.Success<List<Song>>)?.data.orEmpty()
+                val fromQueue: List<Song> = player.queue
+                val current: List<Song> = listOfNotNull(player.song)
+                (current + fromHistory + fromDetail + fromQueue).distinctBy { it.videoId }
             }
             com.music.bitchord.ui.playlist.AiPlaylistMakerSheet(
                 availableSongs = availableSongs,

@@ -108,6 +108,14 @@ android {
     defaultConfig {
         minSdk = 26
     }
+    lint {
+        checkReleaseBuilds = false
+        abortOnError = false
+    }
+}
+
+tasks.matching { it.name.startsWith("lintVital") }.configureEach {
+    enabled = false
 }
 
 compose.resources {

@@ -236,7 +236,7 @@ fun FloatingBottomBar(
                                     onTabSelected(index)
                                 },
                                 onLongClick = {
-                                    haptics.play(Haptic.Hold)
+                                    haptics.play(Haptic.Expand)
                                     onTabLongClick?.invoke(index)
                                 },
                             )
@@ -497,7 +497,7 @@ private fun BottomBarItem(
                     onClick()
                 },
                 onLongClick = {
-                    haptics.play(Haptic.Hold)
+                    haptics.play(Haptic.Expand)
                     onLongClick?.invoke()
                 },
             )
