@@ -206,6 +206,28 @@ private val LegacyTypography = Typography(
     labelSmall = TextStyle(fontWeight = FontWeight.W600, fontSize = 11.sp),
 ).withFamily(SFProDisplayLegacy)
 
+val PixelRoundFontFamily: FontFamily = try {
+    FontFamily(
+        androidx.compose.ui.text.font.Typeface(
+            android.graphics.Typeface.create("sans-serif-rounded", android.graphics.Typeface.NORMAL),
+        ),
+    )
+} catch (_: Throwable) {
+    FontFamily.SansSerif
+}
+
+val PixelRoundTypography = Typography(
+    displayLarge = TextStyle(fontWeight = FontWeight.W800, fontSize = 34.sp, letterSpacing = (-0.5).sp),
+    headlineLarge = TextStyle(fontWeight = FontWeight.W800, fontSize = 30.sp, letterSpacing = (-0.4).sp),
+    headlineMedium = TextStyle(fontWeight = FontWeight.W700, fontSize = 22.sp, letterSpacing = (-0.25).sp),
+    titleLarge = TextStyle(fontWeight = FontWeight.W700, fontSize = 20.sp, letterSpacing = (-0.2).sp),
+    titleMedium = TextStyle(fontWeight = FontWeight.W600, fontSize = 16.sp, letterSpacing = 0.05.sp),
+    bodyLarge = TextStyle(fontWeight = FontWeight.W400, fontSize = 16.sp, letterSpacing = 0.2.sp),
+    bodyMedium = TextStyle(fontWeight = FontWeight.W400, fontSize = 14.sp, letterSpacing = 0.3.sp),
+    labelMedium = TextStyle(fontWeight = FontWeight.W600, fontSize = 12.sp, letterSpacing = 0.25.sp),
+    labelSmall = TextStyle(fontWeight = FontWeight.W600, fontSize = 11.sp, letterSpacing = 0.3.sp),
+).withFamily(PixelRoundFontFamily)
+
 private fun Typography.withFamily(family: FontFamily) = Typography(
     displayLarge = displayLarge.copy(fontFamily = family),
     displayMedium = displayMedium.copy(fontFamily = family),
@@ -305,10 +327,12 @@ fun BitChordTheme(
         } else null
     }
 
-    val resolvedTypography = when (font) {
-        AppFont.DEFAULT -> BitChordTypography
-        AppFont.LEGACY -> LegacyTypography
-        AppFont.CUSTOM -> customTypography ?: BitChordTypography
+    val resolvedTypography = when {
+        materialUiMode || font == AppFont.PIXEL_ROUND -> PixelRoundTypography
+        font == AppFont.DEFAULT -> BitChordTypography
+        font == AppFont.LEGACY -> LegacyTypography
+        font == AppFont.CUSTOM -> customTypography ?: BitChordTypography
+        else -> BitChordTypography
     }
 
     val shapes = if (materialUiMode) ExpressiveShapes else StandardShapes

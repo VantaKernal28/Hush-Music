@@ -1,5 +1,10 @@
 package com.music.bitchord.ui.screens
 
+import com.music.bitchord.ui.LocalMaterialUiMode
+import com.music.bitchord.ui.components.expressive.ExpressiveMotion
+import com.music.bitchord.ui.components.expressive.SquircleShape
+import com.music.bitchord.ui.components.expressive.expressiveClickable
+
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.ExperimentalFoundationApi
@@ -285,11 +290,13 @@ private fun TopPickCard(
 ) {
     val text = cardText(pick, listenerName)
     val longPress = onLongPress?.let { { it(pick) } }
+    val isM3E = LocalMaterialUiMode.current
+    val actualShape = if (isM3E) SquircleShape(28.dp) else TopPickShape
     val interactionSource = remember { MutableInteractionSource() }
     val isPressed by interactionSource.collectIsPressedAsState()
     val pressScale by animateFloatAsState(
-        targetValue = if (isPressed) 0.96f else 1.0f,
-        animationSpec = spring(stiffness = Spring.StiffnessMediumLow),
+        targetValue = if (isPressed) 0.94f else 1.0f,
+        animationSpec = if (isM3E) ExpressiveMotion.TactilePressSpring else spring(stiffness = Spring.StiffnessMediumLow),
         label = "topPickCardPressScale",
     )
     Box(
@@ -299,10 +306,16 @@ private fun TopPickCard(
                 scaleY = pressScale
             }
             .aspectRatio(TOP_PICK_RATIO)
-            .clip(TopPickShape)
-            .thumbnailBorder(TopPickShape)
+            .clip(actualShape)
+            .thumbnailBorder(actualShape)
             .background(MaterialTheme.colorScheme.surfaceVariant)
-            .longPressMenuClickable(onClick = { onClick(pick, text.title) }, onLongClick = longPress)
+            .then(
+                if (isM3E) {
+                    Modifier.expressiveClickable(onClick = { onClick(pick, text.title) })
+                } else {
+                    Modifier.longPressMenuClickable(onClick = { onClick(pick, text.title) }, onLongClick = longPress)
+                }
+            )
             .contextClick(longPress),
     ) {
         val eyebrowColor: Color

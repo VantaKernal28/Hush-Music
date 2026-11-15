@@ -99,6 +99,7 @@ private enum class OnboardingPhase {
     ENTRANCE,
     STEP_NAME_ACCENT,
     POST_NAME_REVEAL,
+    STEP_UI_STYLE,
     STEP_VIBE_AUDIO,
     STEP_ACCOUNT,
 }
@@ -120,6 +121,7 @@ fun OnboardingScreen(
         mutableStateOf(AppSettings.selectedGenres.value.ifEmpty { setOf("Lo-Fi", "Electronic") })
     }
     var currentAccentId by remember { mutableStateOf(AppSettings.themeAccent.value) }
+    var chosenM3E by remember { mutableStateOf(AppSettings.materialUiMode.value) }
     var audioQuality by remember { mutableStateOf("320") }
     val focusManager = LocalFocusManager.current
     val context = LocalContext.current
@@ -147,7 +149,8 @@ fun OnboardingScreen(
     BackHandler(enabled = phase != OnboardingPhase.ENTRANCE && phase != OnboardingPhase.POST_NAME_REVEAL) {
         when (phase) {
             OnboardingPhase.STEP_ACCOUNT -> phase = OnboardingPhase.STEP_VIBE_AUDIO
-            OnboardingPhase.STEP_VIBE_AUDIO -> phase = OnboardingPhase.STEP_NAME_ACCENT
+            OnboardingPhase.STEP_VIBE_AUDIO -> phase = OnboardingPhase.STEP_UI_STYLE
+            OnboardingPhase.STEP_UI_STYLE -> phase = OnboardingPhase.STEP_NAME_ACCENT
             else -> {}
         }
     }
@@ -175,7 +178,7 @@ fun OnboardingScreen(
             OnboardingPhase.POST_NAME_REVEAL -> {
                 PostNameIdentityRevealAnimation(
                     accentColor = activeAccentColor,
-                    onAnimationComplete = { phase = OnboardingPhase.STEP_VIBE_AUDIO },
+                    onAnimationComplete = { phase = OnboardingPhase.STEP_UI_STYLE },
                 )
             }
 
@@ -209,7 +212,7 @@ fun OnboardingScreen(
                                 color = Color.White.copy(alpha = 0.85f),
                                 letterSpacing = 1.2.sp,
                             )
-                            if (phase == OnboardingPhase.STEP_VIBE_AUDIO || phase == OnboardingPhase.STEP_ACCOUNT) {
+                            if (phase == OnboardingPhase.STEP_UI_STYLE || phase == OnboardingPhase.STEP_VIBE_AUDIO || phase == OnboardingPhase.STEP_ACCOUNT) {
                                 Text(
                                     text = "BACK",
                                     style = MaterialTheme.typography.labelSmall,
@@ -217,8 +220,12 @@ fun OnboardingScreen(
                                     color = Color.White.copy(alpha = 0.85f),
                                     letterSpacing = 1.2.sp,
                                     modifier = Modifier.clickable {
-                                        if (phase == OnboardingPhase.STEP_ACCOUNT) phase = OnboardingPhase.STEP_VIBE_AUDIO
-                                        else phase = OnboardingPhase.STEP_NAME_ACCENT
+                                        when (phase) {
+                                            OnboardingPhase.STEP_ACCOUNT -> phase = OnboardingPhase.STEP_VIBE_AUDIO
+                                            OnboardingPhase.STEP_VIBE_AUDIO -> phase = OnboardingPhase.STEP_UI_STYLE
+                                            OnboardingPhase.STEP_UI_STYLE -> phase = OnboardingPhase.STEP_NAME_ACCENT
+                                            else -> {}
+                                        }
                                     },
                                 )
                             } else {
@@ -227,7 +234,7 @@ fun OnboardingScreen(
                         }
 
                         // Centered Hush emblem & brand typography
-                        val isCompactStep = phase == OnboardingPhase.STEP_NAME_ACCENT
+                        val isCompactStep = phase == OnboardingPhase.STEP_NAME_ACCENT || phase == OnboardingPhase.STEP_UI_STYLE
                         Spacer(Modifier.height(if (isCompactStep) 8.dp else 18.dp))
                         Image(
                             painter = painterResource(R.drawable.ic_hush_transparent_logo),
@@ -246,15 +253,17 @@ fun OnboardingScreen(
                             letterSpacing = (-0.5).sp,
                         )
 
-                        // 3-dot pagination indicator
+                        // 4-dot pagination indicator
                         Spacer(Modifier.height(if (isCompactStep) 10.dp else 14.dp))
                         PaginationDots(
                             currentIndex = when (phase) {
                                 OnboardingPhase.STEP_NAME_ACCENT -> 0
-                                OnboardingPhase.STEP_VIBE_AUDIO -> 1
-                                else -> 2
+                                OnboardingPhase.STEP_UI_STYLE -> 1
+                                OnboardingPhase.STEP_VIBE_AUDIO -> 2
+                                else -> 3
                             },
                             accentColor = activeAccentColor,
+                            totalSteps = 4,
                         )
 
                         Spacer(Modifier.height(if (isCompactStep) 10.dp else 16.dp))
@@ -288,6 +297,21 @@ fun OnboardingScreen(
                                             onNameChosen(chosen)
                                             phase = OnboardingPhase.POST_NAME_REVEAL
                                         },
+                                    )
+                                }
+
+                                OnboardingPhase.STEP_UI_STYLE -> {
+                                    StepUiStyleContent(
+                                        isM3E = chosenM3E,
+                                        onSelectStyle = { m3e ->
+                                            chosenM3E = m3e
+                                            AppSettings.setMaterialUiMode(m3e)
+                                            AppSettings.setExpressiveUiEnabled(m3e)
+                                            if (m3e) {
+                                                AppSettings.setAppFont(com.music.bitchord.data.settings.AppFont.PIXEL_ROUND)
+                                            }
+                                        },
+                                        accentColor = activeAccentColor,
                                     )
                                 }
 
@@ -342,8 +366,27 @@ fun OnboardingScreen(
                                         onClick = {
                                             val chosen = name.trim().ifBlank { "Listener" }
                                             onNameChosen(chosen)
+                                            phase = OnboardingPhase.STEP_UI_STYLE
+                                        },
+                                    )
+                                }
+
+                                OnboardingPhase.STEP_UI_STYLE -> {
+                                    PillButtonPrimary(
+                                        text = "Continue",
+                                        accentColor = activeAccentColor,
+                                        onClick = {
+                                            AppSettings.setMaterialUiMode(chosenM3E)
+                                            AppSettings.setExpressiveUiEnabled(chosenM3E)
+                                            if (chosenM3E) {
+                                                AppSettings.setAppFont(com.music.bitchord.data.settings.AppFont.PIXEL_ROUND)
+                                            }
                                             phase = OnboardingPhase.STEP_VIBE_AUDIO
                                         },
+                                    )
+                                    PillButtonSecondary(
+                                        text = "Back",
+                                        onClick = { phase = OnboardingPhase.STEP_NAME_ACCENT },
                                     )
                                 }
 
@@ -355,7 +398,7 @@ fun OnboardingScreen(
                                     )
                                     PillButtonSecondary(
                                         text = "Back",
-                                        onClick = { phase = OnboardingPhase.STEP_NAME_ACCENT },
+                                        onClick = { phase = OnboardingPhase.STEP_UI_STYLE },
                                     )
                                 }
 
@@ -571,17 +614,18 @@ private fun PostNameIdentityRevealAnimation(
     }
 }
 
-/** 3-Dot Pagination Indicator matching Inspired setup.jpg */
+/** 4-Dot Pagination Indicator matching Inspired setup.jpg */
 @Composable
 private fun PaginationDots(
     currentIndex: Int,
     accentColor: Color,
+    totalSteps: Int = 4,
 ) {
     Row(
         horizontalArrangement = Arrangement.spacedBy(8.dp),
         verticalAlignment = Alignment.CenterVertically,
     ) {
-        repeat(3) { index ->
+        repeat(totalSteps) { index ->
             val active = index == currentIndex
             Box(
                 modifier = Modifier
@@ -595,6 +639,204 @@ private fun PaginationDots(
         }
     }
 }
+
+/**
+ * Step: Interface Style Selection (BitChord Classic vs Hush Material 3 Expressive)
+ */
+@Composable
+private fun StepUiStyleContent(
+    isM3E: Boolean,
+    onSelectStyle: (Boolean) -> Unit,
+    accentColor: Color,
+) {
+    val scrollState = rememberScrollState()
+
+    Column(
+        modifier = Modifier
+            .fillMaxWidth()
+            .widthIn(max = 380.dp)
+            .verticalScroll(scrollState),
+        horizontalAlignment = Alignment.CenterHorizontally,
+    ) {
+        TypewriterHeadline(
+            text = "Choose your interface style",
+            style = MaterialTheme.typography.titleMedium,
+            fontWeight = FontWeight.SemiBold,
+            color = Color.White,
+        )
+        Spacer(Modifier.height(4.dp))
+        Text(
+            text = "Switch anytime in Settings → Appearance",
+            style = MaterialTheme.typography.labelSmall,
+            color = Color.White.copy(alpha = 0.65f),
+            textAlign = TextAlign.Center,
+        )
+        Spacer(Modifier.height(18.dp))
+
+        // Choice 1: BitChord Classic
+        UiStyleCard(
+            title = "BitChord Classic",
+            badge = "CLASSIC",
+            description = "Frosted glass aesthetic, Apple-inspired depth & fluid mesh blurs",
+            iconRes = R.drawable.ic_logo,
+            selected = !isM3E,
+            accentColor = accentColor,
+            onClick = { onSelectStyle(false) },
+        )
+
+        Spacer(Modifier.height(14.dp))
+
+        // Choice 2: Material 3 Expressive
+        UiStyleCard(
+            title = "Material 3 Expressive",
+            badge = "HUSH M3E",
+            description = "12 organic M3E shapes, bouncy spring physics, Pixel Round font & dynamic Monet",
+            iconRes = R.drawable.ic_hush_transparent_logo,
+            selected = isM3E,
+            accentColor = accentColor,
+            onClick = { onSelectStyle(true) },
+        )
+    }
+}
+
+@Composable
+private fun UiStyleCard(
+    title: String,
+    badge: String,
+    description: String,
+    iconRes: Int,
+    selected: Boolean,
+    accentColor: Color,
+    onClick: () -> Unit,
+) {
+    val interactionSource = remember { MutableInteractionSource() }
+    val isPressed by interactionSource.collectIsPressedAsState()
+    val scale by animateFloatAsState(
+        targetValue = if (isPressed) 0.96f else 1f,
+        animationSpec = spring(dampingRatio = 0.65f, stiffness = Spring.StiffnessMediumLow),
+        label = "uiStyleCardScale",
+    )
+
+    Box(
+        modifier = Modifier
+            .fillMaxWidth()
+            .graphicsLayer {
+                scaleX = scale
+                scaleY = scale
+            }
+            .clip(RoundedCornerShape(22.dp))
+            .background(
+                if (selected) Color.White.copy(alpha = 0.18f) else Color.White.copy(alpha = 0.08f),
+            )
+            .border(
+                BorderStroke(
+                    width = if (selected) 2.dp else 1.dp,
+                    color = if (selected) accentColor else Color.White.copy(alpha = 0.20f),
+                ),
+                shape = RoundedCornerShape(22.dp),
+            )
+            .clickable(
+                interactionSource = interactionSource,
+                indication = null,
+                onClick = onClick,
+            )
+            .padding(18.dp),
+    ) {
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            verticalAlignment = Alignment.CenterVertically,
+        ) {
+            // Icon emblem container
+            Box(
+                modifier = Modifier
+                    .size(52.dp)
+                    .clip(RoundedCornerShape(16.dp))
+                    .background(
+                        if (selected) accentColor.copy(alpha = 0.25f) else Color.White.copy(alpha = 0.12f),
+                    )
+                    .border(
+                        BorderStroke(1.dp, if (selected) accentColor.copy(alpha = 0.6f) else Color.White.copy(alpha = 0.2f)),
+                        RoundedCornerShape(16.dp),
+                    ),
+                contentAlignment = Alignment.Center,
+            ) {
+                Image(
+                    painter = painterResource(iconRes),
+                    contentDescription = title,
+                    modifier = Modifier.size(32.dp),
+                )
+            }
+
+            Spacer(Modifier.width(16.dp))
+
+            Column(modifier = Modifier.weight(1f)) {
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.spacedBy(8.dp),
+                ) {
+                    Text(
+                        text = title,
+                        style = MaterialTheme.typography.titleSmall,
+                        fontWeight = FontWeight.Bold,
+                        color = Color.White,
+                    )
+                    Box(
+                        modifier = Modifier
+                            .clip(RoundedCornerShape(6.dp))
+                            .background(
+                                if (selected) accentColor else Color.White.copy(alpha = 0.18f),
+                            )
+                            .padding(horizontal = 6.dp, vertical = 2.dp),
+                    ) {
+                        Text(
+                            text = badge,
+                            style = MaterialTheme.typography.labelSmall,
+                            fontSize = 9.sp,
+                            fontWeight = FontWeight.ExtraBold,
+                            color = if (selected && accentColor.luminance() > 0.5f) Color.Black else Color.White,
+                        )
+                    }
+                }
+                Spacer(Modifier.height(4.dp))
+                Text(
+                    text = description,
+                    style = MaterialTheme.typography.bodySmall,
+                    fontSize = 12.sp,
+                    lineHeight = 16.sp,
+                    color = Color.White.copy(alpha = 0.75f),
+                )
+            }
+
+            Spacer(Modifier.width(12.dp))
+
+            // Radio / Check circle
+            Box(
+                modifier = Modifier
+                    .size(24.dp)
+                    .clip(CircleShape)
+                    .background(if (selected) accentColor else Color.Transparent)
+                    .border(
+                        BorderStroke(
+                            2.dp,
+                            if (selected) accentColor else Color.White.copy(alpha = 0.40f),
+                        ),
+                        CircleShape,
+                    ),
+                contentAlignment = Alignment.Center,
+            ) {
+                if (selected) {
+                    Icon(
+                        imageVector = Icons.Rounded.Check,
+                        contentDescription = "Selected",
+                        tint = if (accentColor.luminance() > 0.5f) Color.Black else Color.White,
+                        modifier = Modifier.size(16.dp),
+                    )
+                }
+            }
+        }
+    }
+}
+
 
 /** Character-by-character headline typing animation with soft blinking cursor that fades out on completion */
 @Composable

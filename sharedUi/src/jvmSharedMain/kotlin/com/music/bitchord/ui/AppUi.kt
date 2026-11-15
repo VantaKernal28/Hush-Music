@@ -61,3 +61,10 @@ object AppUi {
  * refresh nobody asked for — so the desktop switches it off.
  */
 val LocalPullToRefreshEnabled = staticCompositionLocalOf { true }
+
+/**
+ * Material 3 Expressive (M3E) UI Mode state across the entire UI tree.
+ * When enabled, switches to 12 M3E shapes, spring physics, and Pixel Round typography.
+ */
+val LocalMaterialUiMode = staticCompositionLocalOf { false }
+

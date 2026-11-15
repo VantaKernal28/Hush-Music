@@ -360,6 +360,7 @@ import com.music.bitchord.ui.replay.ReplayStories
 import com.music.bitchord.ui.replay.ReplayStoryPage
 import com.music.bitchord.ui.replay.rememberReplayState
 import com.music.bitchord.ui.theme.BitChordTheme
+import com.music.bitchord.ui.LocalMaterialUiMode
 import com.music.bitchord.ui.theme.rememberArtworkPalette
 import com.music.bitchord.data.canvas.AppleArtistArtRepository
 import com.music.bitchord.data.canvas.keyColors
@@ -440,6 +441,7 @@ class MainActivity : AppCompatActivity() {
                     LocalOverscrollFactory provides iosOverscrollFactory,
                     LocalLiquidGlassEnabled provides (liquidGlassEnabled && !materialUiMode),
                     LocalAppBackdrop provides appBackdrop,
+                    LocalMaterialUiMode provides materialUiMode,
                 ) {
                 // The window's width, measured rather than asked for.
                 //

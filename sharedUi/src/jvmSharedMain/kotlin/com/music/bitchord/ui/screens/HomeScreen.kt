@@ -3,6 +3,10 @@ package com.music.bitchord.ui.screens
 import com.music.bitchord.ui.components.trackArtSize
 import com.music.bitchord.ui.components.contextClick
 import com.music.bitchord.ui.AppUi
+import com.music.bitchord.ui.LocalMaterialUiMode
+import com.music.bitchord.ui.components.expressive.M3EShapes
+import com.music.bitchord.ui.components.expressive.expressiveClickable
+import com.music.bitchord.ui.components.expressive.AnimatedEqualizerIndicator
 import com.music.bitchord.sharedui.resources.*
 import org.jetbrains.compose.resources.painterResource
 import com.music.bitchord.ui.festive.GoldenLogo
@@ -420,12 +424,30 @@ fun CompactTrackRow(
     /** A music video: its thumbnail at 16:9 rather than squared off. */
     isVideo: Boolean = false,
 ) {
+    val isM3E = LocalMaterialUiMode.current
+    val trackShape = if (isM3E) RoundedCornerShape(16.dp) else RoundedCornerShape(7.dp)
+
     Row(
         modifier = Modifier
             .fillMaxWidth()
-            .longPressMenuClickable(onClick = onClick, onLongClick = onLongPress)
+            .then(
+                if (isM3E) {
+                    Modifier
+                        .clip(RoundedCornerShape(18.dp))
+                        .background(
+                            if (isCurrent) MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.22f) else Color.Transparent
+                        )
+                        .expressiveClickable(onClick = onClick)
+                } else {
+                    Modifier
+                        .longPressMenuClickable(onClick = onClick, onLongClick = onLongPress)
+                }
+            )
             .contextClick(onLongPress)
-            .padding(vertical = 4.dp),
+            .padding(
+                horizontal = if (isM3E && isCurrent) 8.dp else 0.dp,
+                vertical = if (isM3E) 6.dp else 4.dp,
+            ),
         verticalAlignment = Alignment.CenterVertically,
     ) {
         Box(Modifier.trackArtSize(48.dp, isVideo)) {
@@ -435,18 +457,27 @@ fun CompactTrackRow(
                 contentScale = ContentScale.Crop,
                 modifier = Modifier
                     .matchParentSize()
-                    .clip(RoundedCornerShape(7.dp))
-                    .thumbnailBorder(RoundedCornerShape(7.dp))
+                    .clip(trackShape)
+                    .thumbnailBorder(trackShape)
                     .background(MaterialTheme.colorScheme.surfaceVariant),
             )
-            if (isCurrent && isPlaying) SearchPlayingBars(Modifier.align(Alignment.Center))
+            if (isCurrent && isPlaying) {
+                if (isM3E) {
+                    AnimatedEqualizerIndicator(
+                        tint = MaterialTheme.colorScheme.primary,
+                        modifier = Modifier.align(Alignment.Center),
+                    )
+                } else {
+                    SearchPlayingBars(Modifier.align(Alignment.Center))
+                }
+            }
         }
         Spacer(Modifier.width(12.dp))
         Column(Modifier.weight(1f)) {
             Text(
                 text = title,
                 style = MaterialTheme.typography.titleMedium,
-                color = MaterialTheme.colorScheme.onBackground,
+                color = if (isM3E && isCurrent) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onBackground,
                 maxLines = 1,
                 overflow = TextOverflow.Ellipsis,
             )
@@ -928,17 +959,26 @@ fun VideoShelfCard(
     subtitleColor: Color = MaterialTheme.colorScheme.onSurfaceVariant,
     placeholderColor: Color = MaterialTheme.colorScheme.surfaceVariant,
 ) {
+    val isM3E = LocalMaterialUiMode.current
+    val videoShape = if (isM3E) RoundedCornerShape(22.dp) else RoundedCornerShape(12.dp)
+
     Column(
         modifier = modifier
-            .longPressMenuClickable(onClick = onClick, onLongClick = onLongPress)
+            .then(
+                if (isM3E) {
+                    Modifier.expressiveClickable(onClick = onClick)
+                } else {
+                    Modifier.longPressMenuClickable(onClick = onClick, onLongClick = onLongPress)
+                }
+            )
             .contextClick(onLongPress),
     ) {
         Box(
             modifier = Modifier
                 .fillMaxWidth()
                 .aspectRatio(VIDEO_ASPECT)
-                .clip(RoundedCornerShape(12.dp))
-                .thumbnailBorder(RoundedCornerShape(12.dp))
+                .clip(videoShape)
+                .thumbnailBorder(videoShape)
                 .background(placeholderColor),
         ) {
             AsyncImage(
@@ -949,7 +989,16 @@ fun VideoShelfCard(
                 contentScale = ContentScale.Crop,
                 modifier = Modifier.fillMaxSize(),
             )
-            if (isCurrent && isPlaying) SearchPlayingBars(Modifier.align(Alignment.Center))
+            if (isCurrent && isPlaying) {
+                if (isM3E) {
+                    AnimatedEqualizerIndicator(
+                        tint = MaterialTheme.colorScheme.primary,
+                        modifier = Modifier.align(Alignment.Center),
+                    )
+                } else {
+                    SearchPlayingBars(Modifier.align(Alignment.Center))
+                }
+            }
         }
         Spacer(Modifier.height(10.dp))
         Text(
@@ -1079,9 +1128,22 @@ internal fun ShelfCard(
     isCurrent: Boolean = false,
     isPlaying: Boolean = false,
 ) {
+    val isM3E = LocalMaterialUiMode.current
+    val cardShape = if (isM3E) {
+        M3EShapes.get(item.title.ifEmpty { item.browseId ?: "m3e" })
+    } else {
+        RoundedCornerShape(12.dp)
+    }
+
     Column(
         modifier = modifier
-            .longPressMenuClickable(onClick = onClick, onLongClick = onLongPress)
+            .then(
+                if (isM3E) {
+                    Modifier.expressiveClickable(onClick = onClick)
+                } else {
+                    Modifier.longPressMenuClickable(onClick = onClick, onLongClick = onLongPress)
+                }
+            )
             .contextClick(onLongPress),
     ) {
         when (item.browseId) {
@@ -1091,7 +1153,7 @@ internal fun ShelfCard(
                     modifier = Modifier
                         .fillMaxWidth()
                         .aspectRatio(1f)
-                        .clip(RoundedCornerShape(12.dp)),
+                        .clip(cardShape),
                     contentAlignment = Alignment.Center,
                 ) {
                     MeshGradientBackground(
@@ -1133,8 +1195,8 @@ internal fun ShelfCard(
                     modifier = Modifier
                         .fillMaxWidth()
                         .aspectRatio(1f)
-                        .clip(RoundedCornerShape(12.dp))
-                        .thumbnailBorder(RoundedCornerShape(12.dp))
+                        .clip(cardShape)
+                        .thumbnailBorder(cardShape)
                         .background(MaterialTheme.colorScheme.surfaceVariant),
                 ) {
                     AsyncImage(
@@ -1143,7 +1205,16 @@ internal fun ShelfCard(
                         contentScale = androidx.compose.ui.layout.ContentScale.Crop,
                         modifier = Modifier.fillMaxSize(),
                     )
-                    if (isCurrent && isPlaying) SearchPlayingBars(Modifier.align(Alignment.Center))
+                    if (isCurrent && isPlaying) {
+                        if (isM3E) {
+                            AnimatedEqualizerIndicator(
+                                tint = MaterialTheme.colorScheme.primary,
+                                modifier = Modifier.align(Alignment.Center),
+                            )
+                        } else {
+                            SearchPlayingBars(Modifier.align(Alignment.Center))
+                        }
+                    }
                 }
             }
         }

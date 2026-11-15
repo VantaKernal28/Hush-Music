@@ -545,12 +545,13 @@ fun SettingsScreen(
         }
 
         if (section == null) {
-            if (showSearchBar || searchQuery.isNotBlank()) {
+            val materialUiMode by AppSettings.materialUiMode.collectAsStateWithLifecycle()
+            if (materialUiMode || showSearchBar || searchQuery.isNotBlank()) {
                 SearchField(
                     query = searchQuery,
                     onQueryChange = { searchQuery = it },
                     onSubmit = {},
-                    placeholder = stringResource(R.string.settings_search_hint),
+                    placeholder = if (materialUiMode) "Search Settings" else stringResource(R.string.settings_search_hint),
                     modifier = Modifier.padding(start = 20.dp, end = 20.dp, bottom = 12.dp),
                 )
             }
@@ -2753,28 +2754,32 @@ internal fun SettingsGroup(
     topSpacing: Dp = 26.dp,
     content: @Composable () -> Unit,
 ) {
+    val materialUiMode by AppSettings.materialUiMode.collectAsStateWithLifecycle()
+    val shape = if (materialUiMode) RoundedCornerShape(26.dp) else GroupShape
+
     if (header != null) {
         Text(
-            text = header.uppercase(Locale.ROOT),
-            style = MaterialTheme.typography.labelSmall,
-            color = MaterialTheme.colorScheme.onSurfaceVariant,
+            text = if (materialUiMode) header else header.uppercase(Locale.ROOT),
+            style = if (materialUiMode) MaterialTheme.typography.titleSmall else MaterialTheme.typography.labelSmall,
+            fontWeight = FontWeight.Bold,
+            color = if (materialUiMode) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurfaceVariant,
             modifier = Modifier.padding(
                 start = GROUP_INSET + 4.dp,
                 end = GROUP_INSET,
-                top = 26.dp,
+                top = if (materialUiMode) 18.dp else 26.dp,
                 bottom = 8.dp,
             ),
         )
     } else {
-        Spacer(Modifier.height(topSpacing))
+        Spacer(Modifier.height(if (materialUiMode) (topSpacing / 1.6f).coerceAtLeast(10.dp) else topSpacing))
     }
     Column(
         modifier = Modifier
             .fillMaxWidth()
             .padding(horizontal = GROUP_INSET)
-            .clip(GroupShape)
+            .clip(shape)
             .background(MaterialTheme.colorScheme.surfaceVariant)
-            .border(1.dp, Color.White.copy(alpha = 0.08f), GroupShape),
+            .border(1.dp, Color.White.copy(alpha = 0.08f), shape),
     ) {
         content()
     }
@@ -2824,20 +2829,54 @@ internal fun SettingsRow(
     enabled: Boolean = true,
     iconPainter: Painter? = null,
     iconContent: (@Composable () -> Unit)? = null,
+    iconBadgeColor: Color? = null,
     onClick: (() -> Unit)? = null,
     trailing: (@Composable () -> Unit)? = null,
 ) {
+    val materialUiMode by AppSettings.materialUiMode.collectAsStateWithLifecycle()
     Row(
         modifier = Modifier
             .fillMaxWidth()
-            .then(if (onClick != null && enabled) Modifier.clickable(onClick = onClick) else Modifier)
+            .then(
+                if (onClick != null && enabled) {
+                    if (materialUiMode) {
+                        Modifier.com.music.bitchord.ui.components.expressive.expressiveClickable(enabled = enabled, onClick = onClick)
+                    } else {
+                        Modifier.clickable(onClick = onClick)
+                    }
+                } else Modifier
+            )
             .alpha(if (enabled) 1f else 0.45f)
-            .heightIn(min = 52.dp)
-            .padding(horizontal = ROW_INSET, vertical = 12.dp),
+            .heightIn(min = if (iconBadgeColor != null) 60.dp else 52.dp)
+            .padding(horizontal = ROW_INSET, vertical = if (iconBadgeColor != null) 10.dp else 12.dp),
         verticalAlignment = Alignment.CenterVertically,
     ) {
         if (iconContent != null) {
             iconContent()
+        } else if (iconBadgeColor != null) {
+            Box(
+                modifier = Modifier
+                    .size(38.dp)
+                    .clip(CircleShape)
+                    .background(iconBadgeColor),
+                contentAlignment = Alignment.Center,
+            ) {
+                if (iconPainter != null) {
+                    Icon(
+                        painter = iconPainter,
+                        contentDescription = null,
+                        tint = Color.White,
+                        modifier = Modifier.size(20.dp),
+                    )
+                } else if (icon != null) {
+                    Icon(
+                        imageVector = icon,
+                        contentDescription = null,
+                        tint = Color.White,
+                        modifier = Modifier.size(20.dp),
+                    )
+                }
+            }
         } else if (iconPainter != null) {
             Icon(
                 painter = iconPainter,
@@ -2853,11 +2892,32 @@ internal fun SettingsRow(
                 modifier = Modifier.size(ICON_SIZE),
             )
         }
-        Spacer(Modifier.width(ICON_GAP))
+        Spacer(Modifier.width(if (iconBadgeColor != null) 16.dp else ICON_GAP))
         Column(Modifier.weight(1f)) {
             Row(verticalAlignment = Alignment.CenterVertically) {
                 Text(
                     text = title,
+                    style = if (iconBadgeColor != null) MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.SemiBold) else MaterialTheme.typography.bodyLarge,
+                    color = MaterialTheme.colorScheme.onBackground,
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis,
+                )
+                if (badge != null) {
+                    Spacer(Modifier.width(8.dp))
+                    Badge(badge)
+                }
+            }
+            if (subtitleContent != null) {
+                subtitleContent()
+            } else if (subtitle != null) {
+                Text(
+                    text = subtitle,
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    maxLines = 5,
+                )
+            }
+        }
                     style = MaterialTheme.typography.bodyLarge,
                     color = MaterialTheme.colorScheme.onBackground,
                     maxLines = 1,
@@ -3128,27 +3188,78 @@ enum class SettingsChoiceKind(@param:StringRes val title: Int) {
 /** The main page's list of categories: a glyph and a name each, and a chevron into it. */
 @Composable
 private fun SettingsCategoryList(onOpen: (SettingsCategory) -> Unit) {
-    SettingsGroup {
-        SettingsCategory.entries.forEachIndexed { index, category ->
-            if (index > 0) RowDivider()
-            val categorySubtitle = when (category) {
-                SettingsCategory.APPEARANCE -> "Theme, accent color, font & motion effects"
-                SettingsCategory.PLAYBACK -> "Equalizer, loudness normalization, crossfade & automix"
-                SettingsCategory.CONTENT_PREFERENCES -> "Home screen moods, top picks & recents"
-                SettingsCategory.DOWNLOADS -> "Offline storage directory, quality & audio cache"
-                SettingsCategory.LOCAL_MUSIC -> "Internal device storage, folders & library index"
-                SettingsCategory.PERFORMANCE -> "Refresh rate, animation scale & blur effects"
-                SettingsCategory.STORAGE -> "Clear cache, local database & offline tracks"
-                SettingsCategory.YOUR_DATA -> "Export & import backup, listening history"
-                SettingsCategory.MISCELLANEOUS -> "Debug stats, crash reporting & updater"
-                SettingsCategory.LANGUAGE -> "App interface & display language"
+    val materialUiMode by AppSettings.materialUiMode.collectAsStateWithLifecycle()
+
+    if (!materialUiMode) {
+        // Classic BitChord single-card group
+        SettingsGroup {
+            SettingsCategory.entries.forEachIndexed { index, category ->
+                if (index > 0) RowDivider()
+                val categorySubtitle = when (category) {
+                    SettingsCategory.APPEARANCE -> "Theme, accent color, font & motion effects"
+                    SettingsCategory.PLAYBACK -> "Equalizer, loudness normalization, crossfade & automix"
+                    SettingsCategory.CONTENT_PREFERENCES -> "Home screen moods, top picks & recents"
+                    SettingsCategory.DOWNLOADS -> "Offline storage directory, quality & audio cache"
+                    SettingsCategory.LOCAL_MUSIC -> "Internal device storage, folders & library index"
+                    SettingsCategory.PERFORMANCE -> "Refresh rate, animation scale & blur effects"
+                    SettingsCategory.STORAGE -> "Clear cache, local database & offline tracks"
+                    SettingsCategory.YOUR_DATA -> "Export & import backup, listening history"
+                    SettingsCategory.MISCELLANEOUS -> "Debug stats, crash reporting & updater"
+                    SettingsCategory.LANGUAGE -> "App interface & display language"
+                }
+                SettingsRow(
+                    icon = category.icon,
+                    title = stringResource(category.title),
+                    subtitle = categorySubtitle,
+                    onClick = { onOpen(category) },
+                )
             }
-            SettingsRow(
-                icon = category.icon,
-                title = stringResource(category.title),
-                subtitle = categorySubtitle,
-                onClick = { onOpen(category) },
-            )
+        }
+    } else {
+        // Flagship Android/Pixel multi-panel settings matching uploaded reference
+        val panelStorage = listOf(
+            SettingsCategory.STORAGE to Color(0xFFF59E0B),          // Amber
+            SettingsCategory.PERFORMANCE to Color(0xFF22C55E),      // Green
+            SettingsCategory.MISCELLANEOUS to Color(0xFF6366F1),    // Indigo
+            SettingsCategory.LANGUAGE to Color(0xFF38BDF8),         // Sky Blue
+        )
+        val panelMedia = listOf(
+            SettingsCategory.APPEARANCE to Color(0xFFEC4899),       // Rose
+            SettingsCategory.PLAYBACK to Color(0xFFF97316),         // Orange
+            SettingsCategory.CONTENT_PREFERENCES to Color(0xFF14B8A6), // Teal
+        )
+        val panelData = listOf(
+            SettingsCategory.DOWNLOADS to Color(0xFF2563EB),        // Blue
+            SettingsCategory.LOCAL_MUSIC to Color(0xFF10B981),      // Emerald
+            SettingsCategory.YOUR_DATA to Color(0xFF06B6D4),        // Cyan
+        )
+
+        val panels = listOf(panelStorage, panelMedia, panelData)
+        panels.forEach { items ->
+            SettingsGroup(topSpacing = 14.dp) {
+                items.forEachIndexed { index, (category, badgeColor) ->
+                    if (index > 0) RowDivider()
+                    val categorySubtitle = when (category) {
+                        SettingsCategory.APPEARANCE -> "Theme, accent color, font & motion effects"
+                        SettingsCategory.PLAYBACK -> "Equalizer, loudness normalization, crossfade & automix"
+                        SettingsCategory.CONTENT_PREFERENCES -> "Home screen moods, top picks & recents"
+                        SettingsCategory.DOWNLOADS -> "Offline storage directory, quality & audio cache"
+                        SettingsCategory.LOCAL_MUSIC -> "Internal device storage, folders & library index"
+                        SettingsCategory.PERFORMANCE -> "Refresh rate, animation scale & blur effects"
+                        SettingsCategory.STORAGE -> "Clear cache, local database & offline tracks"
+                        SettingsCategory.YOUR_DATA -> "Export & import backup, listening history"
+                        SettingsCategory.MISCELLANEOUS -> "Debug stats, crash reporting & updater"
+                        SettingsCategory.LANGUAGE -> "App interface & display language"
+                    }
+                    SettingsRow(
+                        icon = category.icon,
+                        iconBadgeColor = badgeColor,
+                        title = stringResource(category.title),
+                        subtitle = categorySubtitle,
+                        onClick = { onOpen(category) },
+                    )
+                }
+            }
         }
     }
 }

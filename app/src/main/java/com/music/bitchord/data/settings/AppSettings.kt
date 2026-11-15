@@ -132,7 +132,7 @@ enum class ThemeMode(val label: String) {
  * lighter and spaces it to Apple Music's own screens; [LEGACY] is the cut the
  * app shipped with before that, every weight its own and spaced tight.
  */
-enum class AppFont { DEFAULT, LEGACY, CUSTOM }
+enum class AppFont { DEFAULT, LEGACY, PIXEL_ROUND, CUSTOM }
 
 /**
  * Which of the equaliser's two tabs is driving the sound.

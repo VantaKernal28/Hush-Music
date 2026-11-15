@@ -42,6 +42,9 @@ import org.jetbrains.compose.resources.painterResource
 import org.jetbrains.compose.resources.stringResource
 import com.music.bitchord.ui.player.MeshGradientBackground
 import com.music.bitchord.ui.player.rememberArtworkColors
+import com.music.bitchord.ui.LocalMaterialUiMode
+import com.music.bitchord.ui.components.expressive.SquircleShape
+import com.music.bitchord.ui.components.expressive.expressiveClickable
 import java.util.Locale
 
 /**
@@ -103,24 +106,29 @@ fun ReplayCreditCard(
 ) {
     val palette = rememberArtworkColors(artworkUrl)
     val accentColor = MaterialTheme.colorScheme.primary
+    val isM3E = LocalMaterialUiMode.current
+    val actualCardShape = if (isM3E) SquircleShape(28.dp) else CardShape
     Box(
         modifier = modifier
             .aspectRatio(CARD_RATIO)
-            .shadow(16.dp, CardShape, clip = false)
-            .clip(CardShape)
+            .shadow(16.dp, actualCardShape, clip = false)
+            .clip(actualCardShape)
             .background(Color(0xFF0F1116))
             .border(
-                width = 1.dp,
+                width = if (isM3E) 1.5.dp else 1.dp,
                 brush = Brush.linearGradient(
                     listOf(
-                        Color.White.copy(alpha = 0.22f),
-                        accentColor.copy(alpha = 0.35f),
-                        Color.White.copy(alpha = 0.06f),
+                        Color.White.copy(alpha = if (isM3E) 0.35f else 0.22f),
+                        accentColor.copy(alpha = 0.45f),
+                        Color.White.copy(alpha = 0.08f),
                     )
                 ),
-                shape = CardShape,
+                shape = actualCardShape,
             )
-            .clickable(onClick = onClick),
+            .then(
+                if (isM3E) Modifier.expressiveClickable(onClick = onClick)
+                else Modifier.clickable(onClick = onClick)
+            ),
     ) {
         MeshGradientBackground(
             palette = palette,
