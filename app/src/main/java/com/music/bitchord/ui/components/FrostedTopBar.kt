@@ -169,6 +169,7 @@ fun FrostedTopBar(
     backButtonHazeState: HazeState? = null,
     trailingTitle: String? = null,
     onBack: (() -> Unit)? = null,
+    leading: (@Composable () -> Unit)? = null,
     refreshing: Boolean = false,
     // A lambda, not a value: the drag changes every frame, and reading it in
     // the caller would recompose the whole app on each one.
@@ -310,6 +311,15 @@ fun FrostedTopBar(
                             tint = MaterialTheme.colorScheme.onSurface,
                         )
                     }
+                }
+            } else if (leading != null) {
+                Box(
+                    modifier = Modifier
+                        .align(Alignment.CenterStart)
+                        .padding(start = if (useFloatingChrome) BAR_GUTTER else 12.dp),
+                    contentAlignment = Alignment.CenterStart,
+                ) {
+                    leading()
                 }
             }
             // No wordmark at the leading end: the root tabs carry it above

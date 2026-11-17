@@ -360,6 +360,7 @@ import com.music.bitchord.ui.replay.ReplayStories
 import com.music.bitchord.ui.replay.ReplayStoryPage
 import com.music.bitchord.ui.replay.rememberReplayState
 import com.music.bitchord.ui.theme.BitChordTheme
+import com.music.bitchord.ui.theme.CherryBombOne
 import com.music.bitchord.ui.theme.rememberArtworkPalette
 import com.music.bitchord.data.canvas.AppleArtistArtRepository
 import com.music.bitchord.data.canvas.keyColors
@@ -3842,6 +3843,29 @@ private fun BitChordApp(
                         route != null || detail != null || selectedMoodGenre != null -> goBack
                         else -> null
                     },
+                    leading = if (selectedTab == TAB_HOME && route == null && detail == null && selectedMoodGenre == null) {
+                        {
+                            Row(
+                                verticalAlignment = Alignment.CenterVertically,
+                                horizontalArrangement = Arrangement.spacedBy(8.dp),
+                            ) {
+                                Image(
+                                    painter = painterResource(R.drawable.ic_hush_logo),
+                                    contentDescription = "Hush Music",
+                                    modifier = Modifier
+                                        .size(28.dp)
+                                        .clip(RoundedCornerShape(8.dp)),
+                                )
+                                Text(
+                                    text = "Hush Music",
+                                    fontFamily = CherryBombOne,
+                                    fontSize = 19.sp,
+                                    color = MaterialTheme.colorScheme.onSurface,
+                                    letterSpacing = (-0.3).sp,
+                                )
+                            }
+                        }
+                    } else null,
                     modifier = Modifier.align(Alignment.TopCenter),
                     // Only on the Search tab itself, not on anything pushed over it.
                     accessory = if (

@@ -15,6 +15,8 @@ import androidx.compose.animation.core.spring
 import androidx.compose.animation.core.tween
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
+import androidx.compose.animation.scaleIn
+import androidx.compose.animation.scaleOut
 import androidx.compose.animation.slideInHorizontally
 import androidx.compose.animation.slideOutHorizontally
 import androidx.compose.animation.togetherWith
@@ -265,8 +267,19 @@ fun OnboardingScreen(
                         AnimatedContent(
                             targetState = phase,
                             transitionSpec = {
-                                (fadeIn(tween(350, easing = FastOutSlowInEasing)) + slideInHorizontally(tween(350)) { it / 6 })
-                                    .togetherWith(fadeOut(tween(250, easing = FastOutSlowInEasing)) + slideOutHorizontally(tween(250)) { -it / 6 })
+                                val forward = targetState.ordinal >= initialState.ordinal
+                                (fadeIn(animationSpec = tween(380, easing = FastOutSlowInEasing)) +
+                                    slideInHorizontally(animationSpec = tween(380, easing = FastOutSlowInEasing)) { fullWidth ->
+                                        if (forward) fullWidth / 4 else -fullWidth / 4
+                                    } +
+                                    scaleIn(initialScale = 0.95f, animationSpec = tween(380, easing = FastOutSlowInEasing))
+                                ).togetherWith(
+                                    fadeOut(animationSpec = tween(260, easing = FastOutSlowInEasing)) +
+                                    slideOutHorizontally(animationSpec = tween(260, easing = FastOutSlowInEasing)) { fullWidth ->
+                                        if (forward) -fullWidth / 4 else fullWidth / 4
+                                    } +
+                                    scaleOut(targetScale = 0.95f, animationSpec = tween(260, easing = FastOutSlowInEasing))
+                                )
                             },
                             label = "onboardingPhaseTransition",
                             modifier = Modifier
@@ -369,7 +382,7 @@ fun OnboardingScreen(
                                         onClick = onSignIn,
                                     )
                                     PillButtonSecondary(
-                                        text = "Start Listening Offline",
+                                        text = "Start Listening",
                                         onClick = onFinish,
                                     )
                                 }
@@ -573,7 +586,7 @@ private fun PostNameIdentityRevealAnimation(
     }
 }
 
-/** 3-Dot Pagination Indicator matching Inspired setup.jpg */
+/** 3-Dot Pagination Indicator with smooth width and accent tint animation */
 @Composable
 private fun PaginationDots(
     currentIndex: Int,
@@ -585,14 +598,22 @@ private fun PaginationDots(
     ) {
         repeat(3) { index ->
             val active = index == currentIndex
+            val width by animateFloatAsState(
+                targetValue = if (active) 20f else 6f,
+                animationSpec = spring(dampingRatio = 0.75f, stiffness = Spring.StiffnessMedium),
+                label = "paginationDotWidth",
+            )
+            val dotColor by animateColorAsState(
+                targetValue = if (active) accentColor else Color.White.copy(alpha = 0.30f),
+                animationSpec = tween(280),
+                label = "paginationDotColor",
+            )
             Box(
                 modifier = Modifier
                     .height(6.dp)
-                    .width(if (active) 18.dp else 6.dp)
+                    .width(width.dp)
                     .clip(CircleShape)
-                    .background(
-                        if (active) Color.White else Color.White.copy(alpha = 0.35f),
-                    ),
+                    .background(dotColor),
             )
         }
     }
@@ -676,8 +697,8 @@ private fun StepNameAndAccentContent(
                 .widthIn(max = 380.dp)
                 .height(52.dp)
                 .clip(RoundedCornerShape(26.dp))
-                .background(Color.White.copy(alpha = 0.18f))
-                .border(BorderStroke(1.dp, Color.White.copy(alpha = 0.35f)), RoundedCornerShape(26.dp))
+                .background(Color(0xFF1E212A))
+                .border(BorderStroke(1.dp, Color.White.copy(alpha = 0.20f)), RoundedCornerShape(26.dp))
                 .padding(horizontal = 20.dp),
             contentAlignment = Alignment.CenterStart,
         ) {
@@ -966,13 +987,22 @@ private fun StepAccountContent(
         horizontalAlignment = Alignment.CenterHorizontally,
     ) {
         // Centered Hush Music logo
-        Image(
-            painter = painterResource(R.drawable.ic_hush_transparent_logo),
-            contentDescription = null,
+        Box(
             modifier = Modifier
-                .size(68.dp)
-                .clip(RoundedCornerShape(16.dp)),
-        )
+                .size(76.dp)
+                .clip(RoundedCornerShape(20.dp))
+                .background(Color(0xFF1E212A))
+                .border(1.dp, Color.White.copy(alpha = 0.20f), RoundedCornerShape(20.dp)),
+            contentAlignment = Alignment.Center,
+        ) {
+            Image(
+                painter = painterResource(R.drawable.ic_hush_transparent_logo),
+                contentDescription = null,
+                modifier = Modifier
+                    .size(56.dp)
+                    .clip(RoundedCornerShape(14.dp)),
+            )
+        }
         Spacer(Modifier.height(18.dp))
 
         TypewriterHeadline(
@@ -993,7 +1023,7 @@ private fun StepAccountContent(
     }
 }
 
-/** Soft-filled primary pill button matching Inspired setup.jpg */
+/** Crisp, solid opaque primary pill button using active Accent Color with high-contrast label */
 @Composable
 private fun PillButtonPrimary(
     text: String,
@@ -1005,9 +1035,16 @@ private fun PillButtonPrimary(
     val isPressed by interaction.collectIsPressedAsState()
     val scale by animateFloatAsState(
         targetValue = if (isPressed) 0.96f else 1f,
-        animationSpec = spring(dampingRatio = 0.65f, stiffness = Spring.StiffnessMediumLow),
+        animationSpec = spring(dampingRatio = 0.70f, stiffness = Spring.StiffnessMedium),
         label = "pillPrimaryScale",
     )
+
+    val buttonBg = if (hasGoogleIcon) Color.White else accentColor
+    val textColor = if (hasGoogleIcon) {
+        Color(0xFF16181D)
+    } else {
+        if (accentColor.luminance() > 0.45f) Color(0xFF101216) else Color.White
+    }
 
     Box(
         modifier = Modifier
@@ -1018,7 +1055,7 @@ private fun PillButtonPrimary(
                 scaleY = scale
             }
             .clip(RoundedCornerShape(26.dp))
-            .background(Color.White.copy(alpha = 0.92f))
+            .background(buttonBg)
             .clickable(
                 interactionSource = interaction,
                 indication = null,
@@ -1042,13 +1079,13 @@ private fun PillButtonPrimary(
                 text = text,
                 style = MaterialTheme.typography.titleMedium,
                 fontWeight = FontWeight.Bold,
-                color = Color(0xFF16181D),
+                color = textColor,
             )
         }
     }
 }
 
-/** Thin outlined secondary pill button matching Inspired setup.jpg */
+/** Crisp, solid tonal secondary pill button with clean border and high-contrast text */
 @Composable
 private fun PillButtonSecondary(
     text: String,
@@ -1058,7 +1095,7 @@ private fun PillButtonSecondary(
     val isPressed by interaction.collectIsPressedAsState()
     val scale by animateFloatAsState(
         targetValue = if (isPressed) 0.96f else 1f,
-        animationSpec = spring(dampingRatio = 0.65f, stiffness = Spring.StiffnessMediumLow),
+        animationSpec = spring(dampingRatio = 0.70f, stiffness = Spring.StiffnessMedium),
         label = "pillSecondaryScale",
     )
 
@@ -1071,8 +1108,8 @@ private fun PillButtonSecondary(
                 scaleY = scale
             }
             .clip(RoundedCornerShape(26.dp))
-            .border(BorderStroke(1.dp, Color.White.copy(alpha = 0.55f)), RoundedCornerShape(26.dp))
-            .background(Color.Transparent)
+            .background(Color(0xFF1E212A))
+            .border(BorderStroke(1.dp, Color.White.copy(alpha = 0.18f)), RoundedCornerShape(26.dp))
             .clickable(
                 interactionSource = interaction,
                 indication = null,
@@ -1083,7 +1120,7 @@ private fun PillButtonSecondary(
         Text(
             text = text,
             style = MaterialTheme.typography.titleMedium,
-            fontWeight = FontWeight.Medium,
+            fontWeight = FontWeight.SemiBold,
             color = Color.White,
         )
     }

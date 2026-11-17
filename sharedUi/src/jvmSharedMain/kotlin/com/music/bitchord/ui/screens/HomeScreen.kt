@@ -95,7 +95,7 @@ import com.music.bitchord.ui.player.MeshGradientBackground
 import com.music.bitchord.ui.player.MeshPalette
 
 /** How far the Listen now heading and feed sit above the shared top inset. */
-private val HOME_TITLE_LIFT = 28.dp
+private val HOME_TITLE_LIFT = 0.dp
 
 private const val RECENTS_TITLE = "Recents"
 private const val RECENT_TRACKS_PER_COLUMN = 4
@@ -588,27 +588,15 @@ private fun HomeTitle(
     var selectedFilter by remember { mutableStateOf("All") }
 
     Column(modifier = modifier.padding(horizontal = PAGE_GUTTER, vertical = 6.dp)) {
-        Row(
+        Text(
+            text = fullGreeting,
+            style = MaterialTheme.typography.headlineMedium,
+            fontWeight = FontWeight.Bold,
+            color = MaterialTheme.colorScheme.onBackground,
             modifier = Modifier
                 .fillMaxWidth()
                 .padding(bottom = 12.dp),
-            verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.SpaceBetween,
-        ) {
-            Text(
-                text = fullGreeting,
-                style = MaterialTheme.typography.headlineMedium,
-                fontWeight = FontWeight.Bold,
-                color = MaterialTheme.colorScheme.onBackground,
-            )
-            Image(
-                painter = painterResource(Res.drawable.ic_hush_transparent_logo),
-                contentDescription = "Hush Music",
-                modifier = Modifier
-                    .size(34.dp)
-                    .clip(CircleShape),
-            )
-        }
+        )
 
         val filters = listOf("All", "Music", "Podcasts", "Made For You")
         Row(
