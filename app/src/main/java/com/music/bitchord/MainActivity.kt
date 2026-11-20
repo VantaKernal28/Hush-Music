@@ -4190,7 +4190,28 @@ private fun BitChordApp(
                     }
                 }
 
-                if (glassActive) Column(
+                // Minimal Top-Left AI Playlist Maker dot trigger (6-8dp)
+                if (route == null && detail == null) {
+                    Box(
+                        modifier = Modifier
+                            .align(Alignment.TopStart)
+                            .statusBarsPadding()
+                            .padding(start = 16.dp, top = 14.dp)
+                            .size(28.dp)
+                            .clip(CircleShape)
+                            .clickable { showAiPlaylistMaker = true },
+                        contentAlignment = Alignment.Center,
+                    ) {
+                        Box(
+                            modifier = Modifier
+                                .size(7.dp)
+                                .clip(CircleShape)
+                                .background(MaterialTheme.colorScheme.primary.copy(alpha = 0.85f)),
+                        )
+                    }
+                }
+
+                if (!materialUiMode) Column(
                     modifier = Modifier
                         .align(Alignment.BottomCenter)
                         .widthIn(max = FLOATING_BAR_MAX_WIDTH)
@@ -4198,10 +4219,7 @@ private fun BitChordApp(
                         .onSizeChanged { floatingBarsHeight.intValue = it.height },
                 ) {
                     QueueActionNoticeHost(queueNotice)
-                    // Liquid glass replaces the two stacked bars with the single
-                    // component they are stacked to imitate: the now playing
-                    // controls dock into the tab bar rather than riding above it,
-                    // and the pair folds together on scroll. See [GlassNavBar].
+                    // Liquid glass is the mandatory default in Classic mode
                     GlassNavBar(
                         tabs = tabs,
                         selectedIndex = selectedTab,
@@ -4229,12 +4247,6 @@ private fun BitChordApp(
                 } else Column(
                     modifier = Modifier
                         .align(Alignment.BottomCenter)
-                        // Capped and centred rather than run to the page's edges
-                        // — see [FLOATING_BAR_MAX_WIDTH]. It sits on the Column
-                        // rather than on each bar so the two are held to the same
-                        // width and keep the shared left and right edge they have
-                        // on a phone. Before fillMaxWidth, so the fill has
-                        // already been bounded by the time it is applied.
                         .widthIn(max = FLOATING_BAR_MAX_WIDTH)
                         .fillMaxWidth()
                         .onSizeChanged { floatingBarsHeight.intValue = it.height },
@@ -4242,75 +4254,35 @@ private fun BitChordApp(
                 ) {
                     QueueActionNoticeHost(queueNotice)
                     player.song?.let { song ->
-                        if (expressiveUiEnabled) {
-                            com.music.bitchord.ui.components.expressive.ExpressiveMiniPlayer(
-                                song = song,
-                                isPlaying = player.isPlaying,
-                                isLoading = playPauseBusy,
-                                hazeState = hazeState,
-                                onPlayPause = {
-                                    togglePlayPause()
-                                },
-                                onNext = { controller?.seekToNextMediaItem() },
-                                onPrevious = { controller?.seekToPrevious() },
-                                onExpand = if (reducePlayerMotion) {
-                                    { showNowPlaying = true }
-                                } else {
-                                    playerSheetMotion::open
-                                },
-                                controlsLocked = controlsLocked,
-                                onBlockedControl = showHostOnlyNotice,
-                                dock = activeDock,
-                                pull = playerSheetMotion.takeIf { !reducePlayerMotion },
-                                modifier = Modifier.fillMaxWidth(),
-                            )
-                        } else {
-                            MiniPlayer(
-                                song = song,
-                                isPlaying = player.isPlaying,
-                                isLoading = playPauseBusy,
-                                hazeState = hazeState,
-                                onPlayPause = {
-                                    togglePlayPause()
-                                },
-                                onNext = { controller?.seekToNextMediaItem() },
-                                onPrevious = { controller?.seekToPrevious() },
-                                onExpand = if (reducePlayerMotion) {
-                                    { showNowPlaying = true }
-                                } else {
-                                    playerSheetMotion::open
-                                },
-                                controlsLocked = controlsLocked,
-                                onBlockedControl = showHostOnlyNotice,
-                                dock = activeDock,
-                                pull = playerSheetMotion.takeIf { !reducePlayerMotion },
-                                modifier = Modifier.fillMaxWidth(),
-                            )
-                        }
+                        com.music.bitchord.ui.components.expressive.ExpressiveMiniPlayer(
+                            song = song,
+                            isPlaying = player.isPlaying,
+                            isLoading = playPauseBusy,
+                            hazeState = hazeState,
+                            onPlayPause = {
+                                togglePlayPause()
+                            },
+                            onNext = { controller?.seekToNextMediaItem() },
+                            onPrevious = { controller?.seekToPrevious() },
+                            onExpand = if (reducePlayerMotion) {
+                                { showNowPlaying = true }
+                            } else {
+                                playerSheetMotion::open
+                            },
+                            controlsLocked = controlsLocked,
+                            onBlockedControl = showHostOnlyNotice,
+                            dock = activeDock,
+                            pull = playerSheetMotion.takeIf { !reducePlayerMotion },
+                            modifier = Modifier.fillMaxWidth(),
+                        )
                         Spacer(Modifier.height(8.dp))
                     }
-                    val onTabLongClick: (Int) -> Unit = { index ->
-                        if (index == 1) { // Long press Explore tab
-                            showAiPlaylistMaker = true
-                        }
-                    }
-                    if (expressiveUiEnabled) {
-                        com.music.bitchord.ui.components.expressive.ExpressiveNavBar(
-                            tabs = tabs,
-                            selectedIndex = selectedTab,
-                            hazeState = hazeState,
-                            onTabSelected = onTabSelected,
-                            onTabLongClick = onTabLongClick,
-                        )
-                    } else {
-                        FloatingBottomBar(
-                            tabs = tabs,
-                            selectedIndex = selectedTab,
-                            hazeState = hazeState,
-                            onTabSelected = onTabSelected,
-                            onTabLongClick = onTabLongClick,
-                        )
-                    }
+                    com.music.bitchord.ui.components.expressive.ExpressiveNavBar(
+                        tabs = tabs,
+                        selectedIndex = selectedTab,
+                        hazeState = hazeState,
+                        onTabSelected = onTabSelected,
+                    )
                 }
             }
 

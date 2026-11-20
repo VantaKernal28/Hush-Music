@@ -1,5 +1,6 @@
 package com.music.bitchord.ui.screens
 
+import com.music.bitchord.AppIcon
 import com.music.bitchord.ui.icons.SfIcons
 import com.music.bitchord.ui.icons.HushIcons
 import com.music.bitchord.ui.theme.HushAccents
@@ -1279,6 +1280,79 @@ fun SettingsScreen(
                     }
                 }
             }
+            val appIconTitle = "App Icon"
+            row(appIconTitle, "icon", "launcher", "logo", "black", "white") {
+                var currentIcon by remember { mutableStateOf(AppIcon.current(context)) }
+                SettingsRow(
+                    icon = Icons.Rounded.Apps,
+                    title = appIconTitle,
+                )
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(horizontal = ROW_INSET, vertical = 6.dp),
+                    horizontalArrangement = Arrangement.spacedBy(10.dp),
+                ) {
+                    val icons = listOf(AppIcon.Default, AppIcon.WhiteBlack)
+                    icons.forEach { iconOption ->
+                        val isSelected = currentIcon == iconOption
+                        Box(
+                            modifier = Modifier
+                                .weight(1f)
+                                .clip(RoundedCornerShape(16.dp))
+                                .background(
+                                    if (isSelected) MaterialTheme.colorScheme.primary.copy(alpha = 0.12f)
+                                    else MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f),
+                                )
+                                .border(
+                                    width = if (isSelected) 1.5.dp else 1.dp,
+                                    color = if (isSelected) MaterialTheme.colorScheme.primary
+                                    else MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.4f),
+                                    shape = RoundedCornerShape(16.dp),
+                                )
+                                .clickable {
+                                    AppIcon.apply(context, iconOption)
+                                    currentIcon = iconOption
+                                }
+                                .padding(horizontal = 12.dp, vertical = 10.dp),
+                        ) {
+                            Row(
+                                verticalAlignment = Alignment.CenterVertically,
+                                horizontalArrangement = Arrangement.spacedBy(10.dp),
+                            ) {
+                                Image(
+                                    painter = painterResource(
+                                        if (iconOption == AppIcon.WhiteBlack) R.mipmap.ic_launcher_white_black
+                                        else R.mipmap.ic_launcher
+                                    ),
+                                    contentDescription = null,
+                                    modifier = Modifier
+                                        .size(36.dp)
+                                        .clip(RoundedCornerShape(8.dp)),
+                                )
+                                Column(modifier = Modifier.weight(1f)) {
+                                    Text(
+                                        text = stringResource(iconOption.labelRes),
+                                        style = MaterialTheme.typography.labelLarge,
+                                        fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Medium,
+                                        color = MaterialTheme.colorScheme.onSurface,
+                                        maxLines = 1,
+                                        overflow = TextOverflow.Ellipsis,
+                                    )
+                                }
+                                if (isSelected) {
+                                    Icon(
+                                        imageVector = Icons.Rounded.Check,
+                                        contentDescription = null,
+                                        tint = MaterialTheme.colorScheme.primary,
+                                        modifier = Modifier.size(18.dp),
+                                    )
+                                }
+                            }
+                        }
+                    }
+                }
+            }
             val fontTitle = stringResource(R.string.font)
             row(fontTitle, "typeface", "sf pro", "legacy") {
                 SettingsRow(
@@ -1298,9 +1372,9 @@ fun SettingsScreen(
                     verticalArrangement = Arrangement.spacedBy(10.dp),
                 ) {
                     UiStyleOptionCard(
-                        title = "BitChord Classic",
+                        title = "Classic",
                         badge = "CLASSIC",
-                        description = "Frosted glass aesthetic, Apple-inspired depth & fluid mesh blurs",
+                        description = "",
                         iconRes = R.drawable.ic_logo,
                         selected = !materialUiMode,
                         onClick = {
@@ -1311,9 +1385,9 @@ fun SettingsScreen(
                     )
 
                     UiStyleOptionCard(
-                        title = "Material 3 Expressive",
-                        badge = "HUSH M3E",
-                        description = "12 organic M3E shapes, bouncy spring physics, Pixel Round font & dynamic Monet",
+                        title = "Material UI Mode",
+                        badge = "RHYTHM M3E",
+                        description = "",
                         iconRes = R.drawable.ic_hush_transparent_logo,
                         selected = materialUiMode,
                         onClick = {
@@ -1427,14 +1501,6 @@ fun SettingsScreen(
             // on their own. Progressive Blur has its own switch because it costs
             // frames of its own. Reduce dynamic blur turns it off.
             if (liquidGlass && liquidGlassSupported) {
-                val glassPerformanceTitle = stringResource(R.string.glass_performance)
-                row(glassPerformanceTitle, "glass", "performance", "refraction", "frosted", "lag", divided = false) {
-                    SettingsSubRow(
-                        title = glassPerformanceTitle,
-                        checked = glassPerformance,
-                        onCheckedChange = AppSettings::setGlassPerformance,
-                    )
-                }
                 val progressiveBlurTitle = stringResource(R.string.progressive_blur)
                 row(progressiveBlurTitle, "blur", "status bar", "top", divided = false) {
                     SettingsSubRow(
@@ -2922,13 +2988,6 @@ internal fun SettingsRow(
             }
             if (subtitleContent != null) {
                 subtitleContent()
-            } else if (subtitle != null) {
-                Text(
-                    text = subtitle,
-                    style = MaterialTheme.typography.bodyMedium,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant,
-                    maxLines = 5,
-                )
             }
         }
         Spacer(Modifier.width(12.dp))
@@ -2984,14 +3043,6 @@ internal fun SettingsSubRow(
                     Spacer(Modifier.width(8.dp))
                     Badge(badge)
                 }
-            }
-            if (subtitle != null) {
-                Text(
-                    text = subtitle,
-                    style = MaterialTheme.typography.bodyMedium,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant,
-                    maxLines = 5,
-                )
             }
         }
         IosSwitch(
@@ -3521,7 +3572,7 @@ internal fun <T> ChoiceGroup(
 private fun UiStyleOptionCard(
     title: String,
     badge: String,
-    description: String,
+    description: String = "",
     iconRes: Int,
     selected: Boolean,
     onClick: () -> Unit,
@@ -3585,13 +3636,15 @@ private fun UiStyleOptionCard(
                         )
                     }
                 }
-                Spacer(Modifier.height(2.dp))
-                Text(
-                    text = description,
-                    style = MaterialTheme.typography.bodySmall,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant,
-                    lineHeight = 16.sp,
-                )
+                if (description.isNotBlank()) {
+                    Spacer(Modifier.height(2.dp))
+                    Text(
+                        text = description,
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        lineHeight = 16.sp,
+                    )
+                }
             }
         }
     }

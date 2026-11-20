@@ -444,7 +444,7 @@ object AppSettings {
     val selectedGenres = MutableStateFlow<Set<String>>(emptySet())
 
     /** Theme accent chosen during onboarding (sunset, crimson, rose, purple, indigo, blue, cyan, teal, emerald, lime, amber, brown, monochrome, dynamic). */
-    val themeAccent = MutableStateFlow("sunset")
+    val themeAccent = MutableStateFlow("dynamic")
 
     /** Material 3 Expressive UI: organic corner radii (24-28dp), richer containers & expressive springs. */
     val expressiveMode = MutableStateFlow(false)
@@ -1054,7 +1054,7 @@ object AppSettings {
         onboardingComplete.value = prefs.getBoolean(KEY_ONBOARDING_COMPLETE, false)
         userName.value = prefs.getString(KEY_USER_NAME, "Listener") ?: "Listener"
         selectedGenres.value = prefs.getStringSet(KEY_SELECTED_GENRES, emptySet()) ?: emptySet()
-        themeAccent.value = prefs.getString(KEY_THEME_ACCENT, "sunset") ?: "sunset"
+        themeAccent.value = prefs.getString(KEY_THEME_ACCENT, "dynamic") ?: "dynamic"
         expressiveMode.value = prefs.getBoolean(KEY_EXPRESSIVE_MODE, false)
         expressiveUiEnabled.value = prefs.getBoolean(KEY_EXPRESSIVE_UI_ENABLED, true)
         materialUiMode.value = prefs.getBoolean(KEY_MATERIAL_UI_MODE, false)

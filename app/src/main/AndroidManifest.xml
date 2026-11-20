@@ -293,6 +293,20 @@
         </activity-alias>
 
         <activity-alias
+            android:name=".LauncherWhiteBlack"
+            android:enabled="false"
+            android:exported="true"
+            android:icon="@mipmap/ic_launcher_white_black"
+            android:roundIcon="@mipmap/ic_launcher_white_black"
+            android:label="@string/app_name"
+            android:targetActivity=".MainActivity">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+                <category android:name="android.intent.category.LAUNCHER" />
+            </intent-filter>
+        </activity-alias>
+
+        <activity-alias
             android:name=".LauncherMonochrome"
             android:enabled="false"
             android:exported="true"

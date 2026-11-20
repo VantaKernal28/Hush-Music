@@ -649,20 +649,12 @@ private fun HomeTitle(
                 .fillMaxWidth()
                 .padding(bottom = 12.dp),
             verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.SpaceBetween,
         ) {
             Text(
                 text = fullGreeting,
                 style = MaterialTheme.typography.headlineMedium,
                 fontWeight = FontWeight.Bold,
                 color = MaterialTheme.colorScheme.onBackground,
-            )
-            Image(
-                painter = painterResource(Res.drawable.ic_hush_transparent_logo),
-                contentDescription = "Hush Music",
-                modifier = Modifier
-                    .size(34.dp)
-                    .clip(CircleShape),
             )
         }
 
