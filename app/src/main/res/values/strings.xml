@@ -341,9 +341,9 @@
     <string name="show_listen_together_button">Show Hush Jam button</string>
     <string name="show_listen_together_button_subtitle">Off, the player shows only the audio output button between lyrics and the queue</string>
     <string name="app_icon">App Icon</string>
-    <string name="app_icon_default">Black &amp; White (Default)</string>
-    <string name="app_icon_black_white">Black &amp; White (Default)</string>
-    <string name="app_icon_white_black">White &amp; Black</string>
+    <string name="app_icon_default">Default</string>
+    <string name="app_icon_black_white" translatable="false">Black &amp; White (Default)</string>
+    <string name="app_icon_white_black" translatable="false">White &amp; Black</string>
     <string name="app_icon_monochrome" translatable="false">Monochrome</string>
     <string name="app_icon_liquid_glass" translatable="false">Liquid Glass</string>
     <string name="app_icon_liquid_glass_dark" translatable="false">Liquid Glass Dark</string>
