@@ -12,6 +12,7 @@ package com.music.bitchord.ui.components
 import android.os.Build
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
+import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.shape.CornerBasedShape
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
@@ -21,7 +22,10 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.staticCompositionLocalOf
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.Shape
+import androidx.compose.ui.graphics.isSpecified
 import androidx.compose.ui.graphics.luminance
 import androidx.compose.ui.platform.LocalDensity
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
@@ -144,40 +148,43 @@ fun Modifier.lightweightLiquidGlass(
     shape: CornerBasedShape,
     fallbackColor: Color,
 ): Modifier {
+    val dark = isSystemInDarkTheme()
     val useGlass = LocalLiquidGlassEnabled.current && isGlassSupported()
-    val glassTint = if (MaterialTheme.colorScheme.surface.luminance() > 0.5f) {
-        Color(0xFFFAFAFA)
-    } else {
-        Color(0xFF121212)
+    if (!useGlass) {
+        return clip(shape)
+            .background(color = fallbackColor, shape = shape)
+            .border(GLASS_EDGE_WIDTH, GLASS_EDGE_COLOR, shape)
     }
-    val shapeProvider = ShapeProvider { shape }
+
+    val fill = Brush.verticalGradient(
+        colors = if (dark) {
+            listOf(Color(0xFF242426).copy(alpha = 0.44f), Color(0xFF1C1C1E).copy(alpha = 0.52f))
+        } else {
+            listOf(Color.White.copy(alpha = 0.92f), Color.White.copy(alpha = 0.66f))
+        },
+    )
+    val sheen = Brush.linearGradient(
+        0f to Color.White.copy(alpha = if (dark) 0.11f else 0.55f),
+        0.42f to Color.Transparent,
+        1f to Color.Transparent,
+    )
+    val rim = Brush.verticalGradient(
+        colors = if (dark) {
+            listOf(Color.White.copy(alpha = 0.20f), Color.White.copy(alpha = 0.04f))
+        } else {
+            listOf(Color.White.copy(alpha = 0.95f), Color.Black.copy(alpha = 0.05f))
+        },
+    )
 
     return clip(shape)
-        .background(
-            color = if (useGlass) glassTint.copy(alpha = SURFACE_OPACITY) else fallbackColor,
-            shape = shape,
-        )
-        .then(
-            if (useGlass) {
-                HighlightElement(
-                    shapeProvider = shapeProvider,
-                    highlight = { Highlight.Default },
-                )
-            } else {
-                Modifier
-            },
-        )
-        .border(GLASS_EDGE_WIDTH, GLASS_EDGE_COLOR, shape)
+        .background(fill)
+        .background(sheen)
+        .border(width = 1.dp, brush = rim, shape = shape)
 }
 
 /**
  * Just the rim of liquid glass — the directional [Highlight] that catches the
  * light along a glass edge — for a control that keeps its own fill.
- *
- * Over a flat, stable page the blur and lens of [liquidGlass] would sample a
- * single colour and change nothing a reader could see; the rim is the part
- * that reads as glass. No backdrop capture, so it costs a stroke. Nothing at
- * all while Liquid Glass is off or unsupported.
  */
 @Composable
 fun Modifier.liquidGlassRim(shape: CornerBasedShape): Modifier {
@@ -192,24 +199,70 @@ fun Modifier.liquidGlassRim(shape: CornerBasedShape): Modifier {
 }
 
 /**
- * Renders this composable as a liquid glass surface sampling [LocalAppBackdrop]:
- * vibrancy, blur and lens refraction, then a theme-adaptive surface tint (light
- * glass on light theme, dark on dark). Returns the receiver unchanged on devices
- * without RenderEffect support — callers should still gate on [isGlassSupported]
- * to fall back to the regular Haze treatment there.
- *
- * Under "reduce dynamic blur" the surface is filled solid instead, which is what
- * that setting promises everywhere else in the app. It is checked here rather
- * than at each call site so there is one answer to it: [MainActivity] also stops
- * recording the backdrop layer when it is on, and a surface that still tried to
- * sample would be sampling a layer nothing is drawing into.
- *
- * Under [AppSettings.glassPerformance] the lens goes and the blur frosts instead,
- * for phones that can't spare the refraction shader. The vibrancy, tint, rim and
- * shadow are the same either way.
- *
- * [shape] is restricted to [CornerBasedShape] because the backdrop's lens effect
- * throws for any other shape type.
+ * Exact port of ozyern/exhale's [Modifier.liquidGlassSurface] for general composables and cards.
+ * Combines dual vertical gradient fill, diagonal specular sheen, and hairline specular rim.
+ */
+@Composable
+fun Modifier.liquidGlassSurface(
+    shape: Shape,
+    tint: Color = Color.Unspecified,
+    base: Color = Color.Unspecified,
+): Modifier {
+    val dark = isSystemInDarkTheme()
+
+    val fill = Brush.verticalGradient(
+        colors = if (dark) {
+            listOf(Color(0xFF242426).copy(alpha = 0.44f), Color(0xFF1C1C1E).copy(alpha = 0.52f))
+        } else {
+            listOf(Color.White.copy(alpha = 0.92f), Color.White.copy(alpha = 0.66f))
+        },
+    )
+
+    val sheen = Brush.linearGradient(
+        0f to Color.White.copy(alpha = if (dark) 0.11f else 0.55f),
+        0.42f to Color.Transparent,
+        1f to Color.Transparent,
+    )
+
+    val rim = Brush.verticalGradient(
+        colors = if (dark) {
+            listOf(Color.White.copy(alpha = 0.20f), Color.White.copy(alpha = 0.04f))
+        } else {
+            listOf(Color.White.copy(alpha = 0.95f), Color.Black.copy(alpha = 0.05f))
+        },
+    )
+
+    return this
+        .clip(shape)
+        .then(if (base.isSpecified) Modifier.background(base) else Modifier)
+        .background(fill)
+        .then(
+            if (tint.isSpecified) {
+                Modifier.background(
+                    Brush.verticalGradient(
+                        colors = listOf(
+                            tint.copy(alpha = if (dark) 0.14f else 0.16f),
+                            tint.copy(alpha = if (dark) 0.02f else 0.03f),
+                        ),
+                    )
+                )
+            } else {
+                Modifier
+            }
+        )
+        .background(sheen)
+        .border(width = 1.dp, brush = rim, shape = shape)
+}
+
+/**
+ * Renders this composable as a liquid glass surface sampling [LocalAppBackdrop]
+ * with ozyern/exhale's full multi-layered glass pipeline:
+ * 1. Dual gradient fill for physical depth & specular luminosity
+ * 2. Diagonal sheen gradient capturing corner reflection
+ * 3. 1.dp top-lit specular rim highlight
+ * 4. Vibrancy saturation boost and progressive blur diffusion
+ * 5. Hardware lens refraction on Android 13+ (Tiramisu)
+ * 6. Authentic hardware fallback on unsupported devices / reduceDynamicBlur
  */
 @Composable
 fun Modifier.liquidGlass(
@@ -217,48 +270,83 @@ fun Modifier.liquidGlass(
     /** Drawn over the glass in place of the theme's default tint, when set. */
     surfaceTint: Color? = null,
 ): Modifier {
-    if (!isGlassSupported()) return this
+    val dark = isSystemInDarkTheme()
     val reduceDynamicBlur by AppSettings.reduceDynamicBlur.collectAsStateWithLifecycle()
-    if (reduceDynamicBlur) {
-        return background(MaterialTheme.colorScheme.surface, shape)
-            .border(GLASS_EDGE_WIDTH, GLASS_EDGE_COLOR, shape)
+    val progressiveBlur by AppSettings.progressiveBlur.collectAsStateWithLifecycle()
+
+    val fill = Brush.verticalGradient(
+        colors = if (dark) {
+            listOf(Color(0xFF242426).copy(alpha = 0.44f), Color(0xFF1C1C1E).copy(alpha = 0.52f))
+        } else {
+            listOf(Color.White.copy(alpha = 0.92f), Color.White.copy(alpha = 0.66f))
+        },
+    )
+
+    val sheen = Brush.linearGradient(
+        0f to Color.White.copy(alpha = if (dark) 0.11f else 0.55f),
+        0.42f to Color.Transparent,
+        1f to Color.Transparent,
+    )
+
+    val rim = Brush.verticalGradient(
+        colors = if (dark) {
+            listOf(Color.White.copy(alpha = 0.20f), Color.White.copy(alpha = 0.04f))
+        } else {
+            listOf(Color.White.copy(alpha = 0.95f), Color.Black.copy(alpha = 0.05f))
+        },
+    )
+
+    // Fallback if hardware RenderEffect is not supported or reduceDynamicBlur is requested:
+    // Render the complete multi-layered glass surface so it looks like genuine glass without shader pass
+    if (!isGlassSupported() || reduceDynamicBlur) {
+        return this
+            .clip(shape)
+            .background(fill)
+            .then(
+                if (surfaceTint != null) {
+                    Modifier.background(surfaceTint)
+                } else Modifier
+            )
+            .background(sheen)
+            .border(width = 1.dp, brush = rim, shape = shape)
     }
+
     val backdrop = LocalAppBackdrop.current
     val exportedBackdrop = LocalGlassExport.current
     val density = LocalDensity.current
     val resolutionScale = GLASS_RESOLUTION_SCALE
-    val blurRadiusDp = BLUR_RADIUS_DP
+    val blurRadiusDp = if (progressiveBlur) 20f else BLUR_RADIUS_DP
     val blurPx = with(density) { blurRadiusDp.dp.toPx() } * resolutionScale
     val lensHeightPx = with(density) { (LENS_HEIGHT * LENS_MAX_DP).dp.toPx() } * resolutionScale
     val lensAmountPx = with(density) { (LENS_AMOUNT * LENS_MAX_DP).dp.toPx() } * resolutionScale
-    val themeTint = if (MaterialTheme.colorScheme.surface.luminance() > 0.5f) {
-        Color(0xFFFAFAFA)
-    } else {
-        Color(0xFF4A4A4E)
-    }
-    val surfaceTintColor = surfaceTint ?: themeTint.copy(alpha = if (MaterialTheme.colorScheme.surface.luminance() > 0.5f) 0.5f else 0.32f)
 
-    return drawBackdrop(
-        backdrop = backdrop,
-        shape = { shape },
-        effects = {
-            colorControls(saturation = 1f + 0.5f * VIBRANCY)
-            blur(blurPx)
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
-                lens(
-                    refractionHeight = lensHeightPx,
-                    refractionAmount = lensAmountPx,
-                    depthEffect = true,
-                    chromaticAberration = true,
-                )
-            }
-        },
-        highlight = { Highlight.Default },
-        shadow = { Shadow.Default },
-        onDrawSurface = {
-            drawRect(color = surfaceTintColor, size = size)
-        },
-        exportedBackdrop = exportedBackdrop,
-        backdropScale = resolutionScale,
-    )
+    return this
+        .drawBackdrop(
+            backdrop = backdrop,
+            shape = { shape },
+            effects = {
+                colorControls(saturation = 1.6f)
+                blur(blurPx)
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+                    lens(
+                        refractionHeight = lensHeightPx,
+                        refractionAmount = lensAmountPx,
+                        depthEffect = true,
+                        chromaticAberration = true,
+                    )
+                }
+            },
+            highlight = { Highlight.Default },
+            shadow = { Shadow.Default },
+            onDrawSurface = {
+                drawRect(fill)
+                if (surfaceTint != null) {
+                    drawRect(surfaceTint)
+                }
+                drawRect(sheen)
+            },
+            exportedBackdrop = exportedBackdrop,
+            backdropScale = resolutionScale,
+        )
+        .border(width = 1.dp, brush = rim, shape = shape)
 }

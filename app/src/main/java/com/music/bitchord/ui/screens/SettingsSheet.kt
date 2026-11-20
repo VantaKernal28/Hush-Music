@@ -1320,16 +1320,29 @@ fun SettingsScreen(
                                 verticalAlignment = Alignment.CenterVertically,
                                 horizontalArrangement = Arrangement.spacedBy(10.dp),
                             ) {
-                                Image(
-                                    painter = painterResource(
-                                        if (iconOption == AppIcon.WhiteBlack) R.mipmap.ic_launcher_white_black
-                                        else R.mipmap.ic_launcher
-                                    ),
-                                    contentDescription = null,
+                                Box(
                                     modifier = Modifier
                                         .size(36.dp)
-                                        .clip(RoundedCornerShape(8.dp)),
-                                )
+                                        .clip(RoundedCornerShape(10.dp))
+                                        .background(
+                                            if (iconOption == AppIcon.WhiteBlack) Color.White
+                                            else Color(0xFF141518)
+                                        )
+                                        .border(
+                                            width = 1.dp,
+                                            color = if (iconOption == AppIcon.WhiteBlack) Color.Black.copy(alpha = 0.15f)
+                                            else Color.White.copy(alpha = 0.15f),
+                                            shape = RoundedCornerShape(10.dp),
+                                        ),
+                                    contentAlignment = Alignment.Center,
+                                ) {
+                                    Icon(
+                                        painter = painterResource(R.drawable.ic_logo),
+                                        contentDescription = null,
+                                        tint = if (iconOption == AppIcon.WhiteBlack) Color.Black else Color.White,
+                                        modifier = Modifier.size(20.dp),
+                                    )
+                                }
                                 Column(modifier = Modifier.weight(1f)) {
                                     Text(
                                         text = stringResource(iconOption.labelRes),
