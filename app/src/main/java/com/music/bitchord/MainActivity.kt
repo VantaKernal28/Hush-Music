@@ -257,6 +257,7 @@ import com.music.bitchord.ui.components.FloatingBarsTapGuard
 import com.music.bitchord.ui.components.BottomTab
 import com.music.bitchord.ui.components.FLOATING_BAR_MAX_WIDTH
 import com.music.bitchord.ui.components.FloatingBottomBar
+import com.music.bitchord.ui.components.AiPlaylistPillButton
 import com.music.bitchord.ui.components.GlassNavBar
 import com.music.bitchord.ui.components.floatingtabbar.rememberFloatingTabBarScrollConnection
 import com.music.bitchord.ui.components.FrostedTopBar
@@ -462,23 +463,7 @@ class MainActivity : AppCompatActivity() {
                         appBackdrop = appBackdrop,
                     )
 
-                    val themeTransitionActive by AppSettings.themeTransitionActive.collectAsStateWithLifecycle()
-                    val themeTransitionTarget by AppSettings.themeTransitionTarget.collectAsStateWithLifecycle()
-                    if (themeTransitionActive) {
-                        if (themeTransitionTarget) {
-                            com.music.bitchord.ui.components.expressive.HushThemeTransitionOverlay(
-                                onAnimationComplete = {
-                                    AppSettings.themeTransitionActive.value = false
-                                },
-                            )
-                        } else {
-                            com.music.bitchord.ui.components.expressive.BitChordThemeTransitionOverlay(
-                                onAnimationComplete = {
-                                    AppSettings.themeTransitionActive.value = false
-                                },
-                            )
-                        }
-                    }
+
                 }
                 }
             }
@@ -4190,25 +4175,15 @@ private fun BitChordApp(
                     }
                 }
 
-                // Minimal Top-Left AI Playlist Maker dot trigger (6-8dp)
+                // Sleek, compact animated AI pill button
                 if (route == null && detail == null) {
-                    Box(
+                    AiPlaylistPillButton(
+                        onClick = { showAiPlaylistMaker = true },
                         modifier = Modifier
                             .align(Alignment.TopStart)
                             .statusBarsPadding()
-                            .padding(start = 16.dp, top = 14.dp)
-                            .size(28.dp)
-                            .clip(CircleShape)
-                            .clickable { showAiPlaylistMaker = true },
-                        contentAlignment = Alignment.Center,
-                    ) {
-                        Box(
-                            modifier = Modifier
-                                .size(7.dp)
-                                .clip(CircleShape)
-                                .background(MaterialTheme.colorScheme.primary.copy(alpha = 0.85f)),
-                        )
-                    }
+                            .padding(start = 16.dp, top = 12.dp),
+                    )
                 }
 
                 if (!materialUiMode) Column(

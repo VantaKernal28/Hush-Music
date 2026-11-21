@@ -480,7 +480,8 @@ fun SettingsScreen(
 
     Column(
         modifier = modifier
-            .fillMaxWidth()
+            .fillMaxSize()
+            .background(MaterialTheme.colorScheme.background)
             .verticalScroll(scrollState)
             .padding(contentPadding),
     ) {
@@ -1392,7 +1393,7 @@ fun SettingsScreen(
                         selected = !materialUiMode,
                         onClick = {
                             if (materialUiMode) {
-                                AppSettings.triggerBitChordTransition()
+                                AppSettings.setMaterialUiMode(false)
                             }
                         },
                     )
@@ -1405,7 +1406,7 @@ fun SettingsScreen(
                         selected = materialUiMode,
                         onClick = {
                             if (!materialUiMode) {
-                                AppSettings.triggerMaterialUiTransition()
+                                AppSettings.setMaterialUiMode(true)
                             }
                         },
                     )
@@ -2846,7 +2847,7 @@ internal fun SettingsGroup(
     content: @Composable () -> Unit,
 ) {
     val materialUiMode by AppSettings.materialUiMode.collectAsStateWithLifecycle()
-    val shape = if (materialUiMode) RoundedCornerShape(26.dp) else GroupShape
+    val shape = if (materialUiMode) RoundedCornerShape(24.dp) else GroupShape
 
     if (header != null) {
         Text(
@@ -2869,8 +2870,8 @@ internal fun SettingsGroup(
             .fillMaxWidth()
             .padding(horizontal = GROUP_INSET)
             .clip(shape)
-            .background(MaterialTheme.colorScheme.surfaceVariant)
-            .border(1.dp, Color.White.copy(alpha = 0.08f), shape),
+            .background(if (materialUiMode) MaterialTheme.colorScheme.surfaceContainer else MaterialTheme.colorScheme.surfaceVariant)
+            .border(1.dp, if (materialUiMode) MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.25f) else Color.White.copy(alpha = 0.08f), shape),
     ) {
         content()
     }
@@ -2925,7 +2926,9 @@ internal fun SettingsRow(
     trailing: (@Composable () -> Unit)? = null,
 ) {
     val materialUiMode by AppSettings.materialUiMode.collectAsStateWithLifecycle()
-    val effectiveBadgeColor = if (materialUiMode) iconBadgeColor else null
+    val badgePalette = if (materialUiMode) com.music.bitchord.ui.components.expressive.getIconPalette(icon ?: iconPainter) else null
+    val effectiveBadgeColor = if (materialUiMode) (iconBadgeColor ?: badgePalette?.container) else null
+    val effectiveBadgeTint = if (materialUiMode) (badgePalette?.tint ?: Color.White) else Color.White
     Row(
         modifier = Modifier
             .fillMaxWidth()
@@ -2957,14 +2960,14 @@ internal fun SettingsRow(
                     Icon(
                         painter = iconPainter,
                         contentDescription = null,
-                        tint = Color.White,
+                        tint = effectiveBadgeTint,
                         modifier = Modifier.size(20.dp),
                     )
                 } else if (icon != null) {
                     Icon(
                         imageVector = icon,
                         contentDescription = null,
-                        tint = Color.White,
+                        tint = effectiveBadgeTint,
                         modifier = Modifier.size(20.dp),
                     )
                 }
@@ -3338,7 +3341,8 @@ fun SettingsChoicePage(
     val context = LocalContext.current
     Column(
         modifier
-            .fillMaxWidth()
+            .fillMaxSize()
+            .background(MaterialTheme.colorScheme.background)
             .verticalScroll(rememberScrollState())
             .padding(contentPadding),
     ) {

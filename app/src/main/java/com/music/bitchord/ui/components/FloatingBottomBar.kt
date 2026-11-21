@@ -454,7 +454,7 @@ fun FloatingBottomBar(
 
 @OptIn(ExperimentalFoundationApi::class)
 @Composable
-private fun BottomBarItem(
+internal fun BottomBarItem(
     tab: BottomTab,
     selected: Boolean,
     glassSpec: AnimationSpec<Float>,
