@@ -47,7 +47,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import coil3.compose.AsyncImage
 import com.music.bitchord.data.model.Song
-import com.music.bitchord.playback.LikeStatus
+import com.music.bitchord.data.model.LikeStatus
 import com.music.bitchord.playback.PlaybackPosition
 import com.music.bitchord.ui.components.expressive.ScallopedFlowerShape
 import com.music.bitchord.ui.icons.BitChordIcons
