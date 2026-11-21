@@ -110,6 +110,9 @@ fun ExpressiveMiniPlayer(
         if (materialUi) RoundedCornerShape(24.dp) else RoundedCornerShape(percent = 50)
     }
 
+    val miniPlayerProgressLine by AppSettings.miniPlayerProgressLine.collectAsStateWithLifecycle()
+    val rotatingScallopPlay by AppSettings.rotatingScallopPlay.collectAsStateWithLifecycle()
+
     // Rotating scalloped Play/Pause button for Material UI Mode
     val infiniteTransition = rememberInfiniteTransition(label = "m3ePlaySpin")
     val animatedRotation by infiniteTransition.animateFloat(
@@ -121,7 +124,7 @@ fun ExpressiveMiniPlayer(
         ),
         label = "playRotation",
     )
-    val playRotation = if (materialUi && isPlaying) animatedRotation else 0f
+    val playRotation = if (materialUi && isPlaying && rotatingScallopPlay) animatedRotation else 0f
     val playButtonShape = remember(materialUi) {
         if (materialUi) ScallopedFlowerShape(lobes = 9, innerRadiusRatio = 0.85f) else SquircleShape(16.dp)
     }
@@ -170,7 +173,7 @@ fun ExpressiveMiniPlayer(
             .clickable(onClick = onExpand),
     ) {
         // Thin top progress line for Rhythm Material UI Mode
-        if (materialUi) {
+        if (materialUi && miniPlayerProgressLine) {
             Box(
                 modifier = Modifier
                     .fillMaxWidth()

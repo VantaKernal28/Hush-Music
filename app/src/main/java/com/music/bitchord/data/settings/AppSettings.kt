@@ -462,6 +462,24 @@ object AppSettings {
     /** Live Song-Reactive Color Gradient: extracts artwork tones and flows ambient animated gradients in the player. */
     val liveSongColorGradient = MutableStateFlow(true)
 
+    /** Wavy Progress Scrubber on Material 3 Expressive player seekbar. */
+    val wavyScrubber = MutableStateFlow(true)
+
+    /** Continuous smooth rotation of the scalloped Play/Pause button during playback. */
+    val rotatingScallopPlay = MutableStateFlow(true)
+
+    /** Thin progress indicator line along the top edge of the Expressive Mini Player card. */
+    val miniPlayerProgressLine = MutableStateFlow(true)
+
+    /** Expressive shape preset (Default, Friendly, Cheerful). */
+    val expressiveShapePreset = MutableStateFlow("Default")
+
+    /** Active shape for album artwork in Expressive mode. */
+    val expressiveAlbumArtShape = MutableStateFlow("Wavy Octagon")
+
+    /** Active shape for artist artwork in Expressive mode. */
+    val expressiveArtistArtShape = MutableStateFlow("Heart")
+
     /** Path to user-imported custom font (.ttf or .otf), if any. */
     val customFontPath = MutableStateFlow<String?>(null)
 
@@ -1059,6 +1077,12 @@ object AppSettings {
         expressiveUiEnabled.value = prefs.getBoolean(KEY_EXPRESSIVE_UI_ENABLED, true)
         materialUiMode.value = prefs.getBoolean(KEY_MATERIAL_UI_MODE, false)
         liveSongColorGradient.value = prefs.getBoolean(KEY_LIVE_SONG_COLOR_GRADIENT, true)
+        wavyScrubber.value = prefs.getBoolean(KEY_WAVY_SCRUBBER, true)
+        rotatingScallopPlay.value = prefs.getBoolean(KEY_ROTATING_SCALLOP_PLAY, true)
+        miniPlayerProgressLine.value = prefs.getBoolean(KEY_MINIPLAYER_PROGRESS_LINE, true)
+        expressiveShapePreset.value = prefs.getString(KEY_EXPRESSIVE_SHAPE_PRESET, "Default") ?: "Default"
+        expressiveAlbumArtShape.value = prefs.getString(KEY_EXPRESSIVE_ALBUM_ART_SHAPE, "Wavy Octagon") ?: "Wavy Octagon"
+        expressiveArtistArtShape.value = prefs.getString(KEY_EXPRESSIVE_ARTIST_ART_SHAPE, "Heart") ?: "Heart"
         customFontPath.value = prefs.getString(KEY_CUSTOM_FONT_PATH, null)
         customAvatarPath.value = prefs.getString(KEY_CUSTOM_AVATAR_PATH, null)
         diwaliGreetingShown.value = prefs.getBoolean(KEY_DIWALI_GREETING_SHOWN, false)
@@ -1516,6 +1540,36 @@ object AppSettings {
     fun setLiveSongColorGradient(value: Boolean) {
         liveSongColorGradient.value = value
         prefs.edit().putBoolean(KEY_LIVE_SONG_COLOR_GRADIENT, value).apply()
+    }
+
+    fun setWavyScrubber(value: Boolean) {
+        wavyScrubber.value = value
+        prefs.edit().putBoolean(KEY_WAVY_SCRUBBER, value).apply()
+    }
+
+    fun setRotatingScallopPlay(value: Boolean) {
+        rotatingScallopPlay.value = value
+        prefs.edit().putBoolean(KEY_ROTATING_SCALLOP_PLAY, value).apply()
+    }
+
+    fun setMiniPlayerProgressLine(value: Boolean) {
+        miniPlayerProgressLine.value = value
+        prefs.edit().putBoolean(KEY_MINIPLAYER_PROGRESS_LINE, value).apply()
+    }
+
+    fun setExpressiveShapePreset(value: String) {
+        expressiveShapePreset.value = value
+        prefs.edit().putString(KEY_EXPRESSIVE_SHAPE_PRESET, value).apply()
+    }
+
+    fun setExpressiveAlbumArtShape(value: String) {
+        expressiveAlbumArtShape.value = value
+        prefs.edit().putString(KEY_EXPRESSIVE_ALBUM_ART_SHAPE, value).apply()
+    }
+
+    fun setExpressiveArtistArtShape(value: String) {
+        expressiveArtistArtShape.value = value
+        prefs.edit().putString(KEY_EXPRESSIVE_ARTIST_ART_SHAPE, value).apply()
     }
 
     fun setCustomFontPath(path: String?) {
@@ -2406,6 +2460,12 @@ object AppSettings {
     private const val KEY_EXPRESSIVE_UI_ENABLED = "expressive_ui_enabled"
     private const val KEY_MATERIAL_UI_MODE = "hush_material_ui_mode"
     private const val KEY_LIVE_SONG_COLOR_GRADIENT = "hush_live_song_color_gradient"
+    private const val KEY_WAVY_SCRUBBER = "hush_wavy_scrubber"
+    private const val KEY_ROTATING_SCALLOP_PLAY = "hush_rotating_scallop_play"
+    private const val KEY_MINIPLAYER_PROGRESS_LINE = "hush_miniplayer_progress_line"
+    private const val KEY_EXPRESSIVE_SHAPE_PRESET = "hush_expressive_shape_preset"
+    private const val KEY_EXPRESSIVE_ALBUM_ART_SHAPE = "hush_expressive_album_art_shape"
+    private const val KEY_EXPRESSIVE_ARTIST_ART_SHAPE = "hush_expressive_artist_art_shape"
     private const val KEY_CUSTOM_FONT_PATH = "hush_custom_font_path"
     private const val KEY_CUSTOM_AVATAR_PATH = "hush_custom_avatar_path"
     private const val KEY_DIWALI_GREETING_SHOWN = "diwali_greeting_2026_shown"

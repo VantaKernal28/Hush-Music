@@ -242,10 +242,40 @@ fun SettingsScreen(
 ) {
     val context = LocalContext.current
     var showAboutSheet by rememberSaveable { mutableStateOf(false) }
+    var showShapesSheet by rememberSaveable { mutableStateOf(false) }
+    var showPlayerSheet by rememberSaveable { mutableStateOf(false) }
+    var showMiniPlayerSheet by rememberSaveable { mutableStateOf(false) }
 
     if (showAboutSheet) {
         AboutSheet(
             onBack = { showAboutSheet = false },
+            modifier = Modifier.fillMaxSize(),
+            contentPadding = contentPadding,
+        )
+        return
+    }
+
+    if (showShapesSheet) {
+        ExpressiveShapesSheet(
+            onBack = { showShapesSheet = false },
+            modifier = Modifier.fillMaxSize(),
+            contentPadding = contentPadding,
+        )
+        return
+    }
+
+    if (showPlayerSheet) {
+        PlayerCustomizationSheet(
+            onBack = { showPlayerSheet = false },
+            modifier = Modifier.fillMaxSize(),
+            contentPadding = contentPadding,
+        )
+        return
+    }
+
+    if (showMiniPlayerSheet) {
+        MiniPlayerCustomizationSheet(
+            onBack = { showMiniPlayerSheet = false },
             modifier = Modifier.fillMaxSize(),
             contentPadding = contentPadding,
         )
@@ -488,73 +518,110 @@ fun SettingsScreen(
         }
     }
 
+    val isDark = isSystemInDarkTheme()
+    val solidBg = if (isDark) Color(0xFF0F0F12) else MaterialTheme.colorScheme.background
+
     Column(
         modifier = modifier
             .fillMaxSize()
-            .background(MaterialTheme.colorScheme.background)
+            .background(solidBg)
             .verticalScroll(scrollState)
             .padding(contentPadding),
     ) {
         val currentUserName by AppSettings.userName.collectAsStateWithLifecycle()
 
-        // Hermoso-Style Header (media_1794577366727_4945977e.jpg)
-        Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(horizontal = 20.dp, vertical = 12.dp),
-            horizontalArrangement = Arrangement.SpaceBetween,
-            verticalAlignment = Alignment.CenterVertically,
-        ) {
-            IconButton(
-                onClick = onBack,
+        if (materialUiMode) {
+            // Rhythm M3E Header (video_3.mp4 f_001.png)
+            Row(
                 modifier = Modifier
-                    .size(42.dp)
-                    .background(
-                        color = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.7f),
-                        shape = CircleShape
-                    )
-                    .border(1.dp, Color.White.copy(alpha = 0.08f), CircleShape)
+                    .fillMaxWidth()
+                    .padding(horizontal = 20.dp, vertical = 12.dp),
+                verticalAlignment = Alignment.CenterVertically,
             ) {
-                Icon(
-                    imageVector = Icons.Rounded.Close,
-                    contentDescription = stringResource(R.string.close),
-                    tint = MaterialTheme.colorScheme.onSurface,
-                    modifier = Modifier.size(20.dp),
-                )
-            }
-
-            Text(
-                text = stringResource(section?.title ?: R.string.settings),
-                style = MaterialTheme.typography.titleLarge.copy(fontWeight = FontWeight.Bold),
-                color = MaterialTheme.colorScheme.onBackground,
-            )
-
-            if (section == null) {
                 IconButton(
-                    onClick = { showSearchBar = !showSearchBar },
+                    onClick = onBack,
                     modifier = Modifier
                         .size(42.dp)
                         .background(
-                            color = if (showSearchBar || searchQuery.isNotBlank())
-                                MaterialTheme.colorScheme.primary
-                            else
-                                MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.7f),
+                            color = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.7f),
+                            shape = CircleShape,
+                        )
+                        .border(1.dp, Color.White.copy(alpha = 0.08f), CircleShape),
+                ) {
+                    Icon(
+                        imageVector = Icons.AutoMirrored.Rounded.ArrowBack,
+                        contentDescription = stringResource(R.string.back),
+                        tint = MaterialTheme.colorScheme.onSurface,
+                        modifier = Modifier.size(20.dp),
+                    )
+                }
+                Spacer(Modifier.width(16.dp))
+                Text(
+                    text = stringResource(section?.title ?: R.string.settings),
+                    style = MaterialTheme.typography.headlineMedium.copy(fontWeight = FontWeight.Bold),
+                    color = MaterialTheme.colorScheme.onBackground,
+                )
+            }
+        } else {
+            // Hermoso-Style Header (Classic BitChord)
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 20.dp, vertical = 12.dp),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically,
+            ) {
+                IconButton(
+                    onClick = onBack,
+                    modifier = Modifier
+                        .size(42.dp)
+                        .background(
+                            color = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.7f),
                             shape = CircleShape
                         )
                         .border(1.dp, Color.White.copy(alpha = 0.08f), CircleShape)
                 ) {
                     Icon(
-                        imageVector = Icons.Rounded.Search,
-                        contentDescription = stringResource(R.string.search),
-                        tint = if (showSearchBar || searchQuery.isNotBlank())
-                            Color.White
-                        else
-                            MaterialTheme.colorScheme.onSurface,
+                        imageVector = Icons.Rounded.Close,
+                        contentDescription = stringResource(R.string.close),
+                        tint = MaterialTheme.colorScheme.onSurface,
                         modifier = Modifier.size(20.dp),
                     )
                 }
-            } else {
-                Spacer(Modifier.size(42.dp))
+
+                Text(
+                    text = stringResource(section?.title ?: R.string.settings),
+                    style = MaterialTheme.typography.titleLarge.copy(fontWeight = FontWeight.Bold),
+                    color = MaterialTheme.colorScheme.onBackground,
+                )
+
+                if (section == null) {
+                    IconButton(
+                        onClick = { showSearchBar = !showSearchBar },
+                        modifier = Modifier
+                            .size(42.dp)
+                            .background(
+                                color = if (showSearchBar || searchQuery.isNotBlank())
+                                    MaterialTheme.colorScheme.primary
+                                else
+                                    MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.7f),
+                                shape = CircleShape
+                            )
+                            .border(1.dp, Color.White.copy(alpha = 0.08f), CircleShape)
+                    ) {
+                        Icon(
+                            imageVector = Icons.Rounded.Search,
+                            contentDescription = stringResource(R.string.search),
+                            tint = if (showSearchBar || searchQuery.isNotBlank())
+                                Color.White
+                            else
+                                MaterialTheme.colorScheme.onSurface,
+                            modifier = Modifier.size(20.dp),
+                        )
+                    }
+                } else {
+                    Spacer(Modifier.size(42.dp))
+                }
             }
         }
 
@@ -570,8 +637,8 @@ fun SettingsScreen(
                 )
             }
 
-            // Hermoso Profile Avatar Header
-            if (searchQuery.isBlank()) {
+            // Hermoso Profile Avatar Header (Classic Mode ONLY)
+            if (searchQuery.isBlank() && !materialUiMode) {
                 val customAvatarPath by AppSettings.customAvatarPath.collectAsStateWithLifecycle()
                 val avatarModel = remember(customAvatarPath, account?.thumbnailUrl, signedIn) {
                     if (!customAvatarPath.isNullOrBlank()) {
@@ -666,7 +733,8 @@ fun SettingsScreen(
                 }
             }
 
-            SearchableSettingsGroup(search) {
+            if (!materialUiMode || searching) {
+                SearchableSettingsGroup(search) {
                 val accountTitle = stringResource(R.string.account_integrations)
                 // What the row opens is the scrobbling screen, so the services it
                 // signs into are worth typing at this field even though none of
@@ -799,12 +867,16 @@ fun SettingsScreen(
                     }
                 }
             }
+        }
 
             // The categories, each a page of its own — until there is a query,
             // when their rows answer here instead (below).
             if (!searching) {
                 SettingsCategoryList(
                     onOpen = onOpenSection,
+                    onOpenShapes = { showShapesSheet = true },
+                    onOpenPlayer = { showPlayerSheet = true },
+                    onOpenMiniPlayer = { showMiniPlayerSheet = true },
                     onOpenAbout = { showAboutSheet = true },
                 )
                 if (watchAvailable) {
@@ -3274,6 +3346,9 @@ enum class SettingsChoiceKind(@param:StringRes val title: Int) {
 @Composable
 private fun SettingsCategoryList(
     onOpen: (SettingsCategory) -> Unit,
+    onOpenShapes: () -> Unit = {},
+    onOpenPlayer: () -> Unit = {},
+    onOpenMiniPlayer: () -> Unit = {},
     onOpenAbout: () -> Unit = {},
 ) {
     val materialUiMode by AppSettings.materialUiMode.collectAsStateWithLifecycle()
@@ -3320,7 +3395,7 @@ private fun SettingsCategoryList(
                 iconBadgeColor = Color(0xFFF472B6),
                 title = "Shapes",
                 subtitle = "Custom shapes for artwork and controls",
-                onClick = { onOpen(SettingsCategory.APPEARANCE) },
+                onClick = onOpenShapes,
             )
             RowDivider()
             SettingsRow(
@@ -3328,7 +3403,7 @@ private fun SettingsCategoryList(
                 iconBadgeColor = Color(0xFF60A5FA),
                 title = "Player",
                 subtitle = "Player layout, controls, and progress bar",
-                onClick = { onOpen(SettingsCategory.PLAYBACK) },
+                onClick = onOpenPlayer,
             )
             RowDivider()
             SettingsRow(
@@ -3336,7 +3411,7 @@ private fun SettingsCategoryList(
                 iconBadgeColor = Color(0xFFE879F9),
                 title = "Mini Player",
                 subtitle = "Mini player style and controls",
-                onClick = { onOpen(SettingsCategory.APPEARANCE) },
+                onClick = onOpenMiniPlayer,
             )
         }
 
