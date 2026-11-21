@@ -45,10 +45,12 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.windowInsetsPadding
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.rounded.Pause
 import androidx.compose.material.icons.rounded.PlayArrow
+import androidx.compose.material.icons.rounded.Search
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -129,201 +131,322 @@ fun GlassNavBar(
     onTabLongClick: ((Int) -> Unit)? = null,
 ) {
     val pillShape = remember { RoundedCornerShape(percent = 50) }
+    val circleShape = remember { CircleShape }
     val contentColor = glassContentColor()
     val useGlass = LocalLiquidGlassEnabled.current && isGlassSupported()
     val reduceDynamicBlur by AppSettings.reduceDynamicBlur.collectAsStateWithLifecycle()
     val container = MaterialTheme.colorScheme.surfaceContainer
+    val isInline = scrollConnection?.isInline == true
+    val haptics = rememberHaptics()
 
-    Column(
+    Box(
         modifier = modifier
             .windowInsetsPadding(floatingBarInsets)
             .padding(horizontal = NAV_BAR_GUTTER)
             .padding(bottom = NAV_BAR_LIFT)
             .fillMaxWidth(),
-        horizontalAlignment = Alignment.CenterHorizontally,
+        contentAlignment = Alignment.BottomCenter,
     ) {
-        // 1. Floating MiniPlayer (cleanly above tab bar with 8.dp spacer, zero overlap)
-        song?.let { currentSong ->
-            val miniPlayerShape = pillShape
-            val miniPlayerModifier = Modifier
-                .fillMaxWidth()
-                .height(58.dp)
-                .clip(miniPlayerShape)
-                .then(
-                    if (useGlass && !reduceDynamicBlur) {
-                        Modifier.liquidGlass(shape = miniPlayerShape)
-                    } else {
-                        Modifier
-                            .background(container)
-                            .border(1.dp, Color.White.copy(alpha = 0.12f), miniPlayerShape)
-                    }
-                )
-
-            GlassNowPlaying(
-                song = currentSong,
-                isInline = false,
-                isPlaying = isPlaying,
-                isLoading = isLoading,
-                contentColor = contentColor,
-                onPlayPause = onPlayPause,
-                onNext = onNext,
-                onPrevious = onPrevious,
-                onExpand = onExpand,
-                controlsLocked = controlsLocked,
-                onBlockedControl = onBlockedControl,
-                dock = dock,
-                pull = pull,
-                modifier = miniPlayerModifier,
-            )
-
-            Spacer(Modifier.height(8.dp))
-        }
-
-        // 2. Liquid Glass Tab Bar (ALL 4 Tabs: Home, Explore, Library, Search)
-        // With fluid spring-driven sliding/morphing pill animation across tabs
-        val reduceAnimation by AppSettings.reduceAnimation.collectAsStateWithLifecycle()
-        val glassSpec: AnimationSpec<Float> = if (reduceAnimation) snap() else GlassSpring
-
-        var dragOffset by remember { mutableFloatStateOf(0f) }
-        val haptics = rememberHaptics()
-        val density = LocalDensity.current
-        val currentSelectedIndex by rememberUpdatedState(selectedIndex)
-
-        var rowSize by remember { mutableStateOf(IntSize.Zero) }
-        val gapPx = with(density) { 6.dp.toPx() }
-        val n = tabs.size
-
-        val tabWidthPx = if (rowSize.width > 0 && n > 0) {
-            (rowSize.width - gapPx * (n - 1)) / n
-        } else 0f
-        val tabStepPx = if (rowSize.width > 0 && n > 0) {
-            (rowSize.width + gapPx) / n
-        } else 0f
-
-        val currentTabStepPx by rememberUpdatedState(tabStepPx)
-        val currentLastIndex by rememberUpdatedState(tabs.lastIndex)
-        val currentOnTabSelected by rememberUpdatedState(onTabSelected)
-
-        val pillTargetPx = if (tabStepPx > 0f) {
-            selectedIndex * tabStepPx + dragOffset
-        } else 0f
-
-        val animatedPillOffset by animateFloatAsState(
-            targetValue = pillTargetPx,
-            animationSpec = glassSpec,
-            label = "classicTabPillOffset",
-        )
-
-        val lag = if (tabStepPx > 0f) {
-            (abs(pillTargetPx - animatedPillOffset) / tabStepPx).coerceIn(0f, 1f)
-        } else 0f
-
-        var lastHapticTab by remember { mutableIntStateOf(selectedIndex) }
-
-        LaunchedEffect(selectedIndex) {
-            dragOffset = 0f
-            lastHapticTab = selectedIndex
-        }
-
-        Box(
-            modifier = Modifier
-                .fillMaxWidth()
-                .clip(pillShape)
-                .then(
-                    if (useGlass && !reduceDynamicBlur) {
-                        Modifier.liquidGlass(shape = pillShape)
-                    } else {
-                        Modifier
-                            .background(container)
-                            .border(1.dp, Color.White.copy(alpha = 0.12f), pillShape)
-                    }
-                )
-                .padding(horizontal = PILL_INSET, vertical = PILL_INSET),
-        ) {
-            // Fluid Sliding Glass / Solid Selection Pill
-            if (tabWidthPx > 0f) {
-                Box(
-                    modifier = Modifier
-                        .width(with(density) { tabWidthPx.toDp() })
-                        .height(with(density) { rowSize.height.toDp() })
-                        .graphicsLayer {
-                            translationX = animatedPillOffset
-                            scaleX = 1f + lag * STRETCH
-                            scaleY = 1f - lag * STRETCH * SQUASH
+        AnimatedContent(
+            targetState = isInline,
+            transitionSpec = {
+                (fadeIn(tween(180, delayMillis = 30)) + slideInVertically(spring(stiffness = Spring.StiffnessMediumLow)) { it / 4 }) togetherWith
+                    (fadeOut(tween(120)) + slideOutVertically(spring(stiffness = Spring.StiffnessMediumLow)) { it / 4 })
+            },
+            label = "glassNavBarMorph",
+        ) { inline ->
+            if (inline) {
+                // ========================================================
+                // STATE B: Compact Single Horizontal Row (Scrolling Down)
+                // Left: Active Tab Circle | Center: Compact MiniPlayer | Right: Search Circle
+                // ========================================================
+                val circleModifier = Modifier
+                    .size(48.dp)
+                    .clip(circleShape)
+                    .then(
+                        if (useGlass && !reduceDynamicBlur) {
+                            Modifier.liquidGlass(shape = circleShape)
+                        } else {
+                            Modifier
+                                .background(container)
+                                .border(1.dp, Color.White.copy(alpha = 0.12f), circleShape)
                         }
-                        .clip(pillShape)
-                        .then(
-                            if (useGlass) {
-                                Modifier
-                                    .background(Color.White.copy(alpha = if (MaterialTheme.colorScheme.surface.luminance() > 0.5f) 0.35f else 0.16f))
-                                    .border(1.dp, Color.White.copy(alpha = 0.22f), pillShape)
-                            } else {
-                                Modifier.background(MaterialTheme.colorScheme.primaryContainer)
-                            }
-                        ),
-                )
-            }
-
-            // Tabs Row (ALL 4 Tabs)
-            Row(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .onSizeChanged { rowSize = it }
-                    .pointerInput(Unit) {
-                        var totalDrag = 0f
-                        var dragStartIndex = currentSelectedIndex
-                        detectHorizontalDragGestures(
-                            onDragStart = {
-                                totalDrag = 0f
-                                dragStartIndex = currentSelectedIndex
-                            },
-                            onDragCancel = { dragOffset = 0f },
-                            onDragEnd = {
-                                val step = currentTabStepPx
-                                if (step > 0f) {
-                                    val absoluteIndexFloat = (dragStartIndex + totalDrag / step)
-                                        .coerceIn(0f, currentLastIndex.toFloat())
-                                    val newIndex = absoluteIndexFloat.roundToInt()
-                                    if (newIndex != currentSelectedIndex) {
-                                        currentOnTabSelected(newIndex)
-                                    }
-                                }
-                                dragOffset = 0f
-                            },
-                            onHorizontalDrag = { _, delta ->
-                                val step = currentTabStepPx
-                                if (step <= 0f) return@detectHorizontalDragGestures
-                                totalDrag += delta
-                                val absoluteIndexFloat = (dragStartIndex + totalDrag / step)
-                                    .coerceIn(0f, currentLastIndex.toFloat())
-                                dragOffset = absoluteIndexFloat * step - currentSelectedIndex * step
-
-                                val approxTab = absoluteIndexFloat.roundToInt()
-                                if (approxTab != lastHapticTab) {
-                                    haptics.play(Haptic.Tick)
-                                    lastHapticTab = approxTab
-                                }
-                            },
-                        )
-                    },
-                horizontalArrangement = Arrangement.spacedBy(6.dp),
-                verticalAlignment = Alignment.CenterVertically,
-            ) {
-                val adaptiveTint = if (useGlass) contentColor else null
-                tabs.forEachIndexed { index, tab ->
-                    BottomBarItem(
-                        tab = tab,
-                        selected = index == selectedIndex,
-                        glassSpec = glassSpec,
-                        selectedTint = adaptiveTint,
-                        unselectedTint = adaptiveTint?.copy(alpha = 0.65f),
-                        onClick = {
-                            if (index != selectedIndex) haptics.play(Haptic.Select)
-                            onTabSelected(index)
-                        },
-                        onLongClick = { onTabLongClick?.invoke(index) },
-                        modifier = Modifier.weight(1f),
                     )
+
+                val inlineCapsuleModifier = Modifier
+                    .weight(1f)
+                    .height(48.dp)
+                    .clip(pillShape)
+                    .then(
+                        if (useGlass && !reduceDynamicBlur) {
+                            Modifier.liquidGlass(shape = pillShape)
+                        } else {
+                            Modifier
+                                .background(container)
+                                .border(1.dp, Color.White.copy(alpha = 0.12f), pillShape)
+                        }
+                    )
+
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(48.dp),
+                    horizontalArrangement = Arrangement.spacedBy(10.dp),
+                    verticalAlignment = Alignment.CenterVertically,
+                ) {
+                    // Left: Circular Active Tab Button
+                    Box(
+                        modifier = circleModifier.clickable {
+                            haptics.play(Haptic.Select)
+                            scrollConnection?.expand()
+                        },
+                        contentAlignment = Alignment.Center,
+                    ) {
+                        val activeTab = tabs.getOrNull(selectedIndex) ?: tabs.firstOrNull()
+                        activeTab?.let { tab ->
+                            Icon(
+                                imageVector = tab.icon,
+                                contentDescription = tab.label,
+                                tint = MaterialTheme.colorScheme.primary,
+                                modifier = Modifier.size(24.dp),
+                            )
+                        }
+                    }
+
+                    // Center: Compact MiniPlayer Capsule
+                    if (song != null) {
+                        GlassNowPlaying(
+                            song = song,
+                            isInline = true,
+                            isPlaying = isPlaying,
+                            isLoading = isLoading,
+                            contentColor = contentColor,
+                            onPlayPause = onPlayPause,
+                            onNext = onNext,
+                            onPrevious = onPrevious,
+                            onExpand = onExpand,
+                            controlsLocked = controlsLocked,
+                            onBlockedControl = onBlockedControl,
+                            dock = dock,
+                            pull = pull,
+                            modifier = inlineCapsuleModifier,
+                        )
+                    } else {
+                        Spacer(Modifier.weight(1f))
+                    }
+
+                    // Right: Circular Search Button
+                    Box(
+                        modifier = circleModifier.clickable {
+                            haptics.play(Haptic.Select)
+                            if (tabs.size > 3) {
+                                onTabSelected(3)
+                            }
+                        },
+                        contentAlignment = Alignment.Center,
+                    ) {
+                        val searchTab = tabs.getOrNull(3)
+                        Icon(
+                            imageVector = searchTab?.icon ?: Icons.Rounded.Search,
+                            contentDescription = searchTab?.label ?: "Search",
+                            tint = if (selectedIndex == 3) MaterialTheme.colorScheme.primary else contentColor.copy(alpha = 0.85f),
+                            modifier = Modifier.size(24.dp),
+                        )
+                    }
+                }
+            } else {
+                // ========================================================
+                // STATE A: Expanded 2-Tier Stack (Idle at Top / Scrolling Up)
+                // Top Tier: Full-width MiniPlayer | Bottom Tier: 4-Tab Bar
+                // ========================================================
+                Column(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalAlignment = Alignment.CenterHorizontally,
+                ) {
+                    // 1. Floating MiniPlayer (cleanly above tab bar with 8.dp spacer, zero overlap)
+                    song?.let { currentSong ->
+                        val miniPlayerShape = pillShape
+                        val miniPlayerModifier = Modifier
+                            .fillMaxWidth()
+                            .height(58.dp)
+                            .clip(miniPlayerShape)
+                            .then(
+                                if (useGlass && !reduceDynamicBlur) {
+                                    Modifier.liquidGlass(shape = miniPlayerShape)
+                                } else {
+                                    Modifier
+                                        .background(container)
+                                        .border(1.dp, Color.White.copy(alpha = 0.12f), miniPlayerShape)
+                                }
+                            )
+
+                        GlassNowPlaying(
+                            song = currentSong,
+                            isInline = false,
+                            isPlaying = isPlaying,
+                            isLoading = isLoading,
+                            contentColor = contentColor,
+                            onPlayPause = onPlayPause,
+                            onNext = onNext,
+                            onPrevious = onPrevious,
+                            onExpand = onExpand,
+                            controlsLocked = controlsLocked,
+                            onBlockedControl = onBlockedControl,
+                            dock = dock,
+                            pull = pull,
+                            modifier = miniPlayerModifier,
+                        )
+
+                        Spacer(Modifier.height(8.dp))
+                    }
+
+                    // 2. Liquid Glass Tab Bar (ALL 4 Tabs: Home, Explore, Library, Search)
+                    // With fluid spring-driven sliding/morphing pill animation across tabs
+                    val reduceAnimation by AppSettings.reduceAnimation.collectAsStateWithLifecycle()
+                    val glassSpec: AnimationSpec<Float> = if (reduceAnimation) snap() else GlassSpring
+
+                    var dragOffset by remember { mutableFloatStateOf(0f) }
+                    val density = LocalDensity.current
+                    val currentSelectedIndex by rememberUpdatedState(selectedIndex)
+
+                    var rowSize by remember { mutableStateOf(IntSize.Zero) }
+                    val gapPx = with(density) { 6.dp.toPx() }
+                    val n = tabs.size
+
+                    val tabWidthPx = if (rowSize.width > 0 && n > 0) {
+                        (rowSize.width - gapPx * (n - 1)) / n
+                    } else 0f
+                    val tabStepPx = if (rowSize.width > 0 && n > 0) {
+                        (rowSize.width + gapPx) / n
+                    } else 0f
+
+                    val currentTabStepPx by rememberUpdatedState(tabStepPx)
+                    val currentLastIndex by rememberUpdatedState(tabs.lastIndex)
+                    val currentOnTabSelected by rememberUpdatedState(onTabSelected)
+
+                    val pillTargetPx = if (tabStepPx > 0f) {
+                        selectedIndex * tabStepPx + dragOffset
+                    } else 0f
+
+                    val animatedPillOffset by animateFloatAsState(
+                        targetValue = pillTargetPx,
+                        animationSpec = glassSpec,
+                        label = "classicTabPillOffset",
+                    )
+
+                    val lag = if (tabStepPx > 0f) {
+                        (abs(pillTargetPx - animatedPillOffset) / tabStepPx).coerceIn(0f, 1f)
+                    } else 0f
+
+                    var lastHapticTab by remember { mutableIntStateOf(selectedIndex) }
+
+                    LaunchedEffect(selectedIndex) {
+                        dragOffset = 0f
+                        lastHapticTab = selectedIndex
+                    }
+
+                    Box(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .clip(pillShape)
+                            .then(
+                                if (useGlass && !reduceDynamicBlur) {
+                                    Modifier.liquidGlass(shape = pillShape)
+                                } else {
+                                    Modifier
+                                        .background(container)
+                                        .border(1.dp, Color.White.copy(alpha = 0.12f), pillShape)
+                                }
+                            )
+                            .padding(horizontal = PILL_INSET, vertical = PILL_INSET),
+                    ) {
+                        // Fluid Sliding Glass / Solid Selection Pill
+                        if (tabWidthPx > 0f) {
+                            Box(
+                                modifier = Modifier
+                                    .width(with(density) { tabWidthPx.toDp() })
+                                    .height(with(density) { rowSize.height.toDp() })
+                                    .graphicsLayer {
+                                        translationX = animatedPillOffset
+                                        scaleX = 1f + lag * STRETCH
+                                        scaleY = 1f - lag * STRETCH * SQUASH
+                                    }
+                                    .clip(pillShape)
+                                    .then(
+                                        if (useGlass) {
+                                            Modifier
+                                                .background(Color.White.copy(alpha = if (MaterialTheme.colorScheme.surface.luminance() > 0.5f) 0.35f else 0.16f))
+                                                .border(1.dp, Color.White.copy(alpha = 0.22f), pillShape)
+                                        } else {
+                                            Modifier.background(MaterialTheme.colorScheme.primaryContainer)
+                                        }
+                                    ),
+                            )
+                        }
+
+                        // Tabs Row (ALL 4 Tabs)
+                        Row(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .onSizeChanged { rowSize = it }
+                                .pointerInput(Unit) {
+                                    var totalDrag = 0f
+                                    var dragStartIndex = currentSelectedIndex
+                                    detectHorizontalDragGestures(
+                                        onDragStart = {
+                                            totalDrag = 0f
+                                            dragStartIndex = currentSelectedIndex
+                                        },
+                                        onDragCancel = { dragOffset = 0f },
+                                        onDragEnd = {
+                                            val step = currentTabStepPx
+                                            if (step > 0f) {
+                                                val absoluteIndexFloat = (dragStartIndex + totalDrag / step)
+                                                    .coerceIn(0f, currentLastIndex.toFloat())
+                                                val newIndex = absoluteIndexFloat.roundToInt()
+                                                if (newIndex != currentSelectedIndex) {
+                                                    currentOnTabSelected(newIndex)
+                                                }
+                                            }
+                                            dragOffset = 0f
+                                        },
+                                        onHorizontalDrag = { _, delta ->
+                                            val step = currentTabStepPx
+                                            if (step <= 0f) return@detectHorizontalDragGestures
+                                            totalDrag += delta
+                                            val absoluteIndexFloat = (dragStartIndex + totalDrag / step)
+                                                .coerceIn(0f, currentLastIndex.toFloat())
+                                            dragOffset = absoluteIndexFloat * step - currentSelectedIndex * step
+
+                                            val approxTab = absoluteIndexFloat.roundToInt()
+                                            if (approxTab != lastHapticTab) {
+                                                haptics.play(Haptic.Tick)
+                                                lastHapticTab = approxTab
+                                            }
+                                        },
+                                    )
+                                },
+                            horizontalArrangement = Arrangement.spacedBy(6.dp),
+                            verticalAlignment = Alignment.CenterVertically,
+                        ) {
+                            val adaptiveTint = if (useGlass) contentColor else null
+                            tabs.forEachIndexed { index, tab ->
+                                BottomBarItem(
+                                    tab = tab,
+                                    selected = index == selectedIndex,
+                                    glassSpec = glassSpec,
+                                    selectedTint = adaptiveTint,
+                                    unselectedTint = adaptiveTint?.copy(alpha = 0.65f),
+                                    onClick = {
+                                        if (index != selectedIndex) haptics.play(Haptic.Select)
+                                        onTabSelected(index)
+                                    },
+                                    onLongClick = { onTabLongClick?.invoke(index) },
+                                    modifier = Modifier.weight(1f),
+                                )
+                            }
+                        }
+                    }
                 }
             }
         }

@@ -21,6 +21,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.windowInsetsPadding
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
@@ -80,6 +81,148 @@ fun ExpressiveNavBar(
     val density = LocalDensity.current
     val materialUi by AppSettings.materialUiMode.collectAsStateWithLifecycle()
     val pillShape = remember { RoundedCornerShape(percent = 50) }
+
+    if (materialUi && tabs.size >= 4) {
+        val coreTabs = remember(tabs) { tabs.take(3) }
+        val searchTab = tabs.getOrNull(3)
+        val circleShape = remember { CircleShape }
+
+        Row(
+            modifier = modifier
+                .windowInsetsPadding(floatingBarInsets)
+                .padding(horizontal = NAV_BAR_GUTTER)
+                .padding(bottom = NAV_BAR_LIFT)
+                .fillMaxWidth(),
+            horizontalArrangement = Arrangement.spacedBy(10.dp),
+            verticalAlignment = Alignment.CenterVertically,
+        ) {
+            // Main tabs pill (Home, Explore, Library)
+            Box(
+                modifier = Modifier
+                    .weight(1f)
+                    .height(56.dp)
+                    .shadow(elevation = 8.dp, shape = pillShape, ambientColor = Color.Black.copy(alpha = 0.25f))
+                    .clip(pillShape)
+                    .background(MaterialTheme.colorScheme.surfaceContainer)
+                    .border(
+                        width = 1.dp,
+                        color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.35f),
+                        shape = pillShape,
+                    )
+                    .padding(horizontal = 6.dp, vertical = 6.dp),
+                contentAlignment = Alignment.Center,
+            ) {
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.SpaceEvenly,
+                    verticalAlignment = Alignment.CenterVertically,
+                ) {
+                    coreTabs.forEachIndexed { index, tab ->
+                        val isSelected = index == selectedIndex
+                        val interactionSource = remember { MutableInteractionSource() }
+
+                        Box(
+                            modifier = Modifier
+                                .clip(pillShape)
+                                .then(
+                                    if (isSelected) {
+                                        Modifier
+                                            .background(MaterialTheme.colorScheme.secondaryContainer)
+                                            .padding(horizontal = 14.dp, vertical = 8.dp)
+                                    } else {
+                                        Modifier
+                                            .clickable(
+                                                interactionSource = interactionSource,
+                                                indication = null,
+                                                onClick = {
+                                                    haptic.performHapticFeedback(HapticFeedbackType.TextHandleMove)
+                                                    onTabSelected(index)
+                                                },
+                                            )
+                                            .padding(horizontal = 12.dp, vertical = 8.dp)
+                                    }
+                                ),
+                            contentAlignment = Alignment.Center,
+                        ) {
+                            Row(
+                                verticalAlignment = Alignment.CenterVertically,
+                                horizontalArrangement = Arrangement.Center,
+                            ) {
+                                Icon(
+                                    imageVector = tab.icon,
+                                    contentDescription = tab.label,
+                                    tint = if (isSelected) {
+                                        MaterialTheme.colorScheme.onSecondaryContainer
+                                    } else {
+                                        MaterialTheme.colorScheme.onSurfaceVariant
+                                    },
+                                    modifier = Modifier.size(24.dp),
+                                )
+                                if (isSelected) {
+                                    Spacer(Modifier.width(6.dp))
+                                    Text(
+                                        text = tab.label,
+                                        style = MaterialTheme.typography.labelLarge.copy(
+                                            fontWeight = FontWeight.Bold,
+                                        ),
+                                        color = MaterialTheme.colorScheme.onSecondaryContainer,
+                                        maxLines = 1,
+                                    )
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+
+            // Detached Circular Search Button (56dp)
+            if (searchTab != null) {
+                val isSearchSelected = selectedIndex == 3
+                val searchInteraction = remember { MutableInteractionSource() }
+
+                Box(
+                    modifier = Modifier
+                        .size(56.dp)
+                        .shadow(elevation = 8.dp, shape = circleShape, ambientColor = Color.Black.copy(alpha = 0.25f))
+                        .clip(circleShape)
+                        .background(
+                            if (isSearchSelected) {
+                                MaterialTheme.colorScheme.secondaryContainer
+                            } else {
+                                MaterialTheme.colorScheme.surfaceContainer
+                            }
+                        )
+                        .border(
+                            width = 1.dp,
+                            color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.35f),
+                            shape = circleShape,
+                        )
+                        .clickable(
+                            interactionSource = searchInteraction,
+                            indication = null,
+                            onClick = {
+                                haptic.performHapticFeedback(HapticFeedbackType.TextHandleMove)
+                                onTabSelected(3)
+                            },
+                        ),
+                    contentAlignment = Alignment.Center,
+                ) {
+                    Icon(
+                        imageVector = searchTab.icon,
+                        contentDescription = searchTab.label,
+                        tint = if (isSearchSelected) {
+                            MaterialTheme.colorScheme.onSecondaryContainer
+                        } else {
+                            MaterialTheme.colorScheme.onSurfaceVariant
+                        },
+                        modifier = Modifier.size(24.dp),
+                    )
+                }
+            }
+        }
+        return
+    }
+
     val tabCount = tabs.size
 
     var rowSize by remember { mutableStateOf(IntSize.Zero) }

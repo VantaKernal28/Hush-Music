@@ -1,7 +1,13 @@
 package com.music.bitchord.ui.components.expressive
 
+import androidx.compose.animation.core.LinearEasing
+import androidx.compose.animation.core.RepeatMode
 import androidx.compose.animation.core.animateDpAsState
+import androidx.compose.animation.core.animateFloat
 import androidx.compose.animation.core.animateFloatAsState
+import androidx.compose.animation.core.infiniteRepeatable
+import androidx.compose.animation.core.rememberInfiniteTransition
+import androidx.compose.animation.core.tween
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
@@ -11,8 +17,10 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
@@ -92,6 +100,7 @@ fun ExpressiveMiniPlayer(
     onBlockedControl: () -> Unit = {},
     dock: PlayerDock? = null,
     pull: MiniPlayerPull? = null,
+    progressProvider: (() -> Float)? = null,
     modifier: Modifier = Modifier,
 ) {
     val haptic = LocalHapticFeedback.current
@@ -99,6 +108,22 @@ fun ExpressiveMiniPlayer(
     val materialUi by AppSettings.materialUiMode.collectAsStateWithLifecycle()
     val shape = remember(materialUi) {
         if (materialUi) RoundedCornerShape(24.dp) else RoundedCornerShape(percent = 50)
+    }
+
+    // Rotating scalloped Play/Pause button for Material UI Mode
+    val infiniteTransition = rememberInfiniteTransition(label = "m3ePlaySpin")
+    val animatedRotation by infiniteTransition.animateFloat(
+        initialValue = 0f,
+        targetValue = 360f,
+        animationSpec = infiniteRepeatable(
+            animation = tween(durationMillis = 15000, easing = LinearEasing),
+            repeatMode = RepeatMode.Restart,
+        ),
+        label = "playRotation",
+    )
+    val playRotation = if (materialUi && isPlaying) animatedRotation else 0f
+    val playButtonShape = remember(materialUi) {
+        if (materialUi) ScallopedFlowerShape(lobes = 9, innerRadiusRatio = 0.85f) else SquircleShape(16.dp)
     }
 
     // Breathing artwork scale during playback
@@ -144,6 +169,27 @@ fun ExpressiveMiniPlayer(
             )
             .clickable(onClick = onExpand),
     ) {
+        // Thin top progress line for Rhythm Material UI Mode
+        if (materialUi) {
+            Box(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(2.5.dp)
+                    .align(Alignment.TopCenter)
+                    .background(MaterialTheme.colorScheme.onSurface.copy(alpha = 0.10f)),
+            ) {
+                val progress = progressProvider?.invoke()?.coerceIn(0f, 1f) ?: 0f
+                if (progress > 0f) {
+                    Box(
+                        modifier = Modifier
+                            .fillMaxWidth(fraction = progress)
+                            .fillMaxHeight()
+                            .background(MaterialTheme.colorScheme.primary),
+                    )
+                }
+            }
+        }
+
         Row(
             modifier = Modifier
                 .fillMaxWidth()
@@ -242,8 +288,9 @@ fun ExpressiveMiniPlayer(
                         .graphicsLayer {
                             scaleX = playButtonScale
                             scaleY = playButtonScale
+                            rotationZ = playRotation
                         }
-                        .clip(SquircleShape(16.dp))
+                        .clip(playButtonShape)
                         .background(MaterialTheme.colorScheme.primaryContainer)
                         .clickable(
                             interactionSource = playInteraction,
@@ -259,7 +306,9 @@ fun ExpressiveMiniPlayer(
                         imageVector = if (isPlaying) Icons.Rounded.Pause else Icons.Rounded.PlayArrow,
                         contentDescription = stringResource(if (isPlaying) R.string.pause else R.string.play),
                         tint = MaterialTheme.colorScheme.onPrimaryContainer,
-                        modifier = Modifier.size(28.dp),
+                        modifier = Modifier
+                            .size(28.dp)
+                            .graphicsLayer { rotationZ = -playRotation },
                     )
                 }
             }

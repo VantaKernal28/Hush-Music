@@ -4248,6 +4248,7 @@ private fun BitChordApp(
                             onBlockedControl = showHostOnlyNotice,
                             dock = activeDock,
                             pull = playerSheetMotion.takeIf { !reducePlayerMotion },
+                            progressProvider = { if (player.durationMs > 0L) player.position.positionMs.toFloat() / player.durationMs.toFloat() else 0f },
                             modifier = Modifier.fillMaxWidth(),
                         )
                         Spacer(Modifier.height(8.dp))

@@ -2383,7 +2383,7 @@ fun NowPlayingScreen(
                     Box(
                         modifier = Modifier
                             .fillMaxSize()
-                            .background(MaterialTheme.colorScheme.surface),
+                            .background(MaterialTheme.colorScheme.primary),
                     )
                 }
                 if (legacyMeshBackdrop) {
@@ -2688,6 +2688,7 @@ fun NowPlayingScreen(
                     // both, and the handle, the caption and the scrim all belong on
                     // top of the artwork. The scrim reaches up past the strip's own
                     // top to the screen's, the band it always covered.
+                    if (!materialUi || lyricsOpen || queueOpen) {
                     Box(
                         modifier = Modifier
                             .zIndex(1f)
@@ -2748,6 +2749,7 @@ fun NowPlayingScreen(
                                 )
                             }
                         }
+                    }
                     }
 
                     Column(
@@ -2847,6 +2849,26 @@ fun NowPlayingScreen(
                             .padding(horizontal = PLAYER_GUTTER),
                         horizontalAlignment = Alignment.CenterHorizontally,
                     ) {
+                    if (materialUi && !lyricsOpen && !queueOpen) {
+                        RhythmPlayerContent(
+                            song = song,
+                            isPlaying = isPlaying,
+                            isLoading = isLoading || audioVersionSwitching,
+                            position = position,
+                            durationMs = durationMs,
+                            likeStatus = likeStatus,
+                            onToggleLike = onToggleLike,
+                            onPlayPause = onPlayPause,
+                            onNext = onNext,
+                            onPrevious = onPrevious,
+                            onSeekFraction = onSeekFraction,
+                            onOpenLyrics = openLyrics,
+                            onOpenQueue = toggleQueue,
+                            onOpenAudioOutput = openAudioOutput,
+                            onOpenMenu = onOpenMenu,
+                            modifier = Modifier.fillMaxSize(),
+                        )
+                    } else {
                     // ---- Top and centre: artwork, then the credits ----
                     // Everything that changes between the artwork and the queue lives
                     // in this one weighted box, so the controls below it never move.
@@ -4182,6 +4204,7 @@ fun NowPlayingScreen(
 
                     playerActions()
                     Spacer(Modifier.height(18.dp))
+                    }
                     }
                     }
                     }
