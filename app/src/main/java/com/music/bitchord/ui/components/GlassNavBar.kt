@@ -173,20 +173,6 @@ fun GlassNavBar(
                         }
                     )
 
-                val inlineCapsuleModifier = Modifier
-                    .weight(1f)
-                    .height(48.dp)
-                    .clip(pillShape)
-                    .then(
-                        if (useGlass && !reduceDynamicBlur) {
-                            Modifier.liquidGlass(shape = pillShape)
-                        } else {
-                            Modifier
-                                .background(container)
-                                .border(1.dp, Color.White.copy(alpha = 0.12f), pillShape)
-                        }
-                    )
-
                 Row(
                     modifier = Modifier
                         .fillMaxWidth()
@@ -194,6 +180,19 @@ fun GlassNavBar(
                     horizontalArrangement = Arrangement.spacedBy(10.dp),
                     verticalAlignment = Alignment.CenterVertically,
                 ) {
+                    val inlineCapsuleModifier = Modifier
+                        .weight(1f)
+                        .height(48.dp)
+                        .clip(pillShape)
+                        .then(
+                            if (useGlass && !reduceDynamicBlur) {
+                                Modifier.liquidGlass(shape = pillShape)
+                            } else {
+                                Modifier
+                                    .background(container)
+                                    .border(1.dp, Color.White.copy(alpha = 0.12f), pillShape)
+                            }
+                        )
                     // Left: Circular Active Tab Button
                     Box(
                         modifier = circleModifier.clickable {
