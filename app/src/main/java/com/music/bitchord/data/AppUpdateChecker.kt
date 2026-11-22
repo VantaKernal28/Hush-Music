@@ -88,8 +88,7 @@ object AppUpdateChecker {
             val apkUrl = apkAssetUrl(release)
             val rawNotes = release["body"]?.jsonPrimitive?.contentOrNull
             val cleanNotes = cleanNotes(rawNotes)
-            val latest = tag.removePrefix("v").removePrefix("beta-").removePrefix("beta")
-            if (isNewer(latest, BuildConfig.VERSION_NAME)) {
+            if (isNewer(tag, BuildConfig.VERSION_NAME)) {
                 _available.value = UpdateInfo(tag, url, apkUrl, cleanNotes)
             }
         }
@@ -258,33 +257,45 @@ object AppUpdateChecker {
     private data class ParsedVersion(val parts: List<Int>, val isPreRelease: Boolean)
 
     private fun parseVersion(raw: String): ParsedVersion {
-        val clean = raw.trim()
+        val trimmed = raw.trim()
+        val isPre = trimmed.contains("beta", ignoreCase = true) ||
+            trimmed.contains("alpha", ignoreCase = true) ||
+            trimmed.contains("rc", ignoreCase = true) ||
+            trimmed.startsWith("BETA", ignoreCase = false) ||
+            trimmed.contains("-")
+        val clean = trimmed
             .removePrefix("v")
             .removePrefix("V")
-            .removePrefix("beta-")
-            .removePrefix("beta")
+            .replace(Regex("(?i)^beta-?"), "")
+            .replace(Regex("(?i)^alpha-?"), "")
+            .replace(Regex("(?i)^rc-?"), "")
         val dash = clean.indexOf('-')
         val base = if (dash >= 0) clean.substring(0, dash) else clean
-        val isPre = dash >= 0 || raw.contains("beta", ignoreCase = true)
-        return ParsedVersion(base.split(".").map { it.toIntOrNull() ?: 0 }, isPre)
+        return ParsedVersion(base.split(".").mapNotNull { it.toIntOrNull() }, isPre)
     }
 
     /**
-     * Numeric, dot-separated comparison — "1.10" outranks "1.9" — with one
-     * extra rule: a "-betaN" build (see the debug build type's
-     * `versionNameSuffix` in app/build.gradle.kts) is treated as older than a
-     * plain release of the same numbers, since the beta by definition predates
-     * the tag it was testing toward. Without this, a beta and the release it
-     * matches compare equal and testers never get nudged onto the real build.
+     * Numeric, dot-separated comparison with pre-release awareness:
+     * - Any beta/pre-release tag (e.g. beta-1.0, beta-1.1, beta-1.2, BETA1.3) is strictly older
+     *   than a stable production release (e.g. 1.0).
+     * - A stable release with equal or higher version numbers outranks pre-releases.
      */
     private fun isNewer(latest: String, current: String): Boolean {
         val l = parseVersion(latest)
         val c = parseVersion(current)
+
+        if (l.isPreRelease && !c.isPreRelease) {
+            return false
+        }
+        if (!l.isPreRelease && c.isPreRelease) {
+            return true
+        }
+
         for (i in 0 until maxOf(l.parts.size, c.parts.size)) {
             val a = l.parts.getOrElse(i) { 0 }
             val b = c.parts.getOrElse(i) { 0 }
             if (a != b) return a > b
         }
-        return c.isPreRelease && !l.isPreRelease
+        return false
     }
 }

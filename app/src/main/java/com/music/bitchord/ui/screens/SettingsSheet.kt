@@ -307,6 +307,7 @@ fun SettingsScreen(
     val liquidGlass by AppSettings.liquidGlass.collectAsStateWithLifecycle()
     val glassPerformance by AppSettings.glassPerformance.collectAsStateWithLifecycle()
     val progressiveBlur by AppSettings.progressiveBlur.collectAsStateWithLifecycle()
+    val frostedGlass by AppSettings.frostedGlass.collectAsStateWithLifecycle()
     val liquidGlassSupported = isGlassSupported()
     val lyricsBlur by AppSettings.lyricsBlur.collectAsStateWithLifecycle()
     val animatedCanvas by AppSettings.animatedCanvas.collectAsStateWithLifecycle()
@@ -520,7 +521,7 @@ fun SettingsScreen(
         }
     }
 
-    val isDark = isSystemInDarkTheme()
+    val isDark = MaterialTheme.colorScheme.background.luminance() < 0.5f
     val solidBg = if (isDark) Color(0xFF0F0F12) else MaterialTheme.colorScheme.background
 
     Column(
@@ -1209,7 +1210,6 @@ fun SettingsScreen(
                 SettingsRow(
                     icon = SfIcons.VisibilityOff,
                     title = hideRecentsTitle,
-                    subtitle = "Don't display your recently played albums and songs on the Home feed",
                     trailing = {
                         IosSwitch(
                             checked = hideRecents,
@@ -1239,7 +1239,6 @@ fun SettingsScreen(
                 SettingsRow(
                     icon = SfIcons.AutoAwesome,
                     title = hideTopPicksTitle,
-                    subtitle = "Hide algorithmic recommendations and top picks from your Home feed",
                     trailing = {
                         IosSwitch(
                             checked = hideTopPicks,
@@ -1254,7 +1253,6 @@ fun SettingsScreen(
                 SettingsRow(
                     icon = SfIcons.Star,
                     title = hideHomeMoodsTitle,
-                    subtitle = "Hide curated mood categories and genre shelves on Home",
                     trailing = {
                         IosSwitch(
                             checked = hideHomeMoods,
@@ -1287,7 +1285,6 @@ fun SettingsScreen(
                 SettingsRow(
                     icon = Icons.Rounded.Brightness4,
                     title = themeTitle,
-                    subtitle = "Select light, dark, or system matching theme",
                 )
                 SegmentedControl(
                     options = ThemeMode.entries.map { it.localizedLabel() },
@@ -1304,58 +1301,47 @@ fun SettingsScreen(
                     title = accentColorTitle,
                     subtitle = HushAccents.find { it.id == currentAccent }?.name ?: "Coral Sunset",
                 )
-                Row(
+                Column(
                     modifier = Modifier
                         .fillMaxWidth()
                         .horizontalScroll(rememberScrollState())
                         .padding(start = ROW_INSET, end = ROW_INSET, bottom = 14.dp),
-                    horizontalArrangement = Arrangement.spacedBy(10.dp),
+                    verticalArrangement = Arrangement.spacedBy(10.dp),
                 ) {
-                    HushAccents.forEach { swatch ->
-                        val selected = swatch.id == currentAccent
-                        val swatchColor = if (swatch.isDynamic && Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
-                            dynamicDarkColorScheme(context).primary
-                        } else swatch.primary
+                    val rows = HushAccents.chunked((HushAccents.size + 1) / 2)
+                    rows.forEach { rowSwatches ->
+                        Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
+                            rowSwatches.forEach { swatch ->
+                                val selected = swatch.id == currentAccent
+                                val swatchColor = if (swatch.isDynamic && Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
+                                    dynamicDarkColorScheme(context).primary
+                                } else swatch.primary
 
-                        Column(
-                            modifier = Modifier
-                                .clickable { AppSettings.setThemeAccent(swatch.id) }
-                                .padding(vertical = 4.dp),
-                            horizontalAlignment = Alignment.CenterHorizontally,
-                        ) {
-                            Box(
-                                modifier = Modifier
-                                    .size(42.dp)
-                                    .clip(CircleShape)
-                                    .background(swatchColor)
-                                    .then(
-                                        if (selected) {
-                                            Modifier.border(2.5.dp, Color.White, CircleShape)
-                                        } else {
-                                            Modifier.border(1.dp, Color.White.copy(alpha = 0.2f), CircleShape)
-                                        }
-                                    ),
-                                contentAlignment = Alignment.Center,
-                            ) {
-                                if (selected) {
-                                    Icon(
-                                        imageVector = Icons.Rounded.Check,
-                                        contentDescription = stringResource(R.string.selected),
-                                        tint = if (swatchColor.luminance() > 0.5f) Color.Black else Color.White,
-                                        modifier = Modifier.size(20.dp),
-                                    )
+                                Box(
+                                    modifier = Modifier
+                                        .size(38.dp)
+                                        .clip(CircleShape)
+                                        .background(swatchColor)
+                                        .then(
+                                            if (selected) {
+                                                Modifier.border(2.5.dp, Color.White, CircleShape)
+                                            } else {
+                                                Modifier.border(1.dp, Color.White.copy(alpha = 0.2f), CircleShape)
+                                            }
+                                        )
+                                        .clickable { AppSettings.setThemeAccent(swatch.id) },
+                                    contentAlignment = Alignment.Center,
+                                ) {
+                                    if (selected) {
+                                        Icon(
+                                            imageVector = Icons.Rounded.Check,
+                                            contentDescription = stringResource(R.string.selected),
+                                            tint = if (swatchColor.luminance() > 0.5f) Color.Black else Color.White,
+                                            modifier = Modifier.size(18.dp),
+                                        )
+                                    }
                                 }
                             }
-                            Text(
-                                text = swatch.name,
-                                textAlign = TextAlign.Center,
-                                maxLines = 1,
-                                style = MaterialTheme.typography.labelSmall,
-                                color = if (selected) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurfaceVariant,
-                                fontWeight = if (selected) FontWeight.Bold else FontWeight.Normal,
-                                modifier = Modifier.padding(top = 4.dp).widthIn(max = 68.dp),
-                                overflow = TextOverflow.Ellipsis,
-                            )
                         }
                     }
                 }
@@ -1458,11 +1444,11 @@ fun SettingsScreen(
             }
             val materialUiModeTitle = "Interface Style"
             row(materialUiModeTitle, "material", "m3", "toggle", "pill", "squircle", "tab", "bitchord", "classic", "style") {
-                Column(
+                Row(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .padding(horizontal = ROW_INSET, vertical = 8.dp),
-                    verticalArrangement = Arrangement.spacedBy(10.dp),
+                        .padding(horizontal = ROW_INSET, vertical = 6.dp),
+                    horizontalArrangement = Arrangement.spacedBy(10.dp),
                 ) {
                     UiStyleOptionCard(
                         title = "Classic",
@@ -1470,6 +1456,7 @@ fun SettingsScreen(
                         description = "",
                         iconRes = R.drawable.ic_logo,
                         selected = !materialUiMode,
+                        modifier = Modifier.weight(1f),
                         onClick = {
                             if (materialUiMode) {
                                 AppSettings.setMaterialUiMode(false)
@@ -1478,11 +1465,12 @@ fun SettingsScreen(
                     )
 
                     UiStyleOptionCard(
-                        title = "Material UI Mode",
-                        badge = "RHYTHM M3E",
+                        title = "Material UI",
+                        badge = "RHYTHM",
                         description = "",
                         iconRes = R.drawable.ic_hush_transparent_logo,
                         selected = materialUiMode,
+                        modifier = Modifier.weight(1f),
                         onClick = {
                             if (!materialUiMode) {
                                 AppSettings.setMaterialUiMode(true)
@@ -1496,7 +1484,6 @@ fun SettingsScreen(
                 SettingsRow(
                     icon = SfIcons.Gradient,
                     title = liveSongGradientTitle,
-                    subtitle = "Sample active album art tones to animate ambient player backdrop",
                     trailing = {
                         IosSwitch(
                             checked = liveSongColorGradient,
@@ -1511,7 +1498,6 @@ fun SettingsScreen(
                 SettingsRow(
                     icon = SfIcons.AutoAwesome,
                     title = expressiveUiTitle,
-                    subtitle = "Bold tactile shapes, spring physics, wavy seekbar, and morphing player components",
                     trailing = {
                         IosSwitch(
                             checked = expressiveUiEnabled,
@@ -1526,7 +1512,6 @@ fun SettingsScreen(
                 SettingsRow(
                     icon = SfIcons.MotionPhotosOff,
                     title = reduceAnimationTitle,
-                    subtitle = stringResource(R.string.reduce_animation_subtitle),
                     trailing = {
                         IosSwitch(
                             checked = reduceAnimation,
@@ -1541,7 +1526,6 @@ fun SettingsScreen(
                 SettingsRow(
                     icon = SfIcons.BlurOff,
                     title = reduceDynamicBlurTitle,
-                    subtitle = stringResource(R.string.reduce_dynamic_blur_subtitle),
                     trailing = {
                         IosSwitch(
                             checked = reduceDynamicBlur,
@@ -1556,7 +1540,6 @@ fun SettingsScreen(
                 SettingsRow(
                     icon = SfIcons.Gradient,
                     title = disableBlendEffectsTitle,
-                    subtitle = stringResource(R.string.disable_blend_effects_subtitle),
                     trailing = {
                         IosSwitch(
                             checked = disableBlendEffects,
@@ -1571,13 +1554,6 @@ fun SettingsScreen(
                 SettingsRow(
                     icon = SfIcons.AutoAwesome,
                     title = liquidGlassTitle,
-                    subtitle = stringResource(
-                        if (liquidGlassSupported) {
-                            R.string.liquid_glass_subtitle
-                        } else {
-                            R.string.liquid_glass_unavailable
-                        },
-                    ),
                     enabled = liquidGlassSupported,
                     trailing = {
                         IosSwitch(
@@ -1589,19 +1565,33 @@ fun SettingsScreen(
                     onClick = { AppSettings.setLiquidGlass(!liquidGlass) },
                 )
             }
-            // One line each, like Direct Source Stream under Sources, and only
-            // while Liquid Glass is on: they qualify the glass rather than standing
-            // on their own. Progressive Blur has its own switch because it costs
-            // frames of its own. Reduce dynamic blur turns it off.
-            if (liquidGlass && liquidGlassSupported) {
-                val progressiveBlurTitle = stringResource(R.string.progressive_blur)
-                row(progressiveBlurTitle, "blur", "status bar", "top", divided = false) {
-                    SettingsSubRow(
-                        title = progressiveBlurTitle,
-                        checked = progressiveBlur,
-                        onCheckedChange = AppSettings::setProgressiveBlur,
-                    )
-                }
+            val frostedGlassTitle = "Frosted Glass"
+            row(frostedGlassTitle, "frosted", "glass", "blur", "translucency") {
+                SettingsRow(
+                    icon = SfIcons.BlurOn,
+                    title = frostedGlassTitle,
+                    trailing = {
+                        IosSwitch(
+                            checked = frostedGlass,
+                            onCheckedChange = AppSettings::setFrostedGlass,
+                        )
+                    },
+                    onClick = { AppSettings.setFrostedGlass(!frostedGlass) },
+                )
+            }
+            val progressiveBlurTitle = stringResource(R.string.progressive_blur)
+            row(progressiveBlurTitle, "blur", "status bar", "top") {
+                SettingsRow(
+                    icon = SfIcons.BlurOn,
+                    title = progressiveBlurTitle,
+                    trailing = {
+                        IosSwitch(
+                            checked = progressiveBlur,
+                            onCheckedChange = AppSettings::setProgressiveBlur,
+                        )
+                    },
+                    onClick = { AppSettings.setProgressiveBlur(!progressiveBlur) },
+                )
             }
             // Left out where the player won't honour it: a window too wide for
             // the player to fill and too narrow to stand a page beside it keeps
@@ -1855,7 +1845,6 @@ fun SettingsScreen(
                     SettingsRow(
                         icon = SfIcons.FrameRate,
                         title = refreshRateTitle,
-                        subtitle = "Lock peak display refresh rate for fluid scrolling",
                     )
                     SegmentedControl(
                         options = supportedRefreshRates.map { "$it Hz" },
@@ -3365,20 +3354,13 @@ private fun SettingsCategoryList(
         )
     }
 
-    // 2. Home & Widgets
-    SettingsGroup(header = "Home & Widgets", topSpacing = 14.dp) {
+    // 2. Home & Content
+    SettingsGroup(header = "Home & Content", topSpacing = 14.dp) {
         SettingsRow(
             icon = HushIcons.Display,
             iconBadgeColor = Color(0xFFFB923C),
             title = "Home",
             onClick = { onOpen(SettingsCategory.CONTENT_PREFERENCES) },
-        )
-        RowDivider()
-        SettingsRow(
-            icon = Icons.Rounded.Extension,
-            iconBadgeColor = Color(0xFF2DD4BF),
-            title = "Widget",
-            onClick = { onOpen(SettingsCategory.PERFORMANCE) },
         )
     }
 
@@ -3700,74 +3682,83 @@ private fun UiStyleOptionCard(
     description: String = "",
     iconRes: Int,
     selected: Boolean,
+    modifier: Modifier = Modifier,
     onClick: () -> Unit,
 ) {
     val activeAccent = MaterialTheme.colorScheme.primary
     Box(
-        modifier = Modifier
-            .fillMaxWidth()
-            .clip(RoundedCornerShape(20.dp))
+        modifier = modifier
+            .clip(RoundedCornerShape(16.dp))
             .background(
-                if (selected) MaterialTheme.colorScheme.primary.copy(alpha = 0.15f)
-                else MaterialTheme.colorScheme.surfaceVariant,
+                if (selected) MaterialTheme.colorScheme.primary.copy(alpha = 0.12f)
+                else MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f),
             )
             .border(
-                width = if (selected) 2.dp else 1.dp,
-                color = if (selected) activeAccent else Color.White.copy(alpha = 0.08f),
-                shape = RoundedCornerShape(20.dp),
+                width = if (selected) 1.5.dp else 1.dp,
+                color = if (selected) activeAccent else MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.4f),
+                shape = RoundedCornerShape(16.dp),
             )
             .clickable(onClick = onClick)
-            .padding(14.dp),
+            .padding(12.dp),
     ) {
-        Row(
+        Column(
             modifier = Modifier.fillMaxWidth(),
-            verticalAlignment = Alignment.CenterVertically,
+            verticalArrangement = Arrangement.spacedBy(8.dp),
         ) {
-            Box(
-                modifier = Modifier
-                    .size(46.dp)
-                    .clip(RoundedCornerShape(14.dp))
-                    .background(Color.White.copy(alpha = 0.10f)),
-                contentAlignment = Alignment.Center,
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.SpaceBetween,
             ) {
-                Image(
-                    painter = painterResource(iconRes),
-                    contentDescription = null,
-                    modifier = Modifier.size(28.dp),
-                )
-            }
-            Spacer(Modifier.width(14.dp))
-            Column(Modifier.weight(1f)) {
-                Row(verticalAlignment = Alignment.CenterVertically) {
-                    Text(
-                        text = title,
-                        style = MaterialTheme.typography.titleMedium,
-                        fontWeight = FontWeight.Bold,
-                        color = MaterialTheme.colorScheme.onSurface,
+                Box(
+                    modifier = Modifier
+                        .size(36.dp)
+                        .clip(RoundedCornerShape(10.dp))
+                        .background(Color.White.copy(alpha = 0.10f)),
+                    contentAlignment = Alignment.Center,
+                ) {
+                    Image(
+                        painter = painterResource(iconRes),
+                        contentDescription = null,
+                        modifier = Modifier.size(22.dp),
                     )
-                    Spacer(Modifier.width(8.dp))
-                    Box(
-                        modifier = Modifier
-                            .clip(RoundedCornerShape(8.dp))
-                            .background(
-                                if (selected) activeAccent else MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.4f),
-                            )
-                            .padding(horizontal = 6.dp, vertical = 2.dp),
-                    ) {
-                        Text(
-                            text = badge,
-                            style = MaterialTheme.typography.labelSmall.copy(fontSize = 9.sp, fontWeight = FontWeight.Bold),
-                            color = if (selected) MaterialTheme.colorScheme.onPrimary else MaterialTheme.colorScheme.onSurfaceVariant,
-                        )
-                    }
                 }
-                if (description.isNotBlank()) {
-                    Spacer(Modifier.height(2.dp))
+                Box(
+                    modifier = Modifier
+                        .clip(RoundedCornerShape(6.dp))
+                        .background(
+                            if (selected) activeAccent else MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.4f),
+                        )
+                        .padding(horizontal = 6.dp, vertical = 2.dp),
+                ) {
                     Text(
-                        text = description,
-                        style = MaterialTheme.typography.bodySmall,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant,
-                        lineHeight = 16.sp,
+                        text = badge,
+                        style = MaterialTheme.typography.labelSmall.copy(fontSize = 9.sp, fontWeight = FontWeight.Bold),
+                        color = if (selected) MaterialTheme.colorScheme.onPrimary else MaterialTheme.colorScheme.onSurfaceVariant,
+                    )
+                }
+            }
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.SpaceBetween,
+            ) {
+                Text(
+                    text = title,
+                    style = MaterialTheme.typography.titleSmall,
+                    fontWeight = if (selected) FontWeight.Bold else FontWeight.Medium,
+                    color = MaterialTheme.colorScheme.onSurface,
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis,
+                    modifier = Modifier.weight(1f, fill = false),
+                )
+                if (selected) {
+                    Spacer(Modifier.width(4.dp))
+                    Icon(
+                        imageVector = Icons.Rounded.Check,
+                        contentDescription = null,
+                        tint = activeAccent,
+                        modifier = Modifier.size(16.dp),
                     )
                 }
             }

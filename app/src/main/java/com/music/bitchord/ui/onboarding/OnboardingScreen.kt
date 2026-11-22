@@ -328,16 +328,16 @@ private fun DotMatrixLogoAnimation(
     // The 10 Target Coordinates (normalized to scale 1.0f) forming Hush Music "h" + side soundbars
     val targetCoords = remember {
         listOf(
-            Offset(-44f, 0f),   // 0: Left soundbar dot
-            Offset(44f, 0f),    // 1: Right soundbar dot
-            Offset(-18f, -44f), // 2: "h" stem top
-            Offset(-18f, -22f), // 3: "h" stem upper-mid
-            Offset(-18f, 0f),   // 4: "h" stem center
-            Offset(-18f, 26f),  // 5: "h" stem bottom
-            Offset(4f, -12f),   // 6: "h" shoulder arch
-            Offset(22f, 4f),    // 7: "h" right curve
-            Offset(22f, 26f),   // 8: "h" right leg bottom
-            Offset(2f, 6f),     // 9: Center sparkle dot
+            Offset(-40f, 4f),   // 0: Left soundbar dot
+            Offset(40f, 4f),    // 1: Right soundbar dot
+            Offset(-16f, -36f), // 2: "h" stem top
+            Offset(-16f, -16f), // 3: "h" stem upper-mid
+            Offset(-16f, 4f),   // 4: "h" stem center
+            Offset(-16f, 24f),  // 5: "h" stem bottom
+            Offset(0f, -16f),   // 6: "h" arch apex
+            Offset(0f, 4f),     // 7: "h" center dot
+            Offset(16f, 4f),    // 8: "h" right curve
+            Offset(16f, 24f),   // 9: "h" right leg
         )
     }
 
@@ -424,11 +424,11 @@ private fun ColumnScope.NamePage(
     ) {
         Column {
             Spacer(Modifier.height(44.dp))
-            // Settled Mini Dot-Matrix Mark
-            DotMatrixLogoAnimation(
-                progress = 1f,
-                settled = true,
-                modifier = Modifier.size(52.dp),
+            Icon(
+                painter = androidx.compose.ui.res.painterResource(R.drawable.ic_logo),
+                contentDescription = null,
+                modifier = Modifier.size(48.dp),
+                tint = Color.White,
             )
         }
     }
@@ -437,14 +437,6 @@ private fun ColumnScope.NamePage(
 
     Spacer(Modifier.weight(1f))
 
-    Text(
-        text = stringResource(R.string.onboarding_name_prompt),
-        style = MaterialTheme.typography.titleMedium,
-        fontSize = 17.sp,
-        color = Color.White.copy(alpha = 0.78f),
-        modifier = Modifier.padding(start = 4.dp),
-    )
-    Spacer(Modifier.height(12.dp))
     NameField(value = name, onValueChange = onNameChange, onDone = onNext)
     Spacer(Modifier.height(10.dp))
     Text(

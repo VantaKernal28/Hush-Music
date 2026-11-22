@@ -29,6 +29,8 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.rounded.ArrowBack
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.FilterChip
+import androidx.compose.material3.FilterChipDefaults
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -48,6 +50,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.music.bitchord.data.settings.AppSettings
+import com.music.bitchord.data.settings.ProgressLineStyle
 
 /**
  * Dedicated Player Customization Screen reproducing cromaguy/Rhythm exactly (video_2.mp4 & video_3.mp4):
@@ -66,6 +69,7 @@ fun PlayerCustomizationSheet(
     val haptic = LocalHapticFeedback.current
     val liveSongColorGradient by AppSettings.liveSongColorGradient.collectAsStateWithLifecycle()
     val wavyScrubber by AppSettings.wavyScrubber.collectAsStateWithLifecycle()
+    val progressLineStyle by AppSettings.progressLineStyle.collectAsStateWithLifecycle()
     val fullBleedArtwork by AppSettings.fullBleedArtwork.collectAsStateWithLifecycle()
     val syncedLyrics by AppSettings.syncedLyrics.collectAsStateWithLifecycle()
     val swipeToPlayNext by AppSettings.swipeToPlayNext.collectAsStateWithLifecycle()
@@ -119,6 +123,44 @@ fun PlayerCustomizationSheet(
 
             Spacer(Modifier.height(10.dp))
 
+            // Progress Line Style
+            Text(
+                text = "Progress Line Style",
+                style = MaterialTheme.typography.labelLarge.copy(fontWeight = FontWeight.Bold),
+                color = MaterialTheme.colorScheme.primary,
+                modifier = Modifier.padding(start = 4.dp, bottom = 8.dp),
+            )
+
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(bottom = 16.dp),
+                horizontalArrangement = Arrangement.spacedBy(8.dp),
+            ) {
+                ProgressLineStyle.entries.forEach { style ->
+                    val isSelected = progressLineStyle == style
+                    FilterChip(
+                        selected = isSelected,
+                        onClick = {
+                            haptic.performHapticFeedback(HapticFeedbackType.TextHandleMove)
+                            AppSettings.setProgressLineStyle(style)
+                        },
+                        label = {
+                            Text(
+                                text = style.label,
+                                style = MaterialTheme.typography.labelMedium,
+                                fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Normal,
+                            )
+                        },
+                        modifier = Modifier.weight(1f),
+                        colors = FilterChipDefaults.filterChipColors(
+                            selectedContainerColor = MaterialTheme.colorScheme.primary,
+                            selectedLabelColor = MaterialTheme.colorScheme.onPrimary,
+                        ),
+                    )
+                }
+            }
+
             // Appearance & Visuals
             Text(
                 text = "Look & Visuals",
@@ -137,7 +179,6 @@ fun PlayerCustomizationSheet(
                 Column(Modifier.fillMaxWidth()) {
                     PlayerToggleRow(
                         title = "Live Song-Reactive Gradient",
-                        subtitle = "Sample active album art tones to animate ambient player backdrop",
                         checked = liveSongColorGradient,
                         onCheckedChange = {
                             haptic.performHapticFeedback(HapticFeedbackType.TextHandleMove)
@@ -147,7 +188,6 @@ fun PlayerCustomizationSheet(
                     HorizontalDivider(thickness = 0.5.dp, color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.3f))
                     PlayerToggleRow(
                         title = "Wavy Progress Scrubber",
-                        subtitle = "Kinetic fluid waveform scrubber on full screen player seekbar",
                         checked = wavyScrubber,
                         onCheckedChange = {
                             haptic.performHapticFeedback(HapticFeedbackType.TextHandleMove)
@@ -157,7 +197,6 @@ fun PlayerCustomizationSheet(
                     HorizontalDivider(thickness = 0.5.dp, color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.3f))
                     PlayerToggleRow(
                         title = "Synced Lyrics",
-                        subtitle = "Full-bleed kinetic typography lyrics panel with word-level tracking",
                         checked = syncedLyrics,
                         onCheckedChange = {
                             haptic.performHapticFeedback(HapticFeedbackType.TextHandleMove)
@@ -167,7 +206,6 @@ fun PlayerCustomizationSheet(
                     HorizontalDivider(thickness = 0.5.dp, color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.3f))
                     PlayerToggleRow(
                         title = "Full Bleed Artwork",
-                        subtitle = "Extend high-resolution album artwork behind controls",
                         checked = fullBleedArtwork,
                         onCheckedChange = {
                             haptic.performHapticFeedback(HapticFeedbackType.TextHandleMove)
@@ -197,7 +235,6 @@ fun PlayerCustomizationSheet(
                 Column(Modifier.fillMaxWidth()) {
                     PlayerToggleRow(
                         title = "Swipe to Play Next",
-                        subtitle = "Swipe horizontally on player card to skip tracks",
                         checked = swipeToPlayNext,
                         onCheckedChange = {
                             haptic.performHapticFeedback(HapticFeedbackType.TextHandleMove)
@@ -207,7 +244,6 @@ fun PlayerCustomizationSheet(
                     HorizontalDivider(thickness = 0.5.dp, color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.3f))
                     PlayerToggleRow(
                         title = "Hide Volume Bar in Player",
-                        subtitle = "Hide the on-screen volume slider to emphasize artwork",
                         checked = hideVolumeBar,
                         onCheckedChange = {
                             haptic.performHapticFeedback(HapticFeedbackType.TextHandleMove)
@@ -217,7 +253,6 @@ fun PlayerCustomizationSheet(
                     HorizontalDivider(thickness = 0.5.dp, color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.3f))
                     PlayerToggleRow(
                         title = "Hide Status Bar in Player",
-                        subtitle = "Immersive edge-to-edge experience in full screen player",
                         checked = hideStatusBarInPlayer,
                         onCheckedChange = {
                             haptic.performHapticFeedback(HapticFeedbackType.TextHandleMove)
@@ -235,7 +270,7 @@ fun PlayerCustomizationSheet(
 @Composable
 private fun PlayerToggleRow(
     title: String,
-    subtitle: String,
+    subtitle: String? = null,
     checked: Boolean,
     onCheckedChange: (Boolean) -> Unit,
 ) {
@@ -252,12 +287,14 @@ private fun PlayerToggleRow(
                 style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Medium),
                 color = MaterialTheme.colorScheme.onSurface,
             )
-            Spacer(Modifier.height(2.dp))
-            Text(
-                text = subtitle,
-                style = MaterialTheme.typography.bodySmall,
-                color = MaterialTheme.colorScheme.onSurfaceVariant,
-            )
+            if (!subtitle.isNullOrBlank()) {
+                Spacer(Modifier.height(2.dp))
+                Text(
+                    text = subtitle,
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                )
+            }
         }
         Spacer(Modifier.width(12.dp))
         Switch(

@@ -16,6 +16,7 @@ import com.music.bitchord.data.settings.SmartAnalysis
 import com.music.bitchord.data.settings.MixBlend
 import com.music.bitchord.data.settings.MixTransitionView
 import com.music.bitchord.data.settings.TransitionWindow
+import com.music.bitchord.data.settings.ProgressLineStyle
 import dev.chrisbanes.haze.HazeState
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -289,11 +290,14 @@ interface PlayerSettingsSource {
     val versionAlignmentInProgress: StateFlow<Boolean>
     /** Material 3 Expressive (M3E) UI styling and motion physics toggle. */
     val expressiveUiEnabled: StateFlow<Boolean> get() = MutableStateFlow(true)
+    /** Customizable progress line style selector for the seekbar. */
+    val progressLineStyle: StateFlow<ProgressLineStyle> get() = MutableStateFlow(ProgressLineStyle.WAVY)
 
     fun setLastPlayerScreen(value: LastPlayerScreen)
     fun setLyricsOffsetMs(value: Int)
     /** Whether the mix popup is up, so the host lays out [smartMixPreview] for it. */
     fun setMixViewOpen(open: Boolean)
+    fun setProgressLineStyle(value: ProgressLineStyle) = Unit
 }
 
 /** The player's name for the installed host's settings, read where AppSettings used to be. */

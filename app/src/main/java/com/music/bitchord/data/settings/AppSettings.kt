@@ -127,6 +127,7 @@ enum class ThemeMode(val label: String) {
     SYSTEM("System"), LIGHT("Light"), DARK("Dark")
 }
 
+
 /**
  * How the app's SF Pro Display is set. [DEFAULT] draws each weight one cut
  * lighter and spaces it to Apple Music's own screens; [LEGACY] is the cut the
@@ -559,9 +560,13 @@ object AppSettings {
      * Blurs what scrolls under the status bar and the top controls, easing out
      * just below them, instead of fading it to the page colour. A Liquid Glass
      * option, honoured only while [liquidGlass] is on. Off by default: it costs
-     * frames. Reduce dynamic blur overrides it.
-     */
     val progressiveBlur = MutableStateFlow(false)
+
+    /** Frosted glass translucency with rich tactile blur and light frost tint. */
+    val frostedGlass = MutableStateFlow(false)
+
+    /** Musical player progress bar animation and line style. */
+    val progressLineStyle = MutableStateFlow(ProgressLineStyle.WAVY)
 
     /** Blurs unfocused lyric lines, keeping the active line sharp. */
     val lyricsBlur = MutableStateFlow(true)
@@ -1110,6 +1115,10 @@ object AppSettings {
         liquidGlass.value = prefs.getBoolean(KEY_LIQUID_GLASS, true)
         glassPerformance.value = prefs.getBoolean(KEY_GLASS_PERFORMANCE, false)
         progressiveBlur.value = prefs.getBoolean(KEY_PROGRESSIVE_BLUR, false)
+        frostedGlass.value = prefs.getBoolean(KEY_FROSTED_GLASS, false)
+        progressLineStyle.value = runCatching {
+            ProgressLineStyle.valueOf(prefs.getString(KEY_PROGRESS_LINE_STYLE, null) ?: "WAVY")
+        }.getOrDefault(ProgressLineStyle.WAVY)
         lyricsBlur.value = prefs.getBoolean(KEY_LYRICS_BLUR, true)
         lyricsOffsetMs.value = prefs.getInt(KEY_LYRICS_OFFSET_MS, 0)
             .coerceIn(MIN_LYRICS_OFFSET_MS, MAX_LYRICS_OFFSET_MS)
@@ -1692,6 +1701,16 @@ object AppSettings {
     fun setProgressiveBlur(value: Boolean) {
         progressiveBlur.value = value
         prefs.edit().putBoolean(KEY_PROGRESSIVE_BLUR, value).apply()
+    }
+
+    fun setFrostedGlass(value: Boolean) {
+        frostedGlass.value = value
+        prefs.edit().putBoolean(KEY_FROSTED_GLASS, value).apply()
+    }
+
+    fun setProgressLineStyle(value: ProgressLineStyle) {
+        progressLineStyle.value = value
+        prefs.edit().putString(KEY_PROGRESS_LINE_STYLE, value.name).apply()
     }
 
     fun setHighPerformanceMode(value: Boolean) {
@@ -2490,6 +2509,8 @@ object AppSettings {
     private const val KEY_LIQUID_GLASS = "liquid_glass"
     private const val KEY_GLASS_PERFORMANCE = "glass_performance"
     private const val KEY_PROGRESSIVE_BLUR = "progressive_blur"
+    private const val KEY_FROSTED_GLASS = "frosted_glass"
+    private const val KEY_PROGRESS_LINE_STYLE = "progress_line_style"
     private const val KEY_LYRICS_BLUR = "lyrics_blur"
     private const val KEY_LYRICS_OFFSET_MS = "lyrics_offset_ms"
     private const val KEY_TRANSLATION_LANGUAGE = "translation_language"

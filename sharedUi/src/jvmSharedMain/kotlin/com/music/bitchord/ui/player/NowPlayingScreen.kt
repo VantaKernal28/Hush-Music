@@ -845,6 +845,7 @@ fun NowPlayingScreen(
     lyricsUnavailable: Boolean,
     lyricsOffsetOpen: Boolean,
     onDismissLyricsOffset: () -> Unit,
+    onDismissPlayer: () -> Unit = {},
     /** The width of the window the player is in — see [fullBleedArtworkAvailable]. */
     windowWidth: Dp,
     /**
@@ -2843,7 +2844,20 @@ fun NowPlayingScreen(
                                     val drag = awaitVerticalTouchSlopOrCancellation(down.id) { change, _ ->
                                         change.consume()
                                     }
-                                    if (drag != null) verticalDrag(drag.id) { it.consume() }
+                                    if (drag != null) {
+                                        if (materialUi) {
+                                            var totalDownDrag = 0f
+                                            verticalDrag(drag.id) { change ->
+                                                change.consume()
+                                                totalDownDrag += change.positionChange().y
+                                                if (totalDownDrag > 28f) {
+                                                    onDismissPlayer()
+                                                }
+                                            }
+                                        } else {
+                                            verticalDrag(drag.id) { it.consume() }
+                                        }
+                                    }
                                 }
                             }
                             .padding(horizontal = PLAYER_GUTTER),
@@ -2876,6 +2890,7 @@ fun NowPlayingScreen(
                             onOpenArtist = { onOpenArtist(song.artistId, song.artist) },
                             lyrics = lyrics,
                             lyricsUnavailable = lyricsUnavailable,
+                            onDismiss = onDismissPlayer,
                             modifier = Modifier.fillMaxSize(),
                         )
                     } else {

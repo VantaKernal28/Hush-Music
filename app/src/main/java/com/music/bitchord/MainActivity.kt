@@ -2551,6 +2551,7 @@ private fun BitChordApp(
             song = displayedSong,
             playedBy = playedBy,
             accountName = account?.name,
+            onDismissPlayer = dismissPlayer,
             windowWidth = windowWidth,
             windowHeight = windowHeight,
             // A canvas under the ⋯ menu holds still. Asked, not passed — see
@@ -3763,22 +3764,25 @@ private fun BitChordApp(
                             (header * fadeRamp)).coerceIn(0f, 1f)
                     }
                 }
-                if (reduceDynamicBlur || !glassActive || !progressiveBlur) {
-                    BottomFadeScrim(
-                        pageColor = chromePageColor,
-                        modifier = Modifier
-                            .align(Alignment.TopCenter)
-                            .rotate(180f)
-                            .graphicsLayer { alpha = topFadeAlpha },
-                    )
-                } else {
-                    TopFadeBlur(
-                        hazeState = hazeState,
-                        pageColor = chromePageColor,
-                        modifier = Modifier
-                            .align(Alignment.TopCenter)
-                            .graphicsLayer { alpha = topFadeAlpha },
-                    )
+                val isSettingsPage = route == AppRoute.Settings || route is AppRoute.SettingsSection || route is AppRoute.SettingsChoice || (route != null && AppRoute.Settings in navigator)
+                if (!isSettingsPage) {
+                    if (reduceDynamicBlur || !glassActive || !progressiveBlur) {
+                        BottomFadeScrim(
+                            pageColor = chromePageColor,
+                            modifier = Modifier
+                                .align(Alignment.TopCenter)
+                                .rotate(180f)
+                                .graphicsLayer { alpha = topFadeAlpha },
+                        )
+                    } else {
+                        TopFadeBlur(
+                            hazeState = hazeState,
+                            pageColor = chromePageColor,
+                            modifier = Modifier
+                                .align(Alignment.TopCenter)
+                                .graphicsLayer { alpha = topFadeAlpha },
+                        )
+                    }
                 }
 
                 FrostedTopBar(
@@ -3834,6 +3838,7 @@ private fun BitChordApp(
                     // The same step the back gesture takes — see [goBack] —
                     // offered on anything pushed over a tab.
                     onBack = when {
+                        isSettingsPage -> null
                         route != null || detail != null || selectedMoodGenre != null -> goBack
                         else -> null
                     },

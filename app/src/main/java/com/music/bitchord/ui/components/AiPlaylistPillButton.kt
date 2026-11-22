@@ -19,10 +19,9 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
@@ -32,14 +31,12 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.graphicsLayer
-import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
 import com.music.bitchord.ui.icons.SfIcons
 
 /**
- * Sleek, compact animated pill button in the top-left corner explicitly displaying "AI".
- * Features a subtle sparkle/accent ring, smooth breathing/shimmer animation,
+ * Sleek, circular Material 3 button in the top-left corner with pulsing AI icon.
+ * Features a subtle sparkle/accent ring, smooth breathing animation,
  * and spring press feedback that opens the AI Playlist Maker.
  */
 @Composable
@@ -70,7 +67,7 @@ fun AiPlaylistPillButton(
     )
     val breatheScale by infiniteTransition.animateFloat(
         initialValue = 1.0f,
-        targetValue = 1.04f,
+        targetValue = 1.08f,
         animationSpec = infiniteRepeatable(
             animation = tween(2200, easing = EaseInOut),
             repeatMode = RepeatMode.Reverse,
@@ -78,17 +75,17 @@ fun AiPlaylistPillButton(
         label = "ai_breathe_scale",
     )
 
-    val pillShape = RoundedCornerShape(percent = 50)
     val accent = MaterialTheme.colorScheme.primary
 
     Box(
         modifier = modifier
+            .size(40.dp)
             .graphicsLayer {
                 scaleX = pressScale * breatheScale
                 scaleY = pressScale * breatheScale
             }
-            .clip(pillShape)
-            .background(MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.75f))
+            .clip(CircleShape)
+            .background(MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.82f))
             .border(
                 width = 1.2.dp,
                 brush = Brush.linearGradient(
@@ -98,35 +95,20 @@ fun AiPlaylistPillButton(
                         accent.copy(alpha = shimmerAlpha * 0.5f),
                     )
                 ),
-                shape = pillShape,
+                shape = CircleShape,
             )
             .clickable(
                 interactionSource = interactionSource,
                 indication = null,
                 onClick = onClick,
-            )
-            .padding(horizontal = 10.dp, vertical = 5.dp),
+            ),
         contentAlignment = Alignment.Center,
     ) {
-        Row(
-            verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.spacedBy(4.dp),
-        ) {
-            Icon(
-                imageVector = SfIcons.AutoAwesome,
-                contentDescription = null,
-                tint = accent,
-                modifier = Modifier.size(13.dp),
-            )
-            Text(
-                text = "AI",
-                style = MaterialTheme.typography.labelSmall.copy(
-                    fontWeight = FontWeight.Black,
-                    fontSize = 11.sp,
-                    letterSpacing = 0.5.sp,
-                ),
-                color = MaterialTheme.colorScheme.onSurface,
-            )
-        }
+        Icon(
+            imageVector = SfIcons.AutoAwesome,
+            contentDescription = "AI Playlist Maker",
+            tint = accent,
+            modifier = Modifier.size(18.dp),
+        )
     }
 }

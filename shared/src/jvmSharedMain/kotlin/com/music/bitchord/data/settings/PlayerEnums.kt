@@ -45,3 +45,17 @@ enum class LastPlayerScreen {
     LYRICS,
     QUEUE,
 }
+
+/**
+ * Customizable progress line style selector for the player seekbar:
+ * - WAVY: Sinusoidal animated wave path
+ * - STRAIGHT: Thick rounded M3 track (8.dp)
+ * - DOTTED: Segmented pill dashes
+ * - PULSE: Dynamic cadence line with rhythmic peaks
+ */
+enum class ProgressLineStyle(val label: String) {
+    WAVY("Wavy"),
+    STRAIGHT("Straight"),
+    DOTTED("Dotted"),
+    PULSE("Pulse"),
+}

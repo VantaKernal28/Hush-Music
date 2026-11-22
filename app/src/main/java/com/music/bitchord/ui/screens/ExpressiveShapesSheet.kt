@@ -182,12 +182,6 @@ fun ExpressiveShapesSheet(
                             style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold),
                             color = MaterialTheme.colorScheme.onSurface,
                         )
-                        Spacer(Modifier.height(2.dp))
-                        Text(
-                            text = "Enable tactile organic shapes for artwork, albums and controls throughout the app",
-                            style = MaterialTheme.typography.bodySmall,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant,
-                        )
                     }
                     Spacer(Modifier.width(10.dp))
                     Switch(
@@ -305,35 +299,30 @@ fun ExpressiveShapesSheet(
                 Column(Modifier.fillMaxWidth()) {
                     ShapeTargetRow(
                         title = "Album Artwork",
-                        subtitle = "Main albums, playlists and grid cards",
                         currentShape = albumArtShape,
                         onClick = { pickerTarget = "ALBUM_ART" },
                     )
                     HorizontalDivider(thickness = 0.5.dp, color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.3f))
                     ShapeTargetRow(
                         title = "Player Artwork",
-                        subtitle = "Center-top artwork on full screen player",
                         currentShape = albumArtShape,
                         onClick = { pickerTarget = "PLAYER_ART" },
                     )
                     HorizontalDivider(thickness = 0.5.dp, color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.3f))
                     ShapeTargetRow(
                         title = "Artist Artwork",
-                        subtitle = "Artist profiles & circular avatar slots",
                         currentShape = artistArtShape,
                         onClick = { pickerTarget = "ARTIST_ART" },
                     )
                     HorizontalDivider(thickness = 0.5.dp, color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.3f))
                     ShapeTargetRow(
                         title = "Player Controls",
-                        subtitle = "Tactile squircle and scalloped transport buttons",
                         currentShape = "9-Lobe Scallop",
                         onClick = { pickerTarget = "CONTROLS" },
                     )
                     HorizontalDivider(thickness = 0.5.dp, color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.3f))
                     ShapeTargetRow(
                         title = "Mini Player Dock",
-                        subtitle = "Floating docked mini-player card",
                         currentShape = "M3E Rounded 24dp",
                         onClick = { pickerTarget = "MINI_PLAYER" },
                     )
@@ -425,8 +414,8 @@ fun ExpressiveShapesSheet(
 @Composable
 private fun ShapeTargetRow(
     title: String,
-    subtitle: String,
     currentShape: String,
+    subtitle: String? = null,
     onClick: () -> Unit,
 ) {
     Row(
@@ -442,12 +431,14 @@ private fun ShapeTargetRow(
                 style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Medium),
                 color = MaterialTheme.colorScheme.onSurface,
             )
-            Spacer(Modifier.height(2.dp))
-            Text(
-                text = subtitle,
-                style = MaterialTheme.typography.bodySmall,
-                color = MaterialTheme.colorScheme.onSurfaceVariant,
-            )
+            if (!subtitle.isNullOrBlank()) {
+                Spacer(Modifier.height(2.dp))
+                Text(
+                    text = subtitle,
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                )
+            }
         }
         Spacer(Modifier.width(10.dp))
         Box(

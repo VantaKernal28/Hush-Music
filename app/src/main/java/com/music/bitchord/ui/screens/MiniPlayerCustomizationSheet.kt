@@ -132,7 +132,6 @@ fun MiniPlayerCustomizationSheet(
                 Column(Modifier.fillMaxWidth()) {
                     MiniPlayerToggleRow(
                         title = "Rotating Scalloped Play Button",
-                        subtitle = "Smooth 15-second kinetic rotation of the 9-lobe play/pause clover while playing",
                         checked = rotatingScallopPlay,
                         onCheckedChange = {
                             haptic.performHapticFeedback(HapticFeedbackType.TextHandleMove)
@@ -142,7 +141,6 @@ fun MiniPlayerCustomizationSheet(
                     HorizontalDivider(thickness = 0.5.dp, color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.3f))
                     MiniPlayerToggleRow(
                         title = "Top Progress Indicator Line",
-                        subtitle = "Subtle 2.5dp accent-tinted playback progress line across the top edge",
                         checked = miniPlayerProgressLine,
                         onCheckedChange = {
                             haptic.performHapticFeedback(HapticFeedbackType.TextHandleMove)
@@ -152,7 +150,6 @@ fun MiniPlayerCustomizationSheet(
                     HorizontalDivider(thickness = 0.5.dp, color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.3f))
                     MiniPlayerToggleRow(
                         title = "Swipe to Skip",
-                        subtitle = "Swipe horizontally on the mini player pill to skip forward or backward",
                         checked = swipeToPlayNext,
                         onCheckedChange = {
                             haptic.performHapticFeedback(HapticFeedbackType.TextHandleMove)
@@ -206,12 +203,6 @@ fun MiniPlayerCustomizationSheet(
                             style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold),
                             color = MaterialTheme.colorScheme.onSurface,
                         )
-                        Spacer(Modifier.height(2.dp))
-                        Text(
-                            text = "Tonal container (24dp rounded corners) positioned above the detached navigation dock",
-                            style = MaterialTheme.typography.bodySmall,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant,
-                        )
                     }
                 }
             }
@@ -224,7 +215,7 @@ fun MiniPlayerCustomizationSheet(
 @Composable
 private fun MiniPlayerToggleRow(
     title: String,
-    subtitle: String,
+    subtitle: String? = null,
     checked: Boolean,
     onCheckedChange: (Boolean) -> Unit,
 ) {
@@ -241,12 +232,14 @@ private fun MiniPlayerToggleRow(
                 style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Medium),
                 color = MaterialTheme.colorScheme.onSurface,
             )
-            Spacer(Modifier.height(2.dp))
-            Text(
-                text = subtitle,
-                style = MaterialTheme.typography.bodySmall,
-                color = MaterialTheme.colorScheme.onSurfaceVariant,
-            )
+            if (!subtitle.isNullOrBlank()) {
+                Spacer(Modifier.height(2.dp))
+                Text(
+                    text = subtitle,
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                )
+            }
         }
         Spacer(Modifier.width(12.dp))
         Switch(

@@ -273,10 +273,11 @@ fun Modifier.liquidGlass(
     val dark = isSystemInDarkTheme()
     val reduceDynamicBlur by AppSettings.reduceDynamicBlur.collectAsStateWithLifecycle()
     val progressiveBlur by AppSettings.progressiveBlur.collectAsStateWithLifecycle()
+    val frostedGlass by AppSettings.frostedGlass.collectAsStateWithLifecycle()
 
     val fill = Brush.verticalGradient(
         colors = if (dark) {
-            listOf(Color(0xFF242426).copy(alpha = 0.44f), Color(0xFF1C1C1E).copy(alpha = 0.52f))
+            listOf(Color(0xFF242426).copy(alpha = if (frostedGlass) 0.60f else 0.44f), Color(0xFF1C1C1E).copy(alpha = if (frostedGlass) 0.68f else 0.52f))
         } else {
             listOf(Color.White.copy(alpha = 0.92f), Color.White.copy(alpha = 0.66f))
         },
@@ -303,7 +304,9 @@ fun Modifier.liquidGlass(
             .clip(shape)
             .background(fill)
             .then(
-                if (surfaceTint != null) {
+                if (frostedGlass) {
+                    Modifier.background(if (dark) Color.White.copy(alpha = 0.08f) else Color.White.copy(alpha = 0.35f))
+                } else if (surfaceTint != null) {
                     Modifier.background(surfaceTint)
                 } else Modifier
             )
@@ -315,7 +318,11 @@ fun Modifier.liquidGlass(
     val exportedBackdrop = LocalGlassExport.current
     val density = LocalDensity.current
     val resolutionScale = GLASS_RESOLUTION_SCALE
-    val blurRadiusDp = if (progressiveBlur) 20f else BLUR_RADIUS_DP
+    val blurRadiusDp = when {
+        frostedGlass -> 32f
+        progressiveBlur -> 20f
+        else -> BLUR_RADIUS_DP
+    }
     val blurPx = with(density) { blurRadiusDp.dp.toPx() } * resolutionScale
     val lensHeightPx = with(density) { (LENS_HEIGHT * LENS_MAX_DP).dp.toPx() } * resolutionScale
     val lensAmountPx = with(density) { (LENS_AMOUNT * LENS_MAX_DP).dp.toPx() } * resolutionScale
@@ -325,14 +332,14 @@ fun Modifier.liquidGlass(
             backdrop = backdrop,
             shape = { shape },
             effects = {
-                colorControls(saturation = 1.6f)
+                colorControls(saturation = if (frostedGlass) 1.25f else 1.6f)
                 blur(blurPx)
                 if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
                     lens(
                         refractionHeight = lensHeightPx,
                         refractionAmount = lensAmountPx,
                         depthEffect = true,
-                        chromaticAberration = true,
+                        chromaticAberration = !frostedGlass,
                     )
                 }
             },
@@ -340,7 +347,9 @@ fun Modifier.liquidGlass(
             shadow = { Shadow.Default },
             onDrawSurface = {
                 drawRect(fill)
-                if (surfaceTint != null) {
+                if (frostedGlass) {
+                    drawRect(if (dark) Color.White.copy(alpha = 0.08f) else Color.White.copy(alpha = 0.35f))
+                } else if (surfaceTint != null) {
                     drawRect(surfaceTint)
                 }
                 drawRect(sheen)

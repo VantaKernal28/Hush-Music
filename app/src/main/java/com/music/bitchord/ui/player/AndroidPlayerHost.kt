@@ -99,12 +99,15 @@ class AndroidPlayerHost(context: Context) : PlayerHost {
         override val translationLanguage get() = AppSettings.translationLanguage
         override val versionAlignmentInProgress get() = AppSettings.versionAlignmentInProgress
         override val expressiveUiEnabled get() = AppSettings.expressiveUiEnabled
+        override val progressLineStyle get() = AppSettings.progressLineStyle
 
         override fun setLastPlayerScreen(value: LastPlayerScreen) = AppSettings.setLastPlayerScreen(value)
         override fun setLyricsOffsetMs(value: Int) = AppSettings.setLyricsOffsetMs(value)
         override fun setMixViewOpen(open: Boolean) {
             AppSettings.mixViewOpen.value = open
         }
+        override fun setProgressLineStyle(value: com.music.bitchord.data.settings.ProgressLineStyle) =
+            AppSettings.setProgressLineStyle(value)
     }
 
     override fun cachedCanvas(song: Song): CanvasArtwork? = CanvasRepository.cached(song)
