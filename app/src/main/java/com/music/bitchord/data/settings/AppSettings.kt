@@ -560,6 +560,8 @@ object AppSettings {
      * Blurs what scrolls under the status bar and the top controls, easing out
      * just below them, instead of fading it to the page colour. A Liquid Glass
      * option, honoured only while [liquidGlass] is on. Off by default: it costs
+     * frames. Reduce dynamic blur overrides it.
+     */
     val progressiveBlur = MutableStateFlow(false)
 
     /** Frosted glass translucency with rich tactile blur and light frost tint. */
