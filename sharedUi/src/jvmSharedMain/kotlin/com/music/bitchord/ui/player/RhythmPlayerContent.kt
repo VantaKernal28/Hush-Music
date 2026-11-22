@@ -161,6 +161,8 @@ fun RhythmPlayerContent(
     val dockGlass = Color.White.copy(alpha = 0.12f)
     val activeDockContainer = primaryAccent
     val activeDockContent = playBtnContent
+    val accentBg = primaryAccent
+    val accentFg = playBtnContent
 
     var isScrubbing by remember { mutableStateOf(false) }
     var scrubProgress by remember { mutableFloatStateOf(0f) }
