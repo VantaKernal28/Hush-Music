@@ -41,7 +41,11 @@ import androidx.compose.material3.OutlinedTextFieldDefaults
 import androidx.compose.material3.Text
 import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import com.music.bitchord.data.YtMusicRepository
+import com.music.bitchord.data.model.SearchFilter
+import com.music.bitchord.data.model.SearchResult
 import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -116,7 +120,35 @@ fun AiPlaylistMakerSheet(
             isLiveAiCurated = false
 
             val targetPrompt = if (query.isNotBlank()) query.trim() else vibeName
-            val candidates = availableSongs.take(45)
+
+            // Step 0: Ensure rich candidate pool by querying YouTube Music when candidates are low or matching
+            val onlineCandidates = withContext(Dispatchers.IO) {
+                try {
+                    val searchQuery = when (vibeName) {
+                        "Workout Energy" -> "workout gym high energy motivation hits"
+                        "Late Night Chill" -> "late night chill lofi r&b relax songs"
+                        "Carnatic & Classical" -> "carnatic classical ragam songs hits"
+                        "Indian Cinema Hits" -> "indian cinema songs hits tamil telugu hindi"
+                        "Deep Focus & Beats" -> "deep focus study beats instrumental lofi"
+                        "Indie & Acoustic" -> "indie acoustic guitar songs hits"
+                        "Nostalgia Rewind" -> "classic 90s 2000s throwback hits"
+                        "Melancholy Moods" -> "sad emotional slow songs hits"
+                        "Party & Dance" -> "party dance edm club banger hits"
+                        "Morning Acoustic" -> "morning acoustic coffee sunshine songs"
+                        else -> "$targetPrompt music hits"
+                    }
+                    val finalSearch = if (query.isNotBlank()) query.trim() else searchQuery
+                    YtMusicRepository.search(finalSearch, SearchFilter.SONGS)
+                        .getOrDefault(emptyList())
+                        .filterIsInstance<SearchResult.Track>()
+                        .map { it.song }
+                } catch (_: Throwable) {
+                    emptyList()
+                }
+            }
+
+            val allCandidates = (availableSongs + onlineCandidates).distinctBy { it.videoId }
+            val candidates = allCandidates.take(45)
 
             // Step 1: Query online free open-source AI inference for realtime curation
             val aiSelectedIndices = withContext(Dispatchers.IO) {
@@ -151,7 +183,7 @@ fun AiPlaylistMakerSheet(
                         readTimeout = 7000
                         doOutput = true
                         setRequestProperty("Content-Type", "application/json")
-                        setRequestProperty("User-Agent", "HushMusic/1.3")
+                        setRequestProperty("User-Agent", "HushMusic/1.0")
                     }
 
                     conn.outputStream.use { os ->
@@ -194,7 +226,7 @@ fun AiPlaylistMakerSheet(
                 )
 
                 // Pass 1: Semantic relevance scoring
-                val scored = availableSongs.map { song ->
+                val scored = allCandidates.map { song ->
                     val titleLower = song.title.lowercase(Locale.ROOT)
                     val artistLower = song.artist.lowercase(Locale.ROOT)
                     val albumLower = song.albumName?.lowercase(Locale.ROOT).orEmpty()
@@ -230,7 +262,7 @@ fun AiPlaylistMakerSheet(
                 }
 
                 val finalSelection = (diverseList + deferredList).distinctBy { it.videoId }
-                if (finalSelection.size >= 10) finalSelection.take(24) else availableSongs.shuffled().take(20).distinctBy { it.videoId }
+                if (finalSelection.size >= 10) finalSelection.take(24) else allCandidates.take(20).distinctBy { it.videoId }
             }
 
             curatedSongs.clear()
@@ -246,8 +278,8 @@ fun AiPlaylistMakerSheet(
     }
 
     // Auto-generate initial playlist on first show
-    remember {
-        if (!hasGenerated && availableSongs.isNotEmpty()) {
+    LaunchedEffect(Unit) {
+        if (!hasGenerated) {
             generatePlaylist(selectedVibe, "")
         }
     }

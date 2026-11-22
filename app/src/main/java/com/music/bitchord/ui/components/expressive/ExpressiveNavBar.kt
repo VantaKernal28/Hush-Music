@@ -1,8 +1,13 @@
 package com.music.bitchord.ui.components.expressive
 
+import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.animateColorAsState
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.spring
+import androidx.compose.animation.expandHorizontally
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.shrinkHorizontally
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
@@ -158,16 +163,22 @@ fun ExpressiveNavBar(
                                     },
                                     modifier = Modifier.size(24.dp),
                                 )
-                                if (isSelected) {
-                                    Spacer(Modifier.width(6.dp))
-                                    Text(
-                                        text = tab.label,
-                                        style = MaterialTheme.typography.labelLarge.copy(
-                                            fontWeight = FontWeight.Bold,
-                                        ),
-                                        color = MaterialTheme.colorScheme.onSecondaryContainer,
-                                        maxLines = 1,
-                                    )
+                                AnimatedVisibility(
+                                    visible = isSelected,
+                                    enter = fadeIn(spring(stiffness = 500f)) + expandHorizontally(spring(stiffness = 500f)),
+                                    exit = fadeOut(spring(stiffness = 500f)) + shrinkHorizontally(spring(stiffness = 500f)),
+                                ) {
+                                    Row(verticalAlignment = Alignment.CenterVertically) {
+                                        Spacer(Modifier.width(6.dp))
+                                        Text(
+                                            text = tab.label,
+                                            style = MaterialTheme.typography.labelLarge.copy(
+                                                fontWeight = FontWeight.Bold,
+                                            ),
+                                            color = MaterialTheme.colorScheme.onSecondaryContainer,
+                                            maxLines = 1,
+                                        )
+                                    }
                                 }
                             }
                         }

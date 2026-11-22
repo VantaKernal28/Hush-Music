@@ -359,8 +359,17 @@ fun GlassNavBar(
                             )
                             .padding(horizontal = PILL_INSET, vertical = PILL_INSET),
                     ) {
-                        // Fluid Sliding Glass / Solid Selection Pill
+                        // Fluid Sliding Convex Droplet Glass / Solid Selection Pill (video_2.mp4)
                         if (tabWidthPx > 0f) {
+                            val chromaticBorder = remember {
+                                Brush.sweepGradient(
+                                    0.0f to Color(0xFFFF416C).copy(alpha = 0.60f),
+                                    0.25f to Color(0xFFFFB300).copy(alpha = 0.50f),
+                                    0.50f to Color(0xFF00E5FF).copy(alpha = 0.65f),
+                                    0.75f to Color(0xFF7C4DFF).copy(alpha = 0.55f),
+                                    1.0f to Color(0xFFFF416C).copy(alpha = 0.60f),
+                                )
+                            }
                             Box(
                                 modifier = Modifier
                                     .width(with(density) { tabWidthPx.toDp() })
@@ -372,10 +381,23 @@ fun GlassNavBar(
                                     }
                                     .clip(pillShape)
                                     .then(
-                                        if (useGlass) {
+                                        if (useGlass && !reduceDynamicBlur) {
                                             Modifier
-                                                .background(Color.White.copy(alpha = if (MaterialTheme.colorScheme.surface.luminance() > 0.5f) 0.35f else 0.16f))
-                                                .border(1.dp, Color.White.copy(alpha = 0.22f), pillShape)
+                                                .liquidGlass(
+                                                    shape = pillShape,
+                                                    surfaceTint = Color.White.copy(
+                                                        alpha = if (MaterialTheme.colorScheme.surface.luminance() > 0.5f) 0.28f else 0.12f,
+                                                    ),
+                                                )
+                                                .border(1.2.dp, chromaticBorder, pillShape)
+                                        } else if (useGlass) {
+                                            Modifier
+                                                .background(
+                                                    Color.White.copy(
+                                                        alpha = if (MaterialTheme.colorScheme.surface.luminance() > 0.5f) 0.35f else 0.16f,
+                                                    ),
+                                                )
+                                                .border(1.2.dp, chromaticBorder, pillShape)
                                         } else {
                                             Modifier.background(MaterialTheme.colorScheme.primaryContainer)
                                         }

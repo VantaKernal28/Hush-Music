@@ -192,7 +192,7 @@ fun AboutSheet(
                             )
                             Spacer(Modifier.height(6.dp))
                             Text(
-                                text = "Beta 1.3 / Test",
+                                text = "Hush Music 1.0",
                                 style = MaterialTheme.typography.titleMedium.copy(
                                     fontWeight = FontWeight.SemiBold,
                                     fontSize = 17.sp,
@@ -217,7 +217,7 @@ fun AboutSheet(
                                     )
                                     Spacer(Modifier.width(8.dp))
                                     Text(
-                                        text = "Hush Music is up to date.",
+                                        text = "Hush Music 1.0 is up to date.",
                                         style = MaterialTheme.typography.labelMedium.copy(
                                             fontWeight = FontWeight.SemiBold,
                                         ),
@@ -251,7 +251,7 @@ fun AboutSheet(
                                 color = Color.White,
                             )
                             Text(
-                                text = "Beta 1.3 (Test)",
+                                text = "1.0 (Production Release)",
                                 style = MaterialTheme.typography.bodyMedium,
                                 color = MaterialTheme.colorScheme.onSurfaceVariant,
                             )

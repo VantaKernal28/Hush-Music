@@ -156,7 +156,13 @@ fun ExpressiveMiniPlayer(
             .clip(shape)
             .then(
                 if (materialUi) {
-                    Modifier.background(MaterialTheme.colorScheme.secondaryContainer)
+                    Modifier
+                        .background(MaterialTheme.colorScheme.surfaceContainerHigh)
+                        .border(
+                            width = 1.dp,
+                            color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.25f),
+                            shape = shape,
+                        )
                 } else {
                     Modifier
                         .hazeEffect(

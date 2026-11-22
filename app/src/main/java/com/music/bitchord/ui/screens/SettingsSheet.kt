@@ -816,7 +816,6 @@ fun SettingsScreen(
                     SettingsRow(
                         icon = SfIcons.Wifi,
                         title = onWifiTitle,
-                        subtitle = "Streaming fidelity when connected to Wi-Fi networks",
                         badge = stringResource(R.string.in_use).takeIf { metered == false },
                         value = wifiQuality.localizedLabel(),
                         onClick = { onOpenChoice(SettingsChoiceKind.AUDIO_QUALITY_WIFI) },
@@ -827,7 +826,6 @@ fun SettingsScreen(
                     SettingsRow(
                         icon = SfIcons.SignalCellularAlt,
                         title = onMobileDataTitle,
-                        subtitle = "Streaming fidelity and data budget on cellular connections",
                         badge = stringResource(R.string.in_use).takeIf { metered == true },
                         value = cellularQuality.localizedLabel(),
                         onClick = { onOpenChoice(SettingsChoiceKind.AUDIO_QUALITY_CELLULAR) },
@@ -849,13 +847,7 @@ fun SettingsScreen(
                         SettingsRow(
                             iconPainter = painterResource(R.drawable.ic_dolby_atmos),
                             title = dolbyAtmosTitle,
-                            subtitle = stringResource(
-                                if (dolbyAtmosSupported) {
-                                    R.string.dolby_atmos_subtitle
-                                } else {
-                                    R.string.dolby_atmos_unavailable
-                                },
-                            ),
+                            subtitle = if (!dolbyAtmosSupported) stringResource(R.string.dolby_atmos_unavailable) else null,
                             enabled = dolbyAtmosSupported,
                             trailing = {
                                 IosSwitch(
@@ -2233,18 +2225,6 @@ fun SettingsScreen(
             }
         }
 
-        if (section == null) SearchableSettingsGroup(search, header = "System & About") {
-            val aboutTitle = "About Hush Music"
-            row(aboutTitle, "version", "system", "credits", "developer", "phoenix", "dhruv", "device", "changelog") {
-                SettingsRow(
-                    icon = SfIcons.Info,
-                    title = aboutTitle,
-                    subtitle = "Hush Music $version • Beta 1.3 / Test",
-                    onClick = { showAboutSheet = true },
-                )
-            }
-        }
-
         // Read after every group above has had its turn at the query, which is
         // what makes this an accurate "nothing here" rather than a guess.
         if (searching && !search.anyMatch) {
@@ -2262,7 +2242,7 @@ fun SettingsScreen(
                 horizontalAlignment = Alignment.CenterHorizontally,
             ) {
                 Text(
-                    text = "Hush Music $version",
+                    text = "Hush Music 1.0",
                     style = MaterialTheme.typography.labelMedium,
                     fontWeight = FontWeight.SemiBold,
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
@@ -2270,7 +2250,7 @@ fun SettingsScreen(
                 )
                 Spacer(Modifier.height(4.dp))
                 Text(
-                    text = "Based on BitChord • Tap for Details",
+                    text = "Production Release • Tap for Details",
                     style = MaterialTheme.typography.labelSmall,
                     color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.55f),
                     textAlign = TextAlign.Center,
@@ -3353,142 +3333,101 @@ private fun SettingsCategoryList(
     onOpenMiniPlayer: () -> Unit = {},
     onOpenAbout: () -> Unit = {},
 ) {
-    val materialUiMode by AppSettings.materialUiMode.collectAsStateWithLifecycle()
+    // Unified clean categorized hierarchy matching 20366.jpg & 20386.jpg (Zero Subtitles)
+    // 1. LOOK & FEEL
+    SettingsGroup(header = "LOOK & FEEL", topSpacing = 12.dp) {
+        SettingsRow(
+            icon = HushIcons.Paintbrush,
+            iconBadgeColor = Color(0xFFC084FC),
+            title = "Theme",
+            onClick = { onOpen(SettingsCategory.APPEARANCE) },
+        )
+        RowDivider()
+        SettingsRow(
+            icon = Icons.Rounded.Draw,
+            iconBadgeColor = Color(0xFFF472B6),
+            title = "Shapes",
+            onClick = onOpenShapes,
+        )
+        RowDivider()
+        SettingsRow(
+            icon = HushIcons.Headphones,
+            iconBadgeColor = Color(0xFF60A5FA),
+            title = "Player",
+            onClick = onOpenPlayer,
+        )
+        RowDivider()
+        SettingsRow(
+            icon = Icons.Rounded.Animation,
+            iconBadgeColor = Color(0xFFE879F9),
+            title = "Mini Player",
+            onClick = onOpenMiniPlayer,
+        )
+    }
 
-    if (!materialUiMode) {
-        // Classic BitChord single-card group
-        SettingsGroup {
-            SettingsCategory.entries.forEachIndexed { index, category ->
-                if (index > 0) RowDivider()
-                val categorySubtitle = when (category) {
-                    SettingsCategory.APPEARANCE -> "Theme, accent color, font & motion effects"
-                    SettingsCategory.PLAYBACK -> "Equalizer, loudness normalization, crossfade & automix"
-                    SettingsCategory.CONTENT_PREFERENCES -> "Home screen moods, top picks & recents"
-                    SettingsCategory.DOWNLOADS -> "Offline storage directory, quality & audio cache"
-                    SettingsCategory.LOCAL_MUSIC -> "Internal device storage, folders & library index"
-                    SettingsCategory.PERFORMANCE -> "Refresh rate, animation scale & blur effects"
-                    SettingsCategory.STORAGE -> "Clear cache, local database & offline tracks"
-                    SettingsCategory.YOUR_DATA -> "Export & import backup, listening history"
-                    SettingsCategory.MISCELLANEOUS -> "Debug stats, crash reporting & updater"
-                    SettingsCategory.LANGUAGE -> "App interface & display language"
-                }
-                SettingsRow(
-                    icon = category.icon,
-                    title = stringResource(category.title),
-                    subtitle = categorySubtitle,
-                    onClick = { onOpen(category) },
-                )
-            }
-        }
-    } else {
-        // Exact Rhythm M3E hierarchy matching video_3.mp4 f_001.png
-        // 1. LOOK & FEEL
-        SettingsGroup(header = "LOOK & FEEL", topSpacing = 12.dp) {
-            SettingsRow(
-                icon = HushIcons.Paintbrush,
-                iconBadgeColor = Color(0xFFC084FC),
-                title = "Theme",
-                subtitle = "Dark mode, accent colors, and fonts",
-                onClick = { onOpen(SettingsCategory.APPEARANCE) },
-            )
-            RowDivider()
-            SettingsRow(
-                icon = Icons.Rounded.Draw,
-                iconBadgeColor = Color(0xFFF472B6),
-                title = "Shapes",
-                subtitle = "Custom shapes for artwork and controls",
-                onClick = onOpenShapes,
-            )
-            RowDivider()
-            SettingsRow(
-                icon = HushIcons.Headphones,
-                iconBadgeColor = Color(0xFF60A5FA),
-                title = "Player",
-                subtitle = "Player layout, controls, and progress bar",
-                onClick = onOpenPlayer,
-            )
-            RowDivider()
-            SettingsRow(
-                icon = Icons.Rounded.Animation,
-                iconBadgeColor = Color(0xFFE879F9),
-                title = "Mini Player",
-                subtitle = "Mini player style and controls",
-                onClick = onOpenMiniPlayer,
-            )
-        }
+    // 2. Home & Widgets
+    SettingsGroup(header = "Home & Widgets", topSpacing = 14.dp) {
+        SettingsRow(
+            icon = HushIcons.Display,
+            iconBadgeColor = Color(0xFFFB923C),
+            title = "Home",
+            onClick = { onOpen(SettingsCategory.CONTENT_PREFERENCES) },
+        )
+        RowDivider()
+        SettingsRow(
+            icon = Icons.Rounded.Extension,
+            iconBadgeColor = Color(0xFF2DD4BF),
+            title = "Widget",
+            onClick = { onOpen(SettingsCategory.PERFORMANCE) },
+        )
+    }
 
-        // 2. Home & Widgets
-        SettingsGroup(header = "Home & Widgets", topSpacing = 14.dp) {
-            SettingsRow(
-                icon = HushIcons.Display,
-                iconBadgeColor = Color(0xFFFB923C),
-                title = "Home",
-                subtitle = "Quick actions, recent music",
-                onClick = { onOpen(SettingsCategory.CONTENT_PREFERENCES) },
-            )
-            RowDivider()
-            SettingsRow(
-                icon = Icons.Rounded.Extension,
-                iconBadgeColor = Color(0xFF2DD4BF),
-                title = "Widget",
-                subtitle = "Desktop widgets & quick launcher",
-                onClick = { onOpen(SettingsCategory.PERFORMANCE) },
-            )
-        }
+    // 3. Storage & Data
+    SettingsGroup(header = "Storage & Data", topSpacing = 14.dp) {
+        SettingsRow(
+            icon = HushIcons.DownloadsBox,
+            iconBadgeColor = Color(0xFF38BDF8),
+            title = stringResource(R.string.downloads),
+            onClick = { onOpen(SettingsCategory.DOWNLOADS) },
+        )
+        RowDivider()
+        SettingsRow(
+            icon = HushIcons.Folder,
+            iconBadgeColor = Color(0xFF34D399),
+            title = stringResource(R.string.local_music),
+            onClick = { onOpen(SettingsCategory.LOCAL_MUSIC) },
+        )
+        RowDivider()
+        SettingsRow(
+            icon = Icons.Rounded.History,
+            iconBadgeColor = Color(0xFF22D3EE),
+            title = stringResource(R.string.your_data),
+            onClick = { onOpen(SettingsCategory.YOUR_DATA) },
+        )
+    }
 
-        // 3. Storage & Data
-        SettingsGroup(header = "Storage & Data", topSpacing = 14.dp) {
-            SettingsRow(
-                icon = HushIcons.DownloadsBox,
-                iconBadgeColor = Color(0xFF38BDF8),
-                title = stringResource(R.string.downloads),
-                subtitle = "Offline storage directory, quality & audio cache",
-                onClick = { onOpen(SettingsCategory.DOWNLOADS) },
-            )
-            RowDivider()
-            SettingsRow(
-                icon = HushIcons.Folder,
-                iconBadgeColor = Color(0xFF34D399),
-                title = stringResource(R.string.local_music),
-                subtitle = "Internal device storage, folders & library index",
-                onClick = { onOpen(SettingsCategory.LOCAL_MUSIC) },
-            )
-            RowDivider()
-            SettingsRow(
-                icon = Icons.Rounded.History,
-                iconBadgeColor = Color(0xFF22D3EE),
-                title = stringResource(R.string.your_data),
-                subtitle = "Export & import backup, listening history",
-                onClick = { onOpen(SettingsCategory.YOUR_DATA) },
-            )
-        }
-
-        // 4. System & About
-        SettingsGroup(header = "System & About", topSpacing = 14.dp) {
-            SettingsRow(
-                icon = HushIcons.Gear,
-                iconBadgeColor = Color(0xFF4ADE80),
-                title = stringResource(R.string.performance),
-                subtitle = "Refresh rate, animation scale & blur effects",
-                onClick = { onOpen(SettingsCategory.PERFORMANCE) },
-            )
-            RowDivider()
-            SettingsRow(
-                icon = Icons.Rounded.Language,
-                iconBadgeColor = Color(0xFF818CF8),
-                title = stringResource(R.string.language),
-                subtitle = "App interface & display language",
-                onClick = { onOpen(SettingsCategory.LANGUAGE) },
-            )
-            RowDivider()
-            SettingsRow(
-                icon = Icons.Rounded.AutoAwesome,
-                iconBadgeColor = Color(0xFFA78BFA),
-                title = "About Hush Music",
-                subtitle = "Version, changelog, architecture & lead developers",
-                onClick = onOpenAbout,
-            )
-        }
+    // 4. System & About
+    SettingsGroup(header = "System & About", topSpacing = 14.dp) {
+        SettingsRow(
+            icon = HushIcons.Gear,
+            iconBadgeColor = Color(0xFF4ADE80),
+            title = stringResource(R.string.performance),
+            onClick = { onOpen(SettingsCategory.PERFORMANCE) },
+        )
+        RowDivider()
+        SettingsRow(
+            icon = Icons.Rounded.Language,
+            iconBadgeColor = Color(0xFF818CF8),
+            title = stringResource(R.string.language),
+            onClick = { onOpen(SettingsCategory.LANGUAGE) },
+        )
+        RowDivider()
+        SettingsRow(
+            icon = Icons.Rounded.AutoAwesome,
+            iconBadgeColor = Color(0xFFA78BFA),
+            title = "About Hush Music",
+            onClick = onOpenAbout,
+        )
     }
 }
 

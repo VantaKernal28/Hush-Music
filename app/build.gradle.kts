@@ -261,7 +261,7 @@ android {
 
     applicationVariants.all {
         val variant = this
-        val vName = (variant.versionName ?: "1.3-beta").removePrefix("v").removePrefix("V").replace(" ", "-").lowercase()
+        val vName = (variant.versionName ?: "1.0").removePrefix("v").removePrefix("V").replace(" ", "-").lowercase()
         val buildType = variant.buildType.name.lowercase()
         val flavor = if (variant.flavorName == "prod" || variant.flavorName.isNullOrEmpty()) "" else "-${variant.flavorName.lowercase()}"
 

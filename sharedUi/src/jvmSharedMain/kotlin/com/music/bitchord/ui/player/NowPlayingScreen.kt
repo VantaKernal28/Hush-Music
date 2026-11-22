@@ -2849,7 +2849,7 @@ fun NowPlayingScreen(
                             .padding(horizontal = PLAYER_GUTTER),
                         horizontalAlignment = Alignment.CenterHorizontally,
                     ) {
-                    if (materialUi && !lyricsOpen && !queueOpen) {
+                    if (materialUi) {
                         RhythmPlayerContent(
                             song = song,
                             isPlaying = isPlaying,
@@ -2862,10 +2862,20 @@ fun NowPlayingScreen(
                             onNext = onNext,
                             onPrevious = onPrevious,
                             onSeekFraction = onSeekFraction,
-                            onOpenLyrics = openLyrics,
-                            onOpenQueue = toggleQueue,
-                            onOpenAudioOutput = openAudioOutput,
+                            queue = queue,
+                            queueIndex = queueIndex,
+                            repeatMode = repeatMode,
+                            shuffleEnabled = shuffleEnabled,
+                            onToggleShuffle = onToggleShuffle,
+                            onCycleRepeat = onCycleRepeat,
+                            onJumpTo = onJumpTo,
+                            onRemoveFromQueue = onRemoveFromQueue,
+                            onClearQueue = onClearQueue,
                             onOpenMenu = onOpenMenu,
+                            onOpenAlbum = { song.albumId?.let { onOpenAlbum(it) } },
+                            onOpenArtist = { onOpenArtist(song.artistId, song.artist) },
+                            lyrics = lyrics,
+                            lyricsUnavailable = lyricsUnavailable,
                             modifier = Modifier.fillMaxSize(),
                         )
                     } else {

@@ -10,6 +10,13 @@ import com.music.bitchord.ui.components.expressive.m3eBreathing
 import com.music.bitchord.ui.components.expressive.expressiveClickable
 import com.music.bitchord.ui.components.expressive.m3eSquish
 import com.music.bitchord.ui.components.expressive.AnimatedEqualizerIndicator
+import androidx.compose.animation.core.rememberInfiniteTransition
+import androidx.compose.animation.core.animateFloat
+import androidx.compose.animation.core.infiniteRepeatable
+import androidx.compose.animation.core.tween
+import androidx.compose.animation.core.LinearEasing
+import androidx.compose.animation.core.RepeatMode
+import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.foundation.border
 import com.music.bitchord.ui.haptics.Haptic
 import com.music.bitchord.ui.haptics.rememberHaptics
@@ -1194,26 +1201,52 @@ internal fun ShelfCard(
             )
             else -> {
                 val isRot = isM3E && M3EShapes.isRotational(itemKey)
+                val rotAngle = if (isRot) {
+                    val infiniteTransition = rememberInfiniteTransition(label = "m3eShapeRotation")
+                    infiniteTransition.animateFloat(
+                        initialValue = 0f,
+                        targetValue = 360f,
+                        animationSpec = infiniteRepeatable(
+                            animation = tween(durationMillis = 32000, easing = LinearEasing),
+                            repeatMode = RepeatMode.Restart,
+                        ),
+                        label = "rotationAngle",
+                    ).value
+                } else 0f
+
                 Box(
                     modifier = Modifier
                         .fillMaxWidth()
                         .aspectRatio(1f)
-                        .then(if (isRot) Modifier.m3eRotating(durationMs = 32000) else Modifier)
+                        .graphicsLayer {
+                            if (isRot) rotationZ = rotAngle
+                        }
                         .clip(cardShape)
-                        .thumbnailBorder(cardShape)
-                        .background(MaterialTheme.colorScheme.surfaceVariant),
+                        .thumbnailBorder(cardShape),
                 ) {
                     AsyncImage(
                         model = item.thumbnailUrl.artworkAt(CARD_ART_PX),
                         contentDescription = null,
                         contentScale = androidx.compose.ui.layout.ContentScale.Crop,
-                        modifier = Modifier.fillMaxSize(),
+                        modifier = Modifier
+                            .fillMaxSize()
+                            .graphicsLayer {
+                                if (isRot) {
+                                    rotationZ = -rotAngle
+                                    scaleX = 1.35f
+                                    scaleY = 1.35f
+                                }
+                            },
                     )
                     if (isCurrent && isPlaying) {
                         if (isM3E) {
                             AnimatedEqualizerIndicator(
                                 tint = MaterialTheme.colorScheme.primary,
-                                modifier = Modifier.align(Alignment.Center),
+                                modifier = Modifier
+                                    .align(Alignment.Center)
+                                    .graphicsLayer {
+                                        if (isRot) rotationZ = -rotAngle
+                                    },
                             )
                         } else {
                             SearchPlayingBars(Modifier.align(Alignment.Center))
