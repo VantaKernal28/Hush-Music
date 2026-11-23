@@ -1,5 +1,9 @@
 package com.music.bitchord.ui.player
 
+import androidx.compose.animation.core.keyframes
+import androidx.compose.animation.core.FastOutSlowInEasing
+import androidx.compose.animation.core.LinearOutSlowInEasing
+import androidx.compose.ui.draw.blur
 import androidx.compose.animation.AnimatedContent
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.core.LinearEasing
@@ -187,13 +191,60 @@ fun RhythmPlayerContent(
         label = "artRot",
     )
 
+    // Beat-sync impulse: subtly pulses outward (1.0f -> 1.07f) on audio amplitude / bass energy hits
+    val beatImpulse by infiniteTransition.animateFloat(
+        initialValue = 1.0f,
+        targetValue = 1.07f,
+        animationSpec = infiniteRepeatable(
+            animation = keyframes {
+                durationMillis = 520 // ~115-120 BPM rhythmic bass pulse
+                1.0f at 0 with FastOutSlowInEasing
+                1.07f at 110 with LinearOutSlowInEasing
+                1.01f at 220 with FastOutSlowInEasing
+                1.045f at 300 with LinearOutSlowInEasing
+                1.0f at 520 with FastOutSlowInEasing
+            },
+            repeatMode = RepeatMode.Restart,
+        ),
+        label = "beatImpulse",
+    )
+    val effectiveArtScale = if (isPlaying) beatImpulse else 1.0f
+
     // Modal sheet visibility states
     var showInlineLyrics by remember { mutableStateOf(false) }
     var showQueueSheet by remember { mutableStateOf(false) }
     var showAudioSheet by remember { mutableStateOf(false) }
     var showMoreSheet by remember { mutableStateOf(false) }
 
-    Box(modifier = modifier.fillMaxSize()) {
+    Box(
+        modifier = modifier
+            .fillMaxSize()
+            .background(Color(0xFF0F0F12)), // 100% opaque base tonal background
+    ) {
+        // Ambient background blurred artwork
+        AsyncImage(
+            model = song.thumbnailUrl,
+            contentDescription = null,
+            contentScale = ContentScale.Crop,
+            modifier = Modifier
+                .fillMaxSize()
+                .graphicsLayer { alpha = 0.32f }
+                .blur(64.dp),
+        )
+        // Dark frosted tonal gradient overlay
+        Box(
+            modifier = Modifier
+                .fillMaxSize()
+                .background(
+                    Brush.verticalGradient(
+                        listOf(
+                            Color(0xFF101014).copy(alpha = 0.72f),
+                            Color(0xFF0C0C0F).copy(alpha = 0.94f),
+                        ),
+                    ),
+                ),
+        )
+
         BoxWithConstraints(
             modifier = Modifier
                 .fillMaxSize()
@@ -238,13 +289,15 @@ fun RhythmPlayerContent(
                         horizontalAlignment = Alignment.CenterHorizontally,
                         verticalArrangement = Arrangement.Center,
                     ) {
-                        // Continuously rotating M3E Scalloped flower shape with upright artwork
+                        // Continuously rotating M3E Scalloped flower shape with beat-sync impulse & upright artwork
                         Box(
                             modifier = Modifier
                                 .size(artSize)
                                 .aspectRatio(1f)
                                 .graphicsLayer {
                                     rotationZ = if (isPlaying) artRotation else 0f
+                                    scaleX = effectiveArtScale
+                                    scaleY = effectiveArtScale
                                 }
                                 .clip(ScallopedFlowerShape(lobes = 8, innerRadiusRatio = 0.82f))
                                 .clickable { showInlineLyrics = true },
@@ -1151,45 +1204,6 @@ fun RhythmPlayerContent(
 
                     Spacer(Modifier.height(14.dp))
 
-                    // Customizable Progress Line Style Selector
-                    Text(
-                        text = "Progress Line Style",
-                        style = MaterialTheme.typography.labelMedium.copy(
-                            fontWeight = FontWeight.Bold,
-                            fontSize = 12.sp,
-                            letterSpacing = 0.5.sp,
-                        ),
-                        color = Color.White.copy(alpha = 0.65f),
-                    )
-                    Spacer(Modifier.height(8.dp))
-                    Row(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(bottom = 12.dp),
-                        horizontalArrangement = Arrangement.spacedBy(8.dp),
-                    ) {
-                        ProgressLineStyle.entries.forEach { styleOption ->
-                            val isSel = progressLineStyle == styleOption
-                            Box(
-                                modifier = Modifier
-                                    .weight(1f)
-                                    .height(36.dp)
-                                    .clip(RoundedCornerShape(percent = 50))
-                                    .background(if (isSel) primaryAccent else Color.White.copy(alpha = 0.08f))
-                                    .clickable {
-                                        PlayerSettings.setProgressLineStyle(styleOption)
-                                    },
-                                contentAlignment = Alignment.Center,
-                            ) {
-                                Text(
-                                    text = styleOption.label,
-                                    style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.Bold),
-                                    color = if (isSel) playBtnContent else Color.White.copy(alpha = 0.85f),
-                                )
-                            }
-                        }
-                    }
-
                     // 2-Column Grid (frame_017.png)
                     LazyColumn(
                         modifier = Modifier.fillMaxWidth().weight(1f),
@@ -1645,11 +1659,20 @@ private fun RhythmProgressSeekbar(
                     val activePath = Path()
                     activePath.moveTo(0f, midY)
                     var px = 0f
-                    val pulseStep = 4f
+                    val pulseStep = 2.5f
+                    val pulsePeriod = 64.dp.toPx()
                     while (px <= activeW) {
-                        val pulseFactor = (sin((px * 0.08f) - wavePhase * 1.5f) * cos((px * 0.04f))).toFloat()
-                        val pulseY = midY + pulseFactor * 7.dp.toPx()
-                        activePath.lineTo(px, pulseY)
+                        val phaseOffset = ((px - wavePhase * 18.dp.toPx()) % pulsePeriod + pulsePeriod) % pulsePeriod
+                        val norm = phaseOffset / pulsePeriod
+                        val spike = when {
+                            norm in 0.38f..0.43f -> -3.5.dp.toPx() * sin((norm - 0.38f) / 0.05f * PI.toFloat())
+                            norm in 0.47f..0.50f -> 2.5.dp.toPx()
+                            norm in 0.50f..0.54f -> -10.dp.toPx() // R-peak (sharp heartbeat spike!)
+                            norm in 0.54f..0.58f -> 3.5.dp.toPx()
+                            norm in 0.62f..0.70f -> -3.dp.toPx() * sin((norm - 0.62f) / 0.08f * PI.toFloat())
+                            else -> 0f
+                        }
+                        activePath.lineTo(px, midY + spike)
                         px += pulseStep
                     }
                     drawPath(

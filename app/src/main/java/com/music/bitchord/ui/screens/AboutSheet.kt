@@ -302,7 +302,7 @@ fun AboutSheet(
                             color = Color.White,
                         )
                         Text(
-                            text = "Beta 1.3 (Test) · release",
+                            text = "Hush Music 1.0 (Stable Release) · release",
                             style = MaterialTheme.typography.bodySmall,
                             color = MaterialTheme.colorScheme.onSurfaceVariant,
                         )
@@ -312,7 +312,7 @@ fun AboutSheet(
                         Spacer(Modifier.height(14.dp))
 
                         SpecsRow(label = "Architecture", value = Build.SUPPORTED_ABIS.firstOrNull() ?: "arm64-v8a")
-                        SpecsRow(label = "Commit", value = "0fe33aa (test)")
+                        SpecsRow(label = "Release", value = "Hush Music 1.0 (test)")
                         SpecsRow(label = "Package", value = "com.music.bitchord")
                         SpecsRow(label = "Android Version", value = "Android ${Build.VERSION.RELEASE} (API ${Build.VERSION.SDK_INT})")
                         SpecsRow(label = "Device", value = "${Build.MANUFACTURER} ${Build.MODEL}")
@@ -340,7 +340,7 @@ fun AboutSheet(
                         DeveloperCard(
                             name = "Phoenix",
                             handle = "@$PHOENIX_HANDLE",
-                            role = "Lead Developer & UI/UX Designer",
+                            role = "Lead Developer",
                             avatarUrl = PHOENIX_AVATAR,
                             onClick = { uriHandler.openUri(PHOENIX_URL) },
                         )
@@ -349,11 +349,11 @@ fun AboutSheet(
                         HorizontalDivider(color = Color.White.copy(alpha = 0.06f), thickness = 0.8.dp)
                         Spacer(Modifier.height(14.dp))
 
-                        // Dhruv
+                        // Dhruv Patil
                         DeveloperCard(
-                            name = "Dhruv",
+                            name = "Dhruv Patil",
                             handle = "@$DHRUV_HANDLE",
-                            role = "Core Audio & Architecture Lead",
+                            role = "Lead Developer & UI Designer",
                             avatarUrl = DHRUV_AVATAR,
                             onClick = { uriHandler.openUri(DHRUV_URL) },
                         )

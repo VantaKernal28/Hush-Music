@@ -28,8 +28,13 @@ import androidx.compose.animation.EnterTransition
 import androidx.compose.animation.ExitTransition
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.core.animateFloatAsState
+import androidx.compose.animation.core.spring
 import androidx.compose.animation.core.tween
 import androidx.compose.animation.fadeOut
+import androidx.compose.animation.scaleIn
+import androidx.compose.animation.scaleOut
+import androidx.compose.animation.slideInHorizontally
+import androidx.compose.animation.slideOutHorizontally
 import androidx.compose.animation.togetherWith
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -2900,7 +2905,18 @@ private fun BitChordApp(
                             (this as? AppDestination.Route)?.entry?.route is AppRoute.LibraryShowAll
                         val libraryShowAllSwap = (initial.isShowAll() && target == libraryTab) ||
                             (target.isShowAll() && initial == libraryTab)
-                        if (tabSwap || libraryShowAllSwap) {
+                        if (tabSwap && AppSettings.materialUiMode.value) {
+                            val forward = (target as AppDestination.Tab).index > (initial as AppDestination.Tab).index
+                            val slideOffset = 80
+                            (slideInHorizontally(spring(stiffness = 380f, dampingRatio = 0.82f)) { if (forward) slideOffset else -slideOffset } +
+                                fadeIn(tween(220)) +
+                                scaleIn(initialScale = 0.96f, animationSpec = spring(stiffness = 380f, dampingRatio = 0.82f)))
+                            .togetherWith(
+                                slideOutHorizontally(spring(stiffness = 380f, dampingRatio = 0.82f)) { if (forward) -slideOffset else slideOffset } +
+                                fadeOut(tween(180)) +
+                                scaleOut(targetScale = 0.96f, animationSpec = spring(stiffness = 380f, dampingRatio = 0.82f))
+                            )
+                        } else if (tabSwap || libraryShowAllSwap) {
                             EnterTransition.None togetherWith ExitTransition.None
                         } else {
                             fadeIn(tween(180)) togetherWith fadeOut(tween(180))

@@ -44,6 +44,7 @@ import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
@@ -631,47 +632,206 @@ private fun HomeTitle(
     }
     var selectedFilter by remember { mutableStateOf("All") }
 
-    Column(modifier = modifier.padding(horizontal = PAGE_GUTTER, vertical = 6.dp)) {
-        Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(bottom = 12.dp),
-            verticalAlignment = Alignment.CenterVertically,
-        ) {
-            Text(
-                text = fullGreeting,
-                style = MaterialTheme.typography.headlineMedium,
-                fontWeight = FontWeight.Bold,
-                color = MaterialTheme.colorScheme.onBackground,
-            )
-        }
+    val isM3E = LocalMaterialUiMode.current
 
-        val filters = listOf("All", "Music", "Podcasts", "Made For You")
-        Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(bottom = 10.dp),
-            horizontalArrangement = Arrangement.spacedBy(8.dp),
-        ) {
-            filters.forEach { filter ->
-                val active = selectedFilter == filter
+    if (isM3E) {
+        Column(modifier = modifier.padding(horizontal = PAGE_GUTTER, vertical = 6.dp)) {
+            // Ambient floating M3E shapes + Stacked "Your Mix" Expressive Display Title + Large Shuffle Circle Button
+            Box(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(bottom = 16.dp),
+            ) {
+                // Ambient floating M3E kinetic shapes in background
                 Box(
                     modifier = Modifier
-                        .clip(CircleShape)
-                        .background(
-                            if (active) MaterialTheme.colorScheme.primary
-                            else MaterialTheme.colorScheme.surfaceVariant
-                        )
-                        .clickable { selectedFilter = filter }
-                        .padding(horizontal = 16.dp, vertical = 7.dp),
+                        .size(110.dp)
+                        .align(Alignment.TopEnd)
+                        .offset(x = 18.dp, y = (-12).dp)
+                        .graphicsLayer { alpha = 0.08f }
+                        .m3eRotating(durationMs = 32000)
+                        .clip(M3EShapes.Scallop12)
+                        .background(MaterialTheme.colorScheme.primary),
+                )
+
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.CenterVertically,
                 ) {
-                    Text(
-                        text = filter,
-                        style = MaterialTheme.typography.labelLarge,
-                        fontWeight = if (active) FontWeight.Bold else FontWeight.Medium,
-                        color = if (active) MaterialTheme.colorScheme.onPrimary
-                        else MaterialTheme.colorScheme.onSurfaceVariant,
+                    Column {
+                        Text(
+                            text = "Your",
+                            style = MaterialTheme.typography.headlineMedium.copy(
+                                fontWeight = FontWeight.Bold,
+                                letterSpacing = (-0.5).sp,
+                            ),
+                            color = MaterialTheme.colorScheme.onBackground,
+                        )
+                        Text(
+                            text = "Mix",
+                            style = MaterialTheme.typography.displayMedium.copy(
+                                fontWeight = FontWeight.Black,
+                                letterSpacing = (-1).sp,
+                            ),
+                            color = MaterialTheme.colorScheme.primary,
+                        )
+                        Spacer(Modifier.height(2.dp))
+                        Text(
+                            text = "Today's Mix for you",
+                            style = MaterialTheme.typography.titleSmall.copy(fontWeight = FontWeight.Medium),
+                            color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        )
+                    }
+
+                    // Large Shuffle Circle Button (video_2.mp4)
+                    Box(
+                        modifier = Modifier
+                            .size(56.dp)
+                            .clip(CircleShape)
+                            .background(MaterialTheme.colorScheme.primary)
+                            .m3eSquish()
+                            .clickable { },
+                        contentAlignment = Alignment.Center,
+                    ) {
+                        Icon(
+                            imageVector = Icons.Rounded.Shuffle,
+                            contentDescription = "Shuffle",
+                            tint = MaterialTheme.colorScheme.onPrimary,
+                            modifier = Modifier.size(26.dp),
+                        )
+                    }
+                }
+            }
+
+            // "DAILY MIX — Based on History" track card (video_2.mp4)
+            Box(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .clip(RoundedCornerShape(24.dp))
+                    .background(MaterialTheme.colorScheme.surfaceContainer)
+                    .border(
+                        1.dp,
+                        MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.35f),
+                        RoundedCornerShape(24.dp),
                     )
+                    .padding(14.dp),
+            ) {
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    verticalAlignment = Alignment.CenterVertically,
+                ) {
+                    Box(
+                        modifier = Modifier
+                            .size(52.dp)
+                            .clip(M3EShapes.Clover4)
+                            .background(MaterialTheme.colorScheme.primaryContainer),
+                        contentAlignment = Alignment.Center,
+                    ) {
+                        Icon(
+                            imageVector = Icons.Rounded.LibraryMusic,
+                            contentDescription = null,
+                            tint = MaterialTheme.colorScheme.onPrimaryContainer,
+                            modifier = Modifier.size(24.dp),
+                        )
+                    }
+                    Spacer(Modifier.width(14.dp))
+                    Column(Modifier.weight(1f)) {
+                        Text(
+                            text = "DAILY MIX",
+                            style = MaterialTheme.typography.labelSmall.copy(
+                                fontWeight = FontWeight.Bold,
+                                letterSpacing = 1.sp,
+                            ),
+                            color = MaterialTheme.colorScheme.primary,
+                        )
+                        Spacer(Modifier.height(2.dp))
+                        Text(
+                            text = "Based on your listening history",
+                            style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.SemiBold),
+                            color = MaterialTheme.colorScheme.onSurface,
+                            maxLines = 1,
+                            overflow = TextOverflow.Ellipsis,
+                        )
+                    }
+                }
+            }
+
+            Spacer(Modifier.height(14.dp))
+
+            val filters = listOf("All", "Music", "Podcasts", "Made For You")
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(bottom = 10.dp),
+                horizontalArrangement = Arrangement.spacedBy(8.dp),
+            ) {
+                filters.forEach { filter ->
+                    val active = selectedFilter == filter
+                    Box(
+                        modifier = Modifier
+                            .clip(CircleShape)
+                            .background(
+                                if (active) MaterialTheme.colorScheme.primary
+                                else MaterialTheme.colorScheme.surfaceVariant
+                            )
+                            .clickable { selectedFilter = filter }
+                            .padding(horizontal = 16.dp, vertical = 7.dp),
+                    ) {
+                        Text(
+                            text = filter,
+                            style = MaterialTheme.typography.labelLarge,
+                            fontWeight = if (active) FontWeight.Bold else FontWeight.Medium,
+                            color = if (active) MaterialTheme.colorScheme.onPrimary
+                            else MaterialTheme.colorScheme.onSurfaceVariant,
+                        )
+                    }
+                }
+            }
+        }
+    } else {
+        Column(modifier = modifier.padding(horizontal = PAGE_GUTTER, vertical = 6.dp)) {
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(bottom = 12.dp),
+                verticalAlignment = Alignment.CenterVertically,
+            ) {
+                Text(
+                    text = fullGreeting,
+                    style = MaterialTheme.typography.headlineMedium,
+                    fontWeight = FontWeight.Bold,
+                    color = MaterialTheme.colorScheme.onBackground,
+                )
+            }
+
+            val filters = listOf("All", "Music", "Podcasts", "Made For You")
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(bottom = 10.dp),
+                horizontalArrangement = Arrangement.spacedBy(8.dp),
+            ) {
+                filters.forEach { filter ->
+                    val active = selectedFilter == filter
+                    Box(
+                        modifier = Modifier
+                            .clip(CircleShape)
+                            .background(
+                                if (active) MaterialTheme.colorScheme.primary
+                                else MaterialTheme.colorScheme.surfaceVariant
+                            )
+                            .clickable { selectedFilter = filter }
+                            .padding(horizontal = 16.dp, vertical = 7.dp),
+                    ) {
+                        Text(
+                            text = filter,
+                            style = MaterialTheme.typography.labelLarge,
+                            fontWeight = if (active) FontWeight.Bold else FontWeight.Medium,
+                            color = if (active) MaterialTheme.colorScheme.onPrimary
+                            else MaterialTheme.colorScheme.onSurfaceVariant,
+                        )
+                    }
                 }
             }
         }

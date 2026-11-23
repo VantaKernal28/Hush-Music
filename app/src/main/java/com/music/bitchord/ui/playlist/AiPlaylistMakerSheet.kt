@@ -138,17 +138,27 @@ fun AiPlaylistMakerSheet(
                         else -> "$targetPrompt music hits"
                     }
                     val finalSearch = if (query.isNotBlank()) query.trim() else searchQuery
-                    YtMusicRepository.search(finalSearch, SearchFilter.SONGS)
+                    val res1 = YtMusicRepository.search(finalSearch, SearchFilter.SONGS)
                         .getOrDefault(emptyList())
                         .filterIsInstance<SearchResult.Track>()
                         .map { it.song }
+                    if (res1.size < 20) {
+                        val fallbackSearch = if (query.isNotBlank()) "$targetPrompt top hits" else "$vibeName popular tracks"
+                        val res2 = YtMusicRepository.search(fallbackSearch, SearchFilter.SONGS)
+                            .getOrDefault(emptyList())
+                            .filterIsInstance<SearchResult.Track>()
+                            .map { it.song }
+                        (res1 + res2).distinctBy { it.videoId }
+                    } else {
+                        res1
+                    }
                 } catch (_: Throwable) {
                     emptyList()
                 }
             }
 
             val allCandidates = (availableSongs + onlineCandidates).distinctBy { it.videoId }
-            val candidates = allCandidates.take(45)
+            val candidates = allCandidates.take(50)
 
             // Step 1: Query online free open-source AI inference for realtime curation
             val aiSelectedIndices = withContext(Dispatchers.IO) {
@@ -163,7 +173,7 @@ fun AiPlaylistMakerSheet(
                                 put("role", "system")
                                 put(
                                     "content",
-                                    "You are a world-class AI music supervisor and curator. Given a target vibe, mood, tempo, or genre (including Carnatic, Indian regional [Tamil/Telugu/Hindi/Malayalam/Kannada/Punjabi], Lo-Fi, Film OSTs, Western, Indie, Electronic, Classical, etc.) and candidate songs [index: title by artist], select the 15 to 25 songs that best match the vibe, culture, and emotional resonance. Sequence them into an exquisite cohesive listening journey. Return ONLY a comma-separated list of candidate index numbers (e.g. 2, 7, 11, 14, 23). Zero markdown or commentary.",
+                                    "You are a world-class AI music supervisor and curator. Given a target vibe, mood, tempo, or genre (including Carnatic, Indian regional [Tamil/Telugu/Hindi/Malayalam/Kannada/Punjabi], Lo-Fi, Film OSTs, Western, Indie, Electronic, Classical, etc.) and candidate songs [index: title by artist], select the 20 to 25 songs that best match the vibe, culture, and emotional resonance. Sequence them into an exquisite cohesive listening journey. Return ONLY a comma-separated list of candidate index numbers (e.g. 2, 7, 11, 14, 23). Zero markdown or commentary.",
                                 )
                             })
                             put(JSONObject().apply {
@@ -262,11 +272,20 @@ fun AiPlaylistMakerSheet(
                 }
 
                 val finalSelection = (diverseList + deferredList).distinctBy { it.videoId }
-                if (finalSelection.size >= 10) finalSelection.take(24) else allCandidates.take(20).distinctBy { it.videoId }
+                if (finalSelection.size >= 20) {
+                    finalSelection.take(25)
+                } else {
+                    (finalSelection + allCandidates).distinctBy { it.videoId }.take(25)
+                }
             }
 
             curatedSongs.clear()
-            curatedSongs.addAll(chosenTracks)
+            for ((idx, song) in chosenTracks.withIndex()) {
+                curatedSongs.add(song)
+                if (idx < 12) {
+                    delay(20)
+                }
+            }
 
             playlistTitle = when {
                 query.isNotBlank() -> "${query.trim().replaceFirstChar { it.uppercase() }} AI Mix"

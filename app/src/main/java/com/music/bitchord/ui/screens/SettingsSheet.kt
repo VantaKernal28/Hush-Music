@@ -305,6 +305,9 @@ fun SettingsScreen(
     val reduceDynamicBlur by AppSettings.reduceDynamicBlur.collectAsStateWithLifecycle()
     val disableBlendEffects by AppSettings.disableBlendEffects.collectAsStateWithLifecycle()
     val liquidGlass by AppSettings.liquidGlass.collectAsStateWithLifecycle()
+    val glassDepthEffect by AppSettings.glassDepthEffect.collectAsStateWithLifecycle()
+    val glassTransparency by AppSettings.glassTransparency.collectAsStateWithLifecycle()
+    val glassRefraction by AppSettings.glassRefraction.collectAsStateWithLifecycle()
     val glassPerformance by AppSettings.glassPerformance.collectAsStateWithLifecycle()
     val progressiveBlur by AppSettings.progressiveBlur.collectAsStateWithLifecycle()
     val frostedGlass by AppSettings.frostedGlass.collectAsStateWithLifecycle()
@@ -640,8 +643,8 @@ fun SettingsScreen(
                 )
             }
 
-            // Hermoso Profile Avatar Header (Classic Mode ONLY)
-            if (searchQuery.isBlank() && !materialUiMode) {
+            // Centered Profile Avatar Hero Header (Restored in both Classic & Material UI Modes)
+            if (searchQuery.isBlank()) {
                 val customAvatarPath by AppSettings.customAvatarPath.collectAsStateWithLifecycle()
                 val avatarModel = remember(customAvatarPath, account?.thumbnailUrl, signedIn) {
                     if (!customAvatarPath.isNullOrBlank()) {
@@ -1281,17 +1284,76 @@ fun SettingsScreen(
 
         if (shows(SettingsCategory.APPEARANCE)) SearchableSettingsGroup(search, header = stringResource(R.string.appearance)) {
             val themeTitle = stringResource(R.string.theme)
-            row(themeTitle, "dark mode", "light mode") {
+            row(themeTitle, "dark mode", "light mode", "theme") {
                 SettingsRow(
                     icon = Icons.Rounded.Brightness4,
                     title = themeTitle,
                 )
-                SegmentedControl(
-                    options = ThemeMode.entries.map { it.localizedLabel() },
-                    selectedIndex = ThemeMode.entries.indexOf(theme),
-                    onSelect = { AppSettings.setThemeMode(ThemeMode.entries[it]) },
-                    modifier = Modifier.padding(start = ROW_INSET, end = ROW_INSET, bottom = 14.dp),
-                )
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(start = ROW_INSET, end = ROW_INSET, bottom = 14.dp),
+                    horizontalArrangement = Arrangement.spacedBy(10.dp),
+                ) {
+                    ThemeMode.entries.forEach { mode ->
+                        val isSelected = theme == mode
+                        val primary = MaterialTheme.colorScheme.primary
+                        Column(
+                            modifier = Modifier
+                                .weight(1f)
+                                .clip(RoundedCornerShape(16.dp))
+                                .background(if (isSelected) primary.copy(alpha = 0.12f) else MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.35f))
+                                .border(
+                                    width = if (isSelected) 2.dp else 1.dp,
+                                    color = if (isSelected) primary else Color.White.copy(alpha = 0.08f),
+                                    shape = RoundedCornerShape(16.dp),
+                                )
+                                .clickable { AppSettings.setThemeMode(mode) }
+                                .padding(8.dp),
+                            horizontalAlignment = Alignment.CenterHorizontally,
+                        ) {
+                            Box(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .height(48.dp)
+                                    .clip(RoundedCornerShape(10.dp))
+                                    .background(
+                                        when (mode) {
+                                            ThemeMode.SYSTEM -> Brush.linearGradient(
+                                                listOf(Color(0xFFF2F2F7), Color(0xFF1C1C1E)),
+                                            )
+                                            ThemeMode.LIGHT -> SolidColor(Color(0xFFF5F5F8))
+                                            ThemeMode.DARK -> SolidColor(Color(0xFF18181B))
+                                        }
+                                    )
+                                    .border(0.5.dp, Color.White.copy(alpha = 0.15f), RoundedCornerShape(10.dp)),
+                                contentAlignment = Alignment.Center,
+                            ) {
+                                Icon(
+                                    imageVector = when (mode) {
+                                        ThemeMode.SYSTEM -> Icons.Rounded.Brightness4
+                                        ThemeMode.LIGHT -> SfIcons.Brightness
+                                        ThemeMode.DARK -> SfIcons.SleepTimer
+                                    },
+                                    contentDescription = null,
+                                    tint = when (mode) {
+                                        ThemeMode.SYSTEM -> Color(0xFFE65100)
+                                        ThemeMode.LIGHT -> Color(0xFFE65100)
+                                        ThemeMode.DARK -> Color(0xFFFFB74D)
+                                    },
+                                    modifier = Modifier.size(20.dp),
+                                )
+                            }
+                            Spacer(Modifier.height(6.dp))
+                            Text(
+                                text = mode.localizedLabel(),
+                                style = MaterialTheme.typography.labelSmall,
+                                fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Medium,
+                                color = if (isSelected) primary else MaterialTheme.colorScheme.onSurface,
+                            )
+                        }
+                    }
+                }
             }
             val accentColorTitle = "Accent Color"
             row(accentColorTitle, "theme", "accent", "color", "swatch", "tint", "monet") {
@@ -1549,22 +1611,6 @@ fun SettingsScreen(
                     onClick = { AppSettings.setDisableBlendEffects(!disableBlendEffects) },
                 )
             }
-            val liquidGlassTitle = stringResource(R.string.liquid_glass)
-            row(liquidGlassTitle, "glass", "blur") {
-                SettingsRow(
-                    icon = SfIcons.AutoAwesome,
-                    title = liquidGlassTitle,
-                    enabled = liquidGlassSupported,
-                    trailing = {
-                        IosSwitch(
-                            checked = liquidGlass,
-                            onCheckedChange = AppSettings::setLiquidGlass,
-                            enabled = liquidGlassSupported,
-                        )
-                    },
-                    onClick = { AppSettings.setLiquidGlass(!liquidGlass) },
-                )
-            }
             val frostedGlassTitle = "Frosted Glass"
             row(frostedGlassTitle, "frosted", "glass", "blur", "translucency") {
                 SettingsRow(
@@ -1593,6 +1639,44 @@ fun SettingsScreen(
                     onClick = { AppSettings.setProgressiveBlur(!progressiveBlur) },
                 )
             }
+            if (!materialUiMode && liquidGlassSupported) {
+                val depthTitle = "Depth Effect"
+                row(depthTitle, "depth", "glass", "shadow", "elevation") {
+                    SliderRow(
+                        icon = SfIcons.Drop,
+                        title = depthTitle,
+                        value = "${(glassDepthEffect * 100).roundToInt()}%",
+                        sliderValue = glassDepthEffect,
+                        onSliderValue = AppSettings::setGlassDepthEffect,
+                        valueRange = 0f..1f,
+                        steps = 20,
+                    )
+                }
+                val transparencyTitle = "Transparency"
+                row(transparencyTitle, "transparency", "glass", "opacity") {
+                    SliderRow(
+                        icon = SfIcons.Gradient,
+                        title = transparencyTitle,
+                        value = "${(glassTransparency * 100).roundToInt()}%",
+                        sliderValue = glassTransparency,
+                        onSliderValue = AppSettings::setGlassTransparency,
+                        valueRange = 0f..1f,
+                        steps = 20,
+                    )
+                }
+                val refractionTitle = "Refraction"
+                row(refractionTitle, "refraction", "lens", "chromatic", "glass") {
+                    SliderRow(
+                        icon = SfIcons.AutoAwesome,
+                        title = refractionTitle,
+                        value = "${(glassRefraction * 100).roundToInt()}%",
+                        sliderValue = glassRefraction,
+                        onSliderValue = AppSettings::setGlassRefraction,
+                        valueRange = 0f..1f,
+                        steps = 20,
+                    )
+                }
+            }
             // Left out where the player won't honour it: a window too wide for
             // the player to fill and too narrow to stand a page beside it keeps
             // the sleeve either way. A docked pane is a phone's width, so it does
@@ -1603,7 +1687,6 @@ fun SettingsScreen(
                     SettingsRow(
                         icon = SfIcons.Fullscreen,
                         title = fullScreenCoverArtTitle,
-                        subtitle = stringResource(R.string.full_screen_cover_art_subtitle),
                         trailing = {
                             IosSwitch(
                                 checked = fullBleedArtwork,
@@ -1622,7 +1705,6 @@ fun SettingsScreen(
                 SettingsRow(
                     icon = SfIcons.Fullscreen,
                     title = fullScreenDetailCoverTitle,
-                    subtitle = stringResource(R.string.full_screen_detail_cover_subtitle),
                     trailing = {
                         IosSwitch(
                             checked = fullBleedDetailArtwork,
@@ -2774,7 +2856,7 @@ private fun bitPerfectSubtitle(mode: BitPerfectMode, status: BitPerfectOutput.St
 
 // ---- Building blocks --------------------------------------------------------
 
-internal val GroupShape = RoundedCornerShape(22.dp)
+internal val GroupShape = RoundedCornerShape(24.dp)
 internal val GROUP_INSET = 16.dp
 internal val ROW_INSET = 16.dp
 internal val ICON_SIZE = 22.dp

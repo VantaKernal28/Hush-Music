@@ -567,6 +567,11 @@ object AppSettings {
     /** Frosted glass translucency with rich tactile blur and light frost tint. */
     val frostedGlass = MutableStateFlow(false)
 
+    /** Liquid Glass optical controls for Classic mode. */
+    val glassDepthEffect = MutableStateFlow(0.85f)
+    val glassTransparency = MutableStateFlow(0.65f)
+    val glassRefraction = MutableStateFlow(0.75f)
+
     /** Musical player progress bar animation and line style. */
     val progressLineStyle = MutableStateFlow(ProgressLineStyle.WAVY)
 
@@ -1118,6 +1123,9 @@ object AppSettings {
         glassPerformance.value = prefs.getBoolean(KEY_GLASS_PERFORMANCE, false)
         progressiveBlur.value = prefs.getBoolean(KEY_PROGRESSIVE_BLUR, false)
         frostedGlass.value = prefs.getBoolean(KEY_FROSTED_GLASS, false)
+        glassDepthEffect.value = prefs.getFloat(KEY_GLASS_DEPTH_EFFECT, 0.85f).coerceIn(0f, 1f)
+        glassTransparency.value = prefs.getFloat(KEY_GLASS_TRANSPARENCY, 0.65f).coerceIn(0f, 1f)
+        glassRefraction.value = prefs.getFloat(KEY_GLASS_REFRACTION, 0.75f).coerceIn(0f, 1f)
         progressLineStyle.value = runCatching {
             ProgressLineStyle.valueOf(prefs.getString(KEY_PROGRESS_LINE_STYLE, null) ?: "WAVY")
         }.getOrDefault(ProgressLineStyle.WAVY)
@@ -1708,6 +1716,24 @@ object AppSettings {
     fun setFrostedGlass(value: Boolean) {
         frostedGlass.value = value
         prefs.edit().putBoolean(KEY_FROSTED_GLASS, value).apply()
+    }
+
+    fun setGlassDepthEffect(value: Float) {
+        val coerced = value.coerceIn(0f, 1f)
+        glassDepthEffect.value = coerced
+        prefs.edit().putFloat(KEY_GLASS_DEPTH_EFFECT, coerced).apply()
+    }
+
+    fun setGlassTransparency(value: Float) {
+        val coerced = value.coerceIn(0f, 1f)
+        glassTransparency.value = coerced
+        prefs.edit().putFloat(KEY_GLASS_TRANSPARENCY, coerced).apply()
+    }
+
+    fun setGlassRefraction(value: Float) {
+        val coerced = value.coerceIn(0f, 1f)
+        glassRefraction.value = coerced
+        prefs.edit().putFloat(KEY_GLASS_REFRACTION, coerced).apply()
     }
 
     fun setProgressLineStyle(value: ProgressLineStyle) {
@@ -2512,6 +2538,9 @@ object AppSettings {
     private const val KEY_GLASS_PERFORMANCE = "glass_performance"
     private const val KEY_PROGRESSIVE_BLUR = "progressive_blur"
     private const val KEY_FROSTED_GLASS = "frosted_glass"
+    private const val KEY_GLASS_DEPTH_EFFECT = "hush_glass_depth_effect"
+    private const val KEY_GLASS_TRANSPARENCY = "hush_glass_transparency"
+    private const val KEY_GLASS_REFRACTION = "hush_glass_refraction"
     private const val KEY_PROGRESS_LINE_STYLE = "progress_line_style"
     private const val KEY_LYRICS_BLUR = "lyrics_blur"
     private const val KEY_LYRICS_OFFSET_MS = "lyrics_offset_ms"

@@ -22,6 +22,20 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.Canvas
+import androidx.compose.animation.core.rememberInfiniteTransition
+import androidx.compose.animation.core.animateFloat
+import androidx.compose.animation.core.infiniteRepeatable
+import androidx.compose.animation.core.tween
+import androidx.compose.animation.core.LinearEasing
+import androidx.compose.animation.core.RepeatMode
+import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.graphics.Path
+import androidx.compose.ui.graphics.StrokeCap
+import androidx.compose.ui.graphics.drawscope.Stroke
+import kotlin.math.PI
+import kotlin.math.sin
+import kotlin.math.cos
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
@@ -29,8 +43,6 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.rounded.ArrowBack
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
-import androidx.compose.material3.FilterChip
-import androidx.compose.material3.FilterChipDefaults
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -139,25 +151,35 @@ fun PlayerCustomizationSheet(
             ) {
                 ProgressLineStyle.entries.forEach { style ->
                     val isSelected = progressLineStyle == style
-                    FilterChip(
-                        selected = isSelected,
-                        onClick = {
-                            haptic.performHapticFeedback(HapticFeedbackType.TextHandleMove)
-                            AppSettings.setProgressLineStyle(style)
-                        },
-                        label = {
-                            Text(
-                                text = style.label,
-                                style = MaterialTheme.typography.labelMedium,
-                                fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Normal,
+                    val primary = MaterialTheme.colorScheme.primary
+                    Column(
+                        modifier = Modifier
+                            .weight(1f)
+                            .clip(RoundedCornerShape(16.dp))
+                            .background(
+                                if (isSelected) primary.copy(alpha = 0.15f) else MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.4f)
                             )
-                        },
-                        modifier = Modifier.weight(1f),
-                        colors = FilterChipDefaults.filterChipColors(
-                            selectedContainerColor = MaterialTheme.colorScheme.primary,
-                            selectedLabelColor = MaterialTheme.colorScheme.onPrimary,
-                        ),
-                    )
+                            .border(
+                                width = if (isSelected) 2.dp else 1.dp,
+                                color = if (isSelected) primary else Color.White.copy(alpha = 0.08f),
+                                shape = RoundedCornerShape(16.dp),
+                            )
+                            .clickable {
+                                haptic.performHapticFeedback(HapticFeedbackType.TextHandleMove)
+                                AppSettings.setProgressLineStyle(style)
+                            }
+                            .padding(horizontal = 4.dp, vertical = 8.dp),
+                        horizontalAlignment = Alignment.CenterHorizontally,
+                    ) {
+                        ProgressLinePreviewBox(style = style, isSelected = isSelected, primary = primary)
+                        Spacer(Modifier.height(6.dp))
+                        Text(
+                            text = style.label,
+                            style = MaterialTheme.typography.labelSmall,
+                            fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Medium,
+                            color = if (isSelected) primary else MaterialTheme.colorScheme.onSurface,
+                        )
+                    }
                 }
             }
 
@@ -305,5 +327,91 @@ private fun PlayerToggleRow(
                 checkedTrackColor = MaterialTheme.colorScheme.primary,
             ),
         )
+    }
+}
+
+@Composable
+private fun ProgressLinePreviewBox(
+    style: ProgressLineStyle,
+    isSelected: Boolean,
+    primary: Color,
+) {
+    val infiniteTransition = rememberInfiniteTransition(label = "previewAnim")
+    val phase by infiniteTransition.animateFloat(
+        initialValue = 0f,
+        targetValue = 2 * PI.toFloat(),
+        animationSpec = infiniteRepeatable(
+            animation = tween(durationMillis = 1800, easing = LinearEasing),
+            repeatMode = RepeatMode.Restart,
+        ),
+        label = "phase",
+    )
+
+    Box(
+        modifier = Modifier
+            .fillMaxWidth()
+            .height(38.dp)
+            .clip(RoundedCornerShape(10.dp))
+            .background(if (isSelected) primary.copy(alpha = 0.22f) else Color.Black.copy(alpha = 0.25f)),
+        contentAlignment = Alignment.Center,
+    ) {
+        Canvas(modifier = Modifier.fillMaxWidth().height(24.dp).padding(horizontal = 4.dp)) {
+            val w = size.width
+            val h = size.height
+            val midY = h / 2f
+            val activeColor = primary
+            val inactiveColor = Color.White.copy(alpha = 0.25f)
+            val activeW = w * 0.65f
+
+            when (style) {
+                ProgressLineStyle.WAVY -> {
+                    val p = Path()
+                    val waveLength = w / 2.2f
+                    val waveAmp = 4.dp.toPx()
+                    p.moveTo(0f, midY)
+                    var x = 0f
+                    while (x <= activeW) {
+                        val angle = (x / waveLength) * (2 * PI).toFloat() - phase
+                        p.lineTo(x, midY + sin(angle) * waveAmp)
+                        x += 2f
+                    }
+                    drawPath(p, activeColor, style = Stroke(width = 2.5.dp.toPx(), cap = StrokeCap.Round))
+                    drawLine(inactiveColor, Offset(activeW, midY), Offset(w, midY), strokeWidth = 2.dp.toPx(), cap = StrokeCap.Round)
+                    drawCircle(Color.White, radius = 3.5.dp.toPx(), center = Offset(activeW, midY))
+                }
+                ProgressLineStyle.STRAIGHT -> {
+                    drawLine(inactiveColor, Offset(0f, midY), Offset(w, midY), strokeWidth = 4.dp.toPx(), cap = StrokeCap.Round)
+                    drawLine(activeColor, Offset(0f, midY), Offset(activeW, midY), strokeWidth = 4.dp.toPx(), cap = StrokeCap.Round)
+                    drawCircle(Color.White, radius = 4.dp.toPx(), center = Offset(activeW, midY))
+                }
+                ProgressLineStyle.DOTTED -> {
+                    val count = 8
+                    val gap = w / count
+                    for (i in 0 until count) {
+                        val dotX = i * gap + gap / 2f
+                        val isDotActive = dotX <= activeW
+                        drawCircle(
+                            color = if (isDotActive) activeColor else inactiveColor,
+                            radius = if (isDotActive) 2.5.dp.toPx() else 1.8.dp.toPx(),
+                            center = Offset(dotX, midY),
+                        )
+                    }
+                    drawCircle(Color.White, radius = 3.5.dp.toPx(), center = Offset(activeW, midY))
+                }
+                ProgressLineStyle.PULSE -> {
+                    val p = Path()
+                    p.moveTo(0f, midY)
+                    var px = 0f
+                    while (px <= activeW) {
+                        val pulseFactor = (sin(px * 0.22f - phase * 1.5f) * cos(px * 0.12f)).toFloat()
+                        p.lineTo(px, midY + pulseFactor * 5.dp.toPx())
+                        px += 2f
+                    }
+                    drawPath(p, activeColor, style = Stroke(width = 2.5.dp.toPx(), cap = StrokeCap.Round))
+                    drawLine(inactiveColor, Offset(activeW, midY), Offset(w, midY), strokeWidth = 2.dp.toPx(), cap = StrokeCap.Round)
+                    drawCircle(Color.White, radius = 3.5.dp.toPx(), center = Offset(activeW, midY))
+                }
+            }
+        }
     }
 }

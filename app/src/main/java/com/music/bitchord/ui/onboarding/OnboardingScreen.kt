@@ -424,11 +424,10 @@ private fun ColumnScope.NamePage(
     ) {
         Column {
             Spacer(Modifier.height(44.dp))
-            Icon(
-                painter = androidx.compose.ui.res.painterResource(R.drawable.ic_logo),
-                contentDescription = null,
+            Image(
+                painter = androidx.compose.ui.res.painterResource(R.drawable.ic_hush_transparent_logo),
+                contentDescription = "Hush Music",
                 modifier = Modifier.size(48.dp),
-                tint = Color.White,
             )
         }
     }
@@ -438,13 +437,6 @@ private fun ColumnScope.NamePage(
     Spacer(Modifier.weight(1f))
 
     NameField(value = name, onValueChange = onNameChange, onDone = onNext)
-    Spacer(Modifier.height(10.dp))
-    Text(
-        text = stringResource(R.string.onboarding_name_footer),
-        style = MaterialTheme.typography.bodyMedium,
-        color = Color.White.copy(alpha = 0.55f),
-        modifier = Modifier.padding(horizontal = 4.dp),
-    )
     Spacer(Modifier.height(28.dp))
     PillButton(
         label = stringResource(R.string.onboarding_next),
@@ -492,13 +484,6 @@ private fun ColumnScope.ConnectPage(
     }
 
     Spacer(Modifier.height(14.dp))
-    Text(
-        text = stringResource(R.string.onboarding_connect_body),
-        style = MaterialTheme.typography.bodyLarge,
-        fontSize = 17.sp,
-        lineHeight = 23.sp,
-        color = Color.White.copy(alpha = 0.72f),
-    )
 
     Spacer(Modifier.weight(1f))
 

@@ -115,8 +115,10 @@ fun GlassNavBar(
     // lambda, which the tab bar sees as a changed argument and recomposes on.
     val pillShape = remember { RoundedCornerShape(percent = 50) }
     val contentColor = glassContentColor()
-    val selectedColor = MaterialTheme.colorScheme.primary
-    val unselectedColor = Color(0xFF8E8E93) // Muted Gray Outline
+    val primaryAccent = MaterialTheme.colorScheme.primary
+    val selectedColor = primaryAccent
+    val unselectedColor = Color.White.copy(alpha = 0.72f)
+    val indicatorTint = primaryAccent.copy(alpha = 0.28f)
     val haptics = rememberHaptics()
 
     // The tab content lambdas below are captured once per contentKey and held
@@ -133,8 +135,10 @@ fun GlassNavBar(
 
     // A factory, not a value — see the note in FloatingTabBar's header. Each of
     // the three surfaces gets its own glass modifier and so its own shape cache.
-    // The theme's own glass tint, as the liquid top bar has it — no white wash.
-    val glassSurface: @Composable () -> Modifier = { Modifier.liquidGlass(shape = pillShape) }
+    // Subtle accent tint to ensure vibrant, luminous physical glass depth.
+    val glassSurface: @Composable () -> Modifier = {
+        Modifier.liquidGlass(shape = pillShape, surfaceTint = primaryAccent.copy(alpha = 0.06f))
+    }
 
     FloatingTabBar(
         selectedTabKey = selectedIndex,
@@ -190,7 +194,7 @@ fun GlassNavBar(
         colors = FloatingTabBarDefaults.colors(
             backgroundColor = Color.Transparent,
             accessoryBackgroundColor = Color.Transparent,
-            indicatorColor = glassIndicatorColor(),
+            indicatorColor = indicatorTint,
         ),
         // Flat, because the glass is not. Every surface here already draws its
         // own [Shadow.Default] as part of the backdrop pass, and the library's

@@ -274,26 +274,40 @@ fun Modifier.liquidGlass(
     val reduceDynamicBlur by AppSettings.reduceDynamicBlur.collectAsStateWithLifecycle()
     val progressiveBlur by AppSettings.progressiveBlur.collectAsStateWithLifecycle()
     val frostedGlass by AppSettings.frostedGlass.collectAsStateWithLifecycle()
+    val glassDepthEffect by AppSettings.glassDepthEffect.collectAsStateWithLifecycle()
+    val glassTransparency by AppSettings.glassTransparency.collectAsStateWithLifecycle()
+    val glassRefraction by AppSettings.glassRefraction.collectAsStateWithLifecycle()
+
+    val alphaDark1 = ((1.0f - glassTransparency * 0.45f) * (if (frostedGlass) 0.60f else 0.44f)).coerceIn(0.15f, 0.85f)
+    val alphaDark2 = ((1.0f - glassTransparency * 0.45f) * (if (frostedGlass) 0.68f else 0.52f)).coerceIn(0.20f, 0.90f)
+    val alphaLight1 = ((1.0f - glassTransparency * 0.35f) * 0.92f).coerceIn(0.40f, 0.98f)
+    val alphaLight2 = ((1.0f - glassTransparency * 0.35f) * 0.66f).coerceIn(0.30f, 0.85f)
 
     val fill = Brush.verticalGradient(
         colors = if (dark) {
-            listOf(Color(0xFF242426).copy(alpha = if (frostedGlass) 0.60f else 0.44f), Color(0xFF1C1C1E).copy(alpha = if (frostedGlass) 0.68f else 0.52f))
+            listOf(Color(0xFF242426).copy(alpha = alphaDark1), Color(0xFF1C1C1E).copy(alpha = alphaDark2))
         } else {
-            listOf(Color.White.copy(alpha = 0.92f), Color.White.copy(alpha = 0.66f))
+            listOf(Color.White.copy(alpha = alphaLight1), Color.White.copy(alpha = alphaLight2))
         },
     )
 
     val sheen = Brush.linearGradient(
-        0f to Color.White.copy(alpha = if (dark) 0.11f else 0.55f),
+        0f to Color.White.copy(alpha = (if (dark) 0.11f else 0.55f) * (0.6f + 0.4f * glassDepthEffect)),
         0.42f to Color.Transparent,
         1f to Color.Transparent,
     )
 
     val rim = Brush.verticalGradient(
         colors = if (dark) {
-            listOf(Color.White.copy(alpha = 0.20f), Color.White.copy(alpha = 0.04f))
+            listOf(
+                Color.White.copy(alpha = (0.12f + 0.16f * glassDepthEffect).coerceIn(0.05f, 0.40f)),
+                Color.White.copy(alpha = (0.02f + 0.04f * glassDepthEffect).coerceIn(0.01f, 0.15f)),
+            )
         } else {
-            listOf(Color.White.copy(alpha = 0.95f), Color.Black.copy(alpha = 0.05f))
+            listOf(
+                Color.White.copy(alpha = (0.75f + 0.24f * glassDepthEffect).coerceIn(0.4f, 1f)),
+                Color.Black.copy(alpha = (0.02f + 0.06f * glassDepthEffect).coerceIn(0.01f, 0.15f)),
+            )
         },
     )
 
@@ -324,8 +338,9 @@ fun Modifier.liquidGlass(
         else -> BLUR_RADIUS_DP
     }
     val blurPx = with(density) { blurRadiusDp.dp.toPx() } * resolutionScale
-    val lensHeightPx = with(density) { (LENS_HEIGHT * LENS_MAX_DP).dp.toPx() } * resolutionScale
-    val lensAmountPx = with(density) { (LENS_AMOUNT * LENS_MAX_DP).dp.toPx() } * resolutionScale
+    val lensHeightPx = with(density) { (LENS_HEIGHT * LENS_MAX_DP * glassRefraction).dp.toPx() } * resolutionScale
+    val lensAmountPx = with(density) { (LENS_AMOUNT * LENS_MAX_DP * glassRefraction).dp.toPx() } * resolutionScale
+    val chromaticAberration = !frostedGlass && (glassRefraction > 0.15f)
 
     return this
         .drawBackdrop(
@@ -338,13 +353,13 @@ fun Modifier.liquidGlass(
                     lens(
                         refractionHeight = lensHeightPx,
                         refractionAmount = lensAmountPx,
-                        depthEffect = true,
-                        chromaticAberration = !frostedGlass,
+                        depthEffect = glassDepthEffect > 0.05f,
+                        chromaticAberration = chromaticAberration,
                     )
                 }
             },
             highlight = { Highlight.Default },
-            shadow = { Shadow.Default },
+            shadow = { Shadow.Default.copy(alpha = glassDepthEffect.coerceIn(0f, 1f)) },
             onDrawSurface = {
                 drawRect(fill)
                 if (frostedGlass) {

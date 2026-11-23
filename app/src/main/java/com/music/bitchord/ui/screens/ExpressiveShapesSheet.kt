@@ -43,6 +43,7 @@ import androidx.compose.material3.SwitchDefaults
 import androidx.compose.material3.Text
 import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
+import com.music.bitchord.ui.components.expressive.M3EShapes
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -378,9 +379,28 @@ fun ExpressiveShapesSheet(
                                         pickerTarget = null
                                     }
                                 }
-                                .padding(horizontal = 14.dp, vertical = 12.dp),
+                                .padding(horizontal = 14.dp, vertical = 10.dp),
                             verticalAlignment = Alignment.CenterVertically,
                         ) {
+                            val shape = M3EShapes.get(name)
+                            Box(
+                                modifier = Modifier
+                                    .size(44.dp)
+                                    .clip(shape)
+                                    .background(
+                                        if (isSelected) MaterialTheme.colorScheme.primary
+                                        else MaterialTheme.colorScheme.secondaryContainer
+                                    ),
+                                contentAlignment = Alignment.Center,
+                            ) {
+                                Box(
+                                    modifier = Modifier
+                                        .size(16.dp)
+                                        .clip(CircleShape)
+                                        .background(Color.White.copy(alpha = 0.4f)),
+                                )
+                            }
+                            Spacer(Modifier.width(14.dp))
                             Column(Modifier.weight(1f)) {
                                 Text(
                                     text = name,

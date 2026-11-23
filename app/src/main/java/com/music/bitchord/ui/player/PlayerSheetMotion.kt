@@ -14,6 +14,7 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.platform.WindowInfo
+import com.music.bitchord.data.settings.AppSettings
 import com.music.bitchord.ui.components.MiniPlayerPull
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Job
@@ -332,13 +333,14 @@ class PlayerSheetMotion(
 
     private suspend fun slide(from: Float, to: Float, velocity: Float = 0f) {
         val travel = travel()
+        val isM3E = AppSettings.materialUiMode.value
         animate(
             initialValue = from,
             targetValue = to,
             initialVelocity = velocity,
             animationSpec = spring(
-                dampingRatio = Spring.DampingRatioNoBouncy,
-                stiffness = SLIDE_STIFFNESS,
+                dampingRatio = if (isM3E) 0.72f else Spring.DampingRatioNoBouncy,
+                stiffness = if (isM3E) 340f else SLIDE_STIFFNESS,
                 visibilityThreshold = SLIDE_SETTLED_PX,
             ),
         ) { value, _ ->
