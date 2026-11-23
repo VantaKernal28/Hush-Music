@@ -134,7 +134,9 @@ import androidx.compose.ui.input.pointer.positionChanged
 import kotlin.math.abs
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.scale
+import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.SolidColor
 import androidx.compose.ui.graphics.painter.Painter
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.hapticfeedback.HapticFeedbackType
@@ -1643,7 +1645,7 @@ fun SettingsScreen(
                 val depthTitle = "Depth Effect"
                 row(depthTitle, "depth", "glass", "shadow", "elevation") {
                     SliderRow(
-                        icon = SfIcons.Drop,
+                        icon = SfIcons.Album,
                         title = depthTitle,
                         value = "${(glassDepthEffect * 100).roundToInt()}%",
                         sliderValue = glassDepthEffect,
