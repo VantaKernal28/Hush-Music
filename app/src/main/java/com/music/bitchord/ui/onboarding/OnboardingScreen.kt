@@ -47,12 +47,16 @@ import androidx.compose.foundation.layout.systemBarsPadding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.BasicTextField
 import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.rounded.Check
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -543,7 +547,7 @@ private fun ColumnScope.ThemePage(
                     contentAlignment = Alignment.Center,
                 ) {
                     Icon(
-                        imageVector = androidx.compose.material.icons.Icons.Rounded.Check,
+                        imageVector = Icons.Rounded.Check,
                         contentDescription = null,
                         tint = Color(0xFF0D0D0F),
                         modifier = Modifier.size(16.dp),
@@ -612,7 +616,7 @@ private fun ColumnScope.ThemePage(
                     contentAlignment = Alignment.Center,
                 ) {
                     Icon(
-                        imageVector = androidx.compose.material.icons.Icons.Rounded.Check,
+                        imageVector = Icons.Rounded.Check,
                         contentDescription = null,
                         tint = Color(0xFF0D0D0F),
                         modifier = Modifier.size(16.dp),
