@@ -322,6 +322,11 @@ fun RhythmPlayerContent(
             val isCompactHeight = availableHeight < 680.dp
             val artSize = (maxWidth * 0.82f).coerceIn(250.dp, if (isCompactHeight) 250.dp else 280.dp)
 
+            Column(
+                modifier = Modifier.fillMaxSize(),
+                horizontalAlignment = Alignment.CenterHorizontally,
+                verticalArrangement = Arrangement.SpaceBetween,
+            ) {
                 // Top Row: Circular Collapse Button (Left), "Now Playing" Title (Center), Output & Lyrics Buttons (Right)
                 Row(
                     modifier = Modifier
@@ -827,7 +832,7 @@ fun RhythmPlayerContent(
                                 modifier = Modifier
                                     .weight(1f)
                                     .fillMaxHeight()
-                                    .clickable(onClick = onToggleRepeat),
+                                    .clickable(onClick = onCycleRepeat),
                                 contentAlignment = Alignment.Center,
                             ) {
                                 Icon(
