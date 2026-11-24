@@ -87,7 +87,7 @@ android {
 
         ndk {
             abiFilters.clear()
-            abiFilters += listOf("arm64-v8a")
+            abiFilters += listOf("arm64-v8a", "armeabi-v7a", "x86_64")
         }
         resourceConfigurations += listOf("en", "hi", "te", "ta")
         // Last.fm credentials are supplied locally and never committed.
@@ -111,7 +111,10 @@ android {
 
     splits {
         abi {
-            isEnable = false
+            isEnable = true
+            reset()
+            include("armeabi-v7a", "arm64-v8a", "x86_64")
+            isUniversalApk = true
         }
     }
 
@@ -271,7 +274,7 @@ android {
         outputs.all {
             val output = this as? com.android.build.gradle.api.ApkVariantOutput
             if (output != null) {
-                val abi = output.getFilter(FilterType.ABI) ?: "arm64-v8a"
+                val abi = output.getFilter(FilterType.ABI) ?: "universal"
                 output.outputFileName = "hush-${vName}${flavor}-${abi}-${buildType}.apk"
             }
         }

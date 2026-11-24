@@ -60,8 +60,10 @@ fun WavyProgressSlider(
     wavelength: Dp = 26.dp,
     waveAmplitude: Dp = 4.5.dp,
     trackStrokeWidth: Dp = 4.dp,
-    thumbWidth: Dp = 4.dp,
-    thumbHeight: Dp = 26.dp,
+    thumbRadius: Dp = 7.dp,
+    haloRadius: Dp = 10.dp,
+    thumbWidth: Dp = 14.dp,
+    thumbHeight: Dp = 14.dp,
 ) {
     var isDragging by remember { mutableStateOf(false) }
 
@@ -86,15 +88,15 @@ fun WavyProgressSlider(
     )
 
     // Tactile thumb squish/expand on touch
-    val currentThumbWidth by animateDpAsState(
-        targetValue = if (isDragging) thumbWidth + 2.5.dp else thumbWidth,
+    val currentThumbRadius by animateDpAsState(
+        targetValue = if (isDragging) 8.5.dp else thumbRadius,
         animationSpec = ExpressiveMotion.TactilePressDpSpring,
-        label = "thumbWidth",
+        label = "thumbRadius",
     )
-    val currentThumbHeight by animateDpAsState(
-        targetValue = if (isDragging) thumbHeight + 6.dp else thumbHeight,
+    val currentHaloRadius by animateDpAsState(
+        targetValue = if (isDragging) 12.dp else haloRadius,
         animationSpec = ExpressiveMotion.TactilePressDpSpring,
-        label = "thumbHeight",
+        label = "haloRadius",
     )
 
     Box(
@@ -191,17 +193,26 @@ fun WavyProgressSlider(
                 }
             }
 
-            // 3. Tactile Thumb Stadium Pill
-            val tw = currentThumbWidth.toPx()
-            val th = currentThumbHeight.toPx()
-            val thumbLeft = (thumbX - tw / 2f).coerceIn(0f, width - tw)
-            val thumbTop = centerY - th / 2f
+            // 3. Tactile Circular Thumb Dot with Soft Outer Halo (Pixel M3E style)
+            val tr = currentThumbRadius.toPx()
+            val hr = currentHaloRadius.toPx()
+            val finalThumbY = if (ampPx > 0.05f) {
+                centerY + ampPx * sin(twoPi * (thumbX / waveLenPx) + phase)
+            } else {
+                centerY
+            }
 
-            drawRoundRect(
+            // Outer soft halo
+            drawCircle(
+                color = thumbColor.copy(alpha = if (isDragging) 0.35f else 0.22f),
+                radius = hr,
+                center = Offset(thumbX, finalThumbY),
+            )
+            // Solid center thumb dot
+            drawCircle(
                 color = thumbColor,
-                topLeft = Offset(thumbLeft, thumbTop),
-                size = Size(tw, th),
-                cornerRadius = CornerRadius(tw / 2f, tw / 2f),
+                radius = tr,
+                center = Offset(thumbX, finalThumbY),
             )
         }
     }

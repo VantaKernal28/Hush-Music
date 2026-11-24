@@ -640,44 +640,12 @@ private fun HomeTitle(
             // Clean spacing so top-left AI pill button never overlaps "Your Mix"
             Spacer(Modifier.height(52.dp))
 
-            // Ambient floating M3E kinetic shapes + Stacked "Your Mix" Expressive Display Title + Large Shuffle Circle Button
+            // Stacked "Your Mix" Expressive Display Title + Large Shuffle Circle Button
             Box(
                 modifier = Modifier
                     .fillMaxWidth()
                     .padding(bottom = 16.dp),
             ) {
-                // Ambient floating M3E kinetic shapes in background (Pixel Player inspired)
-                Box(
-                    modifier = Modifier
-                        .size(115.dp)
-                        .align(Alignment.TopEnd)
-                        .offset(x = 22.dp, y = (-12).dp)
-                        .graphicsLayer { alpha = 0.08f }
-                        .m3eRotating(durationMs = 32000, clockwise = true)
-                        .clip(M3EShapes.Scallop12)
-                        .background(MaterialTheme.colorScheme.primary),
-                )
-                Box(
-                    modifier = Modifier
-                        .size(85.dp)
-                        .align(Alignment.TopEnd)
-                        .offset(x = (-60).dp, y = 14.dp)
-                        .graphicsLayer { alpha = 0.06f }
-                        .m3eRotating(durationMs = 26000, clockwise = false)
-                        .clip(M3EShapes.Sunny)
-                        .background(MaterialTheme.colorScheme.secondary),
-                )
-                Box(
-                    modifier = Modifier
-                        .size(70.dp)
-                        .align(Alignment.BottomStart)
-                        .offset(x = 120.dp, y = 8.dp)
-                        .graphicsLayer { alpha = 0.05f }
-                        .m3eRotating(durationMs = 36000, clockwise = true)
-                        .clip(M3EShapes.Clover4)
-                        .background(MaterialTheme.colorScheme.tertiary),
-                )
-
                 Row(
                     modifier = Modifier.fillMaxWidth(),
                     horizontalArrangement = Arrangement.SpaceBetween,

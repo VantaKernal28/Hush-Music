@@ -6,6 +6,7 @@ import com.music.bitchord.playback.EqualizerProcessor
 import com.music.bitchord.playback.LoudnessProcessor
 import com.music.bitchord.playback.SpatialAudioProcessor
 import com.music.bitchord.playback.TransitionFilterProcessor
+import com.music.bitchord.ui.player.AudioBeatDetector
 
 /**
  * Composite DSP chain executing BitChord's custom audio processors in their canonical sequence:
@@ -84,6 +85,9 @@ class DspChain(
         // see; the loudness stage's limiter is what catches whatever survives.
         loudness.holdLimiter = equalizer.isShaping
         loudness.process(block)
+
+        // Real-time audio RMS beat spike detection for reactive animations
+        AudioBeatDetector.processSamples(block.samples, block.sampleCount)
     }
 
     @Suppress("DEPRECATION")
@@ -92,6 +96,7 @@ class DspChain(
         equalizer.flush()
         transition.flush()
         loudness.flush()
+        AudioBeatDetector.reset()
     }
 
     override fun reset() {
@@ -100,6 +105,7 @@ class DspChain(
         equalizer.reset()
         transition.reset()
         loudness.reset()
+        AudioBeatDetector.reset()
     }
 
     companion object {

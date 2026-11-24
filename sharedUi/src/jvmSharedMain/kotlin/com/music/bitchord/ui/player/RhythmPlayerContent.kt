@@ -1,5 +1,6 @@
 package com.music.bitchord.ui.player
 
+import androidx.compose.animation.core.Animatable
 import androidx.compose.animation.core.keyframes
 import androidx.compose.animation.core.FastOutSlowInEasing
 import androidx.compose.animation.core.LinearOutSlowInEasing
@@ -204,24 +205,32 @@ fun RhythmPlayerContent(
         label = "artRot",
     )
 
-    // Beat-sync impulse: subtly pulses outward (1.0f -> 1.07f) on audio amplitude / bass energy hits
-    val beatImpulse by infiniteTransition.animateFloat(
-        initialValue = 1.0f,
-        targetValue = 1.07f,
-        animationSpec = infiniteRepeatable(
-            animation = keyframes {
-                durationMillis = 520 // ~115-120 BPM rhythmic bass pulse
-                1.0f at 0 with FastOutSlowInEasing
-                1.07f at 110 with LinearOutSlowInEasing
-                1.01f at 220 with FastOutSlowInEasing
-                1.045f at 300 with LinearOutSlowInEasing
-                1.0f at 520 with FastOutSlowInEasing
-            },
-            repeatMode = RepeatMode.Restart,
-        ),
-        label = "beatImpulse",
-    )
-    val effectiveArtScale = if (isPlaying && beatImpulseEnabled) beatImpulse else 1.0f
+    // Palette extraction for rich multi-stop ambient gradient
+    val artPalette = rememberArtworkColors(song.thumbnailUrl)
+    val paletteDominant = artPalette.colors.getOrNull(0) ?: primaryAccent
+    val paletteVibrant = artPalette.colors.getOrNull(1) ?: primaryAccent
+    val paletteAmbient = artPalette.colors.getOrNull(2) ?: paletteDominant
+
+    // True Beat-Spike Energy Detection: springs outward (1.0f -> 1.07f) on genuine audio transients
+    val beatTimestamp by AudioBeatDetector.beatTimestamp.collectAsStateWithLifecycle()
+    val beatEnergy by AudioBeatDetector.beatEnergy.collectAsStateWithLifecycle()
+    val beatAnim = remember { Animatable(1.0f) }
+
+    LaunchedEffect(beatTimestamp) {
+        if (beatTimestamp > 0L && isPlaying && beatImpulseEnabled) {
+            val targetScale = 1.0f + 0.07f * beatEnergy.coerceIn(0.5f, 1.0f)
+            beatAnim.snapTo(targetScale)
+            beatAnim.animateTo(
+                targetValue = 1.0f,
+                animationSpec = spring(
+                    dampingRatio = 0.58f,
+                    stiffness = 320f,
+                ),
+            )
+        }
+    }
+
+    val effectiveArtScale = if (isPlaying && beatImpulseEnabled) beatAnim.value else 1.0f
 
     // Modal sheet visibility states
     var showInlineLyrics by remember { mutableStateOf(false) }
@@ -265,18 +274,33 @@ fun RhythmPlayerContent(
                 ),
         )
 
-        // Beat-reactive ambient song-color gradient pulse
-        val pulseAlpha = if (isPlaying && beatImpulseEnabled) (beatImpulse - 1.0f) * 2.5f else 0f
+        // Beat-reactive ambient song-color poster gradient that swells with real beat spikes
+        val pulseAlpha = if (isPlaying && beatImpulseEnabled) (beatAnim.value - 1.0f) * 3.5f else 0f
+        val gradientRadius = 850f * effectiveArtScale
         Box(
             modifier = Modifier
                 .fillMaxSize()
                 .background(
                     Brush.radialGradient(
                         colors = listOf(
-                            primaryAccent.copy(alpha = if (isDark) (0.24f + pulseAlpha * 0.15f) else (0.14f + pulseAlpha * 0.10f)),
+                            paletteVibrant.copy(alpha = if (isDark) (0.28f + pulseAlpha * 0.20f) else (0.16f + pulseAlpha * 0.12f)),
+                            paletteDominant.copy(alpha = if (isDark) (0.16f + pulseAlpha * 0.12f) else (0.08f + pulseAlpha * 0.08f)),
                             Color.Transparent,
                         ),
-                        radius = 800f * (if (isPlaying && beatImpulseEnabled) beatImpulse else 1f),
+                        radius = gradientRadius,
+                    )
+                ),
+        )
+        // Subtle ambient lower gradient wash
+        Box(
+            modifier = Modifier
+                .fillMaxSize()
+                .background(
+                    Brush.verticalGradient(
+                        colors = listOf(
+                            Color.Transparent,
+                            paletteAmbient.copy(alpha = if (isDark) 0.08f else 0.04f),
+                        ),
                     )
                 ),
         )
@@ -337,7 +361,7 @@ fun RhythmPlayerContent(
                                     scaleX = effectiveArtScale
                                     scaleY = effectiveArtScale
                                 }
-                                .clip(ScallopedFlowerShape(lobes = 8, innerRadiusRatio = 0.82f))
+                                .clip(ScallopedFlowerShape(lobes = 8, innerRadiusRatio = 0.88f))
                                 .clickable { showInlineLyrics = true },
                             contentAlignment = Alignment.Center,
                         ) {
@@ -349,8 +373,8 @@ fun RhythmPlayerContent(
                                     .fillMaxSize()
                                     .graphicsLayer {
                                         rotationZ = if (isPlaying) -artRotation else 0f
-                                        scaleX = 1.38f
-                                        scaleY = 1.38f
+                                        scaleX = 1.15f
+                                        scaleY = 1.15f
                                     },
                             )
                         }

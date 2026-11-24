@@ -231,6 +231,7 @@ fun TipsAndTricksSheet(
                             verticalAlignment = Alignment.CenterVertically,
                         ) {
                             Row(
+                                modifier = Modifier.weight(1f, fill = false),
                                 verticalAlignment = Alignment.CenterVertically,
                                 horizontalArrangement = Arrangement.spacedBy(10.dp),
                             ) {
@@ -248,7 +249,7 @@ fun TipsAndTricksSheet(
                                         modifier = Modifier.size(18.dp),
                                     )
                                 }
-                                Column {
+                                Column(modifier = Modifier.padding(end = 8.dp)) {
                                     Text(
                                         text = tip.category,
                                         style = MaterialTheme.typography.labelSmall.copy(
@@ -282,6 +283,8 @@ fun TipsAndTricksSheet(
                                         text = tip.actionLabel,
                                         style = MaterialTheme.typography.labelMedium.copy(fontWeight = FontWeight.Bold),
                                         color = tip.accentColor,
+                                        maxLines = 1,
+                                        softWrap = false,
                                     )
                                 }
                             }

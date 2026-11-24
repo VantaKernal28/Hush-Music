@@ -2,6 +2,7 @@ package com.music.bitchord.ui.components.expressive
 
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.animateColorAsState
+import androidx.compose.animation.core.Spring
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.spring
 import androidx.compose.animation.expandHorizontally
@@ -137,9 +138,22 @@ fun ExpressiveNavBar(
                     coreTabs.forEachIndexed { index, tab ->
                         val isSelected = index == selectedIndex
                         val interactionSource = remember { MutableInteractionSource() }
+                        val isPressed by interactionSource.collectIsPressedAsState()
+                        val tabScale by animateFloatAsState(
+                            targetValue = if (isPressed) 0.90f else 1.0f,
+                            animationSpec = spring(
+                                dampingRatio = Spring.DampingRatioMediumBouncy,
+                                stiffness = Spring.StiffnessMediumLow,
+                            ),
+                            label = "coreTabScale_$index",
+                        )
 
                         Box(
                             modifier = Modifier
+                                .graphicsLayer {
+                                    scaleX = tabScale
+                                    scaleY = tabScale
+                                }
                                 .clip(pillShape)
                                 .then(
                                     if (isSelected) {
@@ -177,8 +191,10 @@ fun ExpressiveNavBar(
                                 )
                                 AnimatedVisibility(
                                     visible = isSelected,
-                                    enter = fadeIn(spring(stiffness = 500f)) + expandHorizontally(spring(stiffness = 500f)),
-                                    exit = fadeOut(spring(stiffness = 500f)) + shrinkHorizontally(spring(stiffness = 500f)),
+                                    enter = fadeIn(spring(dampingRatio = Spring.DampingRatioMediumBouncy, stiffness = Spring.StiffnessMediumLow)) +
+                                            expandHorizontally(spring(dampingRatio = Spring.DampingRatioMediumBouncy, stiffness = Spring.StiffnessMediumLow)),
+                                    exit = fadeOut(spring(dampingRatio = Spring.DampingRatioMediumBouncy, stiffness = Spring.StiffnessMediumLow)) +
+                                            shrinkHorizontally(spring(dampingRatio = Spring.DampingRatioMediumBouncy, stiffness = Spring.StiffnessMediumLow)),
                                 ) {
                                     Row(verticalAlignment = Alignment.CenterVertically) {
                                         Spacer(Modifier.width(6.dp))
@@ -202,10 +218,23 @@ fun ExpressiveNavBar(
             if (searchTab != null) {
                 val isSearchSelected = selectedIndex == 3
                 val searchInteraction = remember { MutableInteractionSource() }
+                val isSearchPressed by searchInteraction.collectIsPressedAsState()
+                val searchScale by animateFloatAsState(
+                    targetValue = if (isSearchPressed) 0.90f else 1.0f,
+                    animationSpec = spring(
+                        dampingRatio = Spring.DampingRatioMediumBouncy,
+                        stiffness = Spring.StiffnessMediumLow,
+                    ),
+                    label = "searchTabScale",
+                )
 
                 Box(
                     modifier = Modifier
                         .size(56.dp)
+                        .graphicsLayer {
+                            scaleX = searchScale
+                            scaleY = searchScale
+                        }
                         .shadow(elevation = 8.dp, shape = circleShape, ambientColor = Color.Black.copy(alpha = 0.25f))
                         .clip(circleShape)
                         .then(

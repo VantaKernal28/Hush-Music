@@ -562,7 +562,7 @@ private fun BitChordApp(
     // rather than inside the bar because the page's scroll is what drives it,
     // and the page is a sibling of the bar rather than a child.
     val navBarScroll = rememberFloatingTabBarScrollConnection(
-        inlineBehavior = FloatingTabBarInlineBehavior.Never,
+        inlineBehavior = FloatingTabBarInlineBehavior.OnScrollDown,
     )
     var selectedTab by rememberSaveable { mutableIntStateOf(0) }
     // Explore loads the first time it's shown, not at launch beside Home.

@@ -2345,14 +2345,53 @@ fun NowPlayingScreen(
                     },
                 )
             }
-        } else {
+        } else if (materialUi) {
             val isDarkTheme = MaterialTheme.colorScheme.surface.luminance() < 0.5f
             Box(
                 modifier = Modifier
                     .fillMaxSize()
                     .onSizeChanged { playerBounds = it }
                     .then(dockHost)
-                    .background(if (materialUi && !isDarkTheme) Color(0xFFF8F7FA) else Color.Black),
+                    .background(if (!isDarkTheme) Color(0xFFF8F7FA) else Color(0xFF0F0F12)),
+            ) {
+                RhythmPlayerContent(
+                    song = song,
+                    isPlaying = isPlaying,
+                    isLoading = isLoading || audioVersionSwitching,
+                    position = position,
+                    durationMs = durationMs,
+                    likeStatus = likeStatus,
+                    onToggleLike = onToggleLike,
+                    onPlayPause = onPlayPause,
+                    onNext = onNext,
+                    onPrevious = onPrevious,
+                    onSeekFraction = onSeekFraction,
+                    queue = queue,
+                    queueIndex = queueIndex,
+                    repeatMode = repeatMode,
+                    shuffleEnabled = shuffleEnabled,
+                    onToggleShuffle = onToggleShuffle,
+                    onCycleRepeat = onCycleRepeat,
+                    onJumpTo = onJumpTo,
+                    onRemoveFromQueue = onRemoveFromQueue,
+                    onClearQueue = onClearQueue,
+                    onOpenMenu = onOpenMenu,
+                    onOpenAlbum = { song.albumId?.let { onOpenAlbum(it) } },
+                    onOpenArtist = { onOpenArtist(song.artistId, song.artist) },
+                    lyrics = lyrics,
+                    lyricsUnavailable = lyricsUnavailable,
+                    onDismiss = onDismissPlayer,
+                    onOpenMixer = onOpenMixer,
+                    modifier = Modifier.fillMaxSize(),
+                )
+            }
+        } else {
+            Box(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .onSizeChanged { playerBounds = it }
+                    .then(dockHost)
+                    .background(Color.Black),
             ) {
                 // Three themes, one rule between them: a full-screen Spotify Canvas
                 // is its own backdrop until a panel opens.

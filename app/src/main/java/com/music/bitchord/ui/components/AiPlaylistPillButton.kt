@@ -31,12 +31,16 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.graphicsLayer
+import androidx.compose.ui.graphics.luminance
 import androidx.compose.ui.unit.dp
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.music.bitchord.data.settings.AppSettings
 import com.music.bitchord.ui.icons.SfIcons
 
 /**
  * Sleek, circular Material 3 button in the top-left corner with pulsing AI icon.
- * Features a subtle sparkle/accent ring, smooth breathing animation,
+ * Features Liquid Glass frosted blur & specular rim in Classic mode,
+ * clean M3E tonal elevation in Material UI mode, smooth breathing animation,
  * and spring press feedback that opens the AI Playlist Maker.
  */
 @Composable
@@ -44,6 +48,10 @@ fun AiPlaylistPillButton(
     onClick: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
+    val materialUi by AppSettings.materialUiMode.collectAsStateWithLifecycle()
+    val isDark = MaterialTheme.colorScheme.surface.luminance() < 0.5f
+    val circleShape = remember { CircleShape }
+
     val interactionSource = remember { MutableInteractionSource() }
     val isPressed by interactionSource.collectIsPressedAsState()
     val pressScale by animateFloatAsState(
@@ -77,15 +85,15 @@ fun AiPlaylistPillButton(
 
     val accent = MaterialTheme.colorScheme.primary
 
-    Box(
-        modifier = modifier
-            .size(40.dp)
-            .graphicsLayer {
-                scaleX = pressScale * breatheScale
-                scaleY = pressScale * breatheScale
-            }
-            .clip(CircleShape)
-            .background(MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.82f))
+    val glassModifier = if (!materialUi) {
+        Modifier.liquidGlass(
+            shape = circleShape,
+            surfaceTint = if (isDark) accent.copy(alpha = 0.08f) else Color.White.copy(alpha = 0.72f),
+        )
+    } else {
+        Modifier
+            .clip(circleShape)
+            .background(MaterialTheme.colorScheme.surfaceContainerHigh)
             .border(
                 width = 1.2.dp,
                 brush = Brush.linearGradient(
@@ -95,8 +103,18 @@ fun AiPlaylistPillButton(
                         accent.copy(alpha = shimmerAlpha * 0.5f),
                     )
                 ),
-                shape = CircleShape,
+                shape = circleShape,
             )
+    }
+
+    Box(
+        modifier = modifier
+            .size(40.dp)
+            .graphicsLayer {
+                scaleX = pressScale * breatheScale
+                scaleY = pressScale * breatheScale
+            }
+            .then(glassModifier)
             .clickable(
                 interactionSource = interactionSource,
                 indication = null,
@@ -107,7 +125,7 @@ fun AiPlaylistPillButton(
         Icon(
             imageVector = SfIcons.AutoAwesome,
             contentDescription = "AI Playlist Maker",
-            tint = accent,
+            tint = if (!materialUi && !isDark) Color(0xFF1A1A1E) else accent,
             modifier = Modifier.size(18.dp),
         )
     }
