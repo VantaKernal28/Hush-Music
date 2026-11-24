@@ -74,6 +74,7 @@ import androidx.compose.material.icons.rounded.Language
 import androidx.compose.material.icons.rounded.Translate
 import androidx.compose.material.icons.rounded.VisibilityOff
 import androidx.compose.material.icons.rounded.LibraryMusic
+import androidx.compose.material.icons.rounded.Lightbulb
 import androidx.compose.material.icons.rounded.LocalOffer
 import androidx.compose.material.icons.rounded.MusicOff
 import androidx.compose.material.icons.rounded.MotionPhotosOff
@@ -890,6 +891,7 @@ fun SettingsScreen(
                     onOpenPlayer = { showPlayerSheet = true },
                     onOpenMiniPlayer = { showMiniPlayerSheet = true },
                     onOpenAbout = { showAboutSheet = true },
+                    onOpenTipsAndTricks = { showTipsAndTricksSheet = true },
                 )
                 if (watchAvailable) {
                     SettingsGroup {
@@ -1693,7 +1695,7 @@ fun SettingsScreen(
                 val blurPercentTitle = "Blur Percentage"
                 row(blurPercentTitle, "blur", "glass", "frosted", "backdrop") {
                     SliderRow(
-                        icon = SfIcons.ProgressiveBlur,
+                        icon = SfIcons.BlurOn,
                         title = blurPercentTitle,
                         value = "${(glassBlurPercentage * 100).roundToInt()}%",
                         sliderValue = glassBlurPercentage,
@@ -3429,6 +3431,7 @@ private fun SettingsCategoryList(
     onOpenPlayer: () -> Unit = {},
     onOpenMiniPlayer: () -> Unit = {},
     onOpenAbout: () -> Unit = {},
+    onOpenTipsAndTricks: () -> Unit = {},
 ) {
     // Unified clean categorized hierarchy matching 20366.jpg & 20386.jpg (Zero Subtitles)
     // 1. LOOK & FEEL
@@ -3516,7 +3519,7 @@ private fun SettingsCategoryList(
             icon = Icons.Rounded.Lightbulb,
             iconBadgeColor = Color(0xFFF59E0B),
             title = "Tips & Tricks",
-            onClick = { showTipsAndTricksSheet = true },
+            onClick = onOpenTipsAndTricks,
         )
         RowDivider()
         SettingsRow(
