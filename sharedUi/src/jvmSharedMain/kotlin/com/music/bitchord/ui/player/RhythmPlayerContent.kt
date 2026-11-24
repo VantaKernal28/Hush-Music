@@ -69,6 +69,12 @@ import androidx.compose.material.icons.rounded.Share
 import androidx.compose.material.icons.rounded.Shuffle
 import androidx.compose.material.icons.rounded.SkipNext
 import androidx.compose.material.icons.rounded.SkipPrevious
+import androidx.compose.material.icons.rounded.Favorite
+import androidx.compose.material.icons.rounded.FavoriteBorder
+import androidx.compose.material.icons.rounded.KeyboardArrowDown
+import androidx.compose.material.icons.rounded.Pause
+import androidx.compose.material.icons.rounded.PlayArrow
+import androidx.compose.material.icons.rounded.RepeatOne
 import androidx.compose.material.icons.rounded.Speaker
 import androidx.compose.material.icons.rounded.Speed
 import androidx.compose.material.icons.rounded.SwapHoriz
@@ -218,13 +224,13 @@ fun RhythmPlayerContent(
 
     LaunchedEffect(beatTimestamp) {
         if (beatTimestamp > 0L && isPlaying && beatImpulseEnabled) {
-            val targetScale = 1.0f + 0.07f * beatEnergy.coerceIn(0.5f, 1.0f)
+            val targetScale = 1.0f + 0.045f * beatEnergy.coerceIn(0.5f, 1.0f)
             beatAnim.snapTo(targetScale)
             beatAnim.animateTo(
                 targetValue = 1.0f,
                 animationSpec = spring(
-                    dampingRatio = 0.58f,
-                    stiffness = 320f,
+                    dampingRatio = 0.75f,
+                    stiffness = 220f,
                 ),
             )
         }
@@ -316,33 +322,78 @@ fun RhythmPlayerContent(
             val isCompactHeight = availableHeight < 680.dp
             val artSize = (maxWidth * 0.82f).coerceIn(250.dp, if (isCompactHeight) 250.dp else 280.dp)
 
-            Column(
-                modifier = Modifier.fillMaxSize(),
-                horizontalAlignment = Alignment.CenterHorizontally,
-                verticalArrangement = Arrangement.SpaceBetween,
-            ) {
-                // Top Dismiss Handle Bar with vertical swipe-to-dismiss gesture
-                Box(
+                // Top Row: Circular Collapse Button (Left), "Now Playing" Title (Center), Output & Lyrics Buttons (Right)
+                Row(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .pointerInput(Unit) {
-                            detectVerticalDragGestures { _, dragAmount ->
-                                if (dragAmount > 14f) onDismiss()
-                            }
-                        }
-                        .padding(top = 4.dp, bottom = 4.dp),
-                    contentAlignment = Alignment.Center,
+                        .padding(top = 8.dp, bottom = 8.dp),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.CenterVertically,
                 ) {
                     Box(
                         modifier = Modifier
-                            .width(42.dp)
-                            .height(5.dp)
-                            .clip(RoundedCornerShape(percent = 50))
-                            .background(sheetHandle),
+                            .size(44.dp)
+                            .clip(CircleShape)
+                            .background(controlGlass)
+                            .clickable(onClick = onDismiss),
+                        contentAlignment = Alignment.Center,
+                    ) {
+                        Icon(
+                            imageVector = Icons.Rounded.KeyboardArrowDown,
+                            contentDescription = "Collapse",
+                            tint = iconTint,
+                            modifier = Modifier.size(26.dp),
+                        )
+                    }
+
+                    Text(
+                        text = "Now Playing",
+                        style = MaterialTheme.typography.titleMedium.copy(
+                            fontWeight = FontWeight.Bold,
+                            fontSize = 18.sp,
+                        ),
+                        color = titleColor,
                     )
+
+                    Row(
+                        horizontalArrangement = Arrangement.spacedBy(8.dp),
+                        verticalAlignment = Alignment.CenterVertically,
+                    ) {
+                        Box(
+                            modifier = Modifier
+                                .size(44.dp)
+                                .clip(RoundedCornerShape(14.dp))
+                                .background(if (showAudioSheet) activeDockContainer else controlGlass)
+                                .clickable { showAudioSheet = true },
+                            contentAlignment = Alignment.Center,
+                        ) {
+                            Icon(
+                                imageVector = Icons.Rounded.Speaker,
+                                contentDescription = "Audio Output",
+                                tint = if (showAudioSheet) activeDockContent else iconTint,
+                                modifier = Modifier.size(20.dp),
+                            )
+                        }
+
+                        Box(
+                            modifier = Modifier
+                                .size(44.dp)
+                                .clip(RoundedCornerShape(14.dp))
+                                .background(if (showInlineLyrics) activeDockContainer else controlGlass)
+                                .clickable { showInlineLyrics = !showInlineLyrics },
+                            contentAlignment = Alignment.Center,
+                        ) {
+                            Icon(
+                                imageVector = BitChordIcons.LyricsQuote,
+                                contentDescription = "Lyrics",
+                                tint = if (showInlineLyrics) activeDockContent else iconTint,
+                                modifier = Modifier.size(20.dp),
+                            )
+                        }
+                    }
                 }
 
-                // Upper Stage: Artwork + Title OR Full-Stage Synced Lyrics
+                // Upper Stage: 28dp Artwork + Title/Artist/Favorite OR Full-Stage Synced Lyrics
                 if (!showInlineLyrics) {
                     Column(
                         modifier = Modifier
@@ -351,17 +402,18 @@ fun RhythmPlayerContent(
                         horizontalAlignment = Alignment.CenterHorizontally,
                         verticalArrangement = Arrangement.Center,
                     ) {
-                        // Continuously rotating M3E Scalloped flower shape with beat-sync impulse & upright artwork
+                        // Pixel M3E 28dp rounded-square artwork card with subtle border & beat impulse (v2_02.jpg)
                         Box(
                             modifier = Modifier
-                                .size(artSize)
+                                .fillMaxWidth()
                                 .aspectRatio(1f)
                                 .graphicsLayer {
-                                    rotationZ = if (isPlaying) artRotation else 0f
                                     scaleX = effectiveArtScale
                                     scaleY = effectiveArtScale
                                 }
-                                .clip(ScallopedFlowerShape(lobes = 8, innerRadiusRatio = 0.88f))
+                                .clip(RoundedCornerShape(28.dp))
+                                .background(if (isDark) Color(0xFF242428) else Color(0xFFE2E0E6))
+                                .border(1.dp, Color.White.copy(alpha = 0.08f), RoundedCornerShape(28.dp))
                                 .clickable { showInlineLyrics = true },
                             contentAlignment = Alignment.Center,
                         ) {
@@ -369,48 +421,61 @@ fun RhythmPlayerContent(
                                 model = song.thumbnailUrl,
                                 contentDescription = song.title,
                                 contentScale = ContentScale.Crop,
-                                modifier = Modifier
-                                    .fillMaxSize()
-                                    .graphicsLayer {
-                                        rotationZ = if (isPlaying) -artRotation else 0f
-                                        scaleX = 1.15f
-                                        scaleY = 1.15f
-                                    },
+                                modifier = Modifier.fillMaxSize(),
                             )
                         }
 
-                        Spacer(Modifier.height(if (isCompactHeight) 14.dp else 24.dp))
+                        Spacer(Modifier.height(if (isCompactHeight) 14.dp else 22.dp))
 
-                        // High-Contrast Title & Artist
-                        Column(
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .padding(horizontal = 8.dp),
-                            horizontalAlignment = Alignment.CenterHorizontally,
+                        // High-Contrast Title & Artist + Favorite Action Button (v2_02.jpg)
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            verticalAlignment = Alignment.CenterVertically,
+                            horizontalArrangement = Arrangement.SpaceBetween,
                         ) {
-                            Text(
-                                text = song.title,
-                                style = MaterialTheme.typography.headlineMedium.copy(
-                                    fontWeight = FontWeight.Black,
-                                    fontSize = if (isCompactHeight) 22.sp else 26.sp,
-                                ),
-                                color = titleColor,
-                                maxLines = 1,
-                                overflow = TextOverflow.Ellipsis,
-                                textAlign = TextAlign.Center,
-                            )
-                            Spacer(Modifier.height(4.dp))
-                            Text(
-                                text = song.artist,
-                                style = MaterialTheme.typography.titleMedium.copy(
-                                    fontWeight = FontWeight.Normal,
-                                    fontSize = if (isCompactHeight) 15.sp else 17.sp,
-                                ),
-                                color = textSubColor,
-                                maxLines = 1,
-                                overflow = TextOverflow.Ellipsis,
-                                textAlign = TextAlign.Center,
-                            )
+                            Column(modifier = Modifier.weight(1f)) {
+                                Text(
+                                    text = song.title,
+                                    style = MaterialTheme.typography.headlineSmall.copy(
+                                        fontWeight = FontWeight.Bold,
+                                        fontSize = if (isCompactHeight) 20.sp else 23.sp,
+                                        letterSpacing = (-0.5).sp,
+                                    ),
+                                    color = titleColor,
+                                    maxLines = 1,
+                                    overflow = TextOverflow.Ellipsis,
+                                )
+                                Spacer(Modifier.height(4.dp))
+                                Text(
+                                    text = song.artist,
+                                    style = MaterialTheme.typography.titleMedium.copy(
+                                        fontWeight = FontWeight.Normal,
+                                        fontSize = if (isCompactHeight) 15.sp else 16.sp,
+                                    ),
+                                    color = textSubColor,
+                                    maxLines = 1,
+                                    overflow = TextOverflow.Ellipsis,
+                                )
+                            }
+
+                            Spacer(Modifier.width(12.dp))
+
+                            val liked = likeStatus == LikeStatus.LIKE
+                            Box(
+                                modifier = Modifier
+                                    .size(46.dp)
+                                    .clip(RoundedCornerShape(14.dp))
+                                    .background(controlGlass)
+                                    .clickable(onClick = onToggleLike),
+                                contentAlignment = Alignment.Center,
+                            ) {
+                                Icon(
+                                    imageVector = if (liked) Icons.Rounded.Favorite else Icons.Rounded.FavoriteBorder,
+                                    contentDescription = if (liked) "Unlike" else "Like",
+                                    tint = if (liked) primaryAccent else iconTint,
+                                    modifier = Modifier.size(22.dp),
+                                )
+                            }
                         }
                     }
                 } else {
@@ -595,179 +660,200 @@ fun RhythmPlayerContent(
                     }
                 }
 
-                // Transport Controls & Dock
+                // Transport Controls & Utility Dock matching v2_02.jpg
                 Column(
                     modifier = Modifier.fillMaxWidth(),
-                    verticalArrangement = Arrangement.spacedBy(if (isCompactHeight) 10.dp else 16.dp),
+                    verticalArrangement = Arrangement.spacedBy(if (isCompactHeight) 14.dp else 20.dp),
                 ) {
-                    // Row 1: Wide Pill Play/Pause button + circular Next button
+                    // 1. M3E Seekbar with centered audio specs badge (48.0 kHz · 320 kbps · MP3) and timestamps
+                    Column(
+                        modifier = Modifier.fillMaxWidth(),
+                        verticalArrangement = Arrangement.Center,
+                    ) {
+                        RhythmProgressSeekbar(
+                            progress = currentProgress,
+                            style = progressLineStyle,
+                            onProgressChange = {
+                                isScrubbing = true
+                                scrubProgress = it
+                            },
+                            onProgressChangeFinished = {
+                                onSeekFraction(it)
+                                isScrubbing = false
+                            },
+                            activeColor = if (isDark) Color.White else primaryAccent,
+                            inactiveColor = if (isDark) Color.White.copy(alpha = 0.22f) else Color.Black.copy(alpha = 0.12f),
+                        )
+
+                        Spacer(Modifier.height(6.dp))
+
+                        Row(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(horizontal = 4.dp),
+                            horizontalArrangement = Arrangement.SpaceBetween,
+                            verticalAlignment = Alignment.CenterVertically,
+                        ) {
+                            val currentMs = if (isScrubbing) (scrubProgress * durationMs).toLong() else position.positionMs
+                            Text(
+                                text = formatDuration(currentMs),
+                                style = MaterialTheme.typography.labelMedium.copy(
+                                    fontSize = 13.sp,
+                                    fontWeight = FontWeight.Medium,
+                                ),
+                                color = timeColor,
+                            )
+
+                            // Centered audio specs badge
+                            Box(
+                                modifier = Modifier
+                                    .clip(RoundedCornerShape(percent = 50))
+                                    .background(if (isDark) Color.White.copy(alpha = 0.10f) else Color.Black.copy(alpha = 0.06f))
+                                    .border(1.dp, Color.White.copy(alpha = 0.08f), RoundedCornerShape(percent = 50))
+                                    .padding(horizontal = 12.dp, vertical = 4.dp),
+                            ) {
+                                Text(
+                                    text = "48.0 kHz · 320 kbps · MP3",
+                                    style = MaterialTheme.typography.labelSmall.copy(
+                                        fontSize = 11.sp,
+                                        fontWeight = FontWeight.SemiBold,
+                                    ),
+                                    color = titleColor.copy(alpha = 0.85f),
+                                )
+                            }
+
+                            Text(
+                                text = formatDuration(durationMs),
+                                style = MaterialTheme.typography.labelMedium.copy(
+                                    fontSize = 13.sp,
+                                    fontWeight = FontWeight.Medium,
+                                ),
+                                color = timeColor,
+                            )
+                        }
+                    }
+
+                    // 2. Playback Controls Row: Previous (white pill), Play/Pause (dark button), Next (white pill)
                     Row(
                         modifier = Modifier.fillMaxWidth(),
                         horizontalArrangement = Arrangement.spacedBy(14.dp),
                         verticalAlignment = Alignment.CenterVertically,
                     ) {
+                        // Previous: Large stadium pill
                         Box(
                             modifier = Modifier
                                 .weight(1f)
                                 .height(if (isCompactHeight) 56.dp else 64.dp)
                                 .clip(RoundedCornerShape(percent = 50))
-                                .background(playBtnContainer)
-                                .clickable(onClick = onPlayPause),
-                            contentAlignment = Alignment.Center,
-                        ) {
-                            Text(
-                                text = if (isPlaying) "Pause" else "Play",
-                                style = MaterialTheme.typography.titleLarge.copy(
-                                    fontWeight = FontWeight.Bold,
-                                    fontSize = if (isCompactHeight) 19.sp else 22.sp,
-                                ),
-                                color = playBtnContent,
-                            )
-                        }
-
-                        Box(
-                            modifier = Modifier
-                                .size(if (isCompactHeight) 56.dp else 64.dp)
-                                .clip(CircleShape)
-                                .background(controlGlass)
-                                .clickable(onClick = onNext),
-                            contentAlignment = Alignment.Center,
-                        ) {
-                            Icon(
-                                imageVector = Icons.Rounded.SkipNext,
-                                contentDescription = "Next",
-                                tint = iconTint,
-                                modifier = Modifier.size(32.dp),
-                            )
-                        }
-                    }
-
-                    // Row 2: Circular Previous button + customizable seekbar with timestamps
-                    Row(
-                        modifier = Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.spacedBy(14.dp),
-                        verticalAlignment = Alignment.CenterVertically,
-                    ) {
-                        Box(
-                            modifier = Modifier
-                                .size(if (isCompactHeight) 46.dp else 52.dp)
-                                .clip(CircleShape)
-                                .background(controlGlass)
+                                .background(if (isDark) Color.White else MaterialTheme.colorScheme.surfaceVariant)
                                 .clickable(onClick = onPrevious),
                             contentAlignment = Alignment.Center,
                         ) {
                             Icon(
                                 imageVector = Icons.Rounded.SkipPrevious,
                                 contentDescription = "Previous",
-                                tint = iconTint,
-                                modifier = Modifier.size(26.dp),
+                                tint = if (isDark) Color(0xFF0D0D0F) else MaterialTheme.colorScheme.onSurfaceVariant,
+                                modifier = Modifier.size(28.dp),
                             )
                         }
 
-                        Column(
-                            modifier = Modifier.weight(1f),
-                            verticalArrangement = Arrangement.Center,
+                        // Play / Pause: Circular dark button
+                        Box(
+                            modifier = Modifier
+                                .size(if (isCompactHeight) 56.dp else 64.dp)
+                                .clip(CircleShape)
+                                .background(if (isDark) Color(0xFF38383E) else primaryAccent)
+                                .clickable(onClick = onPlayPause),
+                            contentAlignment = Alignment.Center,
                         ) {
-                            RhythmProgressSeekbar(
-                                progress = currentProgress,
-                                style = progressLineStyle,
-                                onProgressChange = {
-                                    isScrubbing = true
-                                    scrubProgress = it
-                                },
-                                onProgressChangeFinished = {
-                                    onSeekFraction(it)
-                                    isScrubbing = false
-                                },
-                                activeColor = primaryAccent,
-                                inactiveColor = if (isDark) Color.White.copy(alpha = 0.22f) else Color.Black.copy(alpha = 0.12f),
+                            Icon(
+                                imageVector = if (isPlaying) Icons.Rounded.Pause else Icons.Rounded.PlayArrow,
+                                contentDescription = if (isPlaying) "Pause" else "Play",
+                                tint = Color.White,
+                                modifier = Modifier.size(32.dp),
                             )
-                            Row(
-                                modifier = Modifier
-                                    .fillMaxWidth()
-                                    .padding(horizontal = 4.dp),
-                                horizontalArrangement = Arrangement.SpaceBetween,
-                                verticalAlignment = Alignment.CenterVertically,
-                            ) {
-                                val currentMs = if (isScrubbing) (scrubProgress * durationMs).toLong() else position.positionMs
-                                Text(
-                                    text = formatDuration(currentMs),
-                                    style = MaterialTheme.typography.labelMedium.copy(
-                                        fontSize = 12.sp,
-                                        fontWeight = FontWeight.Medium,
-                                    ),
-                                    color = timeColor,
-                                )
-                                Text(
-                                    text = formatDuration(durationMs),
-                                    style = MaterialTheme.typography.labelMedium.copy(
-                                        fontSize = 12.sp,
-                                        fontWeight = FontWeight.Medium,
-                                    ),
-                                    color = timeColor,
-                                )
-                            }
+                        }
+
+                        // Next: Large stadium pill
+                        Box(
+                            modifier = Modifier
+                                .weight(1f)
+                                .height(if (isCompactHeight) 56.dp else 64.dp)
+                                .clip(RoundedCornerShape(percent = 50))
+                                .background(if (isDark) Color.White else MaterialTheme.colorScheme.surfaceVariant)
+                                .clickable(onClick = onNext),
+                            contentAlignment = Alignment.Center,
+                        ) {
+                            Icon(
+                                imageVector = Icons.Rounded.SkipNext,
+                                contentDescription = "Next",
+                                tint = if (isDark) Color(0xFF0D0D0F) else MaterialTheme.colorScheme.onSurfaceVariant,
+                                modifier = Modifier.size(28.dp),
+                            )
                         }
                     }
 
-                    // Row 3 (Bottom Dock): 5 high-contrast dock buttons
-                    Row(
+                    // 3. Bottom 3-Icon Tonal Utility Pill: Shuffle, Repeat, Queue (v2_02.jpg)
+                    Box(
                         modifier = Modifier
                             .fillMaxWidth()
-                            .padding(bottom = if (isCompactHeight) 12.dp else 20.dp),
-                        horizontalArrangement = Arrangement.spacedBy(8.dp),
-                        verticalAlignment = Alignment.CenterVertically,
+                            .height(52.dp)
+                            .clip(RoundedCornerShape(percent = 50))
+                            .background(controlGlass)
+                            .border(1.dp, Color.White.copy(alpha = 0.08f), RoundedCornerShape(percent = 50)),
                     ) {
-                        // 1. Synced Lyrics
-                        RhythmDockButton(
-                            icon = BitChordIcons.LyricsQuote,
-                            contentDescription = "Lyrics",
-                            containerColor = if (showInlineLyrics) activeDockContainer else dockGlass,
-                            contentColor = if (showInlineLyrics) activeDockContent else iconTint,
-                            onClick = { showInlineLyrics = !showInlineLyrics },
-                            modifier = Modifier.weight(1f),
-                        )
+                        Row(
+                            modifier = Modifier.fillMaxSize(),
+                            verticalAlignment = Alignment.CenterVertically,
+                        ) {
+                            // Shuffle
+                            Box(
+                                modifier = Modifier
+                                    .weight(1f)
+                                    .fillMaxHeight()
+                                    .clickable(onClick = onToggleShuffle),
+                                contentAlignment = Alignment.Center,
+                            ) {
+                                Icon(
+                                    imageVector = Icons.Rounded.Shuffle,
+                                    contentDescription = "Shuffle",
+                                    tint = if (shuffleEnabled) primaryAccent else iconTint,
+                                    modifier = Modifier.size(22.dp),
+                                )
+                            }
 
-                        // 2. Like
-                        val liked = likeStatus == LikeStatus.LIKE
-                        RhythmDockButton(
-                            icon = if (liked) BitChordIcons.StarFilled else BitChordIcons.Star,
-                            contentDescription = if (liked) "Unlike" else "Like",
-                            containerColor = dockGlass,
-                            contentColor = if (liked) primaryAccent else iconTint.copy(alpha = 0.7f),
-                            onClick = onToggleLike,
-                            modifier = Modifier.weight(1f),
-                        )
+                            // Repeat
+                            Box(
+                                modifier = Modifier
+                                    .weight(1f)
+                                    .fillMaxHeight()
+                                    .clickable(onClick = onToggleRepeat),
+                                contentAlignment = Alignment.Center,
+                            ) {
+                                Icon(
+                                    imageVector = if (repeatMode == 1) Icons.Rounded.RepeatOne else Icons.Rounded.Repeat,
+                                    contentDescription = "Repeat",
+                                    tint = if (repeatMode > 0) primaryAccent else iconTint,
+                                    modifier = Modifier.size(22.dp),
+                                )
+                            }
 
-                        // 3. Audio Output / Playback settings
-                        RhythmDockButton(
-                            icon = Icons.Rounded.Speaker,
-                            contentDescription = "Audio Output",
-                            containerColor = if (showAudioSheet) activeDockContainer else dockGlass,
-                            contentColor = if (showAudioSheet) activeDockContent else iconTint,
-                            onClick = { showAudioSheet = true },
-                            modifier = Modifier.weight(1f),
-                        )
-
-                        // 4. Queue
-                        RhythmDockButton(
-                            icon = BitChordIcons.Queue,
-                            contentDescription = "Queue",
-                            containerColor = if (showQueueSheet) activeDockContainer else dockGlass,
-                            contentColor = if (showQueueSheet) activeDockContent else iconTint,
-                            onClick = { showQueueSheet = true },
-                            modifier = Modifier.weight(1f),
-                        )
-
-                        // 5. More Options
-                        RhythmDockButton(
-                            icon = Icons.Rounded.MoreVert,
-                            contentDescription = "More",
-                            containerColor = if (showMoreSheet) activeDockContainer else dockGlass,
-                            contentColor = if (showMoreSheet) activeDockContent else iconTint,
-                            onClick = { showMoreSheet = true },
-                            modifier = Modifier.weight(1f),
-                        )
+                            // Queue
+                            Box(
+                                modifier = Modifier
+                                    .weight(1f)
+                                    .fillMaxHeight()
+                                    .clickable { showQueueSheet = true },
+                                contentAlignment = Alignment.Center,
+                            ) {
+                                Icon(
+                                    imageVector = BitChordIcons.Queue,
+                                    contentDescription = "Queue",
+                                    tint = iconTint,
+                                    modifier = Modifier.size(22.dp),
+                                )
+                            }
+                        }
                     }
                 }
             }

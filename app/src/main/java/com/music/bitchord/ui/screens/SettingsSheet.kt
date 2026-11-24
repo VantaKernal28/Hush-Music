@@ -337,6 +337,10 @@ fun SettingsScreen(
     val playerTheme by AppSettings.playerTheme.collectAsStateWithLifecycle()
     val materialUiMode by AppSettings.materialUiMode.collectAsStateWithLifecycle()
     val liveSongColorGradient by AppSettings.liveSongColorGradient.collectAsStateWithLifecycle()
+    val m3eNavBarWidth by AppSettings.m3eNavBarWidth.collectAsStateWithLifecycle()
+    val m3eNavBarHeight by AppSettings.m3eNavBarHeight.collectAsStateWithLifecycle()
+    val m3eNavBarPadding by AppSettings.m3eNavBarPadding.collectAsStateWithLifecycle()
+    val m3eFrostedGlassIntensity by AppSettings.m3eFrostedGlassIntensity.collectAsStateWithLifecycle()
     val syncedLyrics by AppSettings.syncedLyrics.collectAsStateWithLifecycle()
     val lyricsSources by AppSettings.lyricsSources.collectAsStateWithLifecycle()
     val translationLanguage by AppSettings.translationLanguage.collectAsStateWithLifecycle()
@@ -1700,6 +1704,56 @@ fun SettingsScreen(
                         value = "${(glassBlurPercentage * 100).roundToInt()}%",
                         sliderValue = glassBlurPercentage,
                         onSliderValue = AppSettings::setGlassBlurPercentage,
+                        valueRange = 0f..1f,
+                        steps = 20,
+                    )
+                }
+            }
+            if (materialUiMode) {
+                val navBarWidthTitle = "Menu Bar Width"
+                row(navBarWidthTitle, "nav", "bar", "width", "m3e", "dimension") {
+                    SliderRow(
+                        icon = SfIcons.Tune,
+                        title = navBarWidthTitle,
+                        value = "${(m3eNavBarWidth * 100).roundToInt()}%",
+                        sliderValue = m3eNavBarWidth,
+                        onSliderValue = AppSettings::setM3eNavBarWidth,
+                        valueRange = 0.70f..1.0f,
+                        steps = 30,
+                    )
+                }
+                val navBarHeightTitle = "Menu Bar Height"
+                row(navBarHeightTitle, "nav", "bar", "height", "m3e", "dimension") {
+                    SliderRow(
+                        icon = SfIcons.Sliders,
+                        title = navBarHeightTitle,
+                        value = "$m3eNavBarHeight dp",
+                        sliderValue = m3eNavBarHeight.toFloat(),
+                        onSliderValue = { AppSettings.setM3eNavBarHeight(it.roundToInt()) },
+                        valueRange = 52f..80f,
+                        steps = 28,
+                    )
+                }
+                val navBarPaddingTitle = "Menu Bar Padding"
+                row(navBarPaddingTitle, "nav", "bar", "padding", "thickness", "m3e", "dimension") {
+                    SliderRow(
+                        icon = SfIcons.Apps,
+                        title = navBarPaddingTitle,
+                        value = "$m3eNavBarPadding dp",
+                        sliderValue = m3eNavBarPadding.toFloat(),
+                        onSliderValue = { AppSettings.setM3eNavBarPadding(it.roundToInt()) },
+                        valueRange = 4f..18f,
+                        steps = 14,
+                    )
+                }
+                val frostedIntensityTitle = "Frosted Blur Intensity"
+                row(frostedIntensityTitle, "frosted", "glass", "blur", "intensity", "m3e") {
+                    SliderRow(
+                        icon = SfIcons.BlurOn,
+                        title = frostedIntensityTitle,
+                        value = "${(m3eFrostedGlassIntensity * 100).roundToInt()}%",
+                        sliderValue = m3eFrostedGlassIntensity,
+                        onSliderValue = AppSettings::setM3eFrostedGlassIntensity,
                         valueRange = 0f..1f,
                         steps = 20,
                     )

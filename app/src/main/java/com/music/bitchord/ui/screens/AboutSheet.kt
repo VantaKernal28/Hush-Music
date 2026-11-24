@@ -45,6 +45,17 @@ import androidx.compose.ui.platform.LocalUriHandler
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.compose.material.icons.rounded.BatteryChargingFull
+import androidx.compose.material.icons.rounded.CheckCircle
+import androidx.compose.material.icons.rounded.GraphicEq
+import androidx.compose.material.icons.rounded.Memory
+import androidx.compose.material.icons.rounded.PhoneAndroid
+import androidx.compose.material.icons.rounded.Waves
+import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.text.font.Font
+import androidx.compose.ui.text.font.FontFamily
+import androidx.compose.ui.text.style.TextOverflow
+import com.music.bitchord.R
 import coil3.compose.AsyncImage
 
 private const val PHOENIX_HANDLE = "phoenixdevellopment75"
@@ -143,179 +154,210 @@ fun AboutSheet(
                 ),
                 verticalArrangement = Arrangement.spacedBy(16.dp),
             ) {
-                // 1. Hero Poster Card
+                // 1. Asymmetric 2-Column Bento Grid Hero (IMG-20261124-WA0003.jpg / 21636.jpg)
                 item {
-                    Box(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .height(280.dp)
-                            .clip(RoundedCornerShape(32.dp))
-                            .background(
-                                Brush.linearGradient(
-                                    colors = listOf(
-                                        Color(0xFF1C0D02),
-                                        Color(0xFF2E1303),
-                                        Color(0xFF100702),
-                                    ),
-                                ),
-                            )
-                            .border(1.dp, Color(0xFFFF9800).copy(alpha = 0.25f), RoundedCornerShape(32.dp)),
-                        contentAlignment = Alignment.Center,
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.spacedBy(14.dp),
                     ) {
-                        // Ambient luminous wave ring inside card
+                        // Left Column: 2 Stacked Bento Cards (AXIONOS / 2.7 style -> HUSH MUSIC / 1.0)
+                        Column(
+                            modifier = Modifier
+                                .weight(1.05f)
+                                .height(274.dp),
+                            verticalArrangement = Arrangement.spacedBy(14.dp),
+                        ) {
+                            // Top Card: Version & Branch
+                            Column(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .weight(1f)
+                                    .clip(RoundedCornerShape(24.dp))
+                                    .background(Color(0xFF1E1E22))
+                                    .border(1.dp, Color.White.copy(alpha = 0.08f), RoundedCornerShape(24.dp))
+                                    .padding(18.dp),
+                                verticalArrangement = Arrangement.Center,
+                            ) {
+                                Text(
+                                    text = "HUSH MUSIC",
+                                    style = MaterialTheme.typography.labelSmall.copy(
+                                        fontWeight = FontWeight.ExtraBold,
+                                        letterSpacing = 1.2.sp,
+                                    ),
+                                    color = Color(0xFFFFB74D),
+                                )
+                                Spacer(Modifier.height(4.dp))
+                                Text(
+                                    text = "1.0",
+                                    style = MaterialTheme.typography.displaySmall.copy(
+                                        fontWeight = FontWeight.Black,
+                                        fontSize = 34.sp,
+                                    ),
+                                    color = Color.White,
+                                )
+                                Spacer(Modifier.height(2.dp))
+                                Text(
+                                    text = "Production Release · test",
+                                    style = MaterialTheme.typography.labelSmall,
+                                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                )
+                            }
+
+                            // Bottom Card: Device & Android API
+                            Column(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .weight(1f)
+                                    .clip(RoundedCornerShape(24.dp))
+                                    .background(Color(0xFF1E1E22))
+                                    .border(1.dp, Color.White.copy(alpha = 0.08f), RoundedCornerShape(24.dp))
+                                    .padding(18.dp),
+                                verticalArrangement = Arrangement.Center,
+                            ) {
+                                Text(
+                                    text = "${Build.MANUFACTURER.replaceFirstChar { it.uppercase() }} ${Build.MODEL}",
+                                    style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold),
+                                    color = Color.White,
+                                    maxLines = 1,
+                                    overflow = TextOverflow.Ellipsis,
+                                )
+                                Spacer(Modifier.height(4.dp))
+                                Text(
+                                    text = "Android ${Build.VERSION.RELEASE} (API ${Build.VERSION.SDK_INT})",
+                                    style = MaterialTheme.typography.bodySmall,
+                                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                )
+                            }
+                        }
+
+                        // Right Column: Tall Card (Phone / Hush Artwork silhouette)
                         Box(
                             modifier = Modifier
-                                .size(240.dp)
-                                .clip(CircleShape)
+                                .weight(0.95f)
+                                .height(274.dp)
+                                .clip(RoundedCornerShape(28.dp))
                                 .background(
-                                    Brush.radialGradient(
+                                    Brush.linearGradient(
                                         colors = listOf(
-                                            Color(0xFFFFB74D).copy(alpha = 0.35f),
-                                            Color(0xFFE65100).copy(alpha = 0.15f),
-                                            Color.Transparent,
+                                            Color(0xFF1C0D02),
+                                            Color(0xFF2E1303),
+                                            Color(0xFF100702),
                                         ),
                                     ),
-                                ),
-                        )
-
-                        Column(
-                            horizontalAlignment = Alignment.CenterHorizontally,
-                            verticalArrangement = Arrangement.Center,
+                                )
+                                .border(1.dp, Color(0xFFFF9800).copy(alpha = 0.25f), RoundedCornerShape(28.dp)),
+                            contentAlignment = Alignment.Center,
                         ) {
-                            Text(
-                                text = "Hush",
-                                style = MaterialTheme.typography.displaySmall.copy(
-                                    fontWeight = FontWeight.ExtraBold,
-                                    letterSpacing = (-1).sp,
-                                ),
-                                color = Color.White,
-                            )
-                            Spacer(Modifier.height(6.dp))
-                            Text(
-                                text = "Hush 1.0",
-                                style = MaterialTheme.typography.titleMedium.copy(
-                                    fontWeight = FontWeight.SemiBold,
-                                    fontSize = 17.sp,
-                                ),
-                                color = Color(0xFFFFCC80),
-                            )
-                            Spacer(Modifier.height(32.dp))
-                            // Status capsule pill
+                            // Ambient radial glow
                             Box(
                                 modifier = Modifier
-                                    .clip(RoundedCornerShape(percent = 50))
-                                    .background(Color.White.copy(alpha = 0.12f))
-                                    .border(1.dp, Color.White.copy(alpha = 0.22f), RoundedCornerShape(percent = 50))
-                                    .padding(horizontal = 18.dp, vertical = 9.dp),
-                            ) {
-                                Row(verticalAlignment = Alignment.CenterVertically) {
-                                    Icon(
-                                        imageVector = Icons.Rounded.Check,
-                                        contentDescription = null,
-                                        tint = Color(0xFFFFB74D),
-                                        modifier = Modifier.size(16.dp),
-                                    )
-                                    Spacer(Modifier.width(8.dp))
-                                    Text(
-                                        text = "Hush 1.0 is up to date.",
-                                        style = MaterialTheme.typography.labelMedium.copy(
-                                            fontWeight = FontWeight.SemiBold,
+                                    .size(190.dp)
+                                    .clip(CircleShape)
+                                    .background(
+                                        Brush.radialGradient(
+                                            colors = listOf(
+                                                Color(0xFFFFB74D).copy(alpha = 0.35f),
+                                                Color(0xFFE65100).copy(alpha = 0.15f),
+                                                Color.Transparent,
+                                            ),
                                         ),
-                                        color = Color.White,
-                                    )
+                                    ),
+                            )
+
+                            Column(
+                                horizontalAlignment = Alignment.CenterHorizontally,
+                                verticalArrangement = Arrangement.Center,
+                            ) {
+                                Text(
+                                    text = "Hush",
+                                    fontFamily = FontFamily(Font(R.font.cherry_bomb_one_regular)),
+                                    style = MaterialTheme.typography.displaySmall.copy(
+                                        fontSize = 32.sp,
+                                    ),
+                                    color = Color.White,
+                                )
+                                Spacer(Modifier.height(18.dp))
+                                Box(
+                                    modifier = Modifier
+                                        .clip(RoundedCornerShape(percent = 50))
+                                        .background(Color.White.copy(alpha = 0.12f))
+                                        .border(1.dp, Color.White.copy(alpha = 0.20f), RoundedCornerShape(percent = 50))
+                                        .padding(horizontal = 12.dp, vertical = 6.dp),
+                                ) {
+                                    Row(verticalAlignment = Alignment.CenterVertically) {
+                                        Icon(
+                                            imageVector = Icons.Rounded.Check,
+                                            contentDescription = null,
+                                            tint = Color(0xFFFFB74D),
+                                            modifier = Modifier.size(14.dp),
+                                        )
+                                        Spacer(Modifier.width(6.dp))
+                                        Text(
+                                            text = "Up to date",
+                                            style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.SemiBold),
+                                            color = Color.White,
+                                        )
+                                    }
                                 }
                             }
                         }
                     }
                 }
 
-                // 2. Installed & Changelog Group
+                // 2. 2-Column Bento Grid Specifications (Hardware & Audio Engine)
                 item {
-                    Column(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .clip(RoundedCornerShape(22.dp))
-                            .background(Color(0xFF1E1E22))
-                            .border(1.dp, Color.White.copy(alpha = 0.08f), RoundedCornerShape(22.dp)),
-                    ) {
+                    Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
                         Row(
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .padding(horizontal = 20.dp, vertical = 18.dp),
-                            horizontalArrangement = Arrangement.SpaceBetween,
-                            verticalAlignment = Alignment.CenterVertically,
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.spacedBy(12.dp),
                         ) {
-                            Text(
-                                text = "Installed",
-                                style = MaterialTheme.typography.bodyLarge.copy(fontWeight = FontWeight.Medium),
-                                color = Color.White,
+                            BentoSpecCard(
+                                icon = Icons.Rounded.Memory,
+                                label = "Architecture",
+                                value = Build.SUPPORTED_ABIS.firstOrNull() ?: "arm64-v8a",
+                                modifier = Modifier.weight(1f),
                             )
-                            Text(
-                                text = "1.0 (Production Release)",
-                                style = MaterialTheme.typography.bodyMedium,
-                                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                            BentoSpecCard(
+                                icon = Icons.Rounded.GraphicEq,
+                                label = "Audio DSP",
+                                value = "32-bit Float",
+                                modifier = Modifier.weight(1f),
                             )
                         }
-
-                        HorizontalDivider(
-                            color = Color.White.copy(alpha = 0.06f),
-                            thickness = 0.8.dp,
-                            modifier = Modifier.padding(horizontal = 20.dp),
-                        )
-
                         Row(
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .clickable { uriHandler.openUri("$REPO_URL/commits/test") }
-                                .padding(horizontal = 20.dp, vertical = 18.dp),
-                            horizontalArrangement = Arrangement.SpaceBetween,
-                            verticalAlignment = Alignment.CenterVertically,
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.spacedBy(12.dp),
                         ) {
-                            Text(
-                                text = "View Changelog",
-                                style = MaterialTheme.typography.bodyLarge.copy(fontWeight = FontWeight.Medium),
-                                color = Color.White,
+                            BentoSpecCard(
+                                icon = Icons.Rounded.Waves,
+                                label = "Sample Rate",
+                                value = "48.0 kHz",
+                                modifier = Modifier.weight(1f),
                             )
-                            Icon(
-                                imageVector = Icons.Rounded.ChevronRight,
-                                contentDescription = null,
-                                tint = MaterialTheme.colorScheme.onSurfaceVariant,
-                                modifier = Modifier.size(20.dp),
+                            BentoSpecCard(
+                                icon = Icons.Rounded.PhoneAndroid,
+                                label = "Display Target",
+                                value = "120Hz Fluid",
+                                modifier = Modifier.weight(1f),
                             )
                         }
-                    }
-                }
-
-                // 3. System Specs Metadata Card
-                item {
-                    Column(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .clip(RoundedCornerShape(22.dp))
-                            .background(Color(0xFF1E1E22))
-                            .border(1.dp, Color.White.copy(alpha = 0.08f), RoundedCornerShape(22.dp))
-                            .padding(20.dp),
-                    ) {
-                        Text(
-                            text = "Hush",
-                            style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold),
-                            color = Color.White,
-                        )
-                        Text(
-                            text = "Hush 1.0 (Stable Release) · release",
-                            style = MaterialTheme.typography.bodySmall,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant,
-                        )
-
-                        Spacer(Modifier.height(14.dp))
-                        HorizontalDivider(color = Color.White.copy(alpha = 0.06f), thickness = 0.8.dp)
-                        Spacer(Modifier.height(14.dp))
-
-                        SpecsRow(label = "Architecture", value = Build.SUPPORTED_ABIS.firstOrNull() ?: "arm64-v8a")
-                        SpecsRow(label = "Release", value = "Hush 1.0 (test)")
-                        SpecsRow(label = "Package", value = "com.music.bitchord")
-                        SpecsRow(label = "Android Version", value = "Android ${Build.VERSION.RELEASE} (API ${Build.VERSION.SDK_INT})")
-                        SpecsRow(label = "Device", value = "${Build.MANUFACTURER} ${Build.MODEL}")
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.spacedBy(12.dp),
+                        ) {
+                            BentoSpecCard(
+                                icon = Icons.Rounded.BatteryChargingFull,
+                                label = "Power Draw",
+                                value = "Ultra-Low Draw",
+                                modifier = Modifier.weight(1f),
+                            )
+                            BentoSpecCard(
+                                icon = Icons.Rounded.CheckCircle,
+                                label = "Release Branch",
+                                value = "origin/test",
+                                modifier = Modifier.weight(1f),
+                            )
+                        }
                     }
                 }
 
@@ -395,6 +437,49 @@ fun AboutSheet(
                 }
             }
         }
+    }
+}
+
+@Composable
+private fun BentoSpecCard(
+    icon: ImageVector,
+    label: String,
+    value: String,
+    modifier: Modifier = Modifier,
+) {
+    Column(
+        modifier = modifier
+            .clip(RoundedCornerShape(20.dp))
+            .background(Color(0xFF1E1E22))
+            .border(1.dp, Color.White.copy(alpha = 0.08f), RoundedCornerShape(20.dp))
+            .padding(16.dp),
+    ) {
+        Box(
+            modifier = Modifier
+                .size(36.dp)
+                .clip(CircleShape)
+                .background(Color.White.copy(alpha = 0.08f)),
+            contentAlignment = Alignment.Center,
+        ) {
+            Icon(
+                imageVector = icon,
+                contentDescription = null,
+                tint = Color(0xFFFFB74D),
+                modifier = Modifier.size(20.dp),
+            )
+        }
+        Spacer(Modifier.height(12.dp))
+        Text(
+            text = label,
+            style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.Medium),
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
+        )
+        Spacer(Modifier.height(2.dp))
+        Text(
+            text = value,
+            style = MaterialTheme.typography.titleSmall.copy(fontWeight = FontWeight.Bold),
+            color = Color.White,
+        )
     }
 }
 

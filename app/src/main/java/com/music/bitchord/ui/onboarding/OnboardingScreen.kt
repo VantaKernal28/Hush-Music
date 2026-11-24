@@ -88,11 +88,18 @@ import kotlin.math.PI
 import kotlin.math.cos
 import kotlin.math.sin
 
+import androidx.compose.foundation.border
+import androidx.compose.ui.text.font.Font
+import androidx.compose.ui.text.font.FontFamily
+import com.music.bitchord.data.settings.AppSettings
+import com.music.bitchord.data.settings.ThemeMode
+
 /**
- * 3-step setup / onboarding experience modeled after video_1.mp4:
- * 1. IntroPage: Native Compose dot-matrix particle animation + Go button.
- * 2. NamePage: "What should we call you?" name entry.
- * 3. ConnectPage: YouTube Music / Google sign-in with Maker easter egg.
+ * 4-step setup / onboarding experience modeled after video_1.mp4:
+ * 1. IntroPage: Native Compose symmetrical circle dot-matrix particle animation + Go button.
+ * 2. NamePage: "What should we call you?" name entry with centered spacing.
+ * 3. ThemePage: Theme Selector (Classic Liquid Glass vs Material UI Mode M3E, System/Light/Dark).
+ * 4. ConnectPage: YouTube Music / Google sign-in with Maker easter egg.
  *
  * All steps share the same continuous, slowly breathing monochrome gradient background
  * (#0D0D0F -> #242428 -> #121215).
@@ -111,7 +118,12 @@ fun OnboardingScreen(
     val focusManager = LocalFocusManager.current
 
     BackHandler(enabled = page != PAGE_INTRO) {
-        page = if (page == PAGE_CONNECT) PAGE_NAME else PAGE_INTRO
+        page = when (page) {
+            PAGE_CONNECT -> PAGE_THEME
+            PAGE_THEME -> PAGE_NAME
+            PAGE_NAME -> PAGE_INTRO
+            else -> PAGE_INTRO
+        }
     }
 
     LaunchedEffect(signedIn, page) {
@@ -156,12 +168,18 @@ fun OnboardingScreen(
                             if (chosen.isEmpty()) return@next
                             focusManager.clearFocus()
                             onNameChosen(chosen)
+                            page = PAGE_THEME
+                        },
+                    )
+                    PAGE_THEME -> ThemePage(
+                        onBack = { page = PAGE_NAME },
+                        onNext = {
                             if (signedIn) onFinish() else page = PAGE_CONNECT
                         },
                     )
-                    else -> ConnectPage(
+                    PAGE_CONNECT -> ConnectPage(
                         name = name,
-                        onBack = { page = PAGE_NAME },
+                        onBack = { page = PAGE_THEME },
                         onSignIn = onSignIn,
                         onSkip = onFinish,
                     )
@@ -276,8 +294,9 @@ private fun ColumnScope.IntroPage(
     ) {
         Text(
             text = "Hush",
+            fontFamily = FontFamily(Font(R.font.cherry_bomb_one_regular)),
             style = MaterialTheme.typography.displaySmall.copy(
-                fontSize = 28.sp,
+                fontSize = 38.sp,
                 fontWeight = FontWeight.Bold,
                 letterSpacing = (-0.5).sp,
             ),
@@ -306,7 +325,7 @@ private fun ColumnScope.IntroPage(
 
 /**
  * Exact Canvas 10-particle physics engine matching video_1.mp4:
- * 10 dots orbit, spiral, converge, and snap into the Hush Music dot-matrix "h" mark + side soundbars.
+ * 10 dots orbit, spiral, converge, and snap into a razor-sharp, evenly spaced geometric circle.
  */
 @Composable
 private fun DotMatrixLogoAnimation(
@@ -325,20 +344,13 @@ private fun DotMatrixLogoAnimation(
         label = "dotBreath",
     )
 
-    // The 10 Target Coordinates (normalized to scale 1.0f) forming Hush Music "h" + side soundbars
+    // Symmetrical circle of 10 particles evenly spaced at radius 38f
     val targetCoords = remember {
-        listOf(
-            Offset(-40f, 4f),   // 0: Left soundbar dot
-            Offset(40f, 4f),    // 1: Right soundbar dot
-            Offset(-16f, -36f), // 2: "h" stem top
-            Offset(-16f, -16f), // 3: "h" stem upper-mid
-            Offset(-16f, 4f),   // 4: "h" stem center
-            Offset(-16f, 24f),  // 5: "h" stem bottom
-            Offset(0f, -16f),   // 6: "h" arch apex
-            Offset(0f, 4f),     // 7: "h" center dot
-            Offset(16f, 4f),    // 8: "h" right curve
-            Offset(16f, 24f),   // 9: "h" right leg
-        )
+        List(10) { i ->
+            val angle = (i.toFloat() * (2.0 * PI / 10.0) - (PI / 2.0)).toFloat()
+            val radius = 38f
+            Offset(radius * cos(angle), radius * sin(angle))
+        }
     }
 
     // Base orbit angles and radii for the 10 particles
@@ -371,7 +383,7 @@ private fun DotMatrixLogoAnimation(
                     cy + currentRadius * sin(currentAngle),
                 )
             } else {
-                // Phase 2: Converge & snap into target dot-matrix position
+                // Phase 2: Converge & snap into target symmetrical circle position
                 val tSnap = ((progress - 0.65f) / 0.35f).coerceIn(0f, 1f)
                 val ease = FastOutSlowInEasing.transform(tSnap)
 
@@ -408,6 +420,7 @@ private fun DotMatrixLogoAnimation(
 
 /**
  * Step 2: Name Entry ("What should we call you?") on Live Monochrome Gradient.
+ * Input field is centered cleanly below the prompt rather than pushed to the bottom.
  */
 @OptIn(ExperimentalLayoutApi::class)
 @Composable
@@ -434,14 +447,228 @@ private fun ColumnScope.NamePage(
     Spacer(Modifier.height(20.dp))
     Title(stringResource(R.string.onboarding_name_prompt))
 
-    Spacer(Modifier.weight(1f))
+    Spacer(Modifier.height(36.dp))
 
     NameField(value = name, onValueChange = onNameChange, onDone = onNext)
-    Spacer(Modifier.height(28.dp))
+
+    Spacer(Modifier.weight(1f))
+
     PillButton(
         label = stringResource(R.string.onboarding_next),
         onClick = onNext,
         enabled = name.isNotBlank(),
+        primary = true,
+    )
+    Spacer(Modifier.height(16.dp))
+}
+
+/**
+ * Step 3: Theme Selector (Classic Liquid Glass vs Material UI Mode M3E, System / Light / Dark).
+ */
+@Composable
+private fun ColumnScope.ThemePage(
+    onBack: () -> Unit,
+    onNext: () -> Unit,
+) {
+    val materialUi by AppSettings.materialUiMode.collectAsStateWithLifecycle()
+    val themeMode by AppSettings.themeMode.collectAsStateWithLifecycle()
+
+    Spacer(Modifier.height(16.dp))
+    BackButton(onBack)
+    Spacer(Modifier.height(20.dp))
+    Title("Choose your vibe")
+    Spacer(Modifier.height(8.dp))
+    Text(
+        text = "Select your player interface and theme appearance.",
+        style = MaterialTheme.typography.bodyMedium,
+        color = Color.White.copy(alpha = 0.65f),
+    )
+
+    Spacer(Modifier.height(28.dp))
+
+    // Mode Option 1: Classic (Liquid Glass)
+    val isClassic = !materialUi
+    Box(
+        modifier = Modifier
+            .fillMaxWidth()
+            .clip(RoundedCornerShape(22.dp))
+            .background(if (isClassic) Color.White.copy(alpha = 0.14f) else Color.White.copy(alpha = 0.05f))
+            .border(
+                width = if (isClassic) 2.dp else 1.dp,
+                color = if (isClassic) Color.White else Color.White.copy(alpha = 0.15f),
+                shape = RoundedCornerShape(22.dp),
+            )
+            .clickable { AppSettings.setMaterialUiMode(false) }
+            .padding(18.dp),
+    ) {
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.SpaceBetween,
+        ) {
+            Column(modifier = Modifier.weight(1f)) {
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    Text(
+                        text = "Classic",
+                        style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold),
+                        color = Color.White,
+                    )
+                    Spacer(Modifier.width(8.dp))
+                    Box(
+                        modifier = Modifier
+                            .clip(CircleShape)
+                            .background(Color.White.copy(alpha = 0.20f))
+                            .padding(horizontal = 8.dp, vertical = 2.dp),
+                    ) {
+                        Text(
+                            text = "Liquid Glass",
+                            style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.SemiBold),
+                            color = Color.White,
+                        )
+                    }
+                }
+                Spacer(Modifier.height(4.dp))
+                Text(
+                    text = "Refractive glass blur with iOS-inspired fluidity & depth",
+                    style = MaterialTheme.typography.bodySmall,
+                    color = Color.White.copy(alpha = 0.65f),
+                )
+            }
+            if (isClassic) {
+                Box(
+                    modifier = Modifier
+                        .size(24.dp)
+                        .clip(CircleShape)
+                        .background(Color.White),
+                    contentAlignment = Alignment.Center,
+                ) {
+                    Icon(
+                        imageVector = androidx.compose.material.icons.Icons.Rounded.Check,
+                        contentDescription = null,
+                        tint = Color(0xFF0D0D0F),
+                        modifier = Modifier.size(16.dp),
+                    )
+                }
+            }
+        }
+    }
+
+    Spacer(Modifier.height(14.dp))
+
+    // Mode Option 2: Material UI Mode (M3E Expressive)
+    val isM3 = materialUi
+    Box(
+        modifier = Modifier
+            .fillMaxWidth()
+            .clip(RoundedCornerShape(22.dp))
+            .background(if (isM3) Color.White.copy(alpha = 0.14f) else Color.White.copy(alpha = 0.05f))
+            .border(
+                width = if (isM3) 2.dp else 1.dp,
+                color = if (isM3) Color.White else Color.White.copy(alpha = 0.15f),
+                shape = RoundedCornerShape(22.dp),
+            )
+            .clickable { AppSettings.setMaterialUiMode(true) }
+            .padding(18.dp),
+    ) {
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.SpaceBetween,
+        ) {
+            Column(modifier = Modifier.weight(1f)) {
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    Text(
+                        text = "Material UI",
+                        style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold),
+                        color = Color.White,
+                    )
+                    Spacer(Modifier.width(8.dp))
+                    Box(
+                        modifier = Modifier
+                            .clip(CircleShape)
+                            .background(Color(0xFF6750A4).copy(alpha = 0.6f))
+                            .padding(horizontal = 8.dp, vertical = 2.dp),
+                    ) {
+                        Text(
+                            text = "Pixel M3E",
+                            style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.SemiBold),
+                            color = Color.White,
+                        )
+                    }
+                }
+                Spacer(Modifier.height(4.dp))
+                Text(
+                    text = "Pixel-grade squircle physics, bento cards & dynamic seekbar",
+                    style = MaterialTheme.typography.bodySmall,
+                    color = Color.White.copy(alpha = 0.65f),
+                )
+            }
+            if (isM3) {
+                Box(
+                    modifier = Modifier
+                        .size(24.dp)
+                        .clip(CircleShape)
+                        .background(Color.White),
+                    contentAlignment = Alignment.Center,
+                ) {
+                    Icon(
+                        imageVector = androidx.compose.material.icons.Icons.Rounded.Check,
+                        contentDescription = null,
+                        tint = Color(0xFF0D0D0F),
+                        modifier = Modifier.size(16.dp),
+                    )
+                }
+            }
+        }
+    }
+
+    Spacer(Modifier.height(24.dp))
+
+    // Theme Mode Selection Chips (System / Light / Dark)
+    Text(
+        text = "Color Appearance",
+        style = MaterialTheme.typography.labelLarge.copy(fontWeight = FontWeight.Bold),
+        color = Color.White.copy(alpha = 0.85f),
+    )
+    Spacer(Modifier.height(10.dp))
+    Row(
+        modifier = Modifier.fillMaxWidth(),
+        horizontalArrangement = Arrangement.spacedBy(10.dp),
+    ) {
+        listOf(
+            ThemeMode.SYSTEM to "System",
+            ThemeMode.LIGHT to "Light",
+            ThemeMode.DARK to "Dark",
+        ).forEach { (mode, label) ->
+            val selected = themeMode == mode
+            Box(
+                modifier = Modifier
+                    .weight(1f)
+                    .height(42.dp)
+                    .clip(RoundedCornerShape(12.dp))
+                    .background(if (selected) Color.White else Color.White.copy(alpha = 0.08f))
+                    .border(
+                        1.dp,
+                        if (selected) Color.White else Color.White.copy(alpha = 0.12f),
+                        RoundedCornerShape(12.dp),
+                    )
+                    .clickable { AppSettings.setThemeMode(mode) },
+                contentAlignment = Alignment.Center,
+            ) {
+                Text(
+                    text = label,
+                    style = MaterialTheme.typography.bodyMedium.copy(fontWeight = FontWeight.SemiBold),
+                    color = if (selected) Color(0xFF0D0D0F) else Color.White,
+                )
+            }
+        }
+    }
+
+    Spacer(Modifier.weight(1f))
+
+    PillButton(
+        label = "Continue",
+        onClick = onNext,
         primary = true,
     )
     Spacer(Modifier.height(16.dp))
@@ -638,5 +865,6 @@ private fun BackButton(onClick: () -> Unit) {
 
 private const val PAGE_INTRO = 0
 private const val PAGE_NAME = 1
-private const val PAGE_CONNECT = 2
+private const val PAGE_THEME = 2
+private const val PAGE_CONNECT = 3
 private const val NAME_LIMIT = 40

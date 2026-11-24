@@ -339,8 +339,8 @@ class PlayerSheetMotion(
             targetValue = to,
             initialVelocity = velocity,
             animationSpec = spring(
-                dampingRatio = if (isM3E) 0.72f else Spring.DampingRatioNoBouncy,
-                stiffness = if (isM3E) 340f else SLIDE_STIFFNESS,
+                dampingRatio = if (isM3E) 0.80f else Spring.DampingRatioNoBouncy,
+                stiffness = if (isM3E) 380f else SLIDE_STIFFNESS,
                 visibilityThreshold = SLIDE_SETTLED_PX,
             ),
         ) { value, _ ->

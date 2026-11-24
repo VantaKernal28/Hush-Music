@@ -457,6 +457,18 @@ object AppSettings {
     /** Material UI Theme Mode: tactile Google/M3 expanded tab bar, squircle player buttons, segmented timeline. */
     val materialUiMode = MutableStateFlow(false)
 
+    /** M3E Navigation Bar width factor (0.70f to 1.0f). */
+    val m3eNavBarWidth = MutableStateFlow(0.92f)
+
+    /** M3E Navigation Bar height in dp (52 to 80 dp). */
+    val m3eNavBarHeight = MutableStateFlow(60)
+
+    /** M3E Navigation Bar content padding / thickness in dp (4 to 18 dp). */
+    val m3eNavBarPadding = MutableStateFlow(8)
+
+    /** M3E Navigation Bar frosted glass intensity (0.0f to 1.0f). */
+    val m3eFrostedGlassIntensity = MutableStateFlow(0.70f)
+
     /** Active when playing the Hush / BitChord logo transition animation while switching theme. */
     val themeTransitionActive = MutableStateFlow(false)
     val themeTransitionTarget = MutableStateFlow(true)
@@ -1094,6 +1106,10 @@ object AppSettings {
         expressiveMode.value = prefs.getBoolean(KEY_EXPRESSIVE_MODE, false)
         expressiveUiEnabled.value = prefs.getBoolean(KEY_EXPRESSIVE_UI_ENABLED, true)
         materialUiMode.value = prefs.getBoolean(KEY_MATERIAL_UI_MODE, false)
+        m3eNavBarWidth.value = prefs.getFloat(KEY_M3E_NAV_BAR_WIDTH, 0.92f).coerceIn(0.70f, 1.0f)
+        m3eNavBarHeight.value = prefs.getInt(KEY_M3E_NAV_BAR_HEIGHT, 60).coerceIn(52, 80)
+        m3eNavBarPadding.value = prefs.getInt(KEY_M3E_NAV_BAR_PADDING, 8).coerceIn(4, 18)
+        m3eFrostedGlassIntensity.value = prefs.getFloat(KEY_M3E_FROSTED_GLASS_INTENSITY, 0.70f).coerceIn(0f, 1f)
         liveSongColorGradient.value = prefs.getBoolean(KEY_LIVE_SONG_COLOR_GRADIENT, true)
         wavyScrubber.value = prefs.getBoolean(KEY_WAVY_SCRUBBER, true)
         rotatingScallopPlay.value = prefs.getBoolean(KEY_ROTATING_SCALLOP_PLAY, true)
@@ -1555,6 +1571,30 @@ object AppSettings {
     fun setMaterialUiMode(value: Boolean) {
         materialUiMode.value = value
         prefs.edit().putBoolean(KEY_MATERIAL_UI_MODE, value).apply()
+    }
+
+    fun setM3eNavBarWidth(value: Float) {
+        val clamped = value.coerceIn(0.70f, 1.0f)
+        m3eNavBarWidth.value = clamped
+        prefs.edit().putFloat(KEY_M3E_NAV_BAR_WIDTH, clamped).apply()
+    }
+
+    fun setM3eNavBarHeight(value: Int) {
+        val clamped = value.coerceIn(52, 80)
+        m3eNavBarHeight.value = clamped
+        prefs.edit().putInt(KEY_M3E_NAV_BAR_HEIGHT, clamped).apply()
+    }
+
+    fun setM3eNavBarPadding(value: Int) {
+        val clamped = value.coerceIn(4, 18)
+        m3eNavBarPadding.value = clamped
+        prefs.edit().putInt(KEY_M3E_NAV_BAR_PADDING, clamped).apply()
+    }
+
+    fun setM3eFrostedGlassIntensity(value: Float) {
+        val clamped = value.coerceIn(0f, 1f)
+        m3eFrostedGlassIntensity.value = clamped
+        prefs.edit().putFloat(KEY_M3E_FROSTED_GLASS_INTENSITY, clamped).apply()
     }
 
     fun triggerThemeTransition(toM3E: Boolean) {
@@ -2532,6 +2572,10 @@ object AppSettings {
     private const val KEY_EXPRESSIVE_MODE = "hush_expressive_mode"
     private const val KEY_EXPRESSIVE_UI_ENABLED = "expressive_ui_enabled"
     private const val KEY_MATERIAL_UI_MODE = "hush_material_ui_mode"
+    private const val KEY_M3E_NAV_BAR_WIDTH = "m3e_nav_bar_width"
+    private const val KEY_M3E_NAV_BAR_HEIGHT = "m3e_nav_bar_height"
+    private const val KEY_M3E_NAV_BAR_PADDING = "m3e_nav_bar_padding"
+    private const val KEY_M3E_FROSTED_GLASS_INTENSITY = "m3e_frosted_glass_intensity"
     private const val KEY_LIVE_SONG_COLOR_GRADIENT = "hush_live_song_color_gradient"
     private const val KEY_WAVY_SCRUBBER = "hush_wavy_scrubber"
     private const val KEY_ROTATING_SCALLOP_PLAY = "hush_rotating_scallop_play"

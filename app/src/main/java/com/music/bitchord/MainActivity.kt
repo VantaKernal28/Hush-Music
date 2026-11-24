@@ -3787,20 +3787,20 @@ private fun BitChordApp(
                 }
                 val isSettingsPage = route == AppRoute.Settings || route is AppRoute.SettingsSection || route is AppRoute.SettingsChoice || (route != null && AppRoute.Settings in navigator)
                 if (!isSettingsPage) {
-                    if (reduceDynamicBlur || !glassActive || !progressiveBlur) {
-                        BottomFadeScrim(
-                            pageColor = chromePageColor,
-                            modifier = Modifier
-                                .align(Alignment.TopCenter)
-                                .rotate(180f)
-                                .graphicsLayer { alpha = topFadeAlpha },
-                        )
-                    } else {
+                    if (materialUiMode || (progressiveBlur && glassActive && !reduceDynamicBlur)) {
                         TopFadeBlur(
                             hazeState = hazeState,
                             pageColor = chromePageColor,
                             modifier = Modifier
                                 .align(Alignment.TopCenter)
+                                .graphicsLayer { alpha = topFadeAlpha },
+                        )
+                    } else {
+                        BottomFadeScrim(
+                            pageColor = chromePageColor,
+                            modifier = Modifier
+                                .align(Alignment.TopCenter)
+                                .rotate(180f)
                                 .graphicsLayer { alpha = topFadeAlpha },
                         )
                     }
@@ -4153,15 +4153,14 @@ private fun BitChordApp(
                     },
                 )
 
-                // Drawn before the bars so their own glass reads on top of it.
-                BottomFadeScrim(
-                    withMiniPlayer = player.song != null,
-                    // Not the wash: by the foot of the screen the page has finished
-                    // easing out of it and into this, so this is what is actually
-                    // under the tab bar.
-                    pageColor = chromePageColor,
-                    modifier = Modifier.align(Alignment.BottomCenter),
-                )
+                // Drawn before the bars in Material UI mode; excluded in Classic mode so Liquid Glass dock remains razor-sharp.
+                if (materialUiMode) {
+                    BottomFadeScrim(
+                        withMiniPlayer = player.song != null,
+                        pageColor = chromePageColor,
+                        modifier = Modifier.align(Alignment.BottomCenter),
+                    )
+                }
 
                 // Whichever bar is drawing reports its height here, for the
                 // guard to read at layout — never in composition, see the guard.
@@ -5384,7 +5383,7 @@ private fun BitChordApp(
             enter = EnterTransition.None,
             exit = slideOutVertically(
                 tween<IntOffset>(durationMillis = 560, easing = OnboardingDismissEasing),
-            ) { it },
+            ) { it } + fadeOut(tween(350)),
         ) {
             OnboardingScreen(
                 signedIn = signedIn,
