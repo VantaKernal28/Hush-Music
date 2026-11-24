@@ -291,13 +291,16 @@ interface PlayerSettingsSource {
     /** Material 3 Expressive (M3E) UI styling and motion physics toggle. */
     val expressiveUiEnabled: StateFlow<Boolean> get() = MutableStateFlow(true)
     /** Customizable progress line style selector for the seekbar. */
-    val progressLineStyle: StateFlow<ProgressLineStyle> get() = MutableStateFlow(ProgressLineStyle.WAVY)
+    val progressLineStyle: StateFlow<ProgressLineStyle> get() = MutableStateFlow(ProgressLineStyle.STRAIGHT)
+    /** Beat-reactive song gradient and artwork impulse. */
+    val beatImpulse: StateFlow<Boolean> get() = MutableStateFlow(true)
 
     fun setLastPlayerScreen(value: LastPlayerScreen)
     fun setLyricsOffsetMs(value: Int)
     /** Whether the mix popup is up, so the host lays out [smartMixPreview] for it. */
     fun setMixViewOpen(open: Boolean)
     fun setProgressLineStyle(value: ProgressLineStyle) = Unit
+    fun setBeatImpulse(value: Boolean) = Unit
 }
 
 /** The player's name for the installed host's settings, read where AppSettings used to be. */

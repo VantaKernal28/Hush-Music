@@ -815,6 +815,8 @@ private fun HomeTitle(
         }
     } else {
         Column(modifier = modifier.padding(horizontal = PAGE_GUTTER, vertical = 6.dp)) {
+            // Clean spacing so top-left AI pill button never overlaps greeting in Classic mode
+            Spacer(Modifier.height(52.dp))
             Row(
                 modifier = Modifier
                     .fillMaxWidth()

@@ -86,8 +86,10 @@ android {
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
 
         ndk {
-            abiFilters += listOf("arm64-v8a", "armeabi-v7a", "x86_64")
+            abiFilters.clear()
+            abiFilters += listOf("arm64-v8a")
         }
+        resourceConfigurations += listOf("en", "hi", "te", "ta")
         // Last.fm credentials are supplied locally and never committed.
         buildConfigField("String", "LASTFM_API_KEY", "\"${lastfmApiKey.replace("\\", "\\\\").replace("\"", "\\\"")}\"")
         buildConfigField("String", "LASTFM_SECRET", "\"${lastfmSecret.replace("\\", "\\\\").replace("\"", "\\\"")}\"")
@@ -109,10 +111,7 @@ android {
 
     splits {
         abi {
-            isEnable = true
-            reset()
-            include("armeabi-v7a", "arm64-v8a", "x86_64")
-            isUniversalApk = true
+            isEnable = false
         }
     }
 
@@ -228,6 +227,7 @@ android {
     packaging {
         jniLibs {
             useLegacyPackaging = false
+            excludes += listOf("**/libdebug*.so")
         }
         resources {
             // SMBJ's BouncyCastle and jspecify both ship this descriptor.
@@ -236,8 +236,11 @@ android {
                 "META-INF/*.version",
                 "META-INF/DEPENDENCIES",
                 "META-INF/INDEX.LIST",
+                "META-INF/LICENSE*",
+                "META-INF/NOTICE*",
                 "DebugProbesKt.bin",
                 "kotlin-tooling-metadata.json",
+                "**/*.proto",
             )
             // The three BouncyCastle jars (bcprov, bcutil, bcpkix) ship one licence between them.
             pickFirsts += setOf("META-INF/LICENSE.md", "META-INF/LICENSE.txt", "META-INF/NOTICE.md")
@@ -268,9 +271,8 @@ android {
         outputs.all {
             val output = this as? com.android.build.gradle.api.ApkVariantOutput
             if (output != null) {
-                val abi = output.getFilter(FilterType.ABI)
-                val abiPart = if (abi != null) "-$abi" else ""
-                output.outputFileName = "hush-${vName}${flavor}${abiPart}-${buildType}.apk"
+                val abi = output.getFilter(FilterType.ABI) ?: "arm64-v8a"
+                output.outputFileName = "hush-${vName}${flavor}-${abi}-${buildType}.apk"
             }
         }
     }

@@ -160,20 +160,25 @@ fun RhythmPlayerContent(
     onOpenMixer: (() -> Unit)? = null,
     modifier: Modifier = Modifier,
 ) {
+    val isDark = MaterialTheme.colorScheme.surface.luminance() < 0.5f
     val primaryAccent = MaterialTheme.colorScheme.primary
     val isAccentLight = primaryAccent.luminance() > 0.45f
-    val titleColor = Color.White
-    val textSubColor = Color.White.copy(alpha = 0.72f)
-    val timeColor = Color.White.copy(alpha = 0.65f)
-    val iconTint = Color.White
+    val titleColor = if (isDark) Color.White else Color(0xFF121215)
+    val textSubColor = if (isDark) Color.White.copy(alpha = 0.72f) else Color(0xFF4C4C56)
+    val timeColor = if (isDark) Color.White.copy(alpha = 0.65f) else Color(0xFF6B6B78)
+    val iconTint = if (isDark) Color.White else Color(0xFF121215)
     val playBtnContainer = primaryAccent
     val playBtnContent = if (isAccentLight) Color(0xFF092015) else Color.White
-    val controlGlass = Color.White.copy(alpha = 0.14f)
-    val dockGlass = Color.White.copy(alpha = 0.12f)
+    val controlGlass = if (isDark) Color.White.copy(alpha = 0.14f) else Color.Black.copy(alpha = 0.08f)
+    val dockGlass = if (isDark) Color.White.copy(alpha = 0.12f) else Color.Black.copy(alpha = 0.06f)
     val activeDockContainer = primaryAccent
     val activeDockContent = playBtnContent
     val accentBg = primaryAccent
     val accentFg = playBtnContent
+    val sheetBg = if (isDark) Color(0xFF16161A) else Color(0xFFF7F6F9)
+    val sheetCardBg = if (isDark) Color.White.copy(alpha = 0.08f) else Color.Black.copy(alpha = 0.05f)
+    val sheetPillBg = if (isDark) Color.White.copy(alpha = 0.12f) else Color.Black.copy(alpha = 0.06f)
+    val sheetHandle = if (isDark) Color.White.copy(alpha = 0.35f) else Color.Black.copy(alpha = 0.20f)
 
     var isScrubbing by remember { mutableStateOf(false) }
     var scrubProgress by remember { mutableFloatStateOf(0f) }
@@ -185,6 +190,7 @@ fun RhythmPlayerContent(
     }
 
     val progressLineStyle by PlayerSettings.progressLineStyle.collectAsStateWithLifecycle()
+    val beatImpulseEnabled by PlayerSettings.beatImpulse.collectAsStateWithLifecycle()
 
     // Smooth continuous rotation of the M3E scalloped artwork
     val infiniteTransition = rememberInfiniteTransition(label = "rhythmArtRotate")
@@ -215,7 +221,7 @@ fun RhythmPlayerContent(
         ),
         label = "beatImpulse",
     )
-    val effectiveArtScale = if (isPlaying) beatImpulse else 1.0f
+    val effectiveArtScale = if (isPlaying && beatImpulseEnabled) beatImpulse else 1.0f
 
     // Modal sheet visibility states
     var showInlineLyrics by remember { mutableStateOf(false) }
@@ -226,7 +232,7 @@ fun RhythmPlayerContent(
     Box(
         modifier = modifier
             .fillMaxSize()
-            .background(Color(0xFF0F0F12)), // 100% opaque base tonal background
+            .background(if (isDark) Color(0xFF0F0F12) else Color(0xFFF8F7FA)),
     ) {
         // Ambient background blurred artwork
         AsyncImage(
@@ -235,20 +241,43 @@ fun RhythmPlayerContent(
             contentScale = ContentScale.Crop,
             modifier = Modifier
                 .fillMaxSize()
-                .graphicsLayer { alpha = 0.32f }
+                .graphicsLayer { alpha = if (isDark) 0.32f else 0.20f }
                 .blur(64.dp),
         )
-        // Dark frosted tonal gradient overlay
+        // Frosted tonal gradient overlay
         Box(
             modifier = Modifier
                 .fillMaxSize()
                 .background(
                     Brush.verticalGradient(
-                        listOf(
-                            Color(0xFF101014).copy(alpha = 0.72f),
-                            Color(0xFF0C0C0F).copy(alpha = 0.94f),
-                        ),
+                        if (isDark) {
+                            listOf(
+                                Color(0xFF101014).copy(alpha = 0.72f),
+                                Color(0xFF0C0C0F).copy(alpha = 0.94f),
+                            )
+                        } else {
+                            listOf(
+                                Color(0xFFF8F7FA).copy(alpha = 0.70f),
+                                Color(0xFFEDEBF0).copy(alpha = 0.92f),
+                            )
+                        },
                     ),
+                ),
+        )
+
+        // Beat-reactive ambient song-color gradient pulse
+        val pulseAlpha = if (isPlaying && beatImpulseEnabled) (beatImpulse - 1.0f) * 2.5f else 0f
+        Box(
+            modifier = Modifier
+                .fillMaxSize()
+                .background(
+                    Brush.radialGradient(
+                        colors = listOf(
+                            primaryAccent.copy(alpha = if (isDark) (0.24f + pulseAlpha * 0.15f) else (0.14f + pulseAlpha * 0.10f)),
+                            Color.Transparent,
+                        ),
+                        radius = 800f * (if (isPlaying && beatImpulseEnabled) beatImpulse else 1f),
+                    )
                 ),
         )
 
@@ -285,7 +314,7 @@ fun RhythmPlayerContent(
                             .width(42.dp)
                             .height(5.dp)
                             .clip(RoundedCornerShape(percent = 50))
-                            .background(Color.White.copy(alpha = 0.35f)),
+                            .background(sheetHandle),
                     )
                 }
 
@@ -410,14 +439,14 @@ fun RhythmPlayerContent(
                                 modifier = Modifier
                                     .size(36.dp)
                                     .clip(CircleShape)
-                                    .background(Color.White.copy(alpha = 0.12f))
+                                    .background(controlGlass)
                                     .clickable { showInlineLyrics = false },
                                 contentAlignment = Alignment.Center,
                             ) {
                                 Icon(
                                     imageVector = Icons.Rounded.Close,
                                     contentDescription = "Close lyrics",
-                                    tint = Color.White,
+                                    tint = iconTint,
                                     modifier = Modifier.size(18.dp),
                                 )
                             }
@@ -458,7 +487,7 @@ fun RhythmPlayerContent(
                                             label = "lyricAlpha",
                                         )
                                         val activeColor by animateColorAsState(
-                                            targetValue = if (isCurrentLine) primaryAccent else Color.White.copy(alpha = 0.40f),
+                                            targetValue = if (isCurrentLine) primaryAccent else (if (isDark) Color.White.copy(alpha = 0.40f) else Color.Black.copy(alpha = 0.35f)),
                                             animationSpec = tween(260),
                                             label = "lyricColor",
                                         )
@@ -509,7 +538,7 @@ fun RhythmPlayerContent(
                                                 fontSize = 20.sp,
                                                 lineHeight = 28.sp,
                                             ),
-                                            color = Color.White.copy(alpha = 0.85f),
+                                            color = if (isDark) Color.White.copy(alpha = 0.85f) else Color.Black.copy(alpha = 0.75f),
                                             textAlign = TextAlign.Center,
                                             modifier = Modifier
                                                 .fillMaxWidth()
@@ -534,7 +563,7 @@ fun RhythmPlayerContent(
                                 Text(
                                     text = if (lyricsUnavailable) "Lyrics unavailable for this song" else "Searching for synced lyrics...",
                                     style = MaterialTheme.typography.bodyLarge.copy(fontWeight = FontWeight.Medium),
-                                    color = Color.White.copy(alpha = 0.75f),
+                                    color = if (isDark) Color.White.copy(alpha = 0.75f) else Color.Black.copy(alpha = 0.65f),
                                     textAlign = TextAlign.Center,
                                 )
                             }
@@ -627,7 +656,7 @@ fun RhythmPlayerContent(
                                     isScrubbing = false
                                 },
                                 activeColor = primaryAccent,
-                                inactiveColor = Color.White.copy(alpha = 0.22f),
+                                inactiveColor = if (isDark) Color.White.copy(alpha = 0.22f) else Color.Black.copy(alpha = 0.12f),
                             )
                             Row(
                                 modifier = Modifier
@@ -661,7 +690,7 @@ fun RhythmPlayerContent(
                     Row(
                         modifier = Modifier
                             .fillMaxWidth()
-                            .padding(bottom = if (isCompactHeight) 12.dp else 24.dp),
+                            .padding(bottom = if (isCompactHeight) 12.dp else 20.dp),
                         horizontalArrangement = Arrangement.spacedBy(8.dp),
                         verticalAlignment = Alignment.CenterVertically,
                     ) {
@@ -731,7 +760,7 @@ fun RhythmPlayerContent(
             Box(
                 modifier = Modifier
                     .fillMaxSize()
-                    .background(Color.Black.copy(alpha = 0.65f))
+                    .background(if (isDark) Color.Black.copy(alpha = 0.65f) else Color.Black.copy(alpha = 0.35f))
                     .clickable { showQueueSheet = false },
                 contentAlignment = Alignment.BottomCenter,
             ) {
@@ -740,7 +769,7 @@ fun RhythmPlayerContent(
                         .fillMaxWidth()
                         .fillMaxHeight(0.84f)
                         .clip(RoundedCornerShape(topStart = 28.dp, topEnd = 28.dp))
-                        .background(Color(0xFF16161A))
+                        .background(sheetBg)
                         .clickable(interactionSource = remember { MutableInteractionSource() }, indication = null) {}
                         .padding(horizontal = 20.dp, vertical = 12.dp),
                 ) {
@@ -751,7 +780,7 @@ fun RhythmPlayerContent(
                             .width(36.dp)
                             .height(4.5.dp)
                             .clip(RoundedCornerShape(percent = 50))
-                            .background(Color.White.copy(alpha = 0.35f)),
+                            .background(sheetHandle),
                     )
                     Spacer(Modifier.height(14.dp))
 
@@ -768,19 +797,19 @@ fun RhythmPlayerContent(
                                     fontWeight = FontWeight.Bold,
                                     fontSize = 24.sp,
                                 ),
-                                color = Color.White,
+                                color = titleColor,
                             )
                             Spacer(Modifier.height(4.dp))
                             Box(
                                 modifier = Modifier
                                     .clip(RoundedCornerShape(percent = 50))
-                                    .background(Color.White.copy(alpha = 0.12f))
+                                    .background(sheetPillBg)
                                     .padding(horizontal = 10.dp, vertical = 4.dp),
                             ) {
                                 Text(
                                     text = "${queue.size} songs",
                                     style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.SemiBold),
-                                    color = Color.White.copy(alpha = 0.85f),
+                                    color = textSubColor,
                                 )
                             }
                         }
@@ -791,14 +820,14 @@ fun RhythmPlayerContent(
                                 modifier = Modifier
                                     .size(42.dp)
                                     .clip(CircleShape)
-                                    .background(if (shuffleEnabled) accentBg else Color.White.copy(alpha = 0.12f))
+                                    .background(if (shuffleEnabled) accentBg else sheetPillBg)
                                     .clickable(onClick = onToggleShuffle),
                                 contentAlignment = Alignment.Center,
                             ) {
                                 Icon(
                                     imageVector = Icons.Rounded.Shuffle,
                                     contentDescription = "Shuffle",
-                                    tint = if (shuffleEnabled) accentFg else Color.White,
+                                    tint = if (shuffleEnabled) accentFg else iconTint,
                                     modifier = Modifier.size(20.dp),
                                 )
                             }
@@ -807,14 +836,14 @@ fun RhythmPlayerContent(
                                 modifier = Modifier
                                     .size(42.dp)
                                     .clip(CircleShape)
-                                    .background(if (repeatMode != 0) accentBg else Color.White.copy(alpha = 0.12f))
+                                    .background(if (repeatMode != 0) accentBg else sheetPillBg)
                                     .clickable(onClick = onCycleRepeat),
                                 contentAlignment = Alignment.Center,
                             ) {
                                 Icon(
                                     imageVector = Icons.Rounded.Repeat,
                                     contentDescription = "Repeat",
-                                    tint = if (repeatMode != 0) accentFg else Color.White,
+                                    tint = if (repeatMode != 0) accentFg else iconTint,
                                     modifier = Modifier.size(20.dp),
                                 )
                             }
@@ -844,7 +873,7 @@ fun RhythmPlayerContent(
                         modifier = Modifier
                             .fillMaxWidth()
                             .clip(RoundedCornerShape(16.dp))
-                            .background(Color.White.copy(alpha = 0.08f))
+                            .background(sheetCardBg)
                             .padding(14.dp),
                     ) {
                         Row(
@@ -867,7 +896,7 @@ fun RhythmPlayerContent(
                                         fontWeight = FontWeight.Bold,
                                         letterSpacing = 0.8.sp,
                                     ),
-                                    color = Color.White.copy(alpha = 0.65f),
+                                    color = textSubColor,
                                 )
                                 Text(
                                     text = song.title,
@@ -875,14 +904,14 @@ fun RhythmPlayerContent(
                                         fontWeight = FontWeight.Bold,
                                         fontSize = 15.sp,
                                     ),
-                                    color = Color.White,
+                                    color = titleColor,
                                     maxLines = 1,
                                     overflow = TextOverflow.Ellipsis,
                                 )
                                 Text(
                                     text = song.artist,
                                     style = MaterialTheme.typography.bodySmall.copy(fontSize = 13.sp),
-                                    color = Color.White.copy(alpha = 0.70f),
+                                    color = textSubColor,
                                     maxLines = 1,
                                     overflow = TextOverflow.Ellipsis,
                                 )
@@ -890,7 +919,7 @@ fun RhythmPlayerContent(
                             Icon(
                                 imageVector = Icons.Rounded.MusicNote,
                                 contentDescription = null,
-                                tint = Color.White.copy(alpha = 0.85f),
+                                tint = iconTint,
                                 modifier = Modifier.size(20.dp),
                             )
                         }
@@ -904,7 +933,7 @@ fun RhythmPlayerContent(
                             fontSize = 12.sp,
                             letterSpacing = 0.6.sp,
                         ),
-                        color = Color.White.copy(alpha = 0.55f),
+                        color = textSubColor,
                     )
                     Spacer(Modifier.height(8.dp))
 
@@ -918,7 +947,7 @@ fun RhythmPlayerContent(
                                 modifier = Modifier
                                     .fillMaxWidth()
                                     .clip(RoundedCornerShape(12.dp))
-                                    .background(Color.White.copy(alpha = 0.05f))
+                                    .background(sheetCardBg)
                                     .clickable { onJumpTo(idx) }
                                     .padding(horizontal = 12.dp, vertical = 8.dp),
                                 verticalAlignment = Alignment.CenterVertically,
@@ -929,13 +958,13 @@ fun RhythmPlayerContent(
                                     modifier = Modifier
                                         .size(26.dp)
                                         .clip(CircleShape)
-                                        .background(Color.White.copy(alpha = 0.14f)),
+                                        .background(sheetPillBg),
                                     contentAlignment = Alignment.Center,
                                 ) {
                                     Text(
                                         text = "${idx + 1}",
                                         style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.Bold),
-                                        color = Color.White,
+                                        color = titleColor,
                                     )
                                 }
                                 AsyncImage(
@@ -950,14 +979,14 @@ fun RhythmPlayerContent(
                                     Text(
                                         text = item.title,
                                         style = MaterialTheme.typography.bodyMedium.copy(fontWeight = FontWeight.SemiBold),
-                                        color = Color.White,
+                                        color = titleColor,
                                         maxLines = 1,
                                         overflow = TextOverflow.Ellipsis,
                                     )
                                     Text(
                                         text = item.artist,
                                         style = MaterialTheme.typography.bodySmall,
-                                        color = Color.White.copy(alpha = 0.60f),
+                                        color = textSubColor,
                                         maxLines = 1,
                                         overflow = TextOverflow.Ellipsis,
                                     )
@@ -965,21 +994,21 @@ fun RhythmPlayerContent(
                                 Icon(
                                     imageVector = Icons.Rounded.DragHandle,
                                     contentDescription = "Reorder",
-                                    tint = Color.White.copy(alpha = 0.40f),
+                                    tint = textSubColor,
                                     modifier = Modifier.size(20.dp),
                                 )
                                 Box(
                                     modifier = Modifier
                                         .size(28.dp)
                                         .clip(CircleShape)
-                                        .background(Color.White.copy(alpha = 0.10f))
+                                        .background(sheetPillBg)
                                         .clickable { onRemoveFromQueue(idx) },
                                     contentAlignment = Alignment.Center,
                                 ) {
                                     Icon(
                                         imageVector = Icons.Rounded.Close,
                                         contentDescription = "Remove",
-                                        tint = Color.White.copy(alpha = 0.75f),
+                                        tint = iconTint,
                                         modifier = Modifier.size(16.dp),
                                     )
                                 }
@@ -1001,7 +1030,7 @@ fun RhythmPlayerContent(
             Box(
                 modifier = Modifier
                     .fillMaxSize()
-                    .background(Color.Black.copy(alpha = 0.65f))
+                    .background(if (isDark) Color.Black.copy(alpha = 0.65f) else Color.Black.copy(alpha = 0.35f))
                     .clickable { showAudioSheet = false },
                 contentAlignment = Alignment.BottomCenter,
             ) {
@@ -1016,7 +1045,7 @@ fun RhythmPlayerContent(
                         .fillMaxWidth()
                         .fillMaxHeight(0.84f)
                         .clip(RoundedCornerShape(topStart = 28.dp, topEnd = 28.dp))
-                        .background(Color(0xFF16161A))
+                        .background(sheetBg)
                         .clickable(interactionSource = remember { MutableInteractionSource() }, indication = null) {}
                         .padding(horizontal = 20.dp, vertical = 12.dp),
                 ) {
@@ -1026,7 +1055,7 @@ fun RhythmPlayerContent(
                             .width(36.dp)
                             .height(4.5.dp)
                             .clip(RoundedCornerShape(percent = 50))
-                            .background(Color.White.copy(alpha = 0.35f)),
+                            .background(sheetHandle),
                     )
                     Spacer(Modifier.height(14.dp))
                     Text(
@@ -1035,19 +1064,19 @@ fun RhythmPlayerContent(
                             fontWeight = FontWeight.Bold,
                             fontSize = 24.sp,
                         ),
-                        color = Color.White,
+                        color = titleColor,
                     )
                     Spacer(Modifier.height(4.dp))
                     Box(
                         modifier = Modifier
                             .clip(RoundedCornerShape(percent = 50))
-                            .background(Color.White.copy(alpha = 0.12f))
+                            .background(sheetPillBg)
                             .padding(horizontal = 10.dp, vertical = 4.dp),
                     ) {
                         Text(
                             text = "Audio Settings",
                             style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.SemiBold),
-                            color = Color.White.copy(alpha = 0.85f),
+                            color = textSubColor,
                         )
                     }
 
@@ -1058,7 +1087,7 @@ fun RhythmPlayerContent(
                         modifier = Modifier
                             .fillMaxWidth()
                             .clip(RoundedCornerShape(20.dp))
-                            .background(Color(0xFF8E8E93).copy(alpha = 0.35f))
+                            .background(if (isDark) Color(0xFF8E8E93).copy(alpha = 0.35f) else Color.Black.copy(alpha = 0.06f))
                             .padding(16.dp),
                     ) {
                         Column {
@@ -1075,13 +1104,13 @@ fun RhythmPlayerContent(
                                         modifier = Modifier
                                             .size(36.dp)
                                             .clip(CircleShape)
-                                            .background(Color.White),
+                                            .background(if (isDark) Color.White else Color(0xFF121215)),
                                         contentAlignment = Alignment.Center,
                                     ) {
                                         Icon(
                                             imageVector = Icons.Rounded.Speaker,
                                             contentDescription = null,
-                                            tint = Color.Black,
+                                            tint = if (isDark) Color.Black else Color.White,
                                             modifier = Modifier.size(20.dp),
                                         )
                                     }
@@ -1089,12 +1118,12 @@ fun RhythmPlayerContent(
                                         Text(
                                             text = "Phone Speaker",
                                             style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold),
-                                            color = Color.White,
+                                            color = titleColor,
                                         )
                                         Text(
                                             text = "Built-in speaker",
                                             style = MaterialTheme.typography.bodySmall,
-                                            color = Color.White.copy(alpha = 0.70f),
+                                            color = textSubColor,
                                         )
                                     }
                                 }
@@ -1104,13 +1133,13 @@ fun RhythmPlayerContent(
                                         modifier = Modifier
                                             .size(36.dp)
                                             .clip(CircleShape)
-                                            .background(Color.White),
+                                            .background(if (isDark) Color.White else Color(0xFF121215)),
                                         contentAlignment = Alignment.Center,
                                     ) {
                                         Icon(
                                             imageVector = Icons.Rounded.Refresh,
                                             contentDescription = null,
-                                            tint = Color.Black,
+                                            tint = if (isDark) Color.Black else Color.White,
                                             modifier = Modifier.size(18.dp),
                                         )
                                     }
@@ -1118,13 +1147,13 @@ fun RhythmPlayerContent(
                                         modifier = Modifier
                                             .size(36.dp)
                                             .clip(CircleShape)
-                                            .background(Color.White),
+                                            .background(if (isDark) Color.White else Color(0xFF121215)),
                                         contentAlignment = Alignment.Center,
                                     ) {
                                         Icon(
                                             imageVector = Icons.Rounded.SwapHoriz,
                                             contentDescription = null,
-                                            tint = Color.Black,
+                                            tint = if (isDark) Color.Black else Color.White,
                                             modifier = Modifier.size(18.dp),
                                         )
                                     }
@@ -1139,12 +1168,12 @@ fun RhythmPlayerContent(
                                 Text(
                                     text = "System Volume",
                                     style = MaterialTheme.typography.bodyMedium.copy(fontWeight = FontWeight.SemiBold),
-                                    color = Color.White,
+                                    color = titleColor,
                                 )
                                 Text(
                                     text = "${(volumeLevel * 100).toInt()}%",
                                     style = MaterialTheme.typography.bodyMedium.copy(fontWeight = FontWeight.Bold),
-                                    color = Color.White,
+                                    color = titleColor,
                                 )
                             }
                             Spacer(Modifier.height(8.dp))
@@ -1152,9 +1181,9 @@ fun RhythmPlayerContent(
                                 value = volumeLevel,
                                 onValueChange = { volumeLevel = it },
                                 colors = SliderDefaults.colors(
-                                    thumbColor = Color.White,
-                                    activeTrackColor = Color.White,
-                                    inactiveTrackColor = Color.White.copy(alpha = 0.25f),
+                                    thumbColor = primaryAccent,
+                                    activeTrackColor = primaryAccent,
+                                    inactiveTrackColor = if (isDark) Color.White.copy(alpha = 0.25f) else Color.Black.copy(alpha = 0.15f),
                                 ),
                                 modifier = Modifier.fillMaxWidth(),
                             )
@@ -1168,7 +1197,7 @@ fun RhythmPlayerContent(
                             fontWeight = FontWeight.Bold,
                             fontSize = 13.sp,
                         ),
-                        color = Color.White.copy(alpha = 0.65f),
+                        color = textSubColor,
                     )
                     Spacer(Modifier.height(10.dp))
 
@@ -1176,7 +1205,7 @@ fun RhythmPlayerContent(
                         modifier = Modifier
                             .fillMaxWidth()
                             .clip(RoundedCornerShape(16.dp))
-                            .background(Color.White.copy(alpha = 0.06f)),
+                            .background(sheetCardBg),
                     ) {
                         RhythmSettingSwitchRow(
                             icon = Icons.Rounded.VolumeUp,
@@ -1222,7 +1251,7 @@ fun RhythmPlayerContent(
             Box(
                 modifier = Modifier
                     .fillMaxSize()
-                    .background(Color.Black.copy(alpha = 0.65f))
+                    .background(if (isDark) Color.Black.copy(alpha = 0.65f) else Color.Black.copy(alpha = 0.35f))
                     .clickable { showMoreSheet = false },
                 contentAlignment = Alignment.BottomCenter,
             ) {
@@ -1231,7 +1260,7 @@ fun RhythmPlayerContent(
                         .fillMaxWidth()
                         .fillMaxHeight(0.84f)
                         .clip(RoundedCornerShape(topStart = 28.dp, topEnd = 28.dp))
-                        .background(Color(0xFF16161A))
+                        .background(sheetBg)
                         .clickable(interactionSource = remember { MutableInteractionSource() }, indication = null) {}
                         .padding(horizontal = 20.dp, vertical = 12.dp),
                 ) {
@@ -1241,7 +1270,7 @@ fun RhythmPlayerContent(
                             .width(36.dp)
                             .height(4.5.dp)
                             .clip(RoundedCornerShape(percent = 50))
-                            .background(Color.White.copy(alpha = 0.35f)),
+                            .background(sheetHandle),
                     )
                     Spacer(Modifier.height(14.dp))
                     Text(
@@ -1250,19 +1279,19 @@ fun RhythmPlayerContent(
                             fontWeight = FontWeight.Bold,
                             fontSize = 24.sp,
                         ),
-                        color = Color.White,
+                        color = titleColor,
                     )
                     Spacer(Modifier.height(4.dp))
                     Box(
                         modifier = Modifier
                             .clip(RoundedCornerShape(percent = 50))
-                            .background(Color.White.copy(alpha = 0.12f))
+                            .background(sheetPillBg)
                             .padding(horizontal = 10.dp, vertical = 4.dp),
                     ) {
                         Text(
                             text = "More actions",
                             style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.SemiBold),
-                            color = Color.White.copy(alpha = 0.85f),
+                            color = textSubColor,
                         )
                     }
 
@@ -1472,11 +1501,17 @@ private fun RhythmControlCard(
     onClick: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
+    val isDark = MaterialTheme.colorScheme.surface.luminance() < 0.5f
+    val cardBg = if (isDark) Color.White.copy(alpha = 0.08f) else Color.Black.copy(alpha = 0.05f)
+    val cardText = if (isDark) Color.White else Color(0xFF121215)
+    val cardSub = if (isDark) Color.White.copy(alpha = 0.55f) else Color(0xFF555562)
+    val cardIcon = if (isDark) Color.White else Color(0xFF121215)
+
     Box(
         modifier = modifier
             .height(82.dp)
             .clip(RoundedCornerShape(16.dp))
-            .background(Color.White.copy(alpha = 0.08f))
+            .background(cardBg)
             .clickable(onClick = onClick)
             .padding(14.dp),
     ) {
@@ -1487,14 +1522,14 @@ private fun RhythmControlCard(
             Icon(
                 imageVector = icon,
                 contentDescription = null,
-                tint = Color.White,
+                tint = cardIcon,
                 modifier = Modifier.size(20.dp),
             )
             Column {
                 Text(
                     text = title,
                     style = MaterialTheme.typography.bodyMedium.copy(fontWeight = FontWeight.SemiBold),
-                    color = Color.White,
+                    color = cardText,
                     maxLines = 1,
                     overflow = TextOverflow.Ellipsis,
                 )
@@ -1502,7 +1537,7 @@ private fun RhythmControlCard(
                     Text(
                         text = subtitle,
                         style = MaterialTheme.typography.bodySmall.copy(fontSize = 11.sp),
-                        color = Color.White.copy(alpha = 0.55f),
+                        color = cardSub,
                         maxLines = 1,
                         overflow = TextOverflow.Ellipsis,
                     )
@@ -1520,6 +1555,12 @@ private fun RhythmSettingSwitchRow(
     checked: Boolean,
     onCheckedChange: (Boolean) -> Unit,
 ) {
+    val isDark = MaterialTheme.colorScheme.surface.luminance() < 0.5f
+    val rowText = if (isDark) Color.White else Color(0xFF121215)
+    val rowSub = if (isDark) Color.White.copy(alpha = 0.60f) else Color(0xFF555562)
+    val rowIcon = if (isDark) Color.White else Color(0xFF121215)
+    val pillBg = if (isDark) Color.White.copy(alpha = 0.12f) else Color.Black.copy(alpha = 0.06f)
+
     Row(
         modifier = Modifier
             .fillMaxWidth()
@@ -1532,13 +1573,13 @@ private fun RhythmSettingSwitchRow(
             modifier = Modifier
                 .size(36.dp)
                 .clip(CircleShape)
-                .background(Color.White.copy(alpha = 0.12f)),
+                .background(pillBg),
             contentAlignment = Alignment.Center,
         ) {
             Icon(
                 imageVector = icon,
                 contentDescription = null,
-                tint = Color.White,
+                tint = rowIcon,
                 modifier = Modifier.size(18.dp),
             )
         }
@@ -1546,12 +1587,12 @@ private fun RhythmSettingSwitchRow(
             Text(
                 text = title,
                 style = MaterialTheme.typography.bodyMedium.copy(fontWeight = FontWeight.SemiBold),
-                color = Color.White,
+                color = rowText,
             )
             Text(
                 text = subtitle,
                 style = MaterialTheme.typography.bodySmall.copy(fontSize = 12.sp),
-                color = Color.White.copy(alpha = 0.60f),
+                color = rowSub,
             )
         }
         Switch(
@@ -1560,8 +1601,8 @@ private fun RhythmSettingSwitchRow(
             colors = SwitchDefaults.colors(
                 checkedThumbColor = Color.White,
                 checkedTrackColor = MaterialTheme.colorScheme.primary,
-                uncheckedThumbColor = Color.White.copy(alpha = 0.60f),
-                uncheckedTrackColor = Color.White.copy(alpha = 0.15f),
+                uncheckedThumbColor = if (isDark) Color.White.copy(alpha = 0.60f) else Color.Black.copy(alpha = 0.40f),
+                uncheckedTrackColor = if (isDark) Color.White.copy(alpha = 0.15f) else Color.Black.copy(alpha = 0.12f),
             ),
         )
     }

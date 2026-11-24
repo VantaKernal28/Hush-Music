@@ -1756,6 +1756,22 @@ fun SettingsScreen(
                     modifier = Modifier.padding(start = ROW_INSET, end = ROW_INSET, bottom = 14.dp),
                 )
             }
+            val beatImpulseTitle = "Beat Impulse"
+            row(beatImpulseTitle, "beat", "impulse", "pulse", "react", "bass") {
+                val beatImpulse by AppSettings.beatImpulse.collectAsStateWithLifecycle()
+                SettingsRow(
+                    icon = SfIcons.GraphicEq,
+                    title = beatImpulseTitle,
+                    subtitle = "Subtle real-time song beat-reactive gradient & UI pulse",
+                    trailing = {
+                        IosSwitch(
+                            checked = beatImpulse,
+                            onCheckedChange = AppSettings::setBeatImpulse,
+                        )
+                    },
+                    onClick = { AppSettings.setBeatImpulse(!beatImpulse) },
+                )
+            }
             val animatedCoverArtTitle = stringResource(R.string.animated_cover_art)
             // Carries the keywords of the rows that only appear once it is on,
             // so searching "spotify" with animated covers switched off turns up

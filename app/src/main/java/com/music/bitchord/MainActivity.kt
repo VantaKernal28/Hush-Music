@@ -264,6 +264,7 @@ import com.music.bitchord.ui.components.FLOATING_BAR_MAX_WIDTH
 import com.music.bitchord.ui.components.FloatingBottomBar
 import com.music.bitchord.ui.components.AiPlaylistPillButton
 import com.music.bitchord.ui.components.GlassNavBar
+import com.music.bitchord.ui.components.floatingtabbar.FloatingTabBarInlineBehavior
 import com.music.bitchord.ui.components.floatingtabbar.rememberFloatingTabBarScrollConnection
 import com.music.bitchord.ui.components.FrostedTopBar
 import com.music.bitchord.ui.components.LastfmLoginAlert
@@ -560,7 +561,9 @@ private fun BitChordApp(
     // What folds [GlassNavBar] between its expanded and inline shapes. Held here
     // rather than inside the bar because the page's scroll is what drives it,
     // and the page is a sibling of the bar rather than a child.
-    val navBarScroll = rememberFloatingTabBarScrollConnection()
+    val navBarScroll = rememberFloatingTabBarScrollConnection(
+        inlineBehavior = FloatingTabBarInlineBehavior.Never,
+    )
     var selectedTab by rememberSaveable { mutableIntStateOf(0) }
     // Explore loads the first time it's shown, not at launch beside Home.
     LaunchedEffect(selectedTab) {
@@ -4195,79 +4198,92 @@ private fun BitChordApp(
                     )
                 }
 
-                if (!materialUiMode) Column(
+                AnimatedContent(
+                    targetState = materialUiMode,
+                    transitionSpec = {
+                        (fadeIn(tween(260)) + scaleIn(initialScale = 0.97f)) togetherWith
+                            (fadeOut(tween(200)) + scaleOut(targetScale = 1.02f))
+                    },
                     modifier = Modifier
                         .align(Alignment.BottomCenter)
                         .widthIn(max = FLOATING_BAR_MAX_WIDTH)
-                        .fillMaxWidth()
-                        .onSizeChanged { floatingBarsHeight.intValue = it.height },
-                ) {
-                    QueueActionNoticeHost(queueNotice)
-                    // Liquid glass is the mandatory default in Classic mode
-                    GlassNavBar(
-                        tabs = tabs,
-                        selectedIndex = selectedTab,
-                        onTabSelected = onTabSelected,
-                        scrollConnection = navBarScroll,
-                        song = player.song,
-                        isPlaying = player.isPlaying,
-                        isLoading = playPauseBusy,
-                        onPlayPause = {
-                            togglePlayPause()
-                        },
-                        onNext = { controller?.seekToNextMediaItem() },
-                        onPrevious = { controller?.seekToPrevious() },
-                        onExpand = if (reducePlayerMotion) {
-                            { showNowPlaying = true }
-                        } else {
-                            playerSheetMotion::open
-                        },
-                        controlsLocked = controlsLocked,
-                        onBlockedControl = showHostOnlyNotice,
-                        dock = activeDock,
-                        pull = playerSheetMotion.takeIf { !reducePlayerMotion },
-                        modifier = Modifier.fillMaxWidth(),
-                    )
-                } else Column(
-                    modifier = Modifier
-                        .align(Alignment.BottomCenter)
-                        .widthIn(max = FLOATING_BAR_MAX_WIDTH)
-                        .fillMaxWidth()
-                        .onSizeChanged { floatingBarsHeight.intValue = it.height },
-                    horizontalAlignment = Alignment.CenterHorizontally,
-                ) {
-                    QueueActionNoticeHost(queueNotice)
-                    player.song?.let { song ->
-                        com.music.bitchord.ui.components.expressive.ExpressiveMiniPlayer(
-                            song = song,
-                            isPlaying = player.isPlaying,
-                            isLoading = playPauseBusy,
-                            hazeState = hazeState,
-                            onPlayPause = {
-                                togglePlayPause()
-                            },
-                            onNext = { controller?.seekToNextMediaItem() },
-                            onPrevious = { controller?.seekToPrevious() },
-                            onExpand = if (reducePlayerMotion) {
-                                { showNowPlaying = true }
-                            } else {
-                                playerSheetMotion::open
-                            },
-                            controlsLocked = controlsLocked,
-                            onBlockedControl = showHostOnlyNotice,
-                            dock = activeDock,
-                            pull = playerSheetMotion.takeIf { !reducePlayerMotion },
-                            progressProvider = { if (player.durationMs > 0L) player.position.positionMs.toFloat() / player.durationMs.toFloat() else 0f },
-                            modifier = Modifier.fillMaxWidth(),
-                        )
-                        Spacer(Modifier.height(8.dp))
+                        .fillMaxWidth(),
+                    label = "bottomBarModeTransition",
+                ) { isMaterial ->
+                    if (!isMaterial) {
+                        Column(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .onSizeChanged { floatingBarsHeight.intValue = it.height },
+                        ) {
+                            QueueActionNoticeHost(queueNotice)
+                            // Liquid glass is the mandatory default in Classic mode
+                            GlassNavBar(
+                                tabs = tabs,
+                                selectedIndex = selectedTab,
+                                onTabSelected = onTabSelected,
+                                scrollConnection = navBarScroll,
+                                song = player.song,
+                                isPlaying = player.isPlaying,
+                                isLoading = playPauseBusy,
+                                onPlayPause = {
+                                    togglePlayPause()
+                                },
+                                onNext = { controller?.seekToNextMediaItem() },
+                                onPrevious = { controller?.seekToPrevious() },
+                                onExpand = if (reducePlayerMotion) {
+                                    { showNowPlaying = true }
+                                } else {
+                                    playerSheetMotion::open
+                                },
+                                controlsLocked = controlsLocked,
+                                onBlockedControl = showHostOnlyNotice,
+                                dock = activeDock,
+                                pull = playerSheetMotion.takeIf { !reducePlayerMotion },
+                                modifier = Modifier.fillMaxWidth(),
+                            )
+                        }
+                    } else {
+                        Column(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .onSizeChanged { floatingBarsHeight.intValue = it.height },
+                            horizontalAlignment = Alignment.CenterHorizontally,
+                        ) {
+                            QueueActionNoticeHost(queueNotice)
+                            player.song?.let { song ->
+                                com.music.bitchord.ui.components.expressive.ExpressiveMiniPlayer(
+                                    song = song,
+                                    isPlaying = player.isPlaying,
+                                    isLoading = playPauseBusy,
+                                    hazeState = hazeState,
+                                    onPlayPause = {
+                                        togglePlayPause()
+                                    },
+                                    onNext = { controller?.seekToNextMediaItem() },
+                                    onPrevious = { controller?.seekToPrevious() },
+                                    onExpand = if (reducePlayerMotion) {
+                                        { showNowPlaying = true }
+                                    } else {
+                                        playerSheetMotion::open
+                                    },
+                                    controlsLocked = controlsLocked,
+                                    onBlockedControl = showHostOnlyNotice,
+                                    dock = activeDock,
+                                    pull = playerSheetMotion.takeIf { !reducePlayerMotion },
+                                    progressProvider = { if (player.durationMs > 0L) player.position.positionMs.toFloat() / player.durationMs.toFloat() else 0f },
+                                    modifier = Modifier.fillMaxWidth(),
+                                )
+                                Spacer(Modifier.height(8.dp))
+                            }
+                            com.music.bitchord.ui.components.expressive.ExpressiveNavBar(
+                                tabs = tabs,
+                                selectedIndex = selectedTab,
+                                hazeState = hazeState,
+                                onTabSelected = onTabSelected,
+                            )
+                        }
                     }
-                    com.music.bitchord.ui.components.expressive.ExpressiveNavBar(
-                        tabs = tabs,
-                        selectedIndex = selectedTab,
-                        hazeState = hazeState,
-                        onTabSelected = onTabSelected,
-                    )
                 }
             }
 

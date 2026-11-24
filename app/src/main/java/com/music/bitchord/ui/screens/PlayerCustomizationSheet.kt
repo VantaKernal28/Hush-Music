@@ -80,6 +80,7 @@ fun PlayerCustomizationSheet(
 ) {
     val haptic = LocalHapticFeedback.current
     val liveSongColorGradient by AppSettings.liveSongColorGradient.collectAsStateWithLifecycle()
+    val beatImpulse by AppSettings.beatImpulse.collectAsStateWithLifecycle()
     val wavyScrubber by AppSettings.wavyScrubber.collectAsStateWithLifecycle()
     val progressLineStyle by AppSettings.progressLineStyle.collectAsStateWithLifecycle()
     val fullBleedArtwork by AppSettings.fullBleedArtwork.collectAsStateWithLifecycle()
@@ -205,6 +206,15 @@ fun PlayerCustomizationSheet(
                         onCheckedChange = {
                             haptic.performHapticFeedback(HapticFeedbackType.TextHandleMove)
                             AppSettings.setLiveSongColorGradient(it)
+                        },
+                    )
+                    HorizontalDivider(thickness = 0.5.dp, color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.3f))
+                    PlayerToggleRow(
+                        title = "Beat Impulse",
+                        checked = beatImpulse,
+                        onCheckedChange = {
+                            haptic.performHapticFeedback(HapticFeedbackType.TextHandleMove)
+                            AppSettings.setBeatImpulse(it)
                         },
                     )
                     HorizontalDivider(thickness = 0.5.dp, color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.3f))

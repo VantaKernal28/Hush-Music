@@ -46,6 +46,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.luminance
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
@@ -114,11 +115,12 @@ fun GlassNavBar(
     // this shape, and a fresh RoundedCornerShape each pass means a fresh factory
     // lambda, which the tab bar sees as a changed argument and recomposes on.
     val pillShape = remember { RoundedCornerShape(percent = 50) }
+    val isDark = MaterialTheme.colorScheme.surface.luminance() < 0.5f
     val contentColor = glassContentColor()
     val primaryAccent = MaterialTheme.colorScheme.primary
     val selectedColor = primaryAccent
-    val unselectedColor = Color.White.copy(alpha = 0.72f)
-    val indicatorTint = primaryAccent.copy(alpha = 0.28f)
+    val unselectedColor = if (isDark) Color.White.copy(alpha = 0.72f) else Color(0xFF1A1A1E).copy(alpha = 0.65f)
+    val indicatorTint = primaryAccent.copy(alpha = if (isDark) 0.28f else 0.18f)
     val haptics = rememberHaptics()
 
     // The tab content lambdas below are captured once per contentKey and held
@@ -137,7 +139,10 @@ fun GlassNavBar(
     // the three surfaces gets its own glass modifier and so its own shape cache.
     // Subtle accent tint to ensure vibrant, luminous physical glass depth.
     val glassSurface: @Composable () -> Modifier = {
-        Modifier.liquidGlass(shape = pillShape, surfaceTint = primaryAccent.copy(alpha = 0.06f))
+        Modifier.liquidGlass(
+            shape = pillShape,
+            surfaceTint = if (isDark) primaryAccent.copy(alpha = 0.06f) else Color.White.copy(alpha = 0.72f),
+        )
     }
 
     FloatingTabBar(

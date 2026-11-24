@@ -12,6 +12,7 @@ import com.music.bitchord.playback.PlaybackPosition
 import com.music.bitchord.sharedui.resources.*
 
 import androidx.compose.ui.graphics.ImageBitmap
+import androidx.compose.ui.graphics.luminance
 import androidx.compose.animation.Crossfade
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.fadeIn
@@ -2345,12 +2346,13 @@ fun NowPlayingScreen(
                 )
             }
         } else {
+            val isDarkTheme = MaterialTheme.colorScheme.surface.luminance() < 0.5f
             Box(
                 modifier = Modifier
                     .fillMaxSize()
                     .onSizeChanged { playerBounds = it }
                     .then(dockHost)
-                    .background(Color.Black),
+                    .background(if (materialUi && !isDarkTheme) Color(0xFFF8F7FA) else Color.Black),
             ) {
                 // Three themes, one rule between them: a full-screen Spotify Canvas
                 // is its own backdrop until a panel opens.

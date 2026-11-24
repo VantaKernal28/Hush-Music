@@ -575,7 +575,10 @@ object AppSettings {
     val glassBlurPercentage = MutableStateFlow(0.70f)
 
     /** Musical player progress bar animation and line style. */
-    val progressLineStyle = MutableStateFlow(ProgressLineStyle.WAVY)
+    val progressLineStyle = MutableStateFlow(ProgressLineStyle.STRAIGHT)
+
+    /** Beat-reactive song gradient and artwork impulse. */
+    val beatImpulse = MutableStateFlow(true)
 
     /** Blurs unfocused lyric lines, keeping the active line sharp. */
     val lyricsBlur = MutableStateFlow(true)
@@ -1131,8 +1134,9 @@ object AppSettings {
         glassRefraction.value = prefs.getFloat(KEY_GLASS_REFRACTION, 0.75f).coerceIn(0f, 1f)
         glassBlurPercentage.value = prefs.getFloat(KEY_GLASS_BLUR_PERCENTAGE, 0.70f).coerceIn(0f, 1f)
         progressLineStyle.value = runCatching {
-            ProgressLineStyle.valueOf(prefs.getString(KEY_PROGRESS_LINE_STYLE, null) ?: "WAVY")
-        }.getOrDefault(ProgressLineStyle.WAVY)
+            ProgressLineStyle.valueOf(prefs.getString(KEY_PROGRESS_LINE_STYLE, null) ?: "STRAIGHT")
+        }.getOrDefault(ProgressLineStyle.STRAIGHT)
+        beatImpulse.value = prefs.getBoolean(KEY_BEAT_IMPULSE, true)
         lyricsBlur.value = prefs.getBoolean(KEY_LYRICS_BLUR, true)
         lyricsOffsetMs.value = prefs.getInt(KEY_LYRICS_OFFSET_MS, 0)
             .coerceIn(MIN_LYRICS_OFFSET_MS, MAX_LYRICS_OFFSET_MS)
@@ -1755,6 +1759,11 @@ object AppSettings {
     fun setProgressLineStyle(value: ProgressLineStyle) {
         progressLineStyle.value = value
         prefs.edit().putString(KEY_PROGRESS_LINE_STYLE, value.name).apply()
+    }
+
+    fun setBeatImpulse(value: Boolean) {
+        beatImpulse.value = value
+        prefs.edit().putBoolean(KEY_BEAT_IMPULSE, value).apply()
     }
 
     fun setHighPerformanceMode(value: Boolean) {
@@ -2560,6 +2569,7 @@ object AppSettings {
     private const val KEY_GLASS_REFRACTION = "hush_glass_refraction"
     private const val KEY_GLASS_BLUR_PERCENTAGE = "hush_glass_blur_percentage"
     private const val KEY_PROGRESS_LINE_STYLE = "progress_line_style"
+    private const val KEY_BEAT_IMPULSE = "beat_impulse"
     private const val KEY_LYRICS_BLUR = "lyrics_blur"
     private const val KEY_LYRICS_OFFSET_MS = "lyrics_offset_ms"
     private const val KEY_TRANSLATION_LANGUAGE = "translation_language"
