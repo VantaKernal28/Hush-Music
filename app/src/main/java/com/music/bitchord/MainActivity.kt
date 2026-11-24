@@ -759,6 +759,7 @@ private fun BitChordApp(
     var creatingOfflinePlaylist by remember { mutableStateOf(false) }
     var showSpotifyImportDialog by remember { mutableStateOf(false) }
     var showAiPlaylistMaker by remember { mutableStateOf(false) }
+    var showSongMixer by remember { mutableStateOf(false) }
     // Which album or playlist the collection menu is open on, or null when it
     // is shut. One slot for every surface that can open it — the shelves on
     // three tabs, the search rows, the artist page's carousels, the release
@@ -2563,6 +2564,7 @@ private fun BitChordApp(
             // the parameter.
             menuOpen = { songActions != null && menuFromPlayer && songMenuOrigin == null },
             onLiveCanvasChanged = { playerLiveCanvas = it },
+            onOpenMixer = { showSongMixer = true },
             isPlaying = player.isPlaying,
             isLoading = playPauseBusy,
             position = player.position,
@@ -4955,6 +4957,14 @@ private fun BitChordApp(
                         }
                     }
                 },
+            )
+        }
+
+        // ---- Song Mixer Sheet ----
+        if (showSongMixer) {
+            com.music.bitchord.ui.screens.SongMixerSheet(
+                song = player.song,
+                onDismiss = { showSongMixer = false },
             )
         }
 

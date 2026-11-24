@@ -1,6 +1,6 @@
-# BitChord for Wear OS
+# Hush for Wear OS (HushWear)
 
-A watch remote for the BitChord phone app: now playing over the player's mesh
+A watch remote for the Hush phone app: now playing over the player's mesh
 backdrop, play/pause on the cover with a progress ring (hold it to seek), skip,
 Love where the phone offers it, Up Next, shuffle, repeat, the phone's volume on
 the crown or bezel, an always-on player, and an Output picker covering the

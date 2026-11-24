@@ -275,7 +275,7 @@ private fun ColumnScope.IntroPage(
         modifier = Modifier.align(Alignment.CenterHorizontally),
     ) {
         Text(
-            text = "Hush Music",
+            text = "Hush",
             style = MaterialTheme.typography.displaySmall.copy(
                 fontSize = 28.sp,
                 fontWeight = FontWeight.Bold,
@@ -426,7 +426,7 @@ private fun ColumnScope.NamePage(
             Spacer(Modifier.height(44.dp))
             Image(
                 painter = androidx.compose.ui.res.painterResource(R.drawable.ic_hush_transparent_logo),
-                contentDescription = "Hush Music",
+                contentDescription = "Hush",
                 modifier = Modifier.size(48.dp),
             )
         }

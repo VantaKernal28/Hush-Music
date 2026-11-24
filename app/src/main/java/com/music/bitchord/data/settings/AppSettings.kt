@@ -410,6 +410,7 @@ object AppSettings {
     val equalizerPreset = MutableStateFlow(EqualizerPreset.FLAT)
 
     val playbackSpeed = MutableStateFlow(1.0f)
+    val playbackPitch = MutableStateFlow(1.0f)
     val themeMode = MutableStateFlow(ThemeMode.DARK)
     val appFont = MutableStateFlow(AppFont.DEFAULT)
 
@@ -571,6 +572,7 @@ object AppSettings {
     val glassDepthEffect = MutableStateFlow(0.85f)
     val glassTransparency = MutableStateFlow(0.65f)
     val glassRefraction = MutableStateFlow(0.75f)
+    val glassBlurPercentage = MutableStateFlow(0.70f)
 
     /** Musical player progress bar animation and line style. */
     val progressLineStyle = MutableStateFlow(ProgressLineStyle.WAVY)
@@ -1069,6 +1071,7 @@ object AppSettings {
         equalizerBands.value = readEqualizerBands()
         equalizerPreset.value = EqualizerPreset.matching(equalizerBands.value)
         playbackSpeed.value = prefs.getFloat(KEY_SPEED, 1.0f)
+        playbackPitch.value = prefs.getFloat(KEY_PITCH, 1.0f)
         themeMode.value = runCatching {
             ThemeMode.valueOf(prefs.getString(KEY_THEME, null) ?: "DARK")
         }.getOrDefault(ThemeMode.DARK)
@@ -1126,6 +1129,7 @@ object AppSettings {
         glassDepthEffect.value = prefs.getFloat(KEY_GLASS_DEPTH_EFFECT, 0.85f).coerceIn(0f, 1f)
         glassTransparency.value = prefs.getFloat(KEY_GLASS_TRANSPARENCY, 0.65f).coerceIn(0f, 1f)
         glassRefraction.value = prefs.getFloat(KEY_GLASS_REFRACTION, 0.75f).coerceIn(0f, 1f)
+        glassBlurPercentage.value = prefs.getFloat(KEY_GLASS_BLUR_PERCENTAGE, 0.70f).coerceIn(0f, 1f)
         progressLineStyle.value = runCatching {
             ProgressLineStyle.valueOf(prefs.getString(KEY_PROGRESS_LINE_STYLE, null) ?: "WAVY")
         }.getOrDefault(ProgressLineStyle.WAVY)
@@ -1474,6 +1478,12 @@ object AppSettings {
         prefs.edit().putFloat(KEY_SPEED, value).apply()
     }
 
+    fun setPlaybackPitch(value: Float) {
+        val clamped = value.coerceIn(0.5f, 1.5f)
+        playbackPitch.value = clamped
+        prefs.edit().putFloat(KEY_PITCH, clamped).apply()
+    }
+
     fun setShowNerdStats(value: Boolean) {
         showNerdStats.value = value
         prefs.edit().putBoolean(KEY_NERD_STATS, value).apply()
@@ -1734,6 +1744,12 @@ object AppSettings {
         val coerced = value.coerceIn(0f, 1f)
         glassRefraction.value = coerced
         prefs.edit().putFloat(KEY_GLASS_REFRACTION, coerced).apply()
+    }
+
+    fun setGlassBlurPercentage(value: Float) {
+        val coerced = value.coerceIn(0f, 1f)
+        glassBlurPercentage.value = coerced
+        prefs.edit().putFloat(KEY_GLASS_BLUR_PERCENTAGE, coerced).apply()
     }
 
     fun setProgressLineStyle(value: ProgressLineStyle) {
@@ -2490,6 +2506,7 @@ object AppSettings {
     private const val KEY_EQ_BALANCE = "equalizer_balance"
     private const val KEY_EQ_BANDS = "equalizer_bands"
     private const val KEY_SPEED = "playback_speed"
+    private const val KEY_PITCH = "playback_pitch"
     private const val KEY_THEME = "theme_mode"
     private const val KEY_APP_FONT = "app_font"
     private const val KEY_AUTOPLAY = "autoplay"
@@ -2541,6 +2558,7 @@ object AppSettings {
     private const val KEY_GLASS_DEPTH_EFFECT = "hush_glass_depth_effect"
     private const val KEY_GLASS_TRANSPARENCY = "hush_glass_transparency"
     private const val KEY_GLASS_REFRACTION = "hush_glass_refraction"
+    private const val KEY_GLASS_BLUR_PERCENTAGE = "hush_glass_blur_percentage"
     private const val KEY_PROGRESS_LINE_STYLE = "progress_line_style"
     private const val KEY_LYRICS_BLUR = "lyrics_blur"
     private const val KEY_LYRICS_OFFSET_MS = "lyrics_offset_ms"

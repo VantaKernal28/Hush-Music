@@ -101,7 +101,7 @@ object AppUpdateChecker {
             .replace(Regex("!\\[[^\\]]*\\]\\([^)]*\\)"), "")
             .replace(Regex("<img[^>]*>"), "")
             .trim()
-        return stripped.ifBlank { "Hush Music update with latest performance improvements and features." }
+        return stripped.ifBlank { "Hush update with latest performance improvements and features." }
     }
 
     /**
@@ -135,7 +135,9 @@ object AppUpdateChecker {
             ?.mapNotNull { asset ->
                 val name = asset["name"]?.jsonPrimitive?.contentOrNull ?: return@mapNotNull null
                 val url = asset["browser_download_url"]?.jsonPrimitive?.contentOrNull ?: return@mapNotNull null
-                val ours = name.startsWith(BuildConfig.UPDATE_APK_PREFIX, ignoreCase = true) &&
+                val ours = (name.startsWith(BuildConfig.UPDATE_APK_PREFIX, ignoreCase = true) ||
+                    name.startsWith("hushmusic-", ignoreCase = true) ||
+                    name.startsWith("hush-", ignoreCase = true)) &&
                     name.endsWith(".apk", ignoreCase = true) &&
                     asset["state"]?.jsonPrimitive?.contentOrNull == "uploaded"
                 if (ours) name.removeSuffix(".apk").removeSuffix(".APK") to url else null

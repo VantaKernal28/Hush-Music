@@ -868,6 +868,7 @@ fun NowPlayingScreen(
      * rather than a still of it.
      */
     onLiveCanvasChanged: (Boolean) -> Unit = {},
+    onOpenMixer: (() -> Unit)? = null,
     modifier: Modifier = Modifier,
 ) {
     val density = LocalDensity.current
@@ -2380,13 +2381,6 @@ fun NowPlayingScreen(
                     animationSpec = tween(durationMillis = 360, easing = FastOutSlowInEasing),
                     label = "fullArtworkBackdropCrossfade",
                 )
-                if (materialUi) {
-                    Box(
-                        modifier = Modifier
-                            .fillMaxSize()
-                            .background(MaterialTheme.colorScheme.primary),
-                    )
-                }
                 if (legacyMeshBackdrop) {
                     // v1.5's backdrop, restored verbatim: no seam, because the blobs
                     // are not anchored to anything on screen — they fill the player and
@@ -2860,7 +2854,7 @@ fun NowPlayingScreen(
                                     }
                                 }
                             }
-                            .padding(horizontal = PLAYER_GUTTER),
+                            .then(if (materialUi) Modifier else Modifier.padding(horizontal = PLAYER_GUTTER)),
                         horizontalAlignment = Alignment.CenterHorizontally,
                     ) {
                     if (materialUi) {
@@ -2891,6 +2885,7 @@ fun NowPlayingScreen(
                             lyrics = lyrics,
                             lyricsUnavailable = lyricsUnavailable,
                             onDismiss = onDismissPlayer,
+                            onOpenMixer = onOpenMixer,
                             modifier = Modifier.fillMaxSize(),
                         )
                     } else {

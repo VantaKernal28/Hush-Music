@@ -56,17 +56,12 @@ enum class AppIcon(val alias: String, val iconRes: Int, val labelRes: Int, val p
             }.getOrNull() ?: Default
         }
 
-        /** Enables [icon] before disabling the rest so there is never a moment with no launcher entry. */
+        /** Disables other launcher aliases before enabling the target icon to ensure the launcher updates cleanly without creating duplicate icons. */
         fun apply(context: Context, icon: AppIcon) {
             runCatching {
                 val pm = context.packageManager
-                runCatching {
-                    pm.setComponentEnabledSetting(
-                        icon.component(context),
-                        PackageManager.COMPONENT_ENABLED_STATE_ENABLED,
-                        PackageManager.DONT_KILL_APP,
-                    )
-                }
+                val targetComponent = icon.component(context)
+
                 entries.filter { it != icon }.forEach {
                     runCatching {
                         pm.setComponentEnabledSetting(
@@ -76,6 +71,12 @@ enum class AppIcon(val alias: String, val iconRes: Int, val labelRes: Int, val p
                         )
                     }
                 }
+
+                pm.setComponentEnabledSetting(
+                    targetComponent,
+                    PackageManager.COMPONENT_ENABLED_STATE_ENABLED,
+                    PackageManager.DONT_KILL_APP,
+                )
             }
         }
     }

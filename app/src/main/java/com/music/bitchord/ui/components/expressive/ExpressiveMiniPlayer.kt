@@ -112,6 +112,7 @@ fun ExpressiveMiniPlayer(
 
     val miniPlayerProgressLine by AppSettings.miniPlayerProgressLine.collectAsStateWithLifecycle()
     val rotatingScallopPlay by AppSettings.rotatingScallopPlay.collectAsStateWithLifecycle()
+    val frostedGlass by AppSettings.frostedGlass.collectAsStateWithLifecycle()
 
     // Rotating scalloped Play/Pause button for Material UI Mode
     val infiniteTransition = rememberInfiniteTransition(label = "m3ePlaySpin")
@@ -156,13 +157,27 @@ fun ExpressiveMiniPlayer(
             .clip(shape)
             .then(
                 if (materialUi) {
-                    Modifier
-                        .background(MaterialTheme.colorScheme.surfaceContainerHigh)
-                        .border(
-                            width = 1.dp,
-                            color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.25f),
-                            shape = shape,
-                        )
+                    if (frostedGlass) {
+                        Modifier
+                            .hazeEffect(
+                                state = hazeState,
+                                style = HazeMaterials.regular(MaterialTheme.colorScheme.surfaceContainerHigh.copy(alpha = 0.65f)),
+                            )
+                            .background(MaterialTheme.colorScheme.surfaceContainerHigh.copy(alpha = 0.55f))
+                            .border(
+                                width = 1.dp,
+                                color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.35f),
+                                shape = shape,
+                            )
+                    } else {
+                        Modifier
+                            .background(MaterialTheme.colorScheme.surfaceContainerHigh)
+                            .border(
+                                width = 1.dp,
+                                color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.25f),
+                                shape = shape,
+                            )
+                    }
                 } else {
                     Modifier
                         .hazeEffect(

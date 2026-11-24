@@ -642,6 +642,15 @@ class CrossfadeController(
      */
     fun isTransitioning(): Boolean = phase != Phase.IDLE
 
+    /** Applies the listener's speed and pitch without exposing AudioTrack's parameter-change click. */
+    fun applyPlaybackParameters(speed: Float, pitch: Float) {
+        if (isTransitioning()) return
+        val params = androidx.media3.common.PlaybackParameters(speed, pitch)
+        for (player in listOf(active(), standby()).distinct()) {
+            player.playbackParameters = params
+        }
+    }
+
     /** Applies the listener's speed without exposing AudioTrack's parameter-change click. */
     fun applyPlaybackSpeed(speed: Float) {
         if (isTransitioning()) return

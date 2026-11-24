@@ -1,5 +1,5 @@
 <resources>
-    <string name="app_name">Hush Music</string>
+    <string name="app_name">Hush</string>
     <string name="playback_channel_name">In riproduzione</string>
     <string name="download_channel_name">Download</string>
     <string name="download_channel_description">Brani salvati nella tua cartella Musica</string>
@@ -552,7 +552,7 @@
     <string name="biggest_day_note">Il tuo giorno più intenso è stato %1$s con %2$s di ascolto.</string>
     <string name="close_replay">Chiudi Replay</string>
     <string name="couldnt_draw_picture">Impossibile creare l\'immagine</string>
-    <string name="default_replay_holder">Ascoltatore Hush Music</string>
+    <string name="default_replay_holder">Ascoltatore Hush</string>
     <string name="different_albums">Album diversi</string>
     <string name="genres_pending">I generi appariranno man mano che cresce la tua cronologia di ascolto</string>
     <string name="hour_am">%1$d di mattina</string>
@@ -714,7 +714,7 @@
     </plurals>
     <string name="no_local_albums">Niente qui appartiene ancora a un album o playlist. Scarica un album o una playlist completa e apparirà qui.</string>
     <string name="play_your_replay">Riproduci il tuo Replay</string>
-    <string name="counted_on_device_with_bitchord">Conteggiato su questo dispositivo con Hush Music</string>
+    <string name="counted_on_device_with_bitchord">Conteggiato su questo dispositivo con Hush</string>
     <string name="this_month">Questo mese</string>
     <string name="this_year">Quest\'anno</string>
     <string name="all_time">Sempre</string>

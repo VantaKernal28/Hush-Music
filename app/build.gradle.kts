@@ -104,7 +104,7 @@ android {
         // Which release assets are this app's: the phone and TV APKs ship in
         // the same GitHub release, told apart by file name. See
         // AppUpdateChecker.apkAssetUrl.
-        buildConfigField("String", "UPDATE_APK_PREFIX", "\"hushmusic-\"")
+        buildConfigField("String", "UPDATE_APK_PREFIX", "\"hush-\"")
     }
 
     splits {
@@ -137,7 +137,7 @@ android {
         create("dev") {
             dimension = "env"
             applicationId = "com.vanta.hush.dev"
-            resValue("string", "app_name", "Hush Music")
+            resValue("string", "app_name", "Hush")
         }
         create("prod") {
             dimension = "env"
@@ -270,7 +270,7 @@ android {
             if (output != null) {
                 val abi = output.getFilter(FilterType.ABI)
                 val abiPart = if (abi != null) "-$abi" else ""
-                output.outputFileName = "hushmusic-${vName}${flavor}${abiPart}-${buildType}.apk"
+                output.outputFileName = "hush-${vName}${flavor}${abiPart}-${buildType}.apk"
             }
         }
     }

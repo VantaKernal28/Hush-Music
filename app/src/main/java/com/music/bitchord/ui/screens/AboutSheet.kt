@@ -183,7 +183,7 @@ fun AboutSheet(
                             verticalArrangement = Arrangement.Center,
                         ) {
                             Text(
-                                text = "Hush Music",
+                                text = "Hush",
                                 style = MaterialTheme.typography.displaySmall.copy(
                                     fontWeight = FontWeight.ExtraBold,
                                     letterSpacing = (-1).sp,
@@ -192,7 +192,7 @@ fun AboutSheet(
                             )
                             Spacer(Modifier.height(6.dp))
                             Text(
-                                text = "Hush Music 1.0",
+                                text = "Hush 1.0",
                                 style = MaterialTheme.typography.titleMedium.copy(
                                     fontWeight = FontWeight.SemiBold,
                                     fontSize = 17.sp,
@@ -217,7 +217,7 @@ fun AboutSheet(
                                     )
                                     Spacer(Modifier.width(8.dp))
                                     Text(
-                                        text = "Hush Music 1.0 is up to date.",
+                                        text = "Hush 1.0 is up to date.",
                                         style = MaterialTheme.typography.labelMedium.copy(
                                             fontWeight = FontWeight.SemiBold,
                                         ),
@@ -297,12 +297,12 @@ fun AboutSheet(
                             .padding(20.dp),
                     ) {
                         Text(
-                            text = "Hush Music",
+                            text = "Hush",
                             style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold),
                             color = Color.White,
                         )
                         Text(
-                            text = "Hush Music 1.0 (Stable Release) · release",
+                            text = "Hush 1.0 (Stable Release) · release",
                             style = MaterialTheme.typography.bodySmall,
                             color = MaterialTheme.colorScheme.onSurfaceVariant,
                         )
@@ -312,7 +312,7 @@ fun AboutSheet(
                         Spacer(Modifier.height(14.dp))
 
                         SpecsRow(label = "Architecture", value = Build.SUPPORTED_ABIS.firstOrNull() ?: "arm64-v8a")
-                        SpecsRow(label = "Release", value = "Hush Music 1.0 (test)")
+                        SpecsRow(label = "Release", value = "Hush 1.0 (test)")
                         SpecsRow(label = "Package", value = "com.music.bitchord")
                         SpecsRow(label = "Android Version", value = "Android ${Build.VERSION.RELEASE} (API ${Build.VERSION.SDK_INT})")
                         SpecsRow(label = "Device", value = "${Build.MANUFACTURER} ${Build.MODEL}")
@@ -353,7 +353,7 @@ fun AboutSheet(
                         DeveloperCard(
                             name = "Dhruv Patil",
                             handle = "@$DHRUV_HANDLE",
-                            role = "Lead Developer & UI Designer",
+                            role = "Lead Developer",
                             avatarUrl = DHRUV_AVATAR,
                             onClick = { uriHandler.openUri(DHRUV_URL) },
                         )

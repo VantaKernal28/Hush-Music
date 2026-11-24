@@ -1,5 +1,5 @@
 <resources>
-    <string name="app_name">Hush Music</string>
+    <string name="app_name">Hush</string>
     <string name="playback_channel_name">Şu an çalıyor</string>
     <string name="download_channel_name">İndirmeler</string>
     <string name="download_channel_description">Müzik klasörüne kaydedilen şarkılar</string>
@@ -534,7 +534,7 @@
     <string name="biggest_day_note">En yoğun günün %2$s dinlemeyle %1$s oldu.</string>
     <string name="close_replay">Replay\'i Kapat</string>
     <string name="couldnt_draw_picture">Resim oluşturulamadı</string>
-    <string name="default_replay_holder">Hush Music dinleyicisi</string>
+    <string name="default_replay_holder">Hush dinleyicisi</string>
     <string name="different_albums">Farklı albümler</string>
     <string name="genres_pending">Dinleme geçmişin büyüdükçe türler görünecek</string>
     <string name="hour_am">%1$d, sabah</string>
@@ -696,7 +696,7 @@
     </plurals>
     <string name="no_local_albums">Burada henüz bir albüme veya çalma listesine ait bir şey yok. Tam bir albüm veya çalma listesi indir, burada görünecek.</string>
     <string name="play_your_replay">Replay\'ini çal</string>
-    <string name="counted_on_device_with_bitchord">Bu cihazda Hush Music ile sayıldı</string>
+    <string name="counted_on_device_with_bitchord">Bu cihazda Hush ile sayıldı</string>
     <string name="this_month">Bu ay</string>
     <string name="this_year">Bu yıl</string>
     <string name="all_time">Tüm zamanlar</string>

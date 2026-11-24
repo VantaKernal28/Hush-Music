@@ -6,9 +6,11 @@ import androidx.compose.animation.core.LinearOutSlowInEasing
 import androidx.compose.ui.draw.blur
 import androidx.compose.animation.AnimatedContent
 import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.animateColorAsState
 import androidx.compose.animation.core.LinearEasing
 import androidx.compose.animation.core.RepeatMode
 import androidx.compose.animation.core.animateFloat
+import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.infiniteRepeatable
 import androidx.compose.animation.core.rememberInfiniteTransition
 import androidx.compose.animation.core.spring
@@ -29,6 +31,9 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.foundation.layout.navigationBarsPadding
+import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.aspectRatio
@@ -152,6 +157,7 @@ fun RhythmPlayerContent(
     lyrics: List<LyricLine>? = null,
     lyricsUnavailable: Boolean = false,
     onDismiss: () -> Unit = {},
+    onOpenMixer: (() -> Unit)? = null,
     modifier: Modifier = Modifier,
 ) {
     val primaryAccent = MaterialTheme.colorScheme.primary
@@ -249,7 +255,9 @@ fun RhythmPlayerContent(
         BoxWithConstraints(
             modifier = Modifier
                 .fillMaxSize()
-                .padding(horizontal = 24.dp),
+                .statusBarsPadding()
+                .navigationBarsPadding()
+                .padding(horizontal = 20.dp),
         ) {
             val availableHeight = maxHeight
             val isCompactHeight = availableHeight < 680.dp
@@ -269,7 +277,7 @@ fun RhythmPlayerContent(
                                 if (dragAmount > 14f) onDismiss()
                             }
                         }
-                        .padding(top = 10.dp, bottom = 4.dp),
+                        .padding(top = 4.dp, bottom = 4.dp),
                     contentAlignment = Alignment.Center,
                 ) {
                     Box(
@@ -419,40 +427,95 @@ fun RhythmPlayerContent(
 
                         if (!lyrics.isNullOrEmpty()) {
                             val lyricListState = rememberLazyListState()
-                            val activeIndex = lyrics.indexOfLast { position.positionMs >= it.timeMs }
+                            val hasTimestamps = lyrics.any { it.timeMs > 0L }
 
-                            LaunchedEffect(activeIndex) {
-                                if (activeIndex >= 0) {
-                                    lyricListState.animateScrollToItem(maxOf(0, activeIndex - 1))
+                            if (hasTimestamps) {
+                                val activeIndex = lyrics.indexOfLast { position.positionMs >= it.timeMs }
+
+                                LaunchedEffect(activeIndex) {
+                                    if (activeIndex >= 0) {
+                                        lyricListState.animateScrollToItem(maxOf(0, activeIndex - 1))
+                                    }
                                 }
-                            }
 
-                            LazyColumn(
-                                state = lyricListState,
-                                modifier = Modifier.fillMaxSize(),
-                                horizontalAlignment = Alignment.CenterHorizontally,
-                                verticalArrangement = Arrangement.spacedBy(12.dp),
-                            ) {
-                                itemsIndexed(lyrics) { idx, line ->
-                                    val isCurrentLine = idx == activeIndex
-                                    Text(
-                                        text = line.text,
-                                        style = MaterialTheme.typography.titleLarge.copy(
-                                            fontWeight = if (isCurrentLine) FontWeight.Bold else FontWeight.Medium,
-                                            fontSize = if (isCurrentLine) 26.sp else 18.sp,
-                                            lineHeight = if (isCurrentLine) 34.sp else 26.sp,
-                                        ),
-                                        color = if (isCurrentLine) primaryAccent else Color.White.copy(alpha = 0.45f),
-                                        textAlign = TextAlign.Center,
-                                        modifier = Modifier
-                                            .fillMaxWidth()
-                                            .clickable {
-                                                if (durationMs > 0L) {
-                                                    onSeekFraction((line.timeMs.toFloat() / durationMs.toFloat()).coerceIn(0f, 1f))
+                                LazyColumn(
+                                    state = lyricListState,
+                                    modifier = Modifier.fillMaxSize(),
+                                    horizontalAlignment = Alignment.CenterHorizontally,
+                                    verticalArrangement = Arrangement.spacedBy(14.dp),
+                                    contentPadding = PaddingValues(vertical = 40.dp),
+                                ) {
+                                    itemsIndexed(lyrics) { idx, line ->
+                                        val isCurrentLine = idx == activeIndex
+                                        val lineScale by animateFloatAsState(
+                                            targetValue = if (isCurrentLine) 1.07f else 1.0f,
+                                            animationSpec = spring(dampingRatio = 0.65f, stiffness = 300f),
+                                            label = "lyricScale",
+                                        )
+                                        val lineAlpha by animateFloatAsState(
+                                            targetValue = if (isCurrentLine) 1.0f else 0.40f,
+                                            animationSpec = tween(260),
+                                            label = "lyricAlpha",
+                                        )
+                                        val activeColor by animateColorAsState(
+                                            targetValue = if (isCurrentLine) primaryAccent else Color.White.copy(alpha = 0.40f),
+                                            animationSpec = tween(260),
+                                            label = "lyricColor",
+                                        )
+
+                                        Text(
+                                            text = line.text,
+                                            style = MaterialTheme.typography.headlineSmall.copy(
+                                                fontWeight = if (isCurrentLine) FontWeight.Black else FontWeight.SemiBold,
+                                                fontSize = if (isCurrentLine) 28.sp else 19.sp,
+                                                lineHeight = if (isCurrentLine) 38.sp else 28.sp,
+                                                shadow = if (isCurrentLine) androidx.compose.ui.graphics.Shadow(
+                                                    color = primaryAccent.copy(alpha = 0.55f),
+                                                    blurRadius = 18f,
+                                                ) else null,
+                                            ),
+                                            color = activeColor,
+                                            textAlign = TextAlign.Center,
+                                            modifier = Modifier
+                                                .fillMaxWidth()
+                                                .graphicsLayer {
+                                                    scaleX = lineScale
+                                                    scaleY = lineScale
+                                                    alpha = lineAlpha
                                                 }
-                                            }
-                                            .padding(horizontal = 16.dp, vertical = 6.dp),
-                                    )
+                                                .clickable {
+                                                    if (durationMs > 0L) {
+                                                        onSeekFraction((line.timeMs.toFloat() / durationMs.toFloat()).coerceIn(0f, 1f))
+                                                    }
+                                                }
+                                                .padding(horizontal = 16.dp, vertical = 6.dp),
+                                        )
+                                    }
+                                }
+                            } else {
+                                // Fallback seamlessly to static lyrics
+                                LazyColumn(
+                                    state = lyricListState,
+                                    modifier = Modifier.fillMaxSize(),
+                                    horizontalAlignment = Alignment.CenterHorizontally,
+                                    verticalArrangement = Arrangement.spacedBy(12.dp),
+                                    contentPadding = PaddingValues(vertical = 32.dp),
+                                ) {
+                                    itemsIndexed(lyrics) { _, line ->
+                                        Text(
+                                            text = line.text,
+                                            style = MaterialTheme.typography.titleMedium.copy(
+                                                fontWeight = FontWeight.SemiBold,
+                                                fontSize = 20.sp,
+                                                lineHeight = 28.sp,
+                                            ),
+                                            color = Color.White.copy(alpha = 0.85f),
+                                            textAlign = TextAlign.Center,
+                                            modifier = Modifier
+                                                .fillMaxWidth()
+                                                .padding(horizontal = 20.dp, vertical = 4.dp),
+                                        )
+                                    }
                                 }
                             }
                         } else {
@@ -1241,9 +1304,12 @@ fun RhythmPlayerContent(
                             ) {
                                 RhythmControlCard(
                                     icon = Icons.Rounded.Speed,
-                                    title = "Speed & Pitch",
-                                    subtitle = "Tempo & Pitch",
-                                    onClick = { showMoreSheet = false },
+                                    title = "Song Mixer",
+                                    subtitle = "Remix & Speed",
+                                    onClick = {
+                                        showMoreSheet = false
+                                        onOpenMixer?.invoke()
+                                    },
                                     modifier = Modifier.weight(1f),
                                 )
                                 RhythmControlCard(
@@ -1584,7 +1650,7 @@ private fun RhythmProgressSeekbar(
                     val waveAmplitude = 5.dp.toPx()
                     activePath.moveTo(0f, midY)
                     var x = 0f
-                    val step = 3f
+                    val step = 1.5f
                     while (x <= activeW) {
                         val angle = (x / waveLength) * (2 * PI).toFloat() - wavePhase
                         val y = midY + sin(angle) * waveAmplitude
@@ -1600,6 +1666,11 @@ private fun RhythmProgressSeekbar(
                     val thumbAngle = (activeW / waveLength) * (2 * PI).toFloat() - wavePhase
                     val thumbY = midY + sin(thumbAngle) * waveAmplitude
                     drawCircle(
+                        color = Color.White.copy(alpha = 0.25f),
+                        radius = 10.dp.toPx(),
+                        center = Offset(activeW, thumbY),
+                    )
+                    drawCircle(
                         color = Color.White,
                         radius = 7.dp.toPx(),
                         center = Offset(activeW, thumbY),
@@ -1610,7 +1681,7 @@ private fun RhythmProgressSeekbar(
                         color = inactiveColor,
                         start = Offset(0f, midY),
                         end = Offset(w, midY),
-                        strokeWidth = 8.dp.toPx(),
+                        strokeWidth = 6.dp.toPx(),
                         cap = StrokeCap.Round,
                     )
                     if (activeW > 0f) {
@@ -1618,15 +1689,20 @@ private fun RhythmProgressSeekbar(
                             color = activeColor,
                             start = Offset(0f, midY),
                             end = Offset(activeW, midY),
-                            strokeWidth = 8.dp.toPx(),
+                            strokeWidth = 6.dp.toPx(),
                             cap = StrokeCap.Round,
                         )
                     }
-                    drawRoundRect(
+                    // Sleek circular M3 thumb with soft outer ring
+                    drawCircle(
+                        color = Color.White.copy(alpha = 0.25f),
+                        radius = 10.dp.toPx(),
+                        center = Offset(activeW, midY),
+                    )
+                    drawCircle(
                         color = Color.White,
-                        topLeft = Offset(activeW - 4.dp.toPx(), midY - 9.dp.toPx()),
-                        size = androidx.compose.ui.geometry.Size(8.dp.toPx(), 18.dp.toPx()),
-                        cornerRadius = androidx.compose.ui.geometry.CornerRadius(4.dp.toPx()),
+                        radius = 7.dp.toPx(),
+                        center = Offset(activeW, midY),
                     )
                 }
                 ProgressLineStyle.DOTTED -> {
@@ -1641,6 +1717,11 @@ private fun RhythmProgressSeekbar(
                             center = Offset(dotX, midY),
                         )
                     }
+                    drawCircle(
+                        color = Color.White.copy(alpha = 0.25f),
+                        radius = 10.dp.toPx(),
+                        center = Offset(activeW, midY),
+                    )
                     drawCircle(
                         color = Color.White,
                         radius = 7.dp.toPx(),
@@ -1660,7 +1741,7 @@ private fun RhythmProgressSeekbar(
                     val activePath = Path()
                     activePath.moveTo(0f, midY)
                     var px = 0f
-                    val pulseStep = 2.5f
+                    val pulseStep = 1.5f
                     val pulsePeriod = 64.dp.toPx()
                     while (px <= activeW) {
                         val phaseOffset = ((px - wavePhase * 18.dp.toPx()) % pulsePeriod + pulsePeriod) % pulsePeriod
@@ -1680,6 +1761,11 @@ private fun RhythmProgressSeekbar(
                         path = activePath,
                         color = activeColor,
                         style = Stroke(width = 4.5.dp.toPx(), cap = StrokeCap.Round),
+                    )
+                    drawCircle(
+                        color = Color.White.copy(alpha = 0.25f),
+                        radius = 10.dp.toPx(),
+                        center = Offset(activeW, midY),
                     )
                     drawCircle(
                         color = Color.White,

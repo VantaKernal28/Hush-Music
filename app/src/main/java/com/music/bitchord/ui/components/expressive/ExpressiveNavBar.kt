@@ -85,6 +85,7 @@ fun ExpressiveNavBar(
     val haptic = LocalHapticFeedback.current
     val density = LocalDensity.current
     val materialUi by AppSettings.materialUiMode.collectAsStateWithLifecycle()
+    val frostedGlass by AppSettings.frostedGlass.collectAsStateWithLifecycle()
     val pillShape = remember { RoundedCornerShape(percent = 50) }
 
     if (materialUi && tabs.size >= 4) {
@@ -108,7 +109,18 @@ fun ExpressiveNavBar(
                     .height(56.dp)
                     .shadow(elevation = 8.dp, shape = pillShape, ambientColor = Color.Black.copy(alpha = 0.25f))
                     .clip(pillShape)
-                    .background(MaterialTheme.colorScheme.surfaceContainer)
+                    .then(
+                        if (frostedGlass && hazeState != null) {
+                            Modifier
+                                .hazeEffect(
+                                    state = hazeState,
+                                    style = HazeMaterials.regular(MaterialTheme.colorScheme.surfaceContainer.copy(alpha = 0.65f)),
+                                )
+                                .background(MaterialTheme.colorScheme.surfaceContainer.copy(alpha = 0.55f))
+                        } else {
+                            Modifier.background(MaterialTheme.colorScheme.surfaceContainer)
+                        }
+                    )
                     .border(
                         width = 1.dp,
                         color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.35f),
@@ -196,11 +208,18 @@ fun ExpressiveNavBar(
                         .size(56.dp)
                         .shadow(elevation = 8.dp, shape = circleShape, ambientColor = Color.Black.copy(alpha = 0.25f))
                         .clip(circleShape)
-                        .background(
+                        .then(
                             if (isSearchSelected) {
-                                MaterialTheme.colorScheme.secondaryContainer
+                                Modifier.background(MaterialTheme.colorScheme.secondaryContainer)
+                            } else if (frostedGlass && hazeState != null) {
+                                Modifier
+                                    .hazeEffect(
+                                        state = hazeState,
+                                        style = HazeMaterials.regular(MaterialTheme.colorScheme.surfaceContainer.copy(alpha = 0.65f)),
+                                    )
+                                    .background(MaterialTheme.colorScheme.surfaceContainer.copy(alpha = 0.55f))
                             } else {
-                                MaterialTheme.colorScheme.surfaceContainer
+                                Modifier.background(MaterialTheme.colorScheme.surfaceContainer)
                             }
                         )
                         .border(
@@ -262,7 +281,16 @@ fun ExpressiveNavBar(
             .clip(pillShape)
             .then(
                 if (materialUi || hazeState == null) {
-                    Modifier.background(MaterialTheme.colorScheme.surfaceContainer)
+                    if (frostedGlass && hazeState != null) {
+                        Modifier
+                            .hazeEffect(
+                                state = hazeState,
+                                style = HazeMaterials.regular(MaterialTheme.colorScheme.surfaceContainer.copy(alpha = 0.65f)),
+                            )
+                            .background(MaterialTheme.colorScheme.surfaceContainer.copy(alpha = 0.55f))
+                    } else {
+                        Modifier.background(MaterialTheme.colorScheme.surfaceContainer)
+                    }
                 } else {
                     Modifier.hazeEffect(
                         state = hazeState,

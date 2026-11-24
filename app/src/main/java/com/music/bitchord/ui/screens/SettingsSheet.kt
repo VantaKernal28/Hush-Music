@@ -249,6 +249,17 @@ fun SettingsScreen(
     var showShapesSheet by rememberSaveable { mutableStateOf(false) }
     var showPlayerSheet by rememberSaveable { mutableStateOf(false) }
     var showMiniPlayerSheet by rememberSaveable { mutableStateOf(false) }
+    var showTipsAndTricksSheet by rememberSaveable { mutableStateOf(false) }
+
+    if (showTipsAndTricksSheet) {
+        TipsAndTricksSheet(
+            onDismiss = { showTipsAndTricksSheet = false },
+            onOpenAppearance = {
+                showTipsAndTricksSheet = false
+                onOpenSection(SettingsCategory.APPEARANCE)
+            },
+        )
+    }
 
     if (showAboutSheet) {
         AboutSheet(
@@ -310,6 +321,7 @@ fun SettingsScreen(
     val glassDepthEffect by AppSettings.glassDepthEffect.collectAsStateWithLifecycle()
     val glassTransparency by AppSettings.glassTransparency.collectAsStateWithLifecycle()
     val glassRefraction by AppSettings.glassRefraction.collectAsStateWithLifecycle()
+    val glassBlurPercentage by AppSettings.glassBlurPercentage.collectAsStateWithLifecycle()
     val glassPerformance by AppSettings.glassPerformance.collectAsStateWithLifecycle()
     val progressiveBlur by AppSettings.progressiveBlur.collectAsStateWithLifecycle()
     val frostedGlass by AppSettings.frostedGlass.collectAsStateWithLifecycle()
@@ -640,7 +652,7 @@ fun SettingsScreen(
                     query = searchQuery,
                     onQueryChange = { searchQuery = it },
                     onSubmit = {},
-                    placeholder = if (materialUiMode) "Search Rhythm Settings..." else stringResource(R.string.settings_search_hint),
+                    placeholder = "Search Hush Settings...",
                     modifier = Modifier.padding(start = 20.dp, end = 20.dp, bottom = 12.dp),
                 )
             }
@@ -1532,7 +1544,7 @@ fun SettingsScreen(
                         title = "Material UI",
                         badge = "RHYTHM",
                         description = "",
-                        iconRes = R.drawable.ic_hush_transparent_logo,
+                        iconRes = R.drawable.ic_logo,
                         selected = materialUiMode,
                         modifier = Modifier.weight(1f),
                         onClick = {
@@ -1674,6 +1686,18 @@ fun SettingsScreen(
                         value = "${(glassRefraction * 100).roundToInt()}%",
                         sliderValue = glassRefraction,
                         onSliderValue = AppSettings::setGlassRefraction,
+                        valueRange = 0f..1f,
+                        steps = 20,
+                    )
+                }
+                val blurPercentTitle = "Blur Percentage"
+                row(blurPercentTitle, "blur", "glass", "frosted", "backdrop") {
+                    SliderRow(
+                        icon = SfIcons.ProgressiveBlur,
+                        title = blurPercentTitle,
+                        value = "${(glassBlurPercentage * 100).roundToInt()}%",
+                        sliderValue = glassBlurPercentage,
+                        onSliderValue = AppSettings::setGlassBlurPercentage,
                         valueRange = 0f..1f,
                         steps = 20,
                     )
@@ -2315,7 +2339,7 @@ fun SettingsScreen(
                 horizontalAlignment = Alignment.CenterHorizontally,
             ) {
                 Text(
-                    text = "Hush Music 1.0",
+                    text = "Hush 1.0",
                     style = MaterialTheme.typography.labelMedium,
                     fontWeight = FontWeight.SemiBold,
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
@@ -3489,9 +3513,16 @@ private fun SettingsCategoryList(
         )
         RowDivider()
         SettingsRow(
+            icon = Icons.Rounded.Lightbulb,
+            iconBadgeColor = Color(0xFFF59E0B),
+            title = "Tips & Tricks",
+            onClick = { showTipsAndTricksSheet = true },
+        )
+        RowDivider()
+        SettingsRow(
             icon = Icons.Rounded.AutoAwesome,
             iconBadgeColor = Color(0xFFA78BFA),
-            title = "About Hush Music",
+            title = "About Hush",
             onClick = onOpenAbout,
         )
     }
@@ -3794,17 +3825,24 @@ private fun UiStyleOptionCard(
                 verticalAlignment = Alignment.CenterVertically,
                 horizontalArrangement = Arrangement.SpaceBetween,
             ) {
+                val isDark = MaterialTheme.colorScheme.surface.luminance() < 0.5f
                 Box(
                     modifier = Modifier
                         .size(36.dp)
                         .clip(RoundedCornerShape(10.dp))
-                        .background(Color.White.copy(alpha = 0.10f)),
+                        .background(if (isDark) Color(0xFF1E1E22) else Color(0xFFF2F2F7))
+                        .border(
+                            1.dp,
+                            if (isDark) Color.White.copy(alpha = 0.12f) else Color.Black.copy(alpha = 0.10f),
+                            RoundedCornerShape(10.dp)
+                        ),
                     contentAlignment = Alignment.Center,
                 ) {
-                    Image(
+                    Icon(
                         painter = painterResource(iconRes),
                         contentDescription = null,
-                        modifier = Modifier.size(22.dp),
+                        tint = if (isDark) Color.White else Color(0xFF1C1C1E),
+                        modifier = Modifier.size(20.dp),
                     )
                 }
                 Box(
