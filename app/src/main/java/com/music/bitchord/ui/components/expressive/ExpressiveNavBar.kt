@@ -101,6 +101,7 @@ fun ExpressiveNavBar(
         "Expressive Clover-Edge" -> M3EShapes.WavyOctagon8
         else -> RoundedCornerShape(navBarCornerRadius.dp)
     }
+    val pillShape = remember { RoundedCornerShape(percent = 50) }
 
     val surfaceAlpha = (0.15f + navBarTransparency * 0.85f).coerceIn(0.15f, 1.0f)
     val containerColor = MaterialTheme.colorScheme.surfaceContainer.copy(alpha = surfaceAlpha)
