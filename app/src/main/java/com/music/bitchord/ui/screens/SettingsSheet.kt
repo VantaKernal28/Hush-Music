@@ -262,6 +262,8 @@ fun SettingsScreen(
     var showShapesSheet by rememberSaveable { mutableStateOf(false) }
     var showPlayerSheet by rememberSaveable { mutableStateOf(false) }
     var showMiniPlayerSheet by rememberSaveable { mutableStateOf(false) }
+    var showLiquidGlassSheet by rememberSaveable { mutableStateOf(false) }
+    var showMaterialMenuBarSheet by rememberSaveable { mutableStateOf(false) }
     var showTipsAndTricksSheet by rememberSaveable { mutableStateOf(false) }
 
     if (showTipsAndTricksSheet) {
@@ -279,6 +281,8 @@ fun SettingsScreen(
         showShapesSheet -> "SHAPES"
         showPlayerSheet -> "PLAYER"
         showMiniPlayerSheet -> "MINI_PLAYER"
+        showLiquidGlassSheet -> "LIQUID_GLASS"
+        showMaterialMenuBarSheet -> "MATERIAL_MENU_BAR"
         else -> "MAIN"
     }
 
@@ -288,6 +292,8 @@ fun SettingsScreen(
             showShapesSheet = false
             showPlayerSheet = false
             showMiniPlayerSheet = false
+            showLiquidGlassSheet = false
+            showMaterialMenuBarSheet = false
         }
     }
 
@@ -587,6 +593,20 @@ fun SettingsScreen(
             "MINI_PLAYER" -> {
                 MiniPlayerCustomizationSheet(
                     onBack = { showMiniPlayerSheet = false },
+                    modifier = Modifier.fillMaxSize(),
+                    contentPadding = contentPadding,
+                )
+            }
+            "LIQUID_GLASS" -> {
+                LiquidGlassSettingsSheet(
+                    onBack = { showLiquidGlassSheet = false },
+                    modifier = Modifier.fillMaxSize(),
+                    contentPadding = contentPadding,
+                )
+            }
+            "MATERIAL_MENU_BAR" -> {
+                MaterialMenuBarSettingsSheet(
+                    onBack = { showMaterialMenuBarSheet = false },
                     modifier = Modifier.fillMaxSize(),
                     contentPadding = contentPadding,
                 )
@@ -1871,102 +1891,24 @@ fun SettingsScreen(
                 )
             }
             if (!materialUiMode && liquidGlassSupported) {
-                val depthTitle = "Depth Effect"
-                row(depthTitle, "depth", "glass", "shadow", "elevation") {
-                    SliderRow(
-                        icon = SfIcons.Album,
-                        title = depthTitle,
-                        value = "${(glassDepthEffect * 100).roundToInt()}%",
-                        sliderValue = glassDepthEffect,
-                        onSliderValue = AppSettings::setGlassDepthEffect,
-                        valueRange = 0f..1f,
-                        steps = 20,
-                    )
-                }
-                val transparencyTitle = "Transparency"
-                row(transparencyTitle, "transparency", "glass", "opacity") {
-                    SliderRow(
-                        icon = SfIcons.Gradient,
-                        title = transparencyTitle,
-                        value = "${(glassTransparency * 100).roundToInt()}%",
-                        sliderValue = glassTransparency,
-                        onSliderValue = AppSettings::setGlassTransparency,
-                        valueRange = 0f..1f,
-                        steps = 20,
-                    )
-                }
-                val refractionTitle = "Refraction"
-                row(refractionTitle, "refraction", "lens", "chromatic", "glass") {
-                    SliderRow(
+                val liquidGlassTitle = "Liquid Glass"
+                row(liquidGlassTitle, "glass", "liquid", "refraction", "blur", "appearance", "effects") {
+                    SettingsRow(
                         icon = SfIcons.AutoAwesome,
-                        title = refractionTitle,
-                        value = "${(glassRefraction * 100).roundToInt()}%",
-                        sliderValue = glassRefraction,
-                        onSliderValue = AppSettings::setGlassRefraction,
-                        valueRange = 0f..1f,
-                        steps = 20,
-                    )
-                }
-                val blurPercentTitle = "Blur Percentage"
-                row(blurPercentTitle, "blur", "glass", "frosted", "backdrop") {
-                    SliderRow(
-                        icon = SfIcons.BlurOn,
-                        title = blurPercentTitle,
-                        value = "${(glassBlurPercentage * 100).roundToInt()}%",
-                        sliderValue = glassBlurPercentage,
-                        onSliderValue = AppSettings::setGlassBlurPercentage,
-                        valueRange = 0f..1f,
-                        steps = 20,
+                        title = liquidGlassTitle,
+                        subtitle = "Refraction, blur, highlights & appearance",
+                        onClick = { showLiquidGlassSheet = true },
                     )
                 }
             }
             if (materialUiMode) {
-                val navBarWidthTitle = "Menu Bar Width"
-                row(navBarWidthTitle, "nav", "bar", "width", "m3e", "dimension") {
-                    SliderRow(
+                val materialMenuBarTitle = "Material Menu Bar"
+                row(materialMenuBarTitle, "nav", "bar", "menu", "dock", "shape", "dimensions", "frosted") {
+                    SettingsRow(
                         icon = SfIcons.Tune,
-                        title = navBarWidthTitle,
-                        value = "${(m3eNavBarWidth * 100).roundToInt()}%",
-                        sliderValue = m3eNavBarWidth,
-                        onSliderValue = AppSettings::setM3eNavBarWidth,
-                        valueRange = 0.70f..1.0f,
-                        steps = 30,
-                    )
-                }
-                val navBarHeightTitle = "Menu Bar Height"
-                row(navBarHeightTitle, "nav", "bar", "height", "m3e", "dimension") {
-                    SliderRow(
-                        icon = SfIcons.Sliders,
-                        title = navBarHeightTitle,
-                        value = "$m3eNavBarHeight dp",
-                        sliderValue = m3eNavBarHeight.toFloat(),
-                        onSliderValue = { AppSettings.setM3eNavBarHeight(it.roundToInt()) },
-                        valueRange = 52f..80f,
-                        steps = 28,
-                    )
-                }
-                val navBarPaddingTitle = "Menu Bar Padding"
-                row(navBarPaddingTitle, "nav", "bar", "padding", "thickness", "m3e", "dimension") {
-                    SliderRow(
-                        icon = SfIcons.Apps,
-                        title = navBarPaddingTitle,
-                        value = "$m3eNavBarPadding dp",
-                        sliderValue = m3eNavBarPadding.toFloat(),
-                        onSliderValue = { AppSettings.setM3eNavBarPadding(it.roundToInt()) },
-                        valueRange = 4f..18f,
-                        steps = 14,
-                    )
-                }
-                val frostedIntensityTitle = "Frosted Blur Intensity"
-                row(frostedIntensityTitle, "frosted", "glass", "blur", "intensity", "m3e") {
-                    SliderRow(
-                        icon = SfIcons.BlurOn,
-                        title = frostedIntensityTitle,
-                        value = "${(m3eFrostedGlassIntensity * 100).roundToInt()}%",
-                        sliderValue = m3eFrostedGlassIntensity,
-                        onSliderValue = AppSettings::setM3eFrostedGlassIntensity,
-                        valueRange = 0f..1f,
-                        steps = 20,
+                        title = materialMenuBarTitle,
+                        subtitle = "Shape, dimensions, transparency & frosted blur",
+                        onClick = { showMaterialMenuBarSheet = true },
                     )
                 }
             }

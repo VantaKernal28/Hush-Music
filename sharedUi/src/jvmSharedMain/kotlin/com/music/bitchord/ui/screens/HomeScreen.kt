@@ -85,6 +85,9 @@ import androidx.compose.material.icons.rounded.Folder
 import androidx.compose.material.icons.rounded.LibraryMusic
 import androidx.compose.material.icons.rounded.MoreVert
 import androidx.compose.material.icons.rounded.Shuffle
+import androidx.compose.material.icons.rounded.GraphicEq
+import androidx.compose.material.icons.rounded.Favorite
+import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.material.icons.rounded.Storage
 import com.music.bitchord.ui.icons.BitChordIcons
 import coil3.compose.AsyncImage
@@ -206,10 +209,17 @@ fun HomeScreen(
             // The heading sits higher than the other tabs' first row: pull the
             // whole feed up by [HOME_TITLE_LIFT] with it.
             contentPadding = if (title != null) {
-                PaddingValues(
-                    top = (contentPadding.calculateTopPadding() - HOME_TITLE_LIFT).coerceAtLeast(0.dp),
-                    bottom = contentPadding.calculateBottomPadding(),
-                )
+                if (isM3E) {
+                    PaddingValues(
+                        top = contentPadding.calculateTopPadding(),
+                        bottom = contentPadding.calculateBottomPadding(),
+                    )
+                } else {
+                    PaddingValues(
+                        top = (contentPadding.calculateTopPadding() - HOME_TITLE_LIFT).coerceAtLeast(0.dp),
+                        bottom = contentPadding.calculateBottomPadding(),
+                    )
+                }
             } else {
                 contentPadding
             },
@@ -548,13 +558,17 @@ private fun RecentQuickGrid(
             ) {
                 pair.forEach { item ->
                     val isCurrent = item.videoId != null && item.videoId == currentSong?.videoId
+                    val isM3E = LocalMaterialUiMode.current
                     Box(
                         modifier = Modifier
                             .weight(1f)
-                            .height(56.dp)
-                            .clip(RoundedCornerShape(6.dp))
-                            .background(MaterialTheme.colorScheme.surfaceVariant)
-                            .clickable { onItemClick(item) },
+                            .height(if (isM3E) 62.dp else 56.dp)
+                            .clip(if (isM3E) RoundedCornerShape(18.dp) else RoundedCornerShape(6.dp))
+                            .background(if (isM3E) MaterialTheme.colorScheme.surfaceContainerHigh else MaterialTheme.colorScheme.surfaceVariant)
+                            .then(
+                                if (isM3E) Modifier.expressiveClickable { onItemClick(item) }
+                                else Modifier.clickable { onItemClick(item) }
+                            ),
                     ) {
                         Row(
                             modifier = Modifier.fillMaxSize(),
@@ -565,21 +579,27 @@ private fun RecentQuickGrid(
                                 contentDescription = null,
                                 contentScale = ContentScale.Crop,
                                 modifier = Modifier
-                                    .size(56.dp)
-                                    .clip(RoundedCornerShape(topStart = 6.dp, bottomStart = 6.dp)),
+                                    .size(if (isM3E) 62.dp else 56.dp)
+                                    .clip(if (isM3E) RoundedCornerShape(topStart = 18.dp, bottomStart = 18.dp) else RoundedCornerShape(topStart = 6.dp, bottomStart = 6.dp)),
                             )
                             Spacer(Modifier.width(10.dp))
                             Text(
                                 text = item.title,
-                                style = MaterialTheme.typography.bodyMedium,
-                                fontWeight = FontWeight.SemiBold,
+                                style = MaterialTheme.typography.bodyMedium.copy(fontWeight = FontWeight.SemiBold),
                                 color = MaterialTheme.colorScheme.onSurface,
                                 maxLines = 2,
                                 overflow = TextOverflow.Ellipsis,
                                 modifier = Modifier.weight(1f).padding(end = 6.dp),
                             )
                             if (isCurrent && isPlaying) {
-                                SearchPlayingBars(Modifier.padding(end = 10.dp))
+                                if (isM3E) {
+                                    AnimatedEqualizerIndicator(
+                                        tint = MaterialTheme.colorScheme.primary,
+                                        modifier = Modifier.padding(end = 10.dp),
+                                    )
+                                } else {
+                                    SearchPlayingBars(Modifier.padding(end = 10.dp))
+                                }
                             }
                         }
                     }
@@ -636,29 +656,42 @@ private fun HomeTitle(
     val isM3E = LocalMaterialUiMode.current
 
     if (isM3E) {
-        Column(modifier = modifier.padding(horizontal = PAGE_GUTTER, vertical = 6.dp)) {
-            // Clean spacing so top-left AI pill button never overlaps "Your Mix"
-            Spacer(Modifier.height(52.dp))
+        Column(
+            modifier = modifier
+                .statusBarsPadding()
+                .padding(horizontal = PAGE_GUTTER, vertical = 6.dp),
+        ) {
+            Spacer(Modifier.height(12.dp))
 
-            // Stacked "Your Mix" Expressive Display Title + Large Shuffle Circle Button
+            // Hero Mix Bento Block: Asymmetric M3E Bento card featuring stacked "Your Mix", large circular/scalloped Shuffle button, and rotating M3E shape framing mix artwork
             Box(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(bottom = 16.dp),
+                    .clip(RoundedCornerShape(28.dp))
+                    .background(MaterialTheme.colorScheme.surfaceContainerHigh)
+                    .border(
+                        1.dp,
+                        MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.35f),
+                        RoundedCornerShape(28.dp),
+                    )
+                    .padding(20.dp),
             ) {
                 Row(
                     modifier = Modifier.fillMaxWidth(),
                     horizontalArrangement = Arrangement.SpaceBetween,
                     verticalAlignment = Alignment.CenterVertically,
                 ) {
-                    Column {
+                    Column(
+                        modifier = Modifier.weight(1f),
+                        verticalArrangement = Arrangement.Center,
+                    ) {
                         Text(
                             text = "Your",
                             style = MaterialTheme.typography.headlineMedium.copy(
                                 fontWeight = FontWeight.Bold,
                                 letterSpacing = (-0.5).sp,
                             ),
-                            color = MaterialTheme.colorScheme.onBackground,
+                            color = MaterialTheme.colorScheme.onSurface,
                         )
                         Text(
                             text = "Mix",
@@ -674,111 +707,96 @@ private fun HomeTitle(
                             style = MaterialTheme.typography.titleSmall.copy(fontWeight = FontWeight.Medium),
                             color = MaterialTheme.colorScheme.onSurfaceVariant,
                         )
+                        Spacer(Modifier.height(16.dp))
+                        // Large Expressive Circular/Scalloped Shuffle Action Button
+                        Box(
+                            modifier = Modifier
+                                .size(56.dp)
+                                .clip(M3EShapes.ScallopedFlower)
+                                .background(MaterialTheme.colorScheme.primary)
+                                .m3eSquish()
+                                .clickable { },
+                            contentAlignment = Alignment.Center,
+                        ) {
+                            Icon(
+                                imageVector = Icons.Rounded.Shuffle,
+                                contentDescription = "Shuffle",
+                                tint = MaterialTheme.colorScheme.onPrimary,
+                                modifier = Modifier.size(26.dp),
+                            )
+                        }
                     }
 
-                    // Large Shuffle Circle Button (video_2.mp4)
-                    Box(
-                        modifier = Modifier
-                            .size(56.dp)
-                            .clip(CircleShape)
-                            .background(MaterialTheme.colorScheme.primary)
-                            .m3eSquish()
-                            .clickable { },
-                        contentAlignment = Alignment.Center,
-                    ) {
-                        Icon(
-                            imageVector = Icons.Rounded.Shuffle,
-                            contentDescription = "Shuffle",
-                            tint = MaterialTheme.colorScheme.onPrimary,
-                            modifier = Modifier.size(26.dp),
-                        )
-                    }
-                }
-            }
+                    Spacer(Modifier.width(16.dp))
 
-            // "DAILY MIX — Based on History" track card (video_2.mp4)
-            Box(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .clip(RoundedCornerShape(24.dp))
-                    .background(MaterialTheme.colorScheme.surfaceContainer)
-                    .border(
-                        1.dp,
-                        MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.35f),
-                        RoundedCornerShape(24.dp),
-                    )
-                    .padding(14.dp),
-            ) {
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    verticalAlignment = Alignment.CenterVertically,
-                ) {
-                    val dailyMixShapeName by com.music.bitchord.ui.player.PlayerSettings.expressiveAlbumArtShape.collectAsStateWithLifecycle()
-                    val dailyMixShape = com.music.bitchord.ui.components.expressive.M3EShapes.fromName(dailyMixShapeName)
+                    // Vibrant rotating M3E geometric shape framing active mix artwork (zero overlapping notes)
+                    val heroArtShapeName by com.music.bitchord.ui.player.PlayerSettings.expressiveAlbumArtShape.collectAsStateWithLifecycle()
+                    val heroArtShape = com.music.bitchord.ui.components.expressive.M3EShapes.fromName(heroArtShapeName)
                     Box(
                         modifier = Modifier
-                            .size(52.dp)
-                            .clip(dailyMixShape)
-                            .background(MaterialTheme.colorScheme.primaryContainer),
+                            .size(110.dp)
+                            .m3eRotating(enabled = true, durationMillis = 24000)
+                            .clip(heroArtShape)
+                            .background(MaterialTheme.colorScheme.primaryContainer)
+                            .border(1.5.dp, MaterialTheme.colorScheme.primary.copy(alpha = 0.35f), heroArtShape),
                         contentAlignment = Alignment.Center,
                     ) {
                         Icon(
                             imageVector = Icons.Rounded.LibraryMusic,
                             contentDescription = null,
                             tint = MaterialTheme.colorScheme.onPrimaryContainer,
-                            modifier = Modifier.size(24.dp),
-                        )
-                    }
-                    Spacer(Modifier.width(14.dp))
-                    Column(Modifier.weight(1f)) {
-                        Text(
-                            text = "DAILY MIX",
-                            style = MaterialTheme.typography.labelSmall.copy(
-                                fontWeight = FontWeight.Bold,
-                                letterSpacing = 1.sp,
-                            ),
-                            color = MaterialTheme.colorScheme.primary,
-                        )
-                        Spacer(Modifier.height(2.dp))
-                        Text(
-                            text = "Based on your listening history",
-                            style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.SemiBold),
-                            color = MaterialTheme.colorScheme.onSurface,
-                            maxLines = 1,
-                            overflow = TextOverflow.Ellipsis,
+                            modifier = Modifier.size(48.dp),
                         )
                     }
                 }
             }
 
-            Spacer(Modifier.height(14.dp))
+            Spacer(Modifier.height(16.dp))
 
-            val filters = listOf("All", "Music", "Podcasts", "Made For You")
+            // Expressive Filter & Mood Pills with leading icons and spring selection states (17638.jpg / 17640.jpg)
+            val filters = listOf(
+                Pair("All", Icons.Rounded.Folder),
+                Pair("Music", Icons.Rounded.LibraryMusic),
+                Pair("Podcasts", Icons.Rounded.GraphicEq),
+                Pair("Made For You", Icons.Rounded.Favorite),
+            )
+
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
                     .padding(bottom = 10.dp),
                 horizontalArrangement = Arrangement.spacedBy(8.dp),
             ) {
-                filters.forEach { filter ->
-                    val active = selectedFilter == filter
+                filters.forEach { (label, icon) ->
+                    val active = selectedFilter == label
+                    val pillBg = if (active) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.surfaceVariant
+                    val pillFg = if (active) MaterialTheme.colorScheme.onPrimary else MaterialTheme.colorScheme.onSurfaceVariant
                     Box(
                         modifier = Modifier
                             .clip(CircleShape)
-                            .background(
-                                if (active) MaterialTheme.colorScheme.primary
-                                else MaterialTheme.colorScheme.surfaceVariant
-                            )
-                            .clickable { selectedFilter = filter }
-                            .padding(horizontal = 16.dp, vertical = 7.dp),
+                            .background(pillBg)
+                            .m3eSquish()
+                            .clickable { selectedFilter = label }
+                            .padding(horizontal = 14.dp, vertical = 8.dp),
+                        contentAlignment = Alignment.Center,
                     ) {
-                        Text(
-                            text = filter,
-                            style = MaterialTheme.typography.labelLarge,
-                            fontWeight = if (active) FontWeight.Bold else FontWeight.Medium,
-                            color = if (active) MaterialTheme.colorScheme.onPrimary
-                            else MaterialTheme.colorScheme.onSurfaceVariant,
-                        )
+                        Row(
+                            verticalAlignment = Alignment.CenterVertically,
+                            horizontalArrangement = Arrangement.spacedBy(6.dp),
+                        ) {
+                            Icon(
+                                imageVector = icon,
+                                contentDescription = null,
+                                tint = pillFg,
+                                modifier = Modifier.size(16.dp),
+                            )
+                            Text(
+                                text = label,
+                                style = MaterialTheme.typography.labelLarge,
+                                fontWeight = if (active) FontWeight.Bold else FontWeight.Medium,
+                                color = pillFg,
+                            )
+                        }
                     }
                 }
             }

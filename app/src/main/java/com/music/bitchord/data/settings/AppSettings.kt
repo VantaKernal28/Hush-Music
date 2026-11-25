@@ -594,6 +594,20 @@ object AppSettings {
     val glassTransparency = MutableStateFlow(0.65f)
     val glassRefraction = MutableStateFlow(0.75f)
     val glassBlurPercentage = MutableStateFlow(0.70f)
+    val glassVibrancy = MutableStateFlow(0.85f)
+    val glassLensRefractionHeight = MutableStateFlow(0.60f)
+    val glassLensRefractionAmount = MutableStateFlow(0.75f)
+    val glassChromaticAberration = MutableStateFlow(true)
+    val glassHighlightOpacity = MutableStateFlow(0.70f)
+    val glassAdaptiveContrast = MutableStateFlow(true)
+    val glassMiniPlayerEnabled = MutableStateFlow(true)
+    val glassNavBarEnabled = MutableStateFlow(true)
+
+    /** Material UI Menu Bar precision controls. */
+    val m3eNavBarShape = MutableStateFlow("Pill")
+    val m3eNavBarCornerRadius = MutableStateFlow(28)
+    val m3eNavBarTransparency = MutableStateFlow(0.85f)
+    val m3eNavBarFrostedBlur = MutableStateFlow(0.70f)
 
     /** Musical player progress bar animation and line style. */
     val progressLineStyle = MutableStateFlow(ProgressLineStyle.STRAIGHT)
@@ -1161,6 +1175,18 @@ object AppSettings {
         glassTransparency.value = prefs.getFloat(KEY_GLASS_TRANSPARENCY, 0.65f).coerceIn(0f, 1f)
         glassRefraction.value = prefs.getFloat(KEY_GLASS_REFRACTION, 0.75f).coerceIn(0f, 1f)
         glassBlurPercentage.value = prefs.getFloat(KEY_GLASS_BLUR_PERCENTAGE, 0.70f).coerceIn(0f, 1f)
+        glassVibrancy.value = prefs.getFloat(KEY_GLASS_VIBRANCY, 0.85f).coerceIn(0f, 1f)
+        glassLensRefractionHeight.value = prefs.getFloat(KEY_GLASS_LENS_REFRACTION_HEIGHT, 0.60f).coerceIn(0f, 1f)
+        glassLensRefractionAmount.value = prefs.getFloat(KEY_GLASS_LENS_REFRACTION_AMOUNT, 0.75f).coerceIn(0f, 1f)
+        glassChromaticAberration.value = prefs.getBoolean(KEY_GLASS_CHROMATIC_ABERRATION, true)
+        glassHighlightOpacity.value = prefs.getFloat(KEY_GLASS_HIGHLIGHT_OPACITY, 0.70f).coerceIn(0f, 1f)
+        glassAdaptiveContrast.value = prefs.getBoolean(KEY_GLASS_ADAPTIVE_CONTRAST, true)
+        glassMiniPlayerEnabled.value = prefs.getBoolean(KEY_GLASS_MINI_PLAYER_ENABLED, true)
+        glassNavBarEnabled.value = prefs.getBoolean(KEY_GLASS_NAV_BAR_ENABLED, true)
+        m3eNavBarShape.value = prefs.getString(KEY_M3E_NAV_BAR_SHAPE, "Pill") ?: "Pill"
+        m3eNavBarCornerRadius.value = prefs.getInt(KEY_M3E_NAV_BAR_CORNER_RADIUS, 28).coerceIn(12, 40)
+        m3eNavBarTransparency.value = prefs.getFloat(KEY_M3E_NAV_BAR_TRANSPARENCY, 0.85f).coerceIn(0f, 1f)
+        m3eNavBarFrostedBlur.value = prefs.getFloat(KEY_M3E_NAV_BAR_FROSTED_BLUR, 0.70f).coerceIn(0f, 1f)
         progressLineStyle.value = runCatching {
             ProgressLineStyle.valueOf(prefs.getString(KEY_PROGRESS_LINE_STYLE, null) ?: "STRAIGHT")
         }.getOrDefault(ProgressLineStyle.STRAIGHT)
@@ -1821,6 +1847,73 @@ object AppSettings {
         val coerced = value.coerceIn(0f, 1f)
         glassBlurPercentage.value = coerced
         prefs.edit().putFloat(KEY_GLASS_BLUR_PERCENTAGE, coerced).apply()
+    }
+
+    fun setGlassVibrancy(value: Float) {
+        val coerced = value.coerceIn(0f, 1f)
+        glassVibrancy.value = coerced
+        prefs.edit().putFloat(KEY_GLASS_VIBRANCY, coerced).apply()
+    }
+
+    fun setGlassLensRefractionHeight(value: Float) {
+        val coerced = value.coerceIn(0f, 1f)
+        glassLensRefractionHeight.value = coerced
+        prefs.edit().putFloat(KEY_GLASS_LENS_REFRACTION_HEIGHT, coerced).apply()
+    }
+
+    fun setGlassLensRefractionAmount(value: Float) {
+        val coerced = value.coerceIn(0f, 1f)
+        glassLensRefractionAmount.value = coerced
+        prefs.edit().putFloat(KEY_GLASS_LENS_REFRACTION_AMOUNT, coerced).apply()
+    }
+
+    fun setGlassChromaticAberration(value: Boolean) {
+        glassChromaticAberration.value = value
+        prefs.edit().putBoolean(KEY_GLASS_CHROMATIC_ABERRATION, value).apply()
+    }
+
+    fun setGlassHighlightOpacity(value: Float) {
+        val coerced = value.coerceIn(0f, 1f)
+        glassHighlightOpacity.value = coerced
+        prefs.edit().putFloat(KEY_GLASS_HIGHLIGHT_OPACITY, coerced).apply()
+    }
+
+    fun setGlassAdaptiveContrast(value: Boolean) {
+        glassAdaptiveContrast.value = value
+        prefs.edit().putBoolean(KEY_GLASS_ADAPTIVE_CONTRAST, value).apply()
+    }
+
+    fun setGlassMiniPlayerEnabled(value: Boolean) {
+        glassMiniPlayerEnabled.value = value
+        prefs.edit().putBoolean(KEY_GLASS_MINI_PLAYER_ENABLED, value).apply()
+    }
+
+    fun setGlassNavBarEnabled(value: Boolean) {
+        glassNavBarEnabled.value = value
+        prefs.edit().putBoolean(KEY_GLASS_NAV_BAR_ENABLED, value).apply()
+    }
+
+    fun setM3eNavBarShape(value: String) {
+        m3eNavBarShape.value = value
+        prefs.edit().putString(KEY_M3E_NAV_BAR_SHAPE, value).apply()
+    }
+
+    fun setM3eNavBarCornerRadius(value: Int) {
+        val clamped = value.coerceIn(12, 40)
+        m3eNavBarCornerRadius.value = clamped
+        prefs.edit().putInt(KEY_M3E_NAV_BAR_CORNER_RADIUS, clamped).apply()
+    }
+
+    fun setM3eNavBarTransparency(value: Float) {
+        val coerced = value.coerceIn(0f, 1f)
+        m3eNavBarTransparency.value = coerced
+        prefs.edit().putFloat(KEY_M3E_NAV_BAR_TRANSPARENCY, coerced).apply()
+    }
+
+    fun setM3eNavBarFrostedBlur(value: Float) {
+        val coerced = value.coerceIn(0f, 1f)
+        m3eNavBarFrostedBlur.value = coerced
+        prefs.edit().putFloat(KEY_M3E_NAV_BAR_FROSTED_BLUR, coerced).apply()
     }
 
     fun setProgressLineStyle(value: ProgressLineStyle) {
@@ -2642,6 +2735,18 @@ object AppSettings {
     private const val KEY_GLASS_TRANSPARENCY = "hush_glass_transparency"
     private const val KEY_GLASS_REFRACTION = "hush_glass_refraction"
     private const val KEY_GLASS_BLUR_PERCENTAGE = "hush_glass_blur_percentage"
+    private const val KEY_GLASS_VIBRANCY = "hush_glass_vibrancy"
+    private const val KEY_GLASS_LENS_REFRACTION_HEIGHT = "hush_glass_lens_refraction_height"
+    private const val KEY_GLASS_LENS_REFRACTION_AMOUNT = "hush_glass_lens_refraction_amount"
+    private const val KEY_GLASS_CHROMATIC_ABERRATION = "hush_glass_chromatic_aberration"
+    private const val KEY_GLASS_HIGHLIGHT_OPACITY = "hush_glass_highlight_opacity"
+    private const val KEY_GLASS_ADAPTIVE_CONTRAST = "hush_glass_adaptive_contrast"
+    private const val KEY_GLASS_MINI_PLAYER_ENABLED = "hush_glass_mini_player_enabled"
+    private const val KEY_GLASS_NAV_BAR_ENABLED = "hush_glass_nav_bar_enabled"
+    private const val KEY_M3E_NAV_BAR_SHAPE = "hush_m3e_nav_bar_shape"
+    private const val KEY_M3E_NAV_BAR_CORNER_RADIUS = "hush_m3e_nav_bar_corner_radius"
+    private const val KEY_M3E_NAV_BAR_TRANSPARENCY = "hush_m3e_nav_bar_transparency"
+    private const val KEY_M3E_NAV_BAR_FROSTED_BLUR = "hush_m3e_nav_bar_frosted_blur"
     private const val KEY_PROGRESS_LINE_STYLE = "progress_line_style"
     private const val KEY_BEAT_IMPULSE = "beat_impulse"
     private const val KEY_LYRICS_BLUR = "lyrics_blur"
