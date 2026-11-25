@@ -227,9 +227,9 @@ fun HomeScreen(
             },
         ) {
             if (title != null) {
-                val heroArt = currentSong?.artworkUri
+                val heroArt = currentSong?.thumbnailUrl
                     ?: topPicks?.firstOrNull()?.images?.firstOrNull()
-                    ?: (state as? UiState.Success)?.data?.firstOrNull()?.items?.firstOrNull()?.artworkUri
+                    ?: (state as? UiState.Success)?.data?.firstOrNull()?.items?.firstOrNull()?.thumbnailUrl
                 item {
                     HomeTitle(
                         title = title,
