@@ -16,6 +16,8 @@ import androidx.compose.animation.core.infiniteRepeatable
 import androidx.compose.animation.core.tween
 import androidx.compose.animation.core.LinearEasing
 import androidx.compose.animation.core.RepeatMode
+import androidx.compose.foundation.layout.wrapContentWidth
+import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.foundation.border
 import com.music.bitchord.ui.haptics.Haptic
@@ -225,7 +227,18 @@ fun HomeScreen(
             },
         ) {
             if (title != null) {
-                item { HomeTitle(title, listenerName = listenerName, festiveLogo = festiveLogo, onFestiveLogoClick = onFestiveLogoClick) }
+                val heroArt = currentSong?.artworkUri
+                    ?: topPicks?.firstOrNull()?.images?.firstOrNull()
+                    ?: (state as? UiState.Success)?.data?.firstOrNull()?.items?.firstOrNull()?.artworkUri
+                item {
+                    HomeTitle(
+                        title = title,
+                        listenerName = listenerName,
+                        festiveLogo = festiveLogo,
+                        onFestiveLogoClick = onFestiveLogoClick,
+                        heroArtworkUri = heroArt,
+                    )
+                }
             }
             if (!isM3E && !signedIn && onSignIn != null) {
                 item {
@@ -622,6 +635,7 @@ private fun HomeTitle(
     modifier: Modifier = Modifier,
     festiveLogo: Boolean = false,
     onFestiveLogoClick: (() -> Unit)? = null,
+    heroArtworkUri: String? = null,
 ) {
     val hour = remember { java.util.Calendar.getInstance().get(java.util.Calendar.HOUR_OF_DAY) }
     val name = listenerName?.takeIf { it.isNotBlank() && it != "Listener" }
@@ -732,28 +746,55 @@ private fun HomeTitle(
                     // Vibrant rotating M3E geometric shape framing active mix artwork (zero overlapping notes)
                     val heroArtShapeName by com.music.bitchord.ui.player.PlayerSettings.expressiveAlbumArtShape.collectAsStateWithLifecycle()
                     val heroArtShape = com.music.bitchord.ui.components.expressive.M3EShapes.fromName(heroArtShapeName)
+                    val heroTransition = rememberInfiniteTransition(label = "heroArtSpin")
+                    val heroRotation by heroTransition.animateFloat(
+                        initialValue = 0f,
+                        targetValue = 360f,
+                        animationSpec = infiniteRepeatable(
+                            animation = tween(durationMillis = 24000, easing = LinearEasing),
+                            repeatMode = RepeatMode.Restart,
+                        ),
+                        label = "heroArtRotation",
+                    )
+
                     Box(
                         modifier = Modifier
                             .size(110.dp)
-                            .m3eRotating(enabled = true, durationMs = 24000)
+                            .graphicsLayer { rotationZ = heroRotation }
                             .clip(heroArtShape)
                             .background(MaterialTheme.colorScheme.primaryContainer)
                             .border(1.5.dp, MaterialTheme.colorScheme.primary.copy(alpha = 0.35f), heroArtShape),
                         contentAlignment = Alignment.Center,
                     ) {
-                        Icon(
-                            imageVector = Icons.Rounded.LibraryMusic,
-                            contentDescription = null,
-                            tint = MaterialTheme.colorScheme.onPrimaryContainer,
-                            modifier = Modifier.size(48.dp),
-                        )
+                        if (!heroArtworkUri.isNullOrBlank()) {
+                            AsyncImage(
+                                model = heroArtworkUri,
+                                contentDescription = "Mix Artwork",
+                                contentScale = androidx.compose.ui.layout.ContentScale.Crop,
+                                alignment = Alignment.Center,
+                                modifier = Modifier
+                                    .fillMaxSize()
+                                    .graphicsLayer {
+                                        rotationZ = -heroRotation
+                                        scaleX = 1.42f
+                                        scaleY = 1.42f
+                                    },
+                            )
+                        } else {
+                            Icon(
+                                imageVector = Icons.Rounded.LibraryMusic,
+                                contentDescription = null,
+                                tint = MaterialTheme.colorScheme.onPrimaryContainer,
+                                modifier = Modifier.size(48.dp),
+                            )
+                        }
                     }
                 }
             }
 
             Spacer(Modifier.height(16.dp))
 
-            // Expressive Filter & Mood Pills with leading icons and spring selection states (17638.jpg / 17640.jpg)
+            // Expressive Filter & Mood Pills with leading icons and spring selection states (17638.jpg / 17640.jpg / 21755.jpg)
             val filters = listOf(
                 Pair("All", Icons.Rounded.Folder),
                 Pair("Music", Icons.Rounded.LibraryMusic),
@@ -761,26 +802,28 @@ private fun HomeTitle(
                 Pair("Made For You", Icons.Rounded.Favorite),
             )
 
-            Row(
+            LazyRow(
                 modifier = Modifier
                     .fillMaxWidth()
                     .padding(bottom = 10.dp),
-                horizontalArrangement = Arrangement.spacedBy(8.dp),
+                horizontalArrangement = Arrangement.spacedBy(10.dp),
             ) {
-                filters.forEach { (label, icon) ->
+                items(filters) { (label, icon) ->
                     val active = selectedFilter == label
                     val pillBg = if (active) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.surfaceVariant
                     val pillFg = if (active) MaterialTheme.colorScheme.onPrimary else MaterialTheme.colorScheme.onSurfaceVariant
                     Box(
                         modifier = Modifier
+                            .wrapContentWidth()
                             .clip(CircleShape)
                             .background(pillBg)
                             .m3eSquish()
                             .clickable { selectedFilter = label }
-                            .padding(horizontal = 14.dp, vertical = 8.dp),
+                            .padding(horizontal = 16.dp, vertical = 9.dp),
                         contentAlignment = Alignment.Center,
                     ) {
                         Row(
+                            modifier = Modifier.wrapContentWidth(),
                             verticalAlignment = Alignment.CenterVertically,
                             horizontalArrangement = Arrangement.spacedBy(6.dp),
                         ) {
@@ -795,6 +838,8 @@ private fun HomeTitle(
                                 style = MaterialTheme.typography.labelLarge,
                                 fontWeight = if (active) FontWeight.Bold else FontWeight.Medium,
                                 color = pillFg,
+                                maxLines = 1,
+                                softWrap = false,
                             )
                         }
                     }

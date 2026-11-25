@@ -142,33 +142,36 @@ fun LiquidGlassSettingsSheet(
                     contentAlignment = Alignment.Center,
                 ) {
                     // Vibrant background gradient simulating wallpaper/artwork beneath glass
+                    val vibrancyFactor = (0.5f + 1.3f * glassVibrancy).coerceIn(0.5f, 1.8f)
                     Box(
                         modifier = Modifier
                             .fillMaxSize()
                             .background(
                                 Brush.linearGradient(
                                     listOf(
-                                        Color(0xFF6366F1).copy(alpha = 0.85f * glassVibrancy),
-                                        Color(0xFFA855F7).copy(alpha = 0.90f * glassVibrancy),
-                                        Color(0xFFEC4899).copy(alpha = 0.85f * glassVibrancy),
-                                        Color(0xFF3B82F6).copy(alpha = 0.80f * glassVibrancy),
+                                        Color(0xFF6366F1).copy(alpha = (0.75f * vibrancyFactor).coerceIn(0.3f, 1f)),
+                                        Color(0xFFA855F7).copy(alpha = (0.80f * vibrancyFactor).coerceIn(0.3f, 1f)),
+                                        Color(0xFFEC4899).copy(alpha = (0.75f * vibrancyFactor).coerceIn(0.3f, 1f)),
+                                        Color(0xFF3B82F6).copy(alpha = (0.70f * vibrancyFactor).coerceIn(0.3f, 1f)),
                                     )
                                 )
                             ),
                     )
 
                     // Floating Liquid Glass Lens Pill (live optical refraction preview)
-                    val effectiveBlur = (glassBlurPercentage * 24f).coerceIn(4f, 32f).dp
+                    val effectiveBlur = (glassBlurPercentage * 36f).coerceIn(0f, 36f).dp
+                    val surfaceFillAlpha = (0.08f + 0.84f * glassTransparency).coerceIn(0.08f, 0.92f)
                     val glassSurfaceColor = if (isDark) {
-                        Color.White.copy(alpha = (glassTransparency * 0.28f).coerceIn(0.06f, 0.45f))
+                        Color(0xFF242426).copy(alpha = surfaceFillAlpha)
                     } else {
-                        Color.White.copy(alpha = (glassTransparency * 0.45f).coerceIn(0.15f, 0.65f))
+                        Color.White.copy(alpha = surfaceFillAlpha)
                     }
-                    val borderAlpha = (glassHighlightOpacity * 0.35f).coerceIn(0.08f, 0.50f)
+                    val borderAlpha = (glassHighlightOpacity * 0.85f).coerceIn(0f, 0.85f)
+                    val lensScale = (0.85f + 0.15f * glassLensRefractionAmount).coerceIn(0.85f, 1.0f)
 
                     Box(
                         modifier = Modifier
-                            .fillMaxWidth(0.85f)
+                            .fillMaxWidth(0.85f * lensScale)
                             .height(64.dp)
                             .clip(RoundedCornerShape(32.dp))
                             .background(glassSurfaceColor)
@@ -397,7 +400,7 @@ fun LiquidGlassSettingsSheet(
                 }
             }
 
-            Spacer(Modifier.height(32.dp))
+            Spacer(Modifier.height(140.dp))
         }
     }
 }

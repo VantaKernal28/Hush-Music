@@ -197,25 +197,60 @@ fun FloatingBottomBar(
     val materialUiMode by AppSettings.materialUiMode.collectAsStateWithLifecycle()
 
     if (materialUiMode) {
-        val m3Container = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.95f)
+        val navBarShapeName by AppSettings.m3eNavBarShape.collectAsStateWithLifecycle()
+        val navBarCornerRadius by AppSettings.m3eNavBarCornerRadius.collectAsStateWithLifecycle()
+        val navBarWidth by AppSettings.m3eNavBarWidth.collectAsStateWithLifecycle()
+        val navBarHeight by AppSettings.m3eNavBarHeight.collectAsStateWithLifecycle()
+        val navBarPadding by AppSettings.m3eNavBarPadding.collectAsStateWithLifecycle()
+        val navBarTransparency by AppSettings.m3eNavBarTransparency.collectAsStateWithLifecycle()
+        val navBarFrostedBlur by AppSettings.m3eNavBarFrostedBlur.collectAsStateWithLifecycle()
+
+        val m3Shape = when (navBarShapeName) {
+            "Pill", "Rounded Stadium" -> RoundedCornerShape(percent = 50)
+            "Squircle Dock" -> RoundedCornerShape(navBarCornerRadius.dp)
+            "Expressive Clover-Edge" -> com.music.bitchord.ui.components.expressive.M3EShapes.WavyOctagon8
+            else -> RoundedCornerShape(navBarCornerRadius.dp)
+        }
+
+        val surfaceAlpha = (0.15f + navBarTransparency * 0.85f).coerceIn(0.15f, 1.0f)
+        val m3Container = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = surfaceAlpha)
         val m3Border = Color.White.copy(alpha = 0.08f)
         val haptics = rememberHaptics()
+        val isFrosted = navBarFrostedBlur > 0.02f
         Box(
             modifier = modifier
                 .windowInsetsPadding(floatingBarInsets)
-                .padding(horizontal = NAV_BAR_GUTTER)
-                .padding(bottom = NAV_BAR_LIFT)
-                .fillMaxWidth()
-                .clip(pillShape)
-                .background(m3Container)
-                .border(1.dp, m3Border, pillShape)
-                .padding(horizontal = 6.dp, vertical = 6.dp),
+                .padding(bottom = navBarPadding.dp)
+                .fillMaxWidth(),
+            contentAlignment = Alignment.Center,
         ) {
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.SpaceBetween,
-                verticalAlignment = Alignment.CenterVertically,
+            Box(
+                modifier = Modifier
+                    .fillMaxWidth(navBarWidth)
+                    .height(navBarHeight.dp)
+                    .clip(m3Shape)
+                    .then(
+                        if (isFrosted) {
+                            Modifier
+                                .optimizedHazeEffect(
+                                    state = hazeState,
+                                    style = HazeMaterials.regular(m3Container).copy(
+                                        blurRadius = (navBarFrostedBlur * 32f).coerceIn(4f, 32f).dp,
+                                    ),
+                                )
+                                .background(m3Container)
+                        } else {
+                            Modifier.background(m3Container)
+                        }
+                    )
+                    .border(1.dp, m3Border, m3Shape)
+                    .padding(horizontal = 6.dp, vertical = 6.dp),
             ) {
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.CenterVertically,
+                ) {
                 tabs.forEachIndexed { index, tab ->
                     val selected = index == selectedIndex
                     val activeContainer = MaterialTheme.colorScheme.primary
@@ -275,6 +310,7 @@ fun FloatingBottomBar(
                 }
             }
         }
+    }
         return
     }
     val reduceDynamicBlur by AppSettings.reduceDynamicBlur.collectAsStateWithLifecycle()

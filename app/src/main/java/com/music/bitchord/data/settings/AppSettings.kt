@@ -460,10 +460,10 @@ object AppSettings {
     /** M3E Navigation Bar width factor (0.70f to 1.0f). */
     val m3eNavBarWidth = MutableStateFlow(0.92f)
 
-    /** M3E Navigation Bar height in dp (52 to 80 dp). */
-    val m3eNavBarHeight = MutableStateFlow(60)
+    /** M3E Navigation Bar height in dp (56 to 84 dp). */
+    val m3eNavBarHeight = MutableStateFlow(64)
 
-    /** M3E Navigation Bar content padding / thickness in dp (4 to 18 dp). */
+    /** M3E Navigation Bar content padding / thickness in dp (0 to 24 dp). */
     val m3eNavBarPadding = MutableStateFlow(8)
 
     /** M3E Navigation Bar frosted glass intensity (0.0f to 1.0f). */
@@ -1130,8 +1130,8 @@ object AppSettings {
         expressiveUiEnabled.value = prefs.getBoolean(KEY_EXPRESSIVE_UI_ENABLED, true)
         materialUiMode.value = prefs.getBoolean(KEY_MATERIAL_UI_MODE, false)
         m3eNavBarWidth.value = prefs.getFloat(KEY_M3E_NAV_BAR_WIDTH, 0.92f).coerceIn(0.70f, 1.0f)
-        m3eNavBarHeight.value = prefs.getInt(KEY_M3E_NAV_BAR_HEIGHT, 60).coerceIn(52, 80)
-        m3eNavBarPadding.value = prefs.getInt(KEY_M3E_NAV_BAR_PADDING, 8).coerceIn(4, 18)
+        m3eNavBarHeight.value = prefs.getInt(KEY_M3E_NAV_BAR_HEIGHT, 64).coerceIn(56, 84)
+        m3eNavBarPadding.value = prefs.getInt(KEY_M3E_NAV_BAR_PADDING, 8).coerceIn(0, 24)
         m3eFrostedGlassIntensity.value = prefs.getFloat(KEY_M3E_FROSTED_GLASS_INTENSITY, 0.70f).coerceIn(0f, 1f)
         liveSongColorGradient.value = prefs.getBoolean(KEY_LIVE_SONG_COLOR_GRADIENT, true)
         wavyScrubber.value = prefs.getBoolean(KEY_WAVY_SCRUBBER, true)
@@ -1184,7 +1184,7 @@ object AppSettings {
         glassMiniPlayerEnabled.value = prefs.getBoolean(KEY_GLASS_MINI_PLAYER_ENABLED, true)
         glassNavBarEnabled.value = prefs.getBoolean(KEY_GLASS_NAV_BAR_ENABLED, true)
         m3eNavBarShape.value = prefs.getString(KEY_M3E_NAV_BAR_SHAPE, "Pill") ?: "Pill"
-        m3eNavBarCornerRadius.value = prefs.getInt(KEY_M3E_NAV_BAR_CORNER_RADIUS, 28).coerceIn(12, 40)
+        m3eNavBarCornerRadius.value = prefs.getInt(KEY_M3E_NAV_BAR_CORNER_RADIUS, 28).coerceIn(0, 40)
         m3eNavBarTransparency.value = prefs.getFloat(KEY_M3E_NAV_BAR_TRANSPARENCY, 0.85f).coerceIn(0f, 1f)
         m3eNavBarFrostedBlur.value = prefs.getFloat(KEY_M3E_NAV_BAR_FROSTED_BLUR, 0.70f).coerceIn(0f, 1f)
         progressLineStyle.value = runCatching {
@@ -1618,13 +1618,13 @@ object AppSettings {
     }
 
     fun setM3eNavBarHeight(value: Int) {
-        val clamped = value.coerceIn(52, 80)
+        val clamped = value.coerceIn(56, 84)
         m3eNavBarHeight.value = clamped
         prefs.edit().putInt(KEY_M3E_NAV_BAR_HEIGHT, clamped).apply()
     }
 
     fun setM3eNavBarPadding(value: Int) {
-        val clamped = value.coerceIn(4, 18)
+        val clamped = value.coerceIn(0, 24)
         m3eNavBarPadding.value = clamped
         prefs.edit().putInt(KEY_M3E_NAV_BAR_PADDING, clamped).apply()
     }
@@ -1899,7 +1899,7 @@ object AppSettings {
     }
 
     fun setM3eNavBarCornerRadius(value: Int) {
-        val clamped = value.coerceIn(12, 40)
+        val clamped = value.coerceIn(0, 40)
         m3eNavBarCornerRadius.value = clamped
         prefs.edit().putInt(KEY_M3E_NAV_BAR_CORNER_RADIUS, clamped).apply()
     }

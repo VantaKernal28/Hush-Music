@@ -66,9 +66,11 @@ import com.music.bitchord.ui.haptics.rememberHaptics
 import com.music.bitchord.playback.MusicOnlyPlayback
 import com.music.bitchord.ui.player.PlayerDock
 import com.music.bitchord.ui.player.AndroidMusicVideo
-import androidx.compose.animation.core.animateDpAsState
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.border
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.music.bitchord.data.settings.AppSettings
 
 /**
  * The liquid glass navigation bar: the iOS 26 shape where the now playing
@@ -135,14 +137,36 @@ fun GlassNavBar(
     // order, which is where the shape wants it anyway.
     val standaloneIndex = tabs.lastIndex
 
-    // A factory, not a value — see the note in FloatingTabBar's header. Each of
-    // the three surfaces gets its own glass modifier and so its own shape cache.
-    // Subtle accent tint to ensure vibrant, luminous physical glass depth.
-    val glassSurface: @Composable () -> Modifier = {
-        Modifier.liquidGlass(
-            shape = pillShape,
-            surfaceTint = if (isDark) primaryAccent.copy(alpha = 0.06f) else Color.White.copy(alpha = 0.72f),
-        )
+    val glassNavBarEnabled by AppSettings.glassNavBarEnabled.collectAsStateWithLifecycle()
+    val glassMiniPlayerEnabled by AppSettings.glassMiniPlayerEnabled.collectAsStateWithLifecycle()
+
+    // Dynamic surfaces responding to Liquid Glass PER COMPONENT settings
+    val navBarSurface: @Composable () -> Modifier = {
+        if (glassNavBarEnabled) {
+            Modifier.liquidGlass(
+                shape = pillShape,
+                surfaceTint = if (isDark) primaryAccent.copy(alpha = 0.06f) else Color.White.copy(alpha = 0.72f),
+            )
+        } else {
+            Modifier
+                .clip(pillShape)
+                .background(MaterialTheme.colorScheme.surface)
+                .border(GLASS_EDGE_WIDTH, GLASS_EDGE_COLOR, pillShape)
+        }
+    }
+
+    val miniPlayerSurface: @Composable () -> Modifier = {
+        if (glassMiniPlayerEnabled) {
+            Modifier.liquidGlass(
+                shape = pillShape,
+                surfaceTint = if (isDark) primaryAccent.copy(alpha = 0.06f) else Color.White.copy(alpha = 0.72f),
+            )
+        } else {
+            Modifier
+                .clip(pillShape)
+                .background(MaterialTheme.colorScheme.surface)
+                .border(GLASS_EDGE_WIDTH, GLASS_EDGE_COLOR, pillShape)
+        }
     }
 
     FloatingTabBar(
@@ -153,7 +177,7 @@ fun GlassNavBar(
             .padding(horizontal = NAV_BAR_GUTTER)
             .padding(bottom = NAV_BAR_LIFT)
             .fillMaxWidth(),
-        tabBarContentModifier = glassSurface,
+        tabBarContentModifier = navBarSurface,
         inlineAccessory = song?.let { current ->
             { accessoryModifier, _ ->
                 GlassNowPlaying(
@@ -170,7 +194,7 @@ fun GlassNavBar(
                     onBlockedControl = onBlockedControl,
                     dock = dock,
                     pull = pull,
-                    modifier = accessoryModifier.then(glassSurface()),
+                    modifier = accessoryModifier.then(miniPlayerSurface()),
                 )
             }
         },
@@ -190,7 +214,7 @@ fun GlassNavBar(
                     onBlockedControl = onBlockedControl,
                     dock = dock,
                     pull = pull,
-                    modifier = accessoryModifier.fillMaxWidth().then(glassSurface()),
+                    modifier = accessoryModifier.fillMaxWidth().then(miniPlayerSurface()),
                 )
             }
         },

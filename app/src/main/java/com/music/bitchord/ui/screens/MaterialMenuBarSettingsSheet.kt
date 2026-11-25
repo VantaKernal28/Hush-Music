@@ -190,10 +190,11 @@ fun MaterialMenuBarSettingsSheet(
                     }
 
                     // Live M3E Menu Bar Preview
+                    val surfaceAlpha = (0.15f + navBarTransparency * 0.85f).coerceIn(0.15f, 1f)
                     val barSurface = if (isDark) {
-                        Color(0xFF222228).copy(alpha = navBarTransparency.coerceIn(0.2f, 1f))
+                        Color(0xFF222228).copy(alpha = surfaceAlpha)
                     } else {
-                        Color(0xFFF0EFF4).copy(alpha = navBarTransparency.coerceIn(0.2f, 1f))
+                        Color(0xFFF0EFF4).copy(alpha = surfaceAlpha)
                     }
                     val effectiveBlur = (navBarFrostedBlur * 28f).coerceIn(0f, 32f).dp
 
@@ -203,7 +204,14 @@ fun MaterialMenuBarSettingsSheet(
                             .height(navBarHeight.dp)
                             .clip(previewShape)
                             .background(barSurface)
-                            .blur(effectiveBlur)
+                            .then(
+                                if (navBarFrostedBlur > 0.02f) {
+                                    Modifier.background(
+                                        if (isDark) Color.White.copy(alpha = 0.06f * navBarFrostedBlur)
+                                        else Color.White.copy(alpha = 0.35f * navBarFrostedBlur)
+                                    )
+                                } else Modifier
+                            )
                             .border(
                                 1.dp,
                                 if (isDark) Color.White.copy(alpha = 0.12f) else Color.Black.copy(alpha = 0.08f),
@@ -324,8 +332,8 @@ fun MaterialMenuBarSettingsSheet(
                         value = "$navBarCornerRadius dp",
                         sliderValue = navBarCornerRadius.toFloat(),
                         onSliderValue = { AppSettings.setM3eNavBarCornerRadius(it.roundToInt()) },
-                        valueRange = 12f..40f,
-                        steps = 28,
+                        valueRange = 0f..40f,
+                        steps = 40,
                     )
                 }
             }
@@ -368,7 +376,7 @@ fun MaterialMenuBarSettingsSheet(
                         value = "$navBarHeight dp",
                         sliderValue = navBarHeight.toFloat(),
                         onSliderValue = { AppSettings.setM3eNavBarHeight(it.roundToInt()) },
-                        valueRange = 52f..80f,
+                        valueRange = 56f..84f,
                         steps = 28,
                     )
                     SliderRow(
@@ -377,8 +385,8 @@ fun MaterialMenuBarSettingsSheet(
                         value = "$navBarPadding dp",
                         sliderValue = navBarPadding.toFloat(),
                         onSliderValue = { AppSettings.setM3eNavBarPadding(it.roundToInt()) },
-                        valueRange = 4f..18f,
-                        steps = 14,
+                        valueRange = 0f..24f,
+                        steps = 24,
                     )
                 }
             }
@@ -430,7 +438,7 @@ fun MaterialMenuBarSettingsSheet(
                 }
             }
 
-            Spacer(Modifier.height(32.dp))
+            Spacer(Modifier.height(140.dp))
         }
     }
 }

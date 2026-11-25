@@ -362,21 +362,103 @@ fun RhythmPlayerContent(
                 horizontalAlignment = Alignment.CenterHorizontally,
                 verticalArrangement = Arrangement.SpaceBetween,
             ) {
-                // Top Row: Subtle Drag Handle / Dismiss indicator (matching video_3.mp4 & video_4.mp4)
-                Box(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(top = 10.dp, bottom = 6.dp),
-                    contentAlignment = Alignment.Center,
+                // Top Header: Subtle drag handle + balanced action row (Collapse on left, "Now Playing" centered, Output & Lyrics on right)
+                Column(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalAlignment = Alignment.CenterHorizontally,
                 ) {
+                    // Subtle Top Drag Handle
                     Box(
                         modifier = Modifier
-                            .width(36.dp)
-                            .height(4.5.dp)
-                            .clip(RoundedCornerShape(percent = 50))
-                            .background(sheetHandle)
-                            .clickable(onClick = onDismiss),
-                    )
+                            .fillMaxWidth()
+                            .padding(top = 6.dp, bottom = 2.dp),
+                        contentAlignment = Alignment.Center,
+                    ) {
+                        Box(
+                            modifier = Modifier
+                                .width(36.dp)
+                                .height(4.5.dp)
+                                .clip(RoundedCornerShape(percent = 50))
+                                .background(sheetHandle)
+                                .clickable(onClick = onDismiss),
+                        )
+                    }
+
+                    // Top Bar Row with perfectly centered "Now Playing" title
+                    Box(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(horizontal = 4.dp, vertical = 2.dp),
+                    ) {
+                        // Left: Circular Collapse button (44.dp, CircleShape)
+                        Box(
+                            modifier = Modifier
+                                .align(Alignment.CenterStart)
+                                .size(44.dp)
+                                .clip(CircleShape)
+                                .background(controlGlass)
+                                .clickable(onClick = onDismiss),
+                            contentAlignment = Alignment.Center,
+                        ) {
+                            Icon(
+                                imageVector = Icons.Rounded.KeyboardArrowDown,
+                                contentDescription = "Collapse",
+                                tint = iconTint,
+                                modifier = Modifier.size(26.dp),
+                            )
+                        }
+
+                        // Center: Centered bold "Now Playing" title (18.sp, tonal ink)
+                        Text(
+                            text = "Now Playing",
+                            style = MaterialTheme.typography.titleMedium.copy(
+                                fontWeight = FontWeight.Bold,
+                                fontSize = 18.sp,
+                            ),
+                            color = titleColor,
+                            textAlign = TextAlign.Center,
+                            modifier = Modifier.align(Alignment.Center),
+                        )
+
+                        // Right: Circular Audio Output and Lyrics action buttons (44.dp, CircleShape)
+                        Row(
+                            modifier = Modifier.align(Alignment.CenterEnd),
+                            horizontalArrangement = Arrangement.spacedBy(8.dp),
+                            verticalAlignment = Alignment.CenterVertically,
+                        ) {
+                            Box(
+                                modifier = Modifier
+                                    .size(44.dp)
+                                    .clip(CircleShape)
+                                    .background(if (showAudioSheet) primaryAccent else controlGlass)
+                                    .clickable { showAudioSheet = true },
+                                contentAlignment = Alignment.Center,
+                            ) {
+                                Icon(
+                                    imageVector = Icons.Rounded.Speaker,
+                                    contentDescription = "Audio Output",
+                                    tint = if (showAudioSheet) activeDockContent else iconTint,
+                                    modifier = Modifier.size(20.dp),
+                                )
+                            }
+
+                            Box(
+                                modifier = Modifier
+                                    .size(44.dp)
+                                    .clip(CircleShape)
+                                    .background(if (showInlineLyrics) primaryAccent else controlGlass)
+                                    .clickable { showInlineLyrics = !showInlineLyrics },
+                                contentAlignment = Alignment.Center,
+                            ) {
+                                Icon(
+                                    imageVector = BitChordIcons.LyricsQuote,
+                                    contentDescription = "Lyrics",
+                                    tint = if (showInlineLyrics) activeDockContent else iconTint,
+                                    modifier = Modifier.size(20.dp),
+                                )
+                            }
+                        }
+                    }
                 }
 
                 // Upper Stage: Artwork Shape + Centered Title/Artist OR Full-Stage Synced Lyrics

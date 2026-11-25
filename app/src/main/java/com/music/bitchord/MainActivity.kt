@@ -2486,7 +2486,7 @@ private fun BitChordApp(
     val navBottomInset = WindowInsets.navigationBars.asPaddingValues().calculateBottomPadding()
     val listPadding = PaddingValues(
         top = topBarContentPadding(),
-        bottom = (if (player.song != null) 240.dp else 160.dp) + navBottomInset,
+        bottom = (if (player.song != null) (if (materialUiMode) 270.dp else 240.dp) else (if (materialUiMode) 190.dp else 160.dp)) + navBottomInset,
     )
 
     // What colour the page currently under the bars is. The fades either end
@@ -4310,7 +4310,7 @@ private fun BitChordApp(
                                     progressProvider = { if (player.durationMs > 0L) player.position.positionMs.toFloat() / player.durationMs.toFloat() else 0f },
                                     modifier = Modifier.fillMaxWidth(),
                                 )
-                                Spacer(Modifier.height(8.dp))
+                                Spacer(Modifier.height(10.dp))
                             }
                             com.music.bitchord.ui.components.expressive.ExpressiveNavBar(
                                 tabs = tabs,
