@@ -55,6 +55,9 @@ import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.font.Font
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.style.TextOverflow
+import androidx.compose.ui.graphics.luminance
+import androidx.compose.foundation.isSystemInDarkTheme
+import androidx.compose.ui.text.style.TextAlign
 import com.music.bitchord.R
 import coil3.compose.AsyncImage
 
@@ -67,10 +70,6 @@ private const val DHRUV_AVATAR = "https://github.com/$DHRUV_HANDLE.png"
 private const val DHRUV_URL = "https://github.com/$DHRUV_HANDLE"
 
 private const val REPO_URL = "https://github.com/VantaKernal28/Hush-Music"
-
-import androidx.compose.ui.graphics.luminance
-import androidx.compose.foundation.isSystemInDarkTheme
-import androidx.compose.ui.text.style.TextAlign
 
 /**
  * About Hush screen laid out in flagship Material 3 Expressive Bento Grid aesthetic:
