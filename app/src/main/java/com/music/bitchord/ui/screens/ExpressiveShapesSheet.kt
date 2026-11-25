@@ -62,27 +62,43 @@ import com.music.bitchord.data.settings.AppSettings
 import com.music.bitchord.ui.components.PillSegmentedControl
 import kotlinx.coroutines.launch
 
+import androidx.compose.animation.AnimatedContent
+import androidx.compose.animation.core.spring
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.scaleIn
+import androidx.compose.animation.scaleOut
+import androidx.compose.animation.togetherWith
+import androidx.compose.foundation.horizontalScroll
+import androidx.compose.material.icons.rounded.MusicNote
+import androidx.compose.ui.graphics.Brush
+import androidx.compose.ui.graphics.graphicsLayer
+import com.music.bitchord.ui.components.expressive.m3eBreathing
+import com.music.bitchord.ui.components.expressive.m3eRotating
+import androidx.compose.ui.unit.sp
+
 private val AVAILABLE_SHAPES = listOf(
-    "Wavy Octagon" to "8-lobed organic flower rosette",
+    "8-Leaf Clover" to "8-lobed organic clover rosette",
+    "Flower" to "12-lobed floral scalloped silhouette",
+    "Sunny" to "16-point radiant sun blossom",
+    "4-Sided Cookie" to "Organic four-leaf cookie clover",
+    "Puffy" to "Asymmetric soft organic blob",
+    "Gem" to "Faceted rounded diamond gem",
+    "Heart" to "Expressive rounded heart silhouette",
+    "Pill" to "Smooth 50% stadium pill capsule",
     "Squircle" to "Continuous smooth curved squircle",
-    "4-Lobe Clover" to "Organic four-leaf clover",
-    "12-Lobe Scallop" to "Dense scalloped perimeter",
-    "Stadium Pill" to "Smooth 50% capsule shape",
-    "Architectural Arch" to "Rounded top with stable flat base",
-    "Diamond" to "Diagonal rounded lozenge",
+    "Starburst" to "6-pointed dynamic starburst flare",
+    "Architectural Arch" to "Rounded arch with flat base",
     "Hexagon" to "Geometric rounded 6-sided polygon",
-    "Starburst" to "6-pointed starburst flare",
-    "Sunny Radiance" to "16-point radiant blossom",
-    "Heart" to "Organic heart shape for artists",
     "Circle" to "Classic circular geometry",
 )
 
 /**
- * Dedicated Expressive Shapes Settings Screen reproducing cromaguy/Rhythm exactly (video_2.mp4):
+ * Dedicated Expressive Shapes Settings Screen:
+ * - Large Live Animated Preview Card showing real-time rotation, breathing, and shape updates
  * - Master toggle for Material 3 Expressive Shapes
- * - Shape Presets: Default, Friendly, Cheerful
- * - Randomize All Shapes button
- * - Per-component target shape pickers (Album Art, Player Art, Song Art, Playlist Art, Artist Art, Controls)
+ * - Shape Presets: Default, Friendly, Cheerful + Randomize All Shapes
+ * - Interactive quick shape strip + per-component target pickers
  */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -95,11 +111,32 @@ fun ExpressiveShapesSheet(
     val expressiveUiEnabled by AppSettings.expressiveUiEnabled.collectAsStateWithLifecycle()
     val shapePreset by AppSettings.expressiveShapePreset.collectAsStateWithLifecycle()
     val albumArtShape by AppSettings.expressiveAlbumArtShape.collectAsStateWithLifecycle()
+    val playerArtShape by AppSettings.expressivePlayerArtShape.collectAsStateWithLifecycle()
     val artistArtShape by AppSettings.expressiveArtistArtShape.collectAsStateWithLifecycle()
+    val controlsShape by AppSettings.expressiveControlsShape.collectAsStateWithLifecycle()
+    val miniPlayerShape by AppSettings.expressiveMiniPlayerShape.collectAsStateWithLifecycle()
 
+    var activeTarget by remember { mutableStateOf("PLAYER_ART") }
     var pickerTarget by remember { mutableStateOf<String?>(null) }
-    val sheetState = rememberModalBottomSheetState()
+    val sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
     val scope = rememberCoroutineScope()
+
+    val currentPreviewShapeName = when (activeTarget) {
+        "ALBUM_ART" -> albumArtShape
+        "PLAYER_ART" -> playerArtShape
+        "ARTIST_ART" -> artistArtShape
+        "CONTROLS" -> controlsShape
+        "MINI_PLAYER" -> miniPlayerShape
+        else -> playerArtShape
+    }
+    val currentTargetLabel = when (activeTarget) {
+        "ALBUM_ART" -> "Album Artwork"
+        "PLAYER_ART" -> "Player Artwork"
+        "ARTIST_ART" -> "Artist Artwork"
+        "CONTROLS" -> "Player Controls"
+        "MINI_PLAYER" -> "Mini Player Dock"
+        else -> "Player Artwork"
+    }
 
     Box(
         modifier = modifier
@@ -146,14 +183,158 @@ fun ExpressiveShapesSheet(
                 )
             }
 
-            Spacer(Modifier.height(10.dp))
+            // Live Animated Preview Card
+            Card(
+                modifier = Modifier.fillMaxWidth(),
+                shape = RoundedCornerShape(28.dp),
+                colors = CardDefaults.cardColors(
+                    containerColor = MaterialTheme.colorScheme.surfaceContainerHigh,
+                ),
+            ) {
+                Column(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(vertical = 22.dp, horizontal = 20.dp),
+                    horizontalAlignment = Alignment.CenterHorizontally,
+                ) {
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.SpaceBetween,
+                        verticalAlignment = Alignment.CenterVertically,
+                    ) {
+                        Text(
+                            text = "LIVE PREVIEW · ${currentTargetLabel.uppercase()}",
+                            style = MaterialTheme.typography.labelSmall.copy(
+                                fontWeight = FontWeight.ExtraBold,
+                                letterSpacing = 1.sp,
+                            ),
+                            color = MaterialTheme.colorScheme.primary,
+                        )
+                        Box(
+                            modifier = Modifier
+                                .clip(CircleShape)
+                                .background(MaterialTheme.colorScheme.primaryContainer)
+                                .padding(horizontal = 10.dp, vertical = 4.dp),
+                        ) {
+                            Text(
+                                text = currentPreviewShapeName,
+                                style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.Bold),
+                                color = MaterialTheme.colorScheme.onPrimaryContainer,
+                            )
+                        }
+                    }
+
+                    Spacer(Modifier.height(18.dp))
+
+                    AnimatedContent(
+                        targetState = currentPreviewShapeName,
+                        transitionSpec = {
+                            (fadeIn() + scaleIn(initialScale = 0.82f, animationSpec = spring(dampingRatio = 0.68f, stiffness = 360f)))
+                                .togetherWith(fadeOut() + scaleOut(targetScale = 0.85f))
+                        },
+                        label = "shapeLivePreview",
+                    ) { shapeName ->
+                        val previewShape = M3EShapes.fromName(shapeName)
+                        val isRot = expressiveUiEnabled && M3EShapes.isRotationalName(shapeName)
+                        Box(
+                            modifier = Modifier
+                                .size(156.dp)
+                                .m3eRotating(enabled = isRot, durationMs = 16000)
+                                .m3eBreathing(enabled = expressiveUiEnabled)
+                                .clip(previewShape)
+                                .background(
+                                    Brush.linearGradient(
+                                        colors = listOf(
+                                            MaterialTheme.colorScheme.primary,
+                                            MaterialTheme.colorScheme.tertiary,
+                                            MaterialTheme.colorScheme.secondary,
+                                        ),
+                                    ),
+                                )
+                                .border(2.dp, Color.White.copy(alpha = 0.25f), previewShape),
+                            contentAlignment = Alignment.Center,
+                        ) {
+                            Icon(
+                                imageVector = Icons.Rounded.MusicNote,
+                                contentDescription = shapeName,
+                                tint = Color.White,
+                                modifier = Modifier
+                                    .size(52.dp)
+                                    .graphicsLayer { alpha = 0.92f },
+                            )
+                        }
+                    }
+
+                    Spacer(Modifier.height(16.dp))
+
+                    // Quick inline shape strip so tapping any shape updates live preview & selected target immediately
+                    Row(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .horizontalScroll(rememberScrollState()),
+                        horizontalArrangement = Arrangement.spacedBy(10.dp),
+                    ) {
+                        AVAILABLE_SHAPES.forEach { (name, _) ->
+                            val isSelected = currentPreviewShapeName == name
+                            val chipShape = M3EShapes.fromName(name)
+                            Column(
+                                horizontalAlignment = Alignment.CenterHorizontally,
+                                modifier = Modifier
+                                    .clip(RoundedCornerShape(16.dp))
+                                    .background(
+                                        if (isSelected) MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.6f)
+                                        else MaterialTheme.colorScheme.surfaceContainer,
+                                    )
+                                    .border(
+                                        width = if (isSelected) 1.5.dp else 1.dp,
+                                        color = if (isSelected) MaterialTheme.colorScheme.primary else Color.White.copy(alpha = 0.06f),
+                                        shape = RoundedCornerShape(16.dp),
+                                    )
+                                    .clickable {
+                                        haptic.performHapticFeedback(HapticFeedbackType.TextHandleMove)
+                                        when (activeTarget) {
+                                            "ALBUM_ART" -> AppSettings.setExpressiveAlbumArtShape(name)
+                                            "PLAYER_ART" -> AppSettings.setExpressivePlayerArtShape(name)
+                                            "ARTIST_ART" -> AppSettings.setExpressiveArtistArtShape(name)
+                                            "CONTROLS" -> AppSettings.setExpressiveControlsShape(name)
+                                            "MINI_PLAYER" -> AppSettings.setExpressiveMiniPlayerShape(name)
+                                        }
+                                    }
+                                    .padding(horizontal = 12.dp, vertical = 10.dp),
+                            ) {
+                                Box(
+                                    modifier = Modifier
+                                        .size(34.dp)
+                                        .clip(chipShape)
+                                        .background(
+                                            if (isSelected) MaterialTheme.colorScheme.primary
+                                            else MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.35f),
+                                        ),
+                                )
+                                Spacer(Modifier.height(6.dp))
+                                Text(
+                                    text = name.substringBefore(" "),
+                                    style = MaterialTheme.typography.labelSmall.copy(
+                                        fontSize = 10.sp,
+                                        fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Medium,
+                                    ),
+                                    color = if (isSelected) MaterialTheme.colorScheme.onPrimaryContainer else MaterialTheme.colorScheme.onSurfaceVariant,
+                                    maxLines = 1,
+                                )
+                            }
+                        }
+                    }
+                }
+            }
+
+            Spacer(Modifier.height(16.dp))
 
             // Master Toggle Card
             Card(
                 modifier = Modifier.fillMaxWidth(),
                 shape = RoundedCornerShape(24.dp),
                 colors = CardDefaults.cardColors(
-                    containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f),
+                    containerColor = MaterialTheme.colorScheme.surfaceContainer,
                 ),
             ) {
                 Row(
@@ -213,7 +394,7 @@ fun ExpressiveShapesSheet(
                 modifier = Modifier.fillMaxWidth(),
                 shape = RoundedCornerShape(24.dp),
                 colors = CardDefaults.cardColors(
-                    containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f),
+                    containerColor = MaterialTheme.colorScheme.surfaceContainer,
                 ),
             ) {
                 Column(
@@ -231,16 +412,25 @@ fun ExpressiveShapesSheet(
                             AppSettings.setExpressiveShapePreset(selected)
                             when (selected) {
                                 "Default" -> {
-                                    AppSettings.setExpressiveAlbumArtShape("Wavy Octagon")
+                                    AppSettings.setExpressiveAlbumArtShape("8-Leaf Clover")
+                                    AppSettings.setExpressivePlayerArtShape("8-Leaf Clover")
                                     AppSettings.setExpressiveArtistArtShape("Heart")
+                                    AppSettings.setExpressiveControlsShape("Flower")
+                                    AppSettings.setExpressiveMiniPlayerShape("Pill")
                                 }
                                 "Friendly" -> {
-                                    AppSettings.setExpressiveAlbumArtShape("Squircle")
-                                    AppSettings.setExpressiveArtistArtShape("Squircle")
+                                    AppSettings.setExpressiveAlbumArtShape("4-Sided Cookie")
+                                    AppSettings.setExpressivePlayerArtShape("4-Sided Cookie")
+                                    AppSettings.setExpressiveArtistArtShape("Puffy")
+                                    AppSettings.setExpressiveControlsShape("Squircle")
+                                    AppSettings.setExpressiveMiniPlayerShape("Squircle")
                                 }
                                 "Cheerful" -> {
-                                    AppSettings.setExpressiveAlbumArtShape("Sunny Radiance")
+                                    AppSettings.setExpressiveAlbumArtShape("Sunny")
+                                    AppSettings.setExpressivePlayerArtShape("Sunny")
                                     AppSettings.setExpressiveArtistArtShape("Heart")
+                                    AppSettings.setExpressiveControlsShape("Starburst")
+                                    AppSettings.setExpressiveMiniPlayerShape("Pill")
                                 }
                             }
                         },
@@ -256,10 +446,11 @@ fun ExpressiveShapesSheet(
                             .background(MaterialTheme.colorScheme.primary.copy(alpha = 0.12f))
                             .clickable {
                                 haptic.performHapticFeedback(HapticFeedbackType.TextHandleMove)
-                                val randomAlbum = AVAILABLE_SHAPES.random().first
-                                val randomArtist = listOf("Heart", "Squircle", "Circle", "Wavy Octagon").random()
-                                AppSettings.setExpressiveAlbumArtShape(randomAlbum)
-                                AppSettings.setExpressiveArtistArtShape(randomArtist)
+                                AppSettings.setExpressiveAlbumArtShape(AVAILABLE_SHAPES.random().first)
+                                AppSettings.setExpressivePlayerArtShape(AVAILABLE_SHAPES.random().first)
+                                AppSettings.setExpressiveArtistArtShape(listOf("Heart", "Puffy", "Gem", "Circle", "8-Leaf Clover").random())
+                                AppSettings.setExpressiveControlsShape(listOf("Flower", "Sunny", "4-Sided Cookie", "Squircle", "Pill").random())
+                                AppSettings.setExpressiveMiniPlayerShape(listOf("Pill", "Squircle", "Architectural Arch").random())
                             }
                             .padding(horizontal = 14.dp, vertical = 10.dp),
                         verticalAlignment = Alignment.CenterVertically,
@@ -284,7 +475,7 @@ fun ExpressiveShapesSheet(
 
             // Per-Target Shapes
             Text(
-                text = "Element Shapes",
+                text = "Element Shapes (Tap to Customize & Preview)",
                 style = MaterialTheme.typography.labelLarge.copy(fontWeight = FontWeight.Bold),
                 color = MaterialTheme.colorScheme.primary,
                 modifier = Modifier.padding(start = 4.dp, bottom = 8.dp),
@@ -294,38 +485,53 @@ fun ExpressiveShapesSheet(
                 modifier = Modifier.fillMaxWidth(),
                 shape = RoundedCornerShape(24.dp),
                 colors = CardDefaults.cardColors(
-                    containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f),
+                    containerColor = MaterialTheme.colorScheme.surfaceContainer,
                 ),
             ) {
                 Column(Modifier.fillMaxWidth()) {
                     ShapeTargetRow(
-                        title = "Album Artwork",
-                        currentShape = albumArtShape,
-                        onClick = { pickerTarget = "ALBUM_ART" },
+                        title = "Player Artwork",
+                        currentShape = playerArtShape,
+                        onClick = {
+                            activeTarget = "PLAYER_ART"
+                            pickerTarget = "PLAYER_ART"
+                        },
                     )
                     HorizontalDivider(thickness = 0.5.dp, color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.3f))
                     ShapeTargetRow(
-                        title = "Player Artwork",
+                        title = "Album Artwork",
                         currentShape = albumArtShape,
-                        onClick = { pickerTarget = "PLAYER_ART" },
+                        onClick = {
+                            activeTarget = "ALBUM_ART"
+                            pickerTarget = "ALBUM_ART"
+                        },
                     )
                     HorizontalDivider(thickness = 0.5.dp, color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.3f))
                     ShapeTargetRow(
                         title = "Artist Artwork",
                         currentShape = artistArtShape,
-                        onClick = { pickerTarget = "ARTIST_ART" },
+                        onClick = {
+                            activeTarget = "ARTIST_ART"
+                            pickerTarget = "ARTIST_ART"
+                        },
                     )
                     HorizontalDivider(thickness = 0.5.dp, color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.3f))
                     ShapeTargetRow(
                         title = "Player Controls",
-                        currentShape = "9-Lobe Scallop",
-                        onClick = { pickerTarget = "CONTROLS" },
+                        currentShape = controlsShape,
+                        onClick = {
+                            activeTarget = "CONTROLS"
+                            pickerTarget = "CONTROLS"
+                        },
                     )
                     HorizontalDivider(thickness = 0.5.dp, color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.3f))
                     ShapeTargetRow(
                         title = "Mini Player Dock",
-                        currentShape = "M3E Rounded 24dp",
-                        onClick = { pickerTarget = "MINI_PLAYER" },
+                        currentShape = miniPlayerShape,
+                        onClick = {
+                            activeTarget = "MINI_PLAYER"
+                            pickerTarget = "MINI_PLAYER"
+                        },
                     )
                 }
             }
@@ -343,6 +549,7 @@ fun ExpressiveShapesSheet(
                 Column(
                     modifier = Modifier
                         .fillMaxWidth()
+                        .verticalScroll(rememberScrollState())
                         .padding(horizontal = 20.dp, vertical = 8.dp)
                         .padding(bottom = 24.dp),
                 ) {
@@ -355,8 +562,11 @@ fun ExpressiveShapesSheet(
 
                     AVAILABLE_SHAPES.forEach { (name, desc) ->
                         val isSelected = when (pickerTarget) {
-                            "ALBUM_ART", "PLAYER_ART" -> albumArtShape == name
+                            "ALBUM_ART" -> albumArtShape == name
+                            "PLAYER_ART" -> playerArtShape == name
                             "ARTIST_ART" -> artistArtShape == name
+                            "CONTROLS" -> controlsShape == name
+                            "MINI_PLAYER" -> miniPlayerShape == name
                             else -> false
                         }
 
@@ -371,8 +581,11 @@ fun ExpressiveShapesSheet(
                                 .clickable {
                                     haptic.performHapticFeedback(HapticFeedbackType.TextHandleMove)
                                     when (pickerTarget) {
-                                        "ALBUM_ART", "PLAYER_ART" -> AppSettings.setExpressiveAlbumArtShape(name)
+                                        "ALBUM_ART" -> AppSettings.setExpressiveAlbumArtShape(name)
+                                        "PLAYER_ART" -> AppSettings.setExpressivePlayerArtShape(name)
                                         "ARTIST_ART" -> AppSettings.setExpressiveArtistArtShape(name)
+                                        "CONTROLS" -> AppSettings.setExpressiveControlsShape(name)
+                                        "MINI_PLAYER" -> AppSettings.setExpressiveMiniPlayerShape(name)
                                     }
                                     scope.launch {
                                         sheetState.hide()
@@ -382,7 +595,7 @@ fun ExpressiveShapesSheet(
                                 .padding(horizontal = 14.dp, vertical = 10.dp),
                             verticalAlignment = Alignment.CenterVertically,
                         ) {
-                            val shape = M3EShapes.get(name)
+                            val shape = M3EShapes.fromName(name)
                             Box(
                                 modifier = Modifier
                                     .size(44.dp)

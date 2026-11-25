@@ -101,6 +101,12 @@ class AndroidPlayerHost(context: Context) : PlayerHost {
         override val expressiveUiEnabled get() = AppSettings.expressiveUiEnabled
         override val progressLineStyle get() = AppSettings.progressLineStyle
         override val beatImpulse get() = AppSettings.beatImpulse
+        override val expressiveShapePreset get() = AppSettings.expressiveShapePreset
+        override val expressiveAlbumArtShape get() = AppSettings.expressiveAlbumArtShape
+        override val expressivePlayerArtShape get() = AppSettings.expressivePlayerArtShape
+        override val expressiveArtistArtShape get() = AppSettings.expressiveArtistArtShape
+        override val expressiveControlsShape get() = AppSettings.expressiveControlsShape
+        override val expressiveMiniPlayerShape get() = AppSettings.expressiveMiniPlayerShape
 
         override fun setLastPlayerScreen(value: LastPlayerScreen) = AppSettings.setLastPlayerScreen(value)
         override fun setLyricsOffsetMs(value: Int) = AppSettings.setLyricsOffsetMs(value)

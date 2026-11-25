@@ -59,6 +59,25 @@ object M3EShapes {
     val Sunny: Shape = ScallopedFlowerShape(lobes = 16, innerRadiusRatio = 0.88f)
     val OrganicBlob: Shape = RoundedCornerShape(topStart = 36.dp, topEnd = 16.dp, bottomStart = 16.dp, bottomEnd = 36.dp)
     val Circle: Shape = CircleShape
+    val Gem: Shape = RoundedPolygonShape(sides = 4, cornerRadiusRatio = 0.2f)
+    val Heart: Shape = object : Shape {
+        override fun createOutline(size: Size, layoutDirection: LayoutDirection, density: Density): Outline {
+            val w = size.width
+            val h = size.height
+            if (w <= 0f || h <= 0f) return Outline.Rectangle(Rect(0f, 0f, w, h))
+            val path = Path().apply {
+                moveTo(w * 0.5f, h * 0.88f)
+                cubicTo(w * 0.14f, h * 0.65f, w * 0.04f, h * 0.42f, w * 0.06f, h * 0.28f)
+                cubicTo(w * 0.08f, h * 0.12f, w * 0.24f, h * 0.07f, w * 0.37f, h * 0.12f)
+                cubicTo(w * 0.44f, h * 0.15f, w * 0.48f, h * 0.21f, w * 0.50f, h * 0.25f)
+                cubicTo(w * 0.52f, h * 0.21f, w * 0.56f, h * 0.15f, w * 0.63f, h * 0.12f)
+                cubicTo(w * 0.76f, h * 0.07f, w * 0.92f, h * 0.12f, w * 0.94f, h * 0.28f)
+                cubicTo(w * 0.96f, h * 0.42f, w * 0.86f, h * 0.65f, w * 0.5f, h * 0.88f)
+                close()
+            }
+            return Outline.Generic(path)
+        }
+    }
 
     val allShapes: List<Shape> = listOf(
         Squircle,
@@ -78,6 +97,32 @@ object M3EShapes {
     fun get(index: Int): Shape = allShapes[abs(index) % allShapes.size]
 
     fun get(key: String): Shape = get(key.hashCode())
+
+    fun fromName(name: String): Shape = when (name) {
+        "8-Leaf Clover", "Wavy Octagon" -> WavyOctagon8
+        "Flower", "12-Lobe Scallop" -> Scallop12
+        "Sunny", "Sunny Radiance" -> Sunny
+        "4-Sided Cookie", "4-Lobe Clover" -> Clover4
+        "Puffy", "Organic Blob" -> OrganicBlob
+        "Gem", "Diamond" -> Gem
+        "Heart" -> Heart
+        "Pill", "Stadium Pill" -> Pill
+        "Squircle" -> Squircle
+        "Architectural Arch" -> Arch
+        "Hexagon" -> Hexagon
+        "Starburst" -> Starburst
+        "Circle" -> Circle
+        else -> WavyOctagon8
+    }
+
+    fun isRotationalName(name: String): Boolean = when (name) {
+        "8-Leaf Clover", "Wavy Octagon",
+        "Flower", "12-Lobe Scallop",
+        "Sunny", "Sunny Radiance",
+        "4-Sided Cookie", "4-Lobe Clover",
+        "Starburst", "Hexagon" -> true
+        else -> false
+    }
 
     fun isRotational(index: Int): Boolean = when (abs(index) % allShapes.size) {
         1, 2, 5, 7, 8, 9 -> true

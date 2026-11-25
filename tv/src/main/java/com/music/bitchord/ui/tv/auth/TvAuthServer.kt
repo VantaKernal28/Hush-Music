@@ -154,7 +154,7 @@ object TvAuthServer {
                 when {
                     // 1. API: Get Current Status
                     path == "/api/status" -> {
-                        val status = statusProvider?.invoke() ?: TvRemoteStatus(false, "No Song Playing", "BitChord TV", null, 0, 0)
+                        val status = statusProvider?.invoke() ?: TvRemoteStatus(false, "No Song Playing", "Hush TV", null, 0, 0)
                         val json = JSONObject().apply {
                             put("isPlaying", status.isPlaying)
                             put("title", status.title)
@@ -328,7 +328,7 @@ object TvAuthServer {
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-<title>BitChord TV • Mobile Remote</title>
+<title>Hush TV • Mobile Remote</title>
 <style>
 * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
 body { background: #08080B; color: #FFF; font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display", sans-serif; min-height: 100vh; padding: 18px; display: flex; flex-direction: column; align-items: center; }
@@ -365,7 +365,7 @@ body { background: #08080B; color: #FFF; font-family: -apple-system, BlinkMacSys
 <body>
 <div class="header">
   <div class="logo-badge">♪</div>
-  <h1>BitChord TV Remote</h1>
+  <h1>Hush TV Remote</h1>
 </div>
 
 <div class="card">
@@ -373,7 +373,7 @@ body { background: #08080B; color: #FFF; font-family: -apple-system, BlinkMacSys
     <img id="trackArt" class="art" src="" style="display:none;" />
     <div class="info">
       <div id="trackTitle" class="title">Loading TV...</div>
-      <div id="trackArtist" class="artist">Connecting to BitChord TV</div>
+      <div id="trackArtist" class="artist">Connecting to Hush TV</div>
     </div>
   </div>
   <div class="progress-bar" id="pBar" onclick="handleSeek(event)">
@@ -418,7 +418,7 @@ function fmtTime(ms) {
 function updateStatus() {
   fetch('/api/status').then(r => r.json()).then(data => {
     document.getElementById('trackTitle').innerText = data.title || "No Song Playing";
-    document.getElementById('trackArtist').innerText = data.artist || "BitChord TV";
+    document.getElementById('trackArtist').innerText = data.artist || "Hush TV";
     let art = document.getElementById('trackArt');
     if (data.artworkUrl) { art.src = data.artworkUrl; art.style.display = 'block'; } else { art.style.display = 'none'; }
     document.getElementById('playBtn').innerText = data.isPlaying ? '❚❚' : '▶';

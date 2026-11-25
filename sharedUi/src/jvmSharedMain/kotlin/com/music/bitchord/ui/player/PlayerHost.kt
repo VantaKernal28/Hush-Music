@@ -294,6 +294,12 @@ interface PlayerSettingsSource {
     val progressLineStyle: StateFlow<ProgressLineStyle> get() = MutableStateFlow(ProgressLineStyle.STRAIGHT)
     /** Beat-reactive song gradient and artwork impulse. */
     val beatImpulse: StateFlow<Boolean> get() = MutableStateFlow(true)
+    val expressiveShapePreset: StateFlow<String> get() = MutableStateFlow("Default")
+    val expressiveAlbumArtShape: StateFlow<String> get() = MutableStateFlow("8-Leaf Clover")
+    val expressivePlayerArtShape: StateFlow<String> get() = MutableStateFlow("8-Leaf Clover")
+    val expressiveArtistArtShape: StateFlow<String> get() = MutableStateFlow("Heart")
+    val expressiveControlsShape: StateFlow<String> get() = MutableStateFlow("Flower")
+    val expressiveMiniPlayerShape: StateFlow<String> get() = MutableStateFlow("Pill")
 
     fun setLastPlayerScreen(value: LastPlayerScreen)
     fun setLyricsOffsetMs(value: Int)

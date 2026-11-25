@@ -94,6 +94,7 @@ import androidx.compose.runtime.mutableFloatStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
+import androidx.compose.runtime.withFrameNanos
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -104,6 +105,7 @@ import androidx.compose.ui.graphics.Path
 import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.graphics.graphicsLayer
+import androidx.compose.ui.graphics.lerp
 import androidx.compose.ui.graphics.luminance
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.input.pointer.pointerInput
@@ -123,18 +125,16 @@ import com.music.bitchord.data.lyrics.LyricLine
 import com.music.bitchord.data.model.LikeStatus
 import com.music.bitchord.data.model.Song
 import com.music.bitchord.playback.PlaybackPosition
+import com.music.bitchord.ui.components.expressive.M3EShapes
 import com.music.bitchord.ui.components.expressive.ScallopedFlowerShape
 import com.music.bitchord.ui.icons.BitChordIcons
 
 /**
- * Material 3 Expressive Player Content reproducing cromaguy/Rhythm exactly (video_5.mp4 & video_6.mp4):
- * - Center-top large artwork clipped to 8-lobed ScallopedFlowerShape (or inline synced lyrics)
- * - Guaranteed WCAG AAA contrast calculation across both light/mint and dark backgrounds
- * - Centered title & artist below artwork (FontWeight.Black headlineMedium)
- * - Row 1: Pill Play/Pause button (64dp height, weight 1f) + circular Next button (64dp)
- * - Row 2: Circular Previous button (52dp) + seekbar with timestamps
- * - Row 3: 5 squircle dock buttons (Lyrics, Like/Star, Audio Output, Queue, More options)
- * - Modal sheets for Queue, Playback / Audio Settings, and Player Controls 2-column grid.
+ * Material 3 Expressive Player Content:
+ * - Rotating Material 3 Expressive artwork shape (260dp–280dp) with edge-to-edge upright crop
+ * - Song poster-derived vibrant accent color for active lyrics & highlights with WCAG contrast
+ * - Liquid Glass synced LyricsPanel choreography (spring scroll, blur falloff, word glow)
+ * - Straight default seekbar + audio specs badge + equal-height transport controls
  */
 @Composable
 fun RhythmPlayerContent(
@@ -168,7 +168,51 @@ fun RhythmPlayerContent(
     modifier: Modifier = Modifier,
 ) {
     val isDark = MaterialTheme.colorScheme.surface.luminance() < 0.5f
-    val primaryAccent = MaterialTheme.colorScheme.primary
+    val fallbackAccent = MaterialTheme.colorScheme.primary
+
+    var isScrubbing by remember { mutableStateOf(false) }
+    var scrubProgress by remember { mutableFloatStateOf(0f) }
+
+    val currentProgress = if (isScrubbing) {
+        scrubProgress
+    } else {
+        if (durationMs > 0L) (position.positionMs.toFloat() / durationMs.toFloat()).coerceIn(0f, 1f) else 0f
+    }
+
+    val progressLineStyle by PlayerSettings.progressLineStyle.collectAsStateWithLifecycle()
+    val beatImpulseEnabled by PlayerSettings.beatImpulse.collectAsStateWithLifecycle()
+    val expressiveUiEnabled by PlayerSettings.expressiveUiEnabled.collectAsStateWithLifecycle()
+    val playerArtShapeName by PlayerSettings.expressivePlayerArtShape.collectAsStateWithLifecycle()
+    val controlsShapeName by PlayerSettings.expressiveControlsShape.collectAsStateWithLifecycle()
+    val liveSongGradientEnabled by PlayerSettings.liveSongColorGradient.collectAsStateWithLifecycle()
+
+    // Palette extraction for rich multi-stop ambient gradient & poster-matched lyric highlight
+    val artPalette = rememberArtworkColors(song.thumbnailUrl)
+    val paletteDominant = artPalette.colors.getOrNull(0) ?: fallbackAccent
+    val paletteVibrant = artPalette.colors.getOrNull(1) ?: paletteDominant
+    val paletteAmbient = artPalette.colors.getOrNull(2) ?: paletteDominant
+
+    val posterAccent = remember(paletteVibrant, paletteDominant, fallbackAccent, liveSongGradientEnabled, isDark) {
+        val raw = if (liveSongGradientEnabled) {
+            if (paletteVibrant.luminance() > 0.12f) paletteVibrant else paletteDominant
+        } else {
+            fallbackAccent
+        }
+        val lum = raw.luminance()
+        if (isDark) {
+            when {
+                lum < 0.42f -> lerp(raw, Color.White, ((0.52f - lum) / 0.52f).coerceIn(0.25f, 0.72f))
+                else -> raw
+            }
+        } else {
+            when {
+                lum > 0.36f -> lerp(raw, Color(0xFF141418), ((lum - 0.25f) / 0.75f).coerceIn(0.30f, 0.70f))
+                else -> raw
+            }
+        }
+    }
+
+    val primaryAccent = posterAccent
     val isAccentLight = primaryAccent.luminance() > 0.45f
     val titleColor = if (isDark) Color.White else Color(0xFF121215)
     val textSubColor = if (isDark) Color.White.copy(alpha = 0.72f) else Color(0xFF4C4C56)
@@ -187,37 +231,28 @@ fun RhythmPlayerContent(
     val sheetPillBg = if (isDark) Color.White.copy(alpha = 0.12f) else Color.Black.copy(alpha = 0.06f)
     val sheetHandle = if (isDark) Color.White.copy(alpha = 0.35f) else Color.Black.copy(alpha = 0.20f)
 
-    var isScrubbing by remember { mutableStateOf(false) }
-    var scrubProgress by remember { mutableFloatStateOf(0f) }
+    val albumShape = remember(playerArtShapeName, expressiveUiEnabled) {
+        if (expressiveUiEnabled) M3EShapes.fromName(playerArtShapeName) else RoundedCornerShape(28.dp)
+    }
+    val controlsShape = remember(controlsShapeName, expressiveUiEnabled) {
+        if (expressiveUiEnabled) M3EShapes.fromName(controlsShapeName) else CircleShape
+    }
+    val isRotationalShape = expressiveUiEnabled && M3EShapes.isRotationalName(playerArtShapeName)
 
-    val currentProgress = if (isScrubbing) {
-        scrubProgress
-    } else {
-        if (durationMs > 0L) (position.positionMs.toFloat() / durationMs.toFloat()).coerceIn(0f, 1f) else 0f
+    // Frame-paced smooth rotation that holds angle cleanly on pause
+    var artRotationDeg by remember(song.videoId) { mutableFloatStateOf(0f) }
+    LaunchedEffect(isPlaying, isRotationalShape) {
+        if (!isPlaying || !isRotationalShape) return@LaunchedEffect
+        var lastNanos = withFrameNanos { it }
+        while (true) {
+            val now = withFrameNanos { it }
+            val dtSec = ((now - lastNanos) / 1_000_000_000f).coerceIn(0f, 0.1f)
+            lastNanos = now
+            artRotationDeg = (artRotationDeg + dtSec * 14f) % 360f
+        }
     }
 
-    val progressLineStyle by PlayerSettings.progressLineStyle.collectAsStateWithLifecycle()
-    val beatImpulseEnabled by PlayerSettings.beatImpulse.collectAsStateWithLifecycle()
-
-    // Smooth continuous rotation of the M3E scalloped artwork
-    val infiniteTransition = rememberInfiniteTransition(label = "rhythmArtRotate")
-    val artRotation by infiniteTransition.animateFloat(
-        initialValue = 0f,
-        targetValue = 360f,
-        animationSpec = infiniteRepeatable(
-            animation = tween(durationMillis = 28000, easing = LinearEasing),
-            repeatMode = RepeatMode.Restart,
-        ),
-        label = "artRot",
-    )
-
-    // Palette extraction for rich multi-stop ambient gradient
-    val artPalette = rememberArtworkColors(song.thumbnailUrl)
-    val paletteDominant = artPalette.colors.getOrNull(0) ?: primaryAccent
-    val paletteVibrant = artPalette.colors.getOrNull(1) ?: primaryAccent
-    val paletteAmbient = artPalette.colors.getOrNull(2) ?: paletteDominant
-
-    // True Beat-Spike Energy Detection: springs outward (1.0f -> 1.07f) on genuine audio transients
+    // True Beat-Spike Energy Detection: smoother spring curve (1.0f -> 1.045f)
     val beatTimestamp by AudioBeatDetector.beatTimestamp.collectAsStateWithLifecycle()
     val beatEnergy by AudioBeatDetector.beatEnergy.collectAsStateWithLifecycle()
     val beatAnim = remember { Animatable(1.0f) }
@@ -407,18 +442,19 @@ fun RhythmPlayerContent(
                         horizontalAlignment = Alignment.CenterHorizontally,
                         verticalArrangement = Arrangement.Center,
                     ) {
-                        // Pixel M3E 28dp rounded-square artwork card with subtle border & beat impulse (v2_02.jpg)
+                        // Rotating Material 3 Expressive geometric shape artwork (260dp–280dp) with upright cropped poster
+                        val displayArtSize = (maxWidth * 0.78f).coerceIn(250.dp, if (isCompactHeight) 260.dp else 280.dp)
                         Box(
                             modifier = Modifier
-                                .fillMaxWidth()
-                                .aspectRatio(1f)
+                                .size(displayArtSize)
                                 .graphicsLayer {
                                     scaleX = effectiveArtScale
                                     scaleY = effectiveArtScale
+                                    if (isRotationalShape) rotationZ = artRotationDeg
                                 }
-                                .clip(RoundedCornerShape(28.dp))
+                                .clip(albumShape)
                                 .background(if (isDark) Color(0xFF242428) else Color(0xFFE2E0E6))
-                                .border(1.dp, Color.White.copy(alpha = 0.08f), RoundedCornerShape(28.dp))
+                                .border(1.5.dp, Color.White.copy(alpha = 0.12f), albumShape)
                                 .clickable { showInlineLyrics = true },
                             contentAlignment = Alignment.Center,
                         ) {
@@ -426,7 +462,16 @@ fun RhythmPlayerContent(
                                 model = song.thumbnailUrl,
                                 contentDescription = song.title,
                                 contentScale = ContentScale.Crop,
-                                modifier = Modifier.fillMaxSize(),
+                                alignment = Alignment.Center,
+                                modifier = Modifier
+                                    .fillMaxSize()
+                                    .graphicsLayer {
+                                        if (isRotationalShape) {
+                                            rotationZ = -artRotationDeg
+                                            scaleX = 1.42f
+                                            scaleY = 1.42f
+                                        }
+                                    },
                             )
                         }
 
@@ -484,7 +529,7 @@ fun RhythmPlayerContent(
                         }
                     }
                 } else {
-                    // Full-Stage Synced Lyrics filling entire vertical height
+                    // Full-Stage Liquid Glass Synced LyricsPanel tinted dynamically to song poster gradient
                     Column(
                         modifier = Modifier
                             .fillMaxWidth()
@@ -546,122 +591,27 @@ fun RhythmPlayerContent(
                             }
                         }
 
-                        Spacer(Modifier.height(10.dp))
+                        Spacer(Modifier.height(6.dp))
 
-                        if (!lyrics.isNullOrEmpty()) {
-                            val lyricListState = rememberLazyListState()
-                            val hasTimestamps = lyrics.any { it.timeMs > 0L }
-
-                            if (hasTimestamps) {
-                                val activeIndex = lyrics.indexOfLast { position.positionMs >= it.timeMs }
-
-                                LaunchedEffect(activeIndex) {
-                                    if (activeIndex >= 0) {
-                                        lyricListState.animateScrollToItem(maxOf(0, activeIndex - 1))
-                                    }
+                        LyricsPanel(
+                            lines = lyrics.orEmpty(),
+                            trackKey = song.videoId,
+                            playhead = rememberLyricPlayhead(position),
+                            looking = !lyricsUnavailable && lyrics == null,
+                            isPlaying = isPlaying,
+                            onSeekToLine = { ms ->
+                                if (durationMs > 0L) {
+                                    onSeekFraction((ms.toFloat() / durationMs.toFloat()).coerceIn(0f, 1f))
                                 }
-
-                                LazyColumn(
-                                    state = lyricListState,
-                                    modifier = Modifier.fillMaxSize(),
-                                    horizontalAlignment = Alignment.CenterHorizontally,
-                                    verticalArrangement = Arrangement.spacedBy(14.dp),
-                                    contentPadding = PaddingValues(vertical = 40.dp),
-                                ) {
-                                    itemsIndexed(lyrics) { idx, line ->
-                                        val isCurrentLine = idx == activeIndex
-                                        val lineScale by animateFloatAsState(
-                                            targetValue = if (isCurrentLine) 1.07f else 1.0f,
-                                            animationSpec = spring(dampingRatio = 0.65f, stiffness = 300f),
-                                            label = "lyricScale",
-                                        )
-                                        val lineAlpha by animateFloatAsState(
-                                            targetValue = if (isCurrentLine) 1.0f else 0.40f,
-                                            animationSpec = tween(260),
-                                            label = "lyricAlpha",
-                                        )
-                                        val activeColor by animateColorAsState(
-                                            targetValue = if (isCurrentLine) primaryAccent else (if (isDark) Color.White.copy(alpha = 0.40f) else Color.Black.copy(alpha = 0.35f)),
-                                            animationSpec = tween(260),
-                                            label = "lyricColor",
-                                        )
-
-                                        Text(
-                                            text = line.text,
-                                            style = MaterialTheme.typography.headlineSmall.copy(
-                                                fontWeight = if (isCurrentLine) FontWeight.Black else FontWeight.SemiBold,
-                                                fontSize = if (isCurrentLine) 28.sp else 19.sp,
-                                                lineHeight = if (isCurrentLine) 38.sp else 28.sp,
-                                                shadow = if (isCurrentLine) androidx.compose.ui.graphics.Shadow(
-                                                    color = primaryAccent.copy(alpha = 0.55f),
-                                                    blurRadius = 18f,
-                                                ) else null,
-                                            ),
-                                            color = activeColor,
-                                            textAlign = TextAlign.Center,
-                                            modifier = Modifier
-                                                .fillMaxWidth()
-                                                .graphicsLayer {
-                                                    scaleX = lineScale
-                                                    scaleY = lineScale
-                                                    alpha = lineAlpha
-                                                }
-                                                .clickable {
-                                                    if (durationMs > 0L) {
-                                                        onSeekFraction((line.timeMs.toFloat() / durationMs.toFloat()).coerceIn(0f, 1f))
-                                                    }
-                                                }
-                                                .padding(horizontal = 16.dp, vertical = 6.dp),
-                                        )
-                                    }
-                                }
-                            } else {
-                                // Fallback seamlessly to static lyrics
-                                LazyColumn(
-                                    state = lyricListState,
-                                    modifier = Modifier.fillMaxSize(),
-                                    horizontalAlignment = Alignment.CenterHorizontally,
-                                    verticalArrangement = Arrangement.spacedBy(12.dp),
-                                    contentPadding = PaddingValues(vertical = 32.dp),
-                                ) {
-                                    itemsIndexed(lyrics) { _, line ->
-                                        Text(
-                                            text = line.text,
-                                            style = MaterialTheme.typography.titleMedium.copy(
-                                                fontWeight = FontWeight.SemiBold,
-                                                fontSize = 20.sp,
-                                                lineHeight = 28.sp,
-                                            ),
-                                            color = if (isDark) Color.White.copy(alpha = 0.85f) else Color.Black.copy(alpha = 0.75f),
-                                            textAlign = TextAlign.Center,
-                                            modifier = Modifier
-                                                .fillMaxWidth()
-                                                .padding(horizontal = 20.dp, vertical = 4.dp),
-                                        )
-                                    }
-                                }
-                            }
-                        } else {
-                            Column(
-                                horizontalAlignment = Alignment.CenterHorizontally,
-                                verticalArrangement = Arrangement.Center,
-                                modifier = Modifier.fillMaxSize(),
-                            ) {
-                                Icon(
-                                    imageVector = Icons.Rounded.MusicNote,
-                                    contentDescription = null,
-                                    tint = primaryAccent,
-                                    modifier = Modifier.size(42.dp),
-                                )
-                                Spacer(Modifier.height(14.dp))
-                                Text(
-                                    text = if (lyricsUnavailable) "Lyrics unavailable for this song" else "Searching for synced lyrics...",
-                                    style = MaterialTheme.typography.bodyLarge.copy(fontWeight = FontWeight.Medium),
-                                    color = if (isDark) Color.White.copy(alpha = 0.75f) else Color.Black.copy(alpha = 0.65f),
-                                    textAlign = TextAlign.Center,
-                                )
-                            }
-                        }
+                            },
+                            controlsOpen = true,
+                            onRevealControls = {},
+                            onHideControls = {},
+                            centerFocus = true,
+                            activeColor = primaryAccent,
+                            inactiveColor = if (isDark) Color.White else Color(0xFF1C1C22),
+                            modifier = Modifier.fillMaxSize(),
+                        )
                     }
                 }
 
@@ -762,11 +712,11 @@ fun RhythmPlayerContent(
                             )
                         }
 
-                        // Play / Pause: Circular dark button
+                        // Play / Pause: M3E Expressive shaped button
                         Box(
                             modifier = Modifier
                                 .size(if (isCompactHeight) 56.dp else 64.dp)
-                                .clip(CircleShape)
+                                .clip(controlsShape)
                                 .background(if (isDark) Color(0xFF38383E) else primaryAccent)
                                 .clickable(onClick = onPlayPause),
                             contentAlignment = Alignment.Center,
@@ -774,7 +724,7 @@ fun RhythmPlayerContent(
                             Icon(
                                 imageVector = if (isPlaying) Icons.Rounded.Pause else Icons.Rounded.PlayArrow,
                                 contentDescription = if (isPlaying) "Pause" else "Play",
-                                tint = Color.White,
+                                tint = if (isDark) Color.White else playBtnContent,
                                 modifier = Modifier.size(32.dp),
                             )
                         }

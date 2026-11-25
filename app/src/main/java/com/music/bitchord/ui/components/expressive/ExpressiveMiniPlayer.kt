@@ -106,8 +106,25 @@ fun ExpressiveMiniPlayer(
     val haptic = LocalHapticFeedback.current
     val haptics = rememberHaptics()
     val materialUi by AppSettings.materialUiMode.collectAsStateWithLifecycle()
-    val shape = remember(materialUi) {
-        if (materialUi) RoundedCornerShape(24.dp) else RoundedCornerShape(percent = 50)
+    val expressiveUiEnabled by AppSettings.expressiveUiEnabled.collectAsStateWithLifecycle()
+    val miniPlayerShapeName by AppSettings.expressiveMiniPlayerShape.collectAsStateWithLifecycle()
+    val controlsShapeName by AppSettings.expressiveControlsShape.collectAsStateWithLifecycle()
+    val albumArtShapeName by AppSettings.expressiveAlbumArtShape.collectAsStateWithLifecycle()
+    val frostedGlassIntensity by AppSettings.m3eFrostedGlassIntensity.collectAsStateWithLifecycle()
+
+    val shape = remember(materialUi, miniPlayerShapeName, expressiveUiEnabled) {
+        if (!materialUi) {
+            RoundedCornerShape(percent = 50)
+        } else if (!expressiveUiEnabled) {
+            RoundedCornerShape(24.dp)
+        } else {
+            when (miniPlayerShapeName) {
+                "Pill", "Stadium Pill" -> RoundedCornerShape(percent = 50)
+                "Architectural Arch" -> RoundedCornerShape(topStart = 32.dp, topEnd = 32.dp, bottomStart = 12.dp, bottomEnd = 12.dp)
+                "Squircle" -> RoundedCornerShape(22.dp)
+                else -> RoundedCornerShape(24.dp)
+            }
+        }
     }
 
     val miniPlayerProgressLine by AppSettings.miniPlayerProgressLine.collectAsStateWithLifecycle()
@@ -126,8 +143,14 @@ fun ExpressiveMiniPlayer(
         label = "playRotation",
     )
     val playRotation = if (materialUi && isPlaying && rotatingScallopPlay) animatedRotation else 0f
-    val playButtonShape = remember(materialUi) {
-        if (materialUi) ScallopedFlowerShape(lobes = 9, innerRadiusRatio = 0.85f) else SquircleShape(16.dp)
+    val playButtonShape = remember(materialUi, controlsShapeName, expressiveUiEnabled) {
+        if (materialUi && expressiveUiEnabled) {
+            com.music.bitchord.ui.components.expressive.M3EShapes.fromName(controlsShapeName)
+        } else if (materialUi) {
+            ScallopedFlowerShape(lobes = 9, innerRadiusRatio = 0.85f)
+        } else {
+            SquircleShape(16.dp)
+        }
     }
 
     // Breathing artwork scale during playback
@@ -161,9 +184,9 @@ fun ExpressiveMiniPlayer(
                         Modifier
                             .hazeEffect(
                                 state = hazeState,
-                                style = HazeMaterials.regular(MaterialTheme.colorScheme.surfaceContainerHigh.copy(alpha = 0.65f)),
+                                style = HazeMaterials.regular(MaterialTheme.colorScheme.surfaceContainerHigh.copy(alpha = (frostedGlassIntensity * 0.85f).coerceIn(0.25f, 0.95f))),
                             )
-                            .background(MaterialTheme.colorScheme.surfaceContainerHigh.copy(alpha = 0.55f))
+                            .background(MaterialTheme.colorScheme.surfaceContainerHigh.copy(alpha = (frostedGlassIntensity * 0.75f).coerceIn(0.35f, 0.92f)))
                             .border(
                                 width = 1.dp,
                                 color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.35f),
@@ -227,6 +250,13 @@ fun ExpressiveMiniPlayer(
                 label = "miniArtWidth",
             )
             val artCornerRadius = if (showsPicture) 14.dp else 23.dp
+            val miniArtClipShape = remember(materialUi, expressiveUiEnabled, albumArtShapeName, showsPicture, artCornerRadius) {
+                if (materialUi && expressiveUiEnabled && !showsPicture) {
+                    com.music.bitchord.ui.components.expressive.M3EShapes.fromName(albumArtShapeName)
+                } else {
+                    RoundedCornerShape(artCornerRadius)
+                }
+            }
 
             Box(
                 modifier = Modifier
@@ -236,8 +266,8 @@ fun ExpressiveMiniPlayer(
                         scaleY = artworkScale
                     }
                     .playerDockArt(dock, artCornerRadius)
-                    .clip(RoundedCornerShape(artCornerRadius))
-                    .thumbnailBorder(RoundedCornerShape(artCornerRadius))
+                    .clip(miniArtClipShape)
+                    .thumbnailBorder(miniArtClipShape)
                     .background(MaterialTheme.colorScheme.surfaceVariant),
             ) {
                 AsyncImage(

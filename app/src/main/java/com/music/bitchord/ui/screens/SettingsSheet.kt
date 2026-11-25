@@ -16,8 +16,18 @@ import android.net.Uri
 import android.os.Build
 import android.provider.Settings
 import android.widget.Toast
+import androidx.activity.compose.BackHandler
+import androidx.compose.animation.AnimatedContent
 import androidx.compose.animation.animateColorAsState
+import androidx.compose.animation.core.spring
 import androidx.compose.animation.core.tween
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.scaleIn
+import androidx.compose.animation.scaleOut
+import androidx.compose.animation.slideInHorizontally
+import androidx.compose.animation.slideOutHorizontally
+import androidx.compose.animation.togetherWith
 import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
@@ -108,7 +118,9 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Slider
 import androidx.compose.material3.SliderDefaults
+import androidx.compose.material3.Surface
 import com.music.bitchord.ui.components.IosSwitch
+import com.music.bitchord.ui.components.expressive.M3EShapes
 import com.music.bitchord.ui.components.expressive.expressiveClickable
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
@@ -262,40 +274,21 @@ fun SettingsScreen(
         )
     }
 
-    if (showAboutSheet) {
-        AboutSheet(
-            onBack = { showAboutSheet = false },
-            modifier = Modifier.fillMaxSize(),
-            contentPadding = contentPadding,
-        )
-        return
+    val activeSubSheet = when {
+        showAboutSheet -> "ABOUT"
+        showShapesSheet -> "SHAPES"
+        showPlayerSheet -> "PLAYER"
+        showMiniPlayerSheet -> "MINI_PLAYER"
+        else -> "MAIN"
     }
 
-    if (showShapesSheet) {
-        ExpressiveShapesSheet(
-            onBack = { showShapesSheet = false },
-            modifier = Modifier.fillMaxSize(),
-            contentPadding = contentPadding,
-        )
-        return
-    }
-
-    if (showPlayerSheet) {
-        PlayerCustomizationSheet(
-            onBack = { showPlayerSheet = false },
-            modifier = Modifier.fillMaxSize(),
-            contentPadding = contentPadding,
-        )
-        return
-    }
-
-    if (showMiniPlayerSheet) {
-        MiniPlayerCustomizationSheet(
-            onBack = { showMiniPlayerSheet = false },
-            modifier = Modifier.fillMaxSize(),
-            contentPadding = contentPadding,
-        )
-        return
+    if (activeSubSheet != "MAIN") {
+        BackHandler {
+            showAboutSheet = false
+            showShapesSheet = false
+            showPlayerSheet = false
+            showMiniPlayerSheet = false
+        }
     }
 
     val wifiQuality by AppSettings.audioQualityWifi.collectAsStateWithLifecycle()
@@ -544,34 +537,88 @@ fun SettingsScreen(
     }
 
     val isDark = MaterialTheme.colorScheme.background.luminance() < 0.5f
-    val solidBg = if (isDark) Color(0xFF0F0F12) else MaterialTheme.colorScheme.background
+    val solidBg = if (materialUiMode) {
+        MaterialTheme.colorScheme.surface
+    } else if (isDark) {
+        Color(0xFF0F0F12)
+    } else {
+        MaterialTheme.colorScheme.background
+    }
 
+    AnimatedContent(
+        targetState = activeSubSheet,
+        transitionSpec = {
+            if (targetState != "MAIN") {
+                (slideInHorizontally(spring(dampingRatio = 0.86f, stiffness = 360f)) { it / 5 } +
+                    fadeIn(tween(240)) +
+                    scaleIn(initialScale = 0.96f, animationSpec = spring(dampingRatio = 0.86f, stiffness = 360f))) togetherWith
+                    (slideOutHorizontally(tween(200)) { -it / 7 } + fadeOut(tween(180)))
+            } else {
+                (slideInHorizontally(spring(dampingRatio = 0.86f, stiffness = 360f)) { -it / 7 } +
+                    fadeIn(tween(240))) togetherWith
+                    (slideOutHorizontally(tween(200)) { it / 5 } + fadeOut(tween(180)) + scaleOut(targetScale = 0.96f))
+            }
+        },
+        modifier = modifier.fillMaxSize(),
+        label = "SettingsSubSheetTransition",
+    ) { subSheet ->
+        when (subSheet) {
+            "ABOUT" -> {
+                AboutSheet(
+                    onBack = { showAboutSheet = false },
+                    modifier = Modifier.fillMaxSize(),
+                    contentPadding = contentPadding,
+                )
+            }
+            "SHAPES" -> {
+                ExpressiveShapesSheet(
+                    onBack = { showShapesSheet = false },
+                    modifier = Modifier.fillMaxSize(),
+                    contentPadding = contentPadding,
+                )
+            }
+            "PLAYER" -> {
+                PlayerCustomizationSheet(
+                    onBack = { showPlayerSheet = false },
+                    modifier = Modifier.fillMaxSize(),
+                    contentPadding = contentPadding,
+                )
+            }
+            "MINI_PLAYER" -> {
+                MiniPlayerCustomizationSheet(
+                    onBack = { showMiniPlayerSheet = false },
+                    modifier = Modifier.fillMaxSize(),
+                    contentPadding = contentPadding,
+                )
+            }
+            else -> {
     Column(
-        modifier = modifier
+        modifier = Modifier
             .fillMaxSize()
             .background(solidBg)
             .verticalScroll(scrollState)
             .padding(contentPadding),
     ) {
         val currentUserName by AppSettings.userName.collectAsStateWithLifecycle()
+        val expressiveAlbumArtShape by AppSettings.expressiveAlbumArtShape.collectAsStateWithLifecycle()
 
         if (materialUiMode) {
-            // Rhythm M3E Header (video_3.mp4 f_001.png)
+            // Distinct Material 3 Expressive Display Header
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(horizontal = 20.dp, vertical = 12.dp),
+                    .padding(horizontal = 20.dp, vertical = 14.dp),
                 verticalAlignment = Alignment.CenterVertically,
             ) {
                 IconButton(
                     onClick = onBack,
                     modifier = Modifier
-                        .size(42.dp)
+                        .size(44.dp)
                         .background(
-                            color = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.7f),
+                            color = MaterialTheme.colorScheme.surfaceContainerHigh,
                             shape = CircleShape,
                         )
-                        .border(1.dp, Color.White.copy(alpha = 0.08f), CircleShape),
+                        .border(1.dp, MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.35f), CircleShape),
                 ) {
                     Icon(
                         imageVector = Icons.AutoMirrored.Rounded.ArrowBack,
@@ -580,15 +627,26 @@ fun SettingsScreen(
                         modifier = Modifier.size(20.dp),
                     )
                 }
-                Spacer(Modifier.width(16.dp))
+                Spacer(Modifier.width(14.dp))
                 Text(
                     text = stringResource(section?.title ?: R.string.settings),
-                    style = MaterialTheme.typography.headlineMedium.copy(fontWeight = FontWeight.Bold),
+                    style = if (section == null) {
+                        MaterialTheme.typography.displaySmall.copy(
+                            fontSize = 32.sp,
+                            fontWeight = FontWeight.ExtraBold,
+                            letterSpacing = (-0.6).sp,
+                        )
+                    } else {
+                        MaterialTheme.typography.headlineMedium.copy(fontWeight = FontWeight.ExtraBold)
+                    },
                     color = MaterialTheme.colorScheme.onBackground,
+                    modifier = Modifier.weight(1f),
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis,
                 )
             }
         } else {
-            // Hermoso-Style Header (Classic BitChord)
+            // Classic Header
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
@@ -651,7 +709,6 @@ fun SettingsScreen(
         }
 
         if (section == null) {
-            val materialUiMode by AppSettings.materialUiMode.collectAsStateWithLifecycle()
             if (materialUiMode || showSearchBar || searchQuery.isNotBlank()) {
                 SearchField(
                     query = searchQuery,
@@ -662,7 +719,6 @@ fun SettingsScreen(
                 )
             }
 
-            // Centered Profile Avatar Hero Header (Restored in both Classic & Material UI Modes)
             if (searchQuery.isBlank()) {
                 val customAvatarPath by AppSettings.customAvatarPath.collectAsStateWithLifecycle()
                 val avatarModel = remember(customAvatarPath, account?.thumbnailUrl, signedIn) {
@@ -673,88 +729,243 @@ fun SettingsScreen(
                         if (signedIn) account?.thumbnailUrl else null
                     }
                 }
-                Column(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(vertical = 14.dp),
-                    horizontalAlignment = Alignment.CenterHorizontally,
-                ) {
-                    Box(
-                        modifier = Modifier
-                            .size(88.dp)
-                            .clip(CircleShape)
-                            .background(MaterialTheme.colorScheme.surfaceVariant)
-                            .border(2.5.dp, MaterialTheme.colorScheme.primary, CircleShape)
-                            .clickable {
-                                photoPickerLauncher.launch(
-                                    PickVisualMediaRequest(ActivityResultContracts.PickVisualMedia.ImageOnly)
-                                )
-                            },
-                        contentAlignment = Alignment.Center,
-                    ) {
-                        if (avatarModel != null) {
-                            AsyncImage(
-                                model = avatarModel,
-                                contentDescription = "Profile photo",
-                                contentScale = ContentScale.Crop,
-                                modifier = Modifier.fillMaxSize().clip(CircleShape),
-                            )
-                        } else {
-                            Text(
-                                text = "@",
-                                style = MaterialTheme.typography.headlineLarge.copy(
-                                    fontWeight = FontWeight.Bold,
-                                    color = MaterialTheme.colorScheme.primary,
-                                )
-                            )
-                        }
+                val displayName = account?.name?.takeIf { it.isNotBlank() }
+                    ?: currentUserName.takeIf { it.isNotBlank() && it != "Listener" }
+                    ?: "Hush Listener"
+                val displayHandle = account?.email?.takeIf { it.isNotBlank() }
+                    ?: if (signedIn) "@hush.music" else stringResource(R.string.not_signed_in)
 
-                        // Camera / edit overlay badge at bottom-right
+                if (materialUiMode) {
+                    // Tonal M3E Profile & Mode Bento Hero Card
+                    val heroAvatarShape = remember(expressiveAlbumArtShape) {
+                        M3EShapes.fromName(expressiveAlbumArtShape)
+                    }
+                    Surface(
+                        shape = RoundedCornerShape(28.dp),
+                        color = MaterialTheme.colorScheme.surfaceContainerHigh,
+                        border = BorderStroke(
+                            1.dp,
+                            MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.30f),
+                        ),
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(horizontal = GROUP_INSET, vertical = 6.dp),
+                    ) {
+                        Column(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(horizontal = 18.dp, vertical = 16.dp),
+                        ) {
+                            Row(
+                                modifier = Modifier.fillMaxWidth(),
+                                verticalAlignment = Alignment.CenterVertically,
+                            ) {
+                                Box(
+                                    modifier = Modifier
+                                        .size(72.dp)
+                                        .clickable {
+                                            photoPickerLauncher.launch(
+                                                PickVisualMediaRequest(ActivityResultContracts.PickVisualMedia.ImageOnly)
+                                            )
+                                        },
+                                ) {
+                                    Box(
+                                        modifier = Modifier
+                                            .fillMaxSize()
+                                            .clip(heroAvatarShape)
+                                            .background(MaterialTheme.colorScheme.primaryContainer),
+                                        contentAlignment = Alignment.Center,
+                                    ) {
+                                        if (avatarModel != null) {
+                                            AsyncImage(
+                                                model = avatarModel,
+                                                contentDescription = "Profile photo",
+                                                contentScale = ContentScale.Crop,
+                                                modifier = Modifier.fillMaxSize(),
+                                            )
+                                        } else {
+                                            Text(
+                                                text = "@",
+                                                style = MaterialTheme.typography.headlineMedium.copy(
+                                                    fontWeight = FontWeight.ExtraBold,
+                                                    color = MaterialTheme.colorScheme.onPrimaryContainer,
+                                                ),
+                                            )
+                                        }
+                                    }
+                                    Box(
+                                        modifier = Modifier
+                                            .align(Alignment.BottomEnd)
+                                            .size(24.dp)
+                                            .clip(CircleShape)
+                                            .background(MaterialTheme.colorScheme.primary)
+                                            .border(2.dp, MaterialTheme.colorScheme.surfaceContainerHigh, CircleShape),
+                                        contentAlignment = Alignment.Center,
+                                    ) {
+                                        Icon(
+                                            imageVector = HushIcons.Camera,
+                                            contentDescription = "Upload profile picture",
+                                            tint = MaterialTheme.colorScheme.onPrimary,
+                                            modifier = Modifier.size(13.dp),
+                                        )
+                                    }
+                                }
+
+                                Spacer(Modifier.width(16.dp))
+
+                                Column(modifier = Modifier.weight(1f)) {
+                                    Text(
+                                        text = displayName,
+                                        style = MaterialTheme.typography.titleLarge.copy(fontWeight = FontWeight.ExtraBold),
+                                        color = MaterialTheme.colorScheme.onSurface,
+                                        maxLines = 1,
+                                        overflow = TextOverflow.Ellipsis,
+                                    )
+                                    Text(
+                                        text = displayHandle,
+                                        style = MaterialTheme.typography.bodySmall,
+                                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                        maxLines = 1,
+                                        overflow = TextOverflow.Ellipsis,
+                                    )
+                                    Spacer(Modifier.height(8.dp))
+                                    Row(
+                                        horizontalArrangement = Arrangement.spacedBy(8.dp),
+                                        verticalAlignment = Alignment.CenterVertically,
+                                    ) {
+                                        Surface(
+                                            shape = CircleShape,
+                                            color = MaterialTheme.colorScheme.primaryContainer,
+                                        ) {
+                                            Text(
+                                                text = "Material UI · M3E",
+                                                style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.Bold),
+                                                color = MaterialTheme.colorScheme.onPrimaryContainer,
+                                                modifier = Modifier.padding(horizontal = 10.dp, vertical = 4.dp),
+                                            )
+                                        }
+                                        Surface(
+                                            shape = CircleShape,
+                                            color = MaterialTheme.colorScheme.secondaryContainer,
+                                            modifier = Modifier.clickable { showShapesSheet = true },
+                                        ) {
+                                            Row(
+                                                modifier = Modifier.padding(horizontal = 10.dp, vertical = 4.dp),
+                                                verticalAlignment = Alignment.CenterVertically,
+                                                horizontalArrangement = Arrangement.spacedBy(4.dp),
+                                            ) {
+                                                Icon(
+                                                    imageVector = Icons.Rounded.Draw,
+                                                    contentDescription = null,
+                                                    tint = MaterialTheme.colorScheme.onSecondaryContainer,
+                                                    modifier = Modifier.size(12.dp),
+                                                )
+                                                Text(
+                                                    text = "Shapes",
+                                                    style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.Bold),
+                                                    color = MaterialTheme.colorScheme.onSecondaryContainer,
+                                                )
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                            if (customAvatarPath != null) {
+                                Text(
+                                    text = "Reset custom photo",
+                                    style = MaterialTheme.typography.labelSmall,
+                                    color = MaterialTheme.colorScheme.primary,
+                                    modifier = Modifier
+                                        .padding(top = 8.dp)
+                                        .clickable {
+                                            runCatching { File(customAvatarPath!!).delete() }
+                                            AppSettings.setCustomAvatarPath(null)
+                                        },
+                                )
+                            }
+                        }
+                    }
+                    Spacer(Modifier.height(6.dp))
+                } else {
+                    // Centered Profile Avatar Hero Header (Classic Mode)
+                    Column(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(vertical = 14.dp),
+                        horizontalAlignment = Alignment.CenterHorizontally,
+                    ) {
                         Box(
                             modifier = Modifier
-                                .align(Alignment.BottomEnd)
-                                .size(28.dp)
+                                .size(88.dp)
                                 .clip(CircleShape)
-                                .background(MaterialTheme.colorScheme.primary)
-                                .border(2.dp, MaterialTheme.colorScheme.surface, CircleShape),
+                                .background(MaterialTheme.colorScheme.surfaceVariant)
+                                .border(2.5.dp, MaterialTheme.colorScheme.primary, CircleShape)
+                                .clickable {
+                                    photoPickerLauncher.launch(
+                                        PickVisualMediaRequest(ActivityResultContracts.PickVisualMedia.ImageOnly)
+                                    )
+                                },
                             contentAlignment = Alignment.Center,
                         ) {
-                            Icon(
-                                imageVector = HushIcons.Camera,
-                                contentDescription = "Upload profile picture",
-                                tint = Color.White,
-                                modifier = Modifier.size(15.dp),
+                            if (avatarModel != null) {
+                                AsyncImage(
+                                    model = avatarModel,
+                                    contentDescription = "Profile photo",
+                                    contentScale = ContentScale.Crop,
+                                    modifier = Modifier.fillMaxSize().clip(CircleShape),
+                                )
+                            } else {
+                                Text(
+                                    text = "@",
+                                    style = MaterialTheme.typography.headlineLarge.copy(
+                                        fontWeight = FontWeight.Bold,
+                                        color = MaterialTheme.colorScheme.primary,
+                                    )
+                                )
+                            }
+
+                            Box(
+                                modifier = Modifier
+                                    .align(Alignment.BottomEnd)
+                                    .size(28.dp)
+                                    .clip(CircleShape)
+                                    .background(MaterialTheme.colorScheme.primary)
+                                    .border(2.dp, MaterialTheme.colorScheme.surface, CircleShape),
+                                contentAlignment = Alignment.Center,
+                            ) {
+                                Icon(
+                                    imageVector = HushIcons.Camera,
+                                    contentDescription = "Upload profile picture",
+                                    tint = Color.White,
+                                    modifier = Modifier.size(15.dp),
+                                )
+                            }
+                        }
+                        if (customAvatarPath != null) {
+                            Text(
+                                text = "Reset custom photo",
+                                style = MaterialTheme.typography.labelSmall,
+                                color = MaterialTheme.colorScheme.primary,
+                                modifier = Modifier
+                                    .padding(top = 4.dp)
+                                    .clickable {
+                                        runCatching { File(customAvatarPath!!).delete() }
+                                        AppSettings.setCustomAvatarPath(null)
+                                    },
                             )
                         }
-                    }
-                    if (customAvatarPath != null) {
+                        Spacer(Modifier.height(8.dp))
                         Text(
-                            text = "Reset custom photo",
-                            style = MaterialTheme.typography.labelSmall,
-                            color = MaterialTheme.colorScheme.primary,
-                            modifier = Modifier
-                                .padding(top = 4.dp)
-                                .clickable {
-                                    runCatching { File(customAvatarPath!!).delete() }
-                                    AppSettings.setCustomAvatarPath(null)
-                                },
+                            text = displayName,
+                            style = MaterialTheme.typography.titleLarge.copy(fontWeight = FontWeight.Bold),
+                            color = MaterialTheme.colorScheme.onBackground,
+                        )
+                        Text(
+                            text = displayHandle,
+                            style = MaterialTheme.typography.bodyMedium,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant,
                         )
                     }
-                    Spacer(Modifier.height(8.dp))
-                    val displayName = account?.name?.takeIf { it.isNotBlank() }
-                        ?: currentUserName.takeIf { it.isNotBlank() && it != "Listener" }
-                        ?: "Hermoso"
-                    Text(
-                        text = displayName,
-                        style = MaterialTheme.typography.titleLarge.copy(fontWeight = FontWeight.Bold),
-                        color = MaterialTheme.colorScheme.onBackground,
-                    )
-                    Text(
-                        text = account?.email?.takeIf { it.isNotBlank() }
-                            ?: if (signedIn) "@hush.music" else stringResource(R.string.not_signed_in),
-                        style = MaterialTheme.typography.bodyMedium,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant,
-                    )
                 }
             }
 
@@ -1525,7 +1736,7 @@ fun SettingsScreen(
                 )
             }
             val materialUiModeTitle = "Interface Style"
-            row(materialUiModeTitle, "material", "m3", "toggle", "pill", "squircle", "tab", "bitchord", "classic", "style") {
+            row(materialUiModeTitle, "material", "m3", "toggle", "pill", "squircle", "tab", "hush", "classic", "style") {
                 Row(
                     modifier = Modifier
                         .fillMaxWidth()
@@ -2427,6 +2638,9 @@ fun SettingsScreen(
             }
         }
     }
+            }
+        }
+    }
 
     // Everything in the Cached songs folder goes with it, so say so first.
     if (confirmClearSongCache) {
@@ -3096,7 +3310,7 @@ internal fun SettingsGroup(
     content: @Composable () -> Unit,
 ) {
     val materialUiMode by AppSettings.materialUiMode.collectAsStateWithLifecycle()
-    val shape = if (materialUiMode) RoundedCornerShape(24.dp) else GroupShape
+    val shape = if (materialUiMode) RoundedCornerShape(28.dp) else GroupShape
 
     if (header != null) {
         Text(
@@ -3119,8 +3333,8 @@ internal fun SettingsGroup(
             .fillMaxWidth()
             .padding(horizontal = GROUP_INSET)
             .clip(shape)
-            .background(if (materialUiMode) MaterialTheme.colorScheme.surfaceContainer else MaterialTheme.colorScheme.surfaceVariant)
-            .border(1.dp, if (materialUiMode) MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.25f) else Color.White.copy(alpha = 0.08f), shape),
+            .background(if (materialUiMode) MaterialTheme.colorScheme.surfaceContainerHigh else MaterialTheme.colorScheme.surfaceVariant)
+            .border(1.dp, if (materialUiMode) MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.30f) else Color.White.copy(alpha = 0.08f), shape),
     ) {
         content()
     }

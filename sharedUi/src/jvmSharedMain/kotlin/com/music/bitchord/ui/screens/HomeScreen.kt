@@ -713,10 +713,12 @@ private fun HomeTitle(
                     modifier = Modifier.fillMaxWidth(),
                     verticalAlignment = Alignment.CenterVertically,
                 ) {
+                    val dailyMixShapeName by com.music.bitchord.ui.player.PlayerSettings.expressiveAlbumArtShape.collectAsStateWithLifecycle()
+                    val dailyMixShape = com.music.bitchord.ui.components.expressive.M3EShapes.fromName(dailyMixShapeName)
                     Box(
                         modifier = Modifier
                             .size(52.dp)
-                            .clip(M3EShapes.Clover4)
+                            .clip(dailyMixShape)
                             .background(MaterialTheme.colorScheme.primaryContainer),
                         contentAlignment = Alignment.Center,
                     ) {
@@ -1291,9 +1293,12 @@ internal fun ShelfCard(
     isPlaying: Boolean = false,
 ) {
     val isM3E = LocalMaterialUiMode.current
-    val itemKey = item.title.ifEmpty { item.browseId ?: "m3e" }
-    val cardShape = if (isM3E) {
-        M3EShapes.get(itemKey)
+    val expressiveUiEnabled by com.music.bitchord.ui.player.PlayerSettings.expressiveUiEnabled.collectAsStateWithLifecycle()
+    val albumArtShapeName by com.music.bitchord.ui.player.PlayerSettings.expressiveAlbumArtShape.collectAsStateWithLifecycle()
+    val cardShape = if (isM3E && expressiveUiEnabled) {
+        M3EShapes.fromName(albumArtShapeName)
+    } else if (isM3E) {
+        RoundedCornerShape(24.dp)
     } else {
         RoundedCornerShape(12.dp)
     }
@@ -1354,7 +1359,7 @@ internal fun ShelfCard(
                 icon = Icons.Rounded.Storage,
             )
             else -> {
-                val isRot = isM3E && M3EShapes.isRotational(itemKey)
+                val isRot = isM3E && expressiveUiEnabled && M3EShapes.isRotationalName(albumArtShapeName)
                 val rotAngle = if (isRot) {
                     val infiniteTransition = rememberInfiniteTransition(label = "m3eShapeRotation")
                     infiniteTransition.animateFloat(
@@ -1387,8 +1392,8 @@ internal fun ShelfCard(
                             .graphicsLayer {
                                 if (isRot) {
                                     rotationZ = -rotAngle
-                                    scaleX = 1.35f
-                                    scaleY = 1.35f
+                                    scaleX = 1.42f
+                                    scaleY = 1.42f
                                 }
                             },
                     )

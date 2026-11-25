@@ -3,10 +3,13 @@ package com.music.bitchord.ui.onboarding
 import androidx.activity.compose.BackHandler
 import androidx.compose.animation.AnimatedContent
 import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.animateColorAsState
 import androidx.compose.animation.core.Animatable
+import androidx.compose.animation.core.CubicBezierEasing
 import androidx.compose.animation.core.FastOutSlowInEasing
 import androidx.compose.animation.core.LinearEasing
 import androidx.compose.animation.core.RepeatMode
+import androidx.compose.animation.core.animateDpAsState
 import androidx.compose.animation.core.animateFloat
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.infiniteRepeatable
@@ -348,22 +351,15 @@ private fun DotMatrixLogoAnimation(
         label = "dotBreath",
     )
 
-    // Symmetrical circle of 10 particles evenly spaced at radius 38f
-    val targetCoords = remember {
-        List(10) { i ->
-            val angle = (i.toFloat() * (2.0 * PI / 10.0) - (PI / 2.0)).toFloat()
-            val radius = 38f
-            Offset(radius * cos(angle), radius * sin(angle))
-        }
-    }
+    val orbitEasing = remember { CubicBezierEasing(0.18f, 0.90f, 0.25f, 1.0f) }
 
-    // Base orbit angles and radii for the 10 particles
-    val orbitData = remember {
+    // Symmetrical circle of 10 evenly spaced particles at radius 38f
+    val particleTargets = remember {
         List(10) { i ->
-            val angle = (i.toFloat() * (2.0 * PI / 10.0)).toFloat()
-            val radius = 58f + ((i % 3) * 6f)
-            val speed = 1.6f + ((i % 2) * 0.4f)
-            Triple(angle, radius, speed)
+            val targetAngle = (i.toFloat() * (2.0 * PI / 10.0) - (PI / 2.0)).toFloat()
+            val startAngle = targetAngle - (2.0 * PI).toFloat()
+            val startRadius = 68f + ((i % 2) * 8f)
+            Triple(startAngle, targetAngle, startRadius)
         }
     }
 
@@ -372,39 +368,17 @@ private fun DotMatrixLogoAnimation(
         val cy = size.height / 2f
         val s = (size.minDimension / 140f) * (if (settled) breathScale else 1f)
         val dotRadius = 4.8.dp.toPx()
+        val p = progress.coerceIn(0f, 1f)
+        val eased = orbitEasing.transform(p)
 
         for (i in 0 until 10) {
-            val target = targetCoords[i]
-            val (baseAngle, baseRadius, speed) = orbitData[i]
-
-            val currentOffset = if (progress < 0.65f) {
-                // Phase 1: Orbital spinning around center
-                val t = progress / 0.65f
-                val currentAngle = baseAngle + t * speed * PI.toFloat()
-                val currentRadius = (baseRadius * (1f - t * 0.25f)) * s
-                Offset(
-                    cx + currentRadius * cos(currentAngle),
-                    cy + currentRadius * sin(currentAngle),
-                )
-            } else {
-                // Phase 2: Converge & snap into target symmetrical circle position
-                val tSnap = ((progress - 0.65f) / 0.35f).coerceIn(0f, 1f)
-                val ease = FastOutSlowInEasing.transform(tSnap)
-
-                // Exit orbital position
-                val exitAngle = baseAngle + speed * PI.toFloat()
-                val exitRadius = (baseRadius * 0.75f) * s
-                val startX = cx + exitRadius * cos(exitAngle)
-                val startY = cy + exitRadius * sin(exitAngle)
-
-                val targetX = cx + target.x * s
-                val targetY = cy + target.y * s
-
-                Offset(
-                    startX + (targetX - startX) * ease,
-                    startY + (targetY - startY) * ease,
-                )
-            }
+            val (startAngle, targetAngle, startRadius) = particleTargets[i]
+            val currentAngle = startAngle + (targetAngle - startAngle) * eased
+            val currentRadius = (startRadius + (38f - startRadius) * eased) * s
+            val currentOffset = Offset(
+                cx + currentRadius * cos(currentAngle),
+                cy + currentRadius * sin(currentAngle),
+            )
 
             // Draw outer ambient halo
             drawCircle(
@@ -492,14 +466,38 @@ private fun ColumnScope.ThemePage(
 
     // Mode Option 1: Classic (Liquid Glass)
     val isClassic = !materialUi
+    val classicBg by animateColorAsState(
+        targetValue = if (isClassic) Color.White.copy(alpha = 0.14f) else Color.White.copy(alpha = 0.05f),
+        animationSpec = tween(260),
+        label = "classicBg",
+    )
+    val classicBorderColor by animateColorAsState(
+        targetValue = if (isClassic) Color.White else Color.White.copy(alpha = 0.15f),
+        animationSpec = tween(260),
+        label = "classicBorderColor",
+    )
+    val classicBorderWidth by animateDpAsState(
+        targetValue = if (isClassic) 2.dp else 1.dp,
+        animationSpec = spring(dampingRatio = 0.78f, stiffness = 400f),
+        label = "classicBorderWidth",
+    )
+    val classicScale by animateFloatAsState(
+        targetValue = if (isClassic) 1.015f else 0.985f,
+        animationSpec = spring(dampingRatio = 0.75f, stiffness = 400f),
+        label = "classicScale",
+    )
     Box(
         modifier = Modifier
             .fillMaxWidth()
+            .graphicsLayer {
+                scaleX = classicScale
+                scaleY = classicScale
+            }
             .clip(RoundedCornerShape(22.dp))
-            .background(if (isClassic) Color.White.copy(alpha = 0.14f) else Color.White.copy(alpha = 0.05f))
+            .background(classicBg)
             .border(
-                width = if (isClassic) 2.dp else 1.dp,
-                color = if (isClassic) Color.White else Color.White.copy(alpha = 0.15f),
+                width = classicBorderWidth,
+                color = classicBorderColor,
                 shape = RoundedCornerShape(22.dp),
             )
             .clickable { AppSettings.setMaterialUiMode(false) }
@@ -538,7 +536,7 @@ private fun ColumnScope.ThemePage(
                     color = Color.White.copy(alpha = 0.65f),
                 )
             }
-            if (isClassic) {
+            AnimatedVisibility(visible = isClassic) {
                 Box(
                     modifier = Modifier
                         .size(24.dp)
@@ -561,14 +559,38 @@ private fun ColumnScope.ThemePage(
 
     // Mode Option 2: Material UI Mode (M3E Expressive)
     val isM3 = materialUi
+    val m3Bg by animateColorAsState(
+        targetValue = if (isM3) Color.White.copy(alpha = 0.14f) else Color.White.copy(alpha = 0.05f),
+        animationSpec = tween(260),
+        label = "m3Bg",
+    )
+    val m3BorderColor by animateColorAsState(
+        targetValue = if (isM3) Color.White else Color.White.copy(alpha = 0.15f),
+        animationSpec = tween(260),
+        label = "m3BorderColor",
+    )
+    val m3BorderWidth by animateDpAsState(
+        targetValue = if (isM3) 2.dp else 1.dp,
+        animationSpec = spring(dampingRatio = 0.78f, stiffness = 400f),
+        label = "m3BorderWidth",
+    )
+    val m3Scale by animateFloatAsState(
+        targetValue = if (isM3) 1.015f else 0.985f,
+        animationSpec = spring(dampingRatio = 0.75f, stiffness = 400f),
+        label = "m3Scale",
+    )
     Box(
         modifier = Modifier
             .fillMaxWidth()
+            .graphicsLayer {
+                scaleX = m3Scale
+                scaleY = m3Scale
+            }
             .clip(RoundedCornerShape(22.dp))
-            .background(if (isM3) Color.White.copy(alpha = 0.14f) else Color.White.copy(alpha = 0.05f))
+            .background(m3Bg)
             .border(
-                width = if (isM3) 2.dp else 1.dp,
-                color = if (isM3) Color.White else Color.White.copy(alpha = 0.15f),
+                width = m3BorderWidth,
+                color = m3BorderColor,
                 shape = RoundedCornerShape(22.dp),
             )
             .clickable { AppSettings.setMaterialUiMode(true) }
@@ -607,7 +629,7 @@ private fun ColumnScope.ThemePage(
                     color = Color.White.copy(alpha = 0.65f),
                 )
             }
-            if (isM3) {
+            AnimatedVisibility(visible = isM3) {
                 Box(
                     modifier = Modifier
                         .size(24.dp)

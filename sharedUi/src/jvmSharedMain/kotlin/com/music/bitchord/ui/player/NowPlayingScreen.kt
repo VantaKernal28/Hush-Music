@@ -2347,12 +2347,31 @@ fun NowPlayingScreen(
             }
         } else if (materialUi) {
             val isDarkTheme = MaterialTheme.colorScheme.surface.luminance() < 0.5f
+            val m3eDockHost: Modifier = if (dock != null) {
+                Modifier.onGloballyPositioned { coordinates ->
+                    dockFrame.host = coordinates
+                    if (dockFrame.anchor != null && dockFrame.anchorFor == coordinates.size) {
+                        return@onGloballyPositioned
+                    }
+                    val offset = dock.offset() ?: return@onGloballyPositioned
+                    dockFrame.anchorFor = coordinates.size
+                    dockFrame.anchor = coordinates.positionOnScreen() - Offset(0f, offset.toInt().toFloat())
+                    if (!dock.attached) dock.attached = true
+                }
+            } else {
+                Modifier
+            }
+            val dragCorner = if (dock != null) {
+                (28f * (1f - dock.openFraction()).coerceIn(0f, 1f)).dp
+            } else 0.dp
             Box(
                 modifier = Modifier
                     .fillMaxSize()
                     .onSizeChanged { playerBounds = it }
-                    .then(dockHost)
-                    .background(if (!isDarkTheme) Color(0xFFF8F7FA) else Color(0xFF0F0F12)),
+                    .then(m3eDockHost)
+                    .clip(RoundedCornerShape(topStart = dragCorner, topEnd = dragCorner))
+                    .background(if (!isDarkTheme) Color(0xFFF8F7FA) else Color(0xFF0F0F12))
+                    .graphicsLayer { alpha = 1f },
             ) {
                 RhythmPlayerContent(
                     song = song,

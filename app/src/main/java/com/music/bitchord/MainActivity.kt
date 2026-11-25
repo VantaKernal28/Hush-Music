@@ -27,6 +27,7 @@ import androidx.compose.animation.slideOutVertically
 import androidx.compose.animation.EnterTransition
 import androidx.compose.animation.ExitTransition
 import androidx.compose.animation.fadeIn
+import androidx.compose.animation.core.animateDpAsState
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.spring
 import androidx.compose.animation.core.tween
@@ -36,6 +37,7 @@ import androidx.compose.animation.scaleOut
 import androidx.compose.animation.slideInHorizontally
 import androidx.compose.animation.slideOutHorizontally
 import androidx.compose.animation.togetherWith
+import androidx.compose.ui.draw.blur
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
@@ -557,6 +559,32 @@ private fun BitChordApp(
     val progressiveBlur by AppSettings.progressiveBlur.collectAsStateWithLifecycle()
     val expressiveUiEnabled by AppSettings.expressiveUiEnabled.collectAsStateWithLifecycle()
     val materialUiMode by AppSettings.materialUiMode.collectAsStateWithLifecycle()
+    var isFirstModeCheck by remember { mutableStateOf(true) }
+    var modeMorphing by remember { mutableStateOf(false) }
+    LaunchedEffect(materialUiMode) {
+        if (isFirstModeCheck) {
+            isFirstModeCheck = false
+        } else {
+            modeMorphing = true
+            delay(280)
+            modeMorphing = false
+        }
+    }
+    val modeMorphScale by animateFloatAsState(
+        targetValue = if (modeMorphing) 0.97f else 1f,
+        animationSpec = spring(dampingRatio = 0.80f, stiffness = 380f),
+        label = "ModeMorphScale",
+    )
+    val modeMorphBlur by animateDpAsState(
+        targetValue = if (modeMorphing) 10.dp else 0.dp,
+        animationSpec = tween(durationMillis = 220),
+        label = "ModeMorphBlur",
+    )
+    val modeMorphAlpha by animateFloatAsState(
+        targetValue = if (modeMorphing) 0.84f else 1f,
+        animationSpec = tween(durationMillis = 220),
+        label = "ModeMorphAlpha",
+    )
     val glassSamplesBackdrop = glassActive && !reduceDynamicBlur
     // What folds [GlassNavBar] between its expanded and inline shapes. Held here
     // rather than inside the bar because the page's scroll is what drives it,
@@ -2869,6 +2897,12 @@ private fun BitChordApp(
         Row(
             Modifier
                 .fillMaxSize()
+                .graphicsLayer {
+                    scaleX = modeMorphScale
+                    scaleY = modeMorphScale
+                    alpha = modeMorphAlpha
+                }
+                .then(if (modeMorphBlur > 0.dp) Modifier.blur(modeMorphBlur) else Modifier)
                 .snapshotBackdropSource(pageBackdrop, floor = MaterialTheme.colorScheme.background),
         ) {
             Box(Modifier.weight(1f).fillMaxHeight()) {
@@ -4200,8 +4234,11 @@ private fun BitChordApp(
                 AnimatedContent(
                     targetState = materialUiMode,
                     transitionSpec = {
-                        (fadeIn(tween(260)) + scaleIn(initialScale = 0.97f)) togetherWith
-                            (fadeOut(tween(200)) + scaleOut(targetScale = 1.02f))
+                        (fadeIn(tween(340)) + scaleIn(
+                            initialScale = 0.94f,
+                            animationSpec = spring(dampingRatio = 0.80f, stiffness = 340f),
+                        )) togetherWith
+                            (fadeOut(tween(240)) + scaleOut(targetScale = 1.03f))
                     },
                     modifier = Modifier
                         .align(Alignment.BottomCenter)

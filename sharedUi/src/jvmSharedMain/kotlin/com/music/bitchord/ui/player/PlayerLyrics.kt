@@ -2,6 +2,7 @@ package com.music.bitchord.ui.player
 
 import androidx.compose.animation.AnimatedContent
 import androidx.compose.animation.SizeTransform
+import androidx.compose.animation.animateColorAsState
 import androidx.compose.animation.core.Animatable
 import androidx.compose.animation.core.CubicBezierEasing
 import androidx.compose.animation.core.FastOutSlowInEasing
@@ -1801,6 +1802,8 @@ internal fun LyricsPanel(
      * read from its top edge leaves most of the screen below the words.
      */
     centerFocus: Boolean = false,
+    activeColor: Color = Color.White,
+    inactiveColor: Color = Color.White,
     modifier: Modifier = Modifier,
 ) {
     val panelPlaying = isPlaying && active
@@ -2049,7 +2052,7 @@ internal fun LyricsPanel(
                 Text(
                     text = stringResource(Res.string.no_lyrics_for_track),
                     style = MaterialTheme.typography.titleMedium,
-                    color = Color.White.copy(alpha = 0.6f),
+                    color = inactiveColor.copy(alpha = 0.6f),
                 )
             }
         }
@@ -2097,7 +2100,7 @@ internal fun LyricsPanel(
                     Box(
                         modifier = Modifier
                             .clip(RoundedCornerShape(6.dp))
-                            .background(Color.White.copy(alpha = 0.14f))
+                            .background(inactiveColor.copy(alpha = 0.14f))
                             .padding(horizontal = 11.dp, vertical = 4.dp),
                     ) {
                         Text(
@@ -2107,7 +2110,7 @@ internal fun LyricsPanel(
                                 fontWeight = FontWeight.Bold,
                                 fontSize = 11.5.sp,
                             ),
-                            color = Color.White.copy(alpha = 0.9f),
+                            color = inactiveColor.copy(alpha = 0.9f),
                         )
                     }
                 }
@@ -2185,58 +2188,17 @@ internal fun LyricsPanel(
                     label = "gapSwell",
                 )
                 val instrumental = stringResource(Res.string.instrumental)
-                if (materialUi) {
-                    val gapColor = MaterialTheme.colorScheme.primary
-                    Row(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(vertical = 8.dp)
-                            .clip(RoundedCornerShape(22.dp))
-                            .background(MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.25f))
-                            .border(1.2.dp, gapColor.copy(alpha = 0.4f), RoundedCornerShape(22.dp))
-                            .clickable(enabled = isSynced && !picking) { onSeekToLine(line.timeMs) }
-                            .padding(horizontal = 16.dp, vertical = 9.dp),
-                        verticalAlignment = Alignment.CenterVertically,
-                        horizontalArrangement = Arrangement.spacedBy(10.dp),
-                    ) {
-                        Box(
-                            modifier = Modifier
-                                .size(24.dp)
-                                .m3eRotating(durationMs = 9000)
-                                .clip(M3EShapes.Scallop12)
-                                .background(gapColor),
-                            contentAlignment = Alignment.Center,
-                        ) {
-                            Box(Modifier.size(8.dp).clip(CircleShape).background(MaterialTheme.colorScheme.onPrimary))
-                        }
-                        Text(
-                            text = "Instrumental Interlude",
-                            style = MaterialTheme.typography.labelMedium.copy(
-                                fontFamily = m3eRoundedFamily,
-                                fontWeight = FontWeight.Bold,
-                                fontSize = 13.5.sp,
-                                letterSpacing = 0.5.sp,
-                            ),
-                            color = MaterialTheme.colorScheme.onPrimaryContainer,
-                        )
-                    }
-                } else {
-                    Box(
-                        contentAlignment = Alignment.CenterStart,
-                        modifier = Modifier
-                            .height((GAP_ROW_HEIGHT + GAP_ROW_SPACING) * swell)
-                            .clipToBounds(),
-                    ) {
+                Box(
+                    contentAlignment = Alignment.CenterStart,
+                    modifier = Modifier
+                        .height((GAP_ROW_HEIGHT + GAP_ROW_SPACING) * swell)
+                        .clipToBounds(),
+                ) {
                     Box(
                         modifier = Modifier
                             .blur(blur, BlurredEdgeTreatment.Unbounded)
                             .clip(RoundedCornerShape(10.dp))
-                            // A gap is nothing to pick, so it only ever seeks — and
-                            // not even that while a pick is open, where a stray tap
-                            // in the silence would jump the song.
                             .clickable(enabled = isSynced && !picking) { onSeekToLine(line.timeMs) }
-                            // Matches the inset every sung line carries, so the
-                            // rhythm of the list doesn't break at a break.
                             .padding(GLOW_ROOM)
                             .size(
                                 width = GAP_DOT_SIZE * 3 + GAP_DOT_GAP * 2,
@@ -2250,20 +2212,15 @@ internal fun LyricsPanel(
                                 alpha = lineAlpha * swell
                             }
                             .drawBehind {
-                                // Read here rather than in composition: the fill
-                                // moves every frame, and this way a break costs a
-                                // redraw of three circles, not a recomposition.
                                 val span = (until - line.timeMs).coerceAtLeast(1L)
                                 val through = gapFill.value.takeUnless { it == GAP_RUNNING }
                                     ?: ((clock.longValue - line.timeMs).toFloat() / span).coerceIn(0f, 1f)
                                 val radius = GAP_DOT_SIZE.toPx() / 2f
                                 val stride = (GAP_DOT_SIZE + GAP_DOT_GAP).toPx()
                                 repeat(GAP_DOTS) { dot ->
-                                    // Each dot owns its share of the break and
-                                    // fills across it, so they light left to right.
                                     val lit = (through * GAP_DOTS - dot).coerceIn(0f, 1f)
                                     drawCircle(
-                                        color = Color.White.copy(
+                                        color = activeColor.copy(
                                             alpha = GAP_DOT_REST + (1f - GAP_DOT_REST) * lit,
                                         ),
                                         radius = radius,
@@ -2273,41 +2230,12 @@ internal fun LyricsPanel(
                             }
                             .semantics { contentDescription = instrumental },
                     )
-                    }
                 }
             } else {
                 val alignEnd = duet && line.alignment == LyricAlignment.End
-                val style = if (materialUi) {
-                    if (isActive) {
-                        MaterialTheme.typography.headlineLarge.copy(
-                            fontFamily = m3eRoundedFamily,
-                            fontSize = 35.sp,
-                            lineHeight = 43.sp,
-                            fontWeight = FontWeight.ExtraBold,
-                            letterSpacing = (-0.6).sp,
-                            textAlign = if (alignEnd) TextAlign.End else TextAlign.Start,
-                        )
-                    } else if (alignEnd) {
-                        MaterialTheme.typography.headlineMedium.copy(
-                            fontFamily = m3eDisplayFamily,
-                            fontSize = 28.sp,
-                            lineHeight = 36.sp,
-                            fontWeight = FontWeight.Medium,
-                            letterSpacing = 0.sp,
-                            textAlign = TextAlign.End,
-                        )
-                    } else {
-                        MaterialTheme.typography.headlineMedium.copy(
-                            fontFamily = m3eRoundedFamily,
-                            fontSize = 29.sp,
-                            lineHeight = 37.sp,
-                            fontWeight = if (abs(index - focusLine) <= 1) FontWeight.Bold else FontWeight.Medium,
-                            letterSpacing = (-0.3).sp,
-                            textAlign = TextAlign.Start,
-                        )
-                    }
-                } else if (isSynced) {
+                val style = if (isSynced) {
                     MaterialTheme.typography.headlineLarge.copy(
+                        fontFamily = if (materialUi) m3eRoundedFamily else null,
                         fontSize = 34.sp,
                         lineHeight = 41.sp,
                         fontWeight = FontWeight.ExtraBold,
@@ -2315,26 +2243,14 @@ internal fun LyricsPanel(
                     )
                 } else {
                     MaterialTheme.typography.headlineMedium.copy(
+                        fontFamily = if (materialUi) m3eRoundedFamily else null,
                         fontSize = 30.sp,
                         lineHeight = 38.sp,
                         fontWeight = FontWeight.ExtraBold,
                         textAlign = if (alignEnd) TextAlign.End else TextAlign.Start,
                     )
                 }
-                // The stack sits fractionally back and the playing line comes
-                // forward to meet you, rather than the playing line swelling
-                // past the others — a smaller move, and one that doesn't push
-                // the type around the line it hands over to.
-                //
-                // Anchored to the left edge, so the words don't slide sideways
-                // under the highlight; scaling about the centre would fight the
-                // sweep. A row under a finger dips, the way a button does.
-                // Behind the panel's focus, so the words close up to full
-                // brightness as it leaves rather than when the last syllable
-                // lands — the dim, the blur and the movement together.
                 val sung = offset < 0
-                // Rows behind the one being scrolled to are the ones that
-                // fan out; the ones it is moving away from arrive together.
                 val behind = if (run.delta >= 0f) index - focusLine else focusLine - index
                 val staggerDelay = behind.coerceIn(0, STAGGER_STEPS) *
                     STAGGER_FRACTION * run.durationMs
@@ -2352,22 +2268,13 @@ internal fun LyricsPanel(
                     ),
                     label = "lyricScale",
                 )
-                // Apple's bloom on the line being sung. Fades in and out with
-                // the line rather than switching, so a handover is one line's
-                // light going down as the next one's comes up.
                 val glow by animateFloatAsState(
                     targetValue = if (isActive && glowing) GLOW_ALPHA else 0f,
                     animationSpec = tween(durationMillis = 420),
                     label = "lyricGlow",
                 )
-                // No width held back for the swell any more: nothing draws past
-                // its own bounds now that the playing line tops out at 1, so the
-                // text gets the full column and wraps where the panel does.
                 val shape = Modifier
                     .fillMaxWidth()
-                    // The lane the other voice sings in, kept clear. Applied
-                    // before the layer below so the row scales about the edge
-                    // it is actually written from.
                     .padding(
                         start = if (duet && alignEnd) DUET_LANE else 0.dp,
                         end = if (duet && !alignEnd) DUET_LANE else 0.dp,
@@ -2377,16 +2284,6 @@ internal fun LyricsPanel(
                         scaleY = scale
                         transformOrigin = TransformOrigin(if (alignEnd) 1f else 0f, 0.5f)
                         alpha = lineAlpha
-                        // Held back against the list's own movement: the list
-                        // has already taken this row part of the way, so giving
-                        // back what it has not earned yet is what leaves it
-                        // trailing. One curve for both, so a row with no delay
-                        // sits exactly still against the list and the rows that
-                        // do have one are the only thing that moves.
-                        //
-                        // Rows with nothing to catch up on never read the clock
-                        // at all, so a handover only invalidates the handful of
-                        // layers that are actually fanning out.
                         translationY = if (staggerDelay <= 0f) {
                             0f
                         } else {
@@ -2402,22 +2299,13 @@ internal fun LyricsPanel(
                         }
                     }
                     .blur(blur, BlurredEdgeTreatment.Unbounded)
-                    .clip(if (materialUi) (if (isActive) RoundedCornerShape(24.dp) else RoundedCornerShape(16.dp)) else RoundedCornerShape(10.dp))
-                    .then(
-                        if (materialUi && isActive) {
-                            Modifier
-                                .background(MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.35f))
-                                .border(1.5.dp, MaterialTheme.colorScheme.primary.copy(alpha = 0.45f), RoundedCornerShape(24.dp))
-                                .padding(horizontal = 14.dp, vertical = 7.dp)
-                        } else {
-                            Modifier.background(
-                                when {
-                                    index in picked -> Color.White.copy(alpha = 0.16f)
-                                    picking -> Color.White.copy(alpha = 0.05f)
-                                    else -> Color.Transparent
-                                },
-                            )
-                        }
+                    .clip(RoundedCornerShape(10.dp))
+                    .background(
+                        when {
+                            index in picked -> inactiveColor.copy(alpha = 0.16f)
+                            picking -> inactiveColor.copy(alpha = 0.05f)
+                            else -> Color.Transparent
+                        },
                     )
                     // A combined click because long-press is the way in: a list
                     // of words gives no sign that pressing one does anything
@@ -2519,6 +2407,8 @@ internal fun LyricsPanel(
                         room = GLOW_ROOM,
                         alignEnd = alignEnd,
                         laneLocked = duet,
+                        activeColor = activeColor,
+                        inactiveColor = inactiveColor,
                         modifier = Modifier.fillMaxWidth(),
                     )
                     // A line the service handed back unchanged ("falling
@@ -2537,17 +2427,14 @@ internal fun LyricsPanel(
                             alignEnd = alignEnd,
                             laneLocked = duet,
                             rise = false,
-                            // Only the rows actually in front of the reader get the
-                            // particle pass. Sixty rows' worth of glyph boxes is a
-                            // layout walk per frame for text nobody is looking at.
+                            activeColor = activeColor,
+                            inactiveColor = inactiveColor,
                             translationProgress = translationProgress.takeIf {
                                 if (isSynced) abs(index - focusLine) <= 1 else index < 4
                             },
                             modifier = Modifier
                                 .fillMaxWidth()
                                 .revealBelow(subReveal.progress)
-                                // Tucked up into the lead's glow inset so the
-                                // pair reads as one line in two scripts.
                                 .padding(start = GLOW_ROOM, end = GLOW_ROOM, bottom = GLOW_ROOM)
                                 .offset(y = -SUB_LYRIC_TUCK)
                                 .graphicsLayer { alpha = SUB_LYRIC_ALPHA },
@@ -2570,20 +2457,15 @@ internal fun LyricsPanel(
                                 sung = sung,
                                 synced = isSynced,
                                 browsing = browsing,
-                                // No bloom on the second voice. The glow marks
-                                // what is being sung *at you*; putting it on both
-                                // makes the row read as two equal lines, which is
-                                // the thing this split exists to stop.
                                 glowAlpha = 0f,
                                 room = 0.dp,
                                 alignEnd = alignEnd,
                                 laneLocked = duet,
                                 rise = false,
+                                activeColor = activeColor,
+                                inactiveColor = inactiveColor,
                                 modifier = Modifier
                                     .fillMaxWidth()
-                                    // No top inset: the lead's own bottom room is
-                                    // the gap, which leaves the two voices closer
-                                    // to each other than to the rows either side.
                                     .padding(start = GLOW_ROOM, end = GLOW_ROOM, bottom = GLOW_ROOM)
                                     .graphicsLayer { alpha = BACKING_ALPHA },
                             )
@@ -2606,6 +2488,8 @@ internal fun LyricsPanel(
                                         alignEnd = alignEnd,
                                         laneLocked = duet,
                                         rise = false,
+                                        activeColor = activeColor,
+                                        inactiveColor = inactiveColor,
                                         modifier = Modifier
                                             .fillMaxWidth()
                                             .revealBelow(subReveal.progress)
@@ -2626,11 +2510,6 @@ internal fun LyricsPanel(
 /**
  * One voice of a row in [LyricsPanel] — the lead, or the answering line drawn
  * under it.
- *
- * Both go through the same sweep. A backing vocal carries its own word
- * timings, so it lights up on its own clock rather than borrowing the lead's:
- * that is the whole point of splitting it out, and it is why the bracket no
- * longer gets cut off when the next line's stamp arrives mid-phrase.
  */
 @Composable
 private fun PanelVoice(
@@ -2638,42 +2517,30 @@ private fun PanelVoice(
     clock: MutableLongState,
     style: TextStyle,
     isActive: Boolean,
-    /** Whether the panel has already left this line behind. */
     sung: Boolean,
-    /** Whether the source stamps its lines at all. */
     synced: Boolean,
     browsing: Boolean,
     glowAlpha: Float,
     room: Dp,
-    /** Whether this line is one of the right-hand voice's; see [LyricAlignment]. */
     alignEnd: Boolean,
-    /** When true, alignment is driven by lane (duet) not text direction. */
     laneLocked: Boolean = false,
     translationProgress: State<Float>? = null,
-    /**
-     * Whether words lift off the line as they are sung. Only the lead does:
-     * on the small lines under it — the answering voice, a translation — the
-     * movement competes with the line being read and makes the row look busy.
-     */
     rise: Boolean = true,
+    activeColor: Color = Color.White,
+    inactiveColor: Color = Color.White,
     modifier: Modifier = Modifier,
 ) {
-    // Vazirmatn for Persian/Arabic-script lines; Latin lines keep the player's font.
     val arabicScript = remember(line.text) { usesArabicScript(line.text) }
     val lyricStyle = if (arabicScript) {
         val vazirmatn = Font(Res.font.vazirmatn_regular)
         remember(style, vazirmatn) { style.copy(fontFamily = FontFamily(vazirmatn)) }
     } else style
+    val animatedTint by animateColorAsState(
+        targetValue = if (isActive) activeColor else inactiveColor,
+        animationSpec = tween(durationMillis = LYRIC_SETTLE_MS, easing = LYRIC_EASING),
+        label = "lyricVoiceTint",
+    )
     if (line.isWordSynced && !browsing) {
-        // Every word-synced line goes through the sweep, not just the playing
-        // one — a line that has already been sung is fully revealed and one
-        // still to come is not, which falls out of the same arithmetic.
-        //
-        // Running it only on the active line meant swapping this composable
-        // for a plain Text the instant a line handed over, and the two
-        // disagreed about the brightness of the words: the tail of the line
-        // popped up to meet the rest of it in a single frame. Animating the
-        // tail instead lets a finished line close up as it dims away.
         val tail by animateFloatAsState(
             targetValue = if (sung) 1f else UNSUNG_ALPHA,
             label = "lyricTail",
@@ -2691,13 +2558,9 @@ private fun PanelVoice(
             alignEnd = alignEnd,
             laneLocked = laneLocked,
             translationProgress = translationProgress,
-            color = Color.White,
+            color = animatedTint,
         )
     } else if (line.isWordSynced) {
-        // Browsing: keep the sweep so sung lines stay fully lit and unsung
-        // ones stay dim, but skip the bloom — it is a playback flourish, not
-        // a browsing aid.  Non-active lines get the same dim tail as when we
-        // are not browsing; the active line stays at full brightness.
         val tail by animateFloatAsState(
             targetValue = if (sung) 1f else UNSUNG_ALPHA,
             label = "lyricTail",
@@ -2714,18 +2577,9 @@ private fun PanelVoice(
             alignEnd = alignEnd,
             laneLocked = laneLocked,
             translationProgress = translationProgress,
-            color = Color.White,
+            color = animatedTint,
         )
     } else {
-        // No word timings, so there is no sweep to light the words as they are
-        // sung: the line lights whole, the moment it starts.
-        //
-        // It still has to hold itself back until then. The parent's falloff
-        // alone left a line not yet sung reading brighter here than the same
-        // line does on a word-synced source, where the unsung words sit at
-        // [UNSUNG_ALPHA] underneath it — the two have to agree about what "not
-        // yet" looks like, or changing provider changes the panel rather than
-        // the words. Lyrics with no timing at all are all "now", and stay lit.
         val lit by animateFloatAsState(
             targetValue = if (!synced || sung || isActive) 1f else UNSUNG_ALPHA,
             label = "lyricLit",
@@ -2734,7 +2588,7 @@ private fun PanelVoice(
         Text(
             text = line.text,
             style = lyricStyle,
-            color = Color.White.copy(alpha = lit),
+            color = animatedTint.copy(alpha = lit),
             onTextLayout = { layout = it },
             modifier = modifier.lyricParticles(layout, translationProgress, room).padding(room),
         )

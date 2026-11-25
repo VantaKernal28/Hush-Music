@@ -489,10 +489,19 @@ object AppSettings {
     val expressiveShapePreset = MutableStateFlow("Default")
 
     /** Active shape for album artwork in Expressive mode. */
-    val expressiveAlbumArtShape = MutableStateFlow("Wavy Octagon")
+    val expressiveAlbumArtShape = MutableStateFlow("8-Leaf Clover")
+
+    /** Active shape for full-screen player artwork in Expressive mode. */
+    val expressivePlayerArtShape = MutableStateFlow("8-Leaf Clover")
 
     /** Active shape for artist artwork in Expressive mode. */
     val expressiveArtistArtShape = MutableStateFlow("Heart")
+
+    /** Active shape for Expressive player controls. */
+    val expressiveControlsShape = MutableStateFlow("Flower")
+
+    /** Active shape style for Expressive mini player dock. */
+    val expressiveMiniPlayerShape = MutableStateFlow("Pill")
 
     /** Path to user-imported custom font (.ttf or .otf), if any. */
     val customFontPath = MutableStateFlow<String?>(null)
@@ -1115,8 +1124,11 @@ object AppSettings {
         rotatingScallopPlay.value = prefs.getBoolean(KEY_ROTATING_SCALLOP_PLAY, true)
         miniPlayerProgressLine.value = prefs.getBoolean(KEY_MINIPLAYER_PROGRESS_LINE, true)
         expressiveShapePreset.value = prefs.getString(KEY_EXPRESSIVE_SHAPE_PRESET, "Default") ?: "Default"
-        expressiveAlbumArtShape.value = prefs.getString(KEY_EXPRESSIVE_ALBUM_ART_SHAPE, "Wavy Octagon") ?: "Wavy Octagon"
+        expressiveAlbumArtShape.value = prefs.getString(KEY_EXPRESSIVE_ALBUM_ART_SHAPE, "8-Leaf Clover") ?: "8-Leaf Clover"
+        expressivePlayerArtShape.value = prefs.getString(KEY_EXPRESSIVE_PLAYER_ART_SHAPE, "8-Leaf Clover") ?: "8-Leaf Clover"
         expressiveArtistArtShape.value = prefs.getString(KEY_EXPRESSIVE_ARTIST_ART_SHAPE, "Heart") ?: "Heart"
+        expressiveControlsShape.value = prefs.getString(KEY_EXPRESSIVE_CONTROLS_SHAPE, "Flower") ?: "Flower"
+        expressiveMiniPlayerShape.value = prefs.getString(KEY_EXPRESSIVE_MINI_PLAYER_SHAPE, "Pill") ?: "Pill"
         customFontPath.value = prefs.getString(KEY_CUSTOM_FONT_PATH, null)
         customAvatarPath.value = prefs.getString(KEY_CUSTOM_AVATAR_PATH, null)
         diwaliGreetingShown.value = prefs.getBoolean(KEY_DIWALI_GREETING_SHOWN, false)
@@ -1643,6 +1655,21 @@ object AppSettings {
     fun setExpressiveArtistArtShape(value: String) {
         expressiveArtistArtShape.value = value
         prefs.edit().putString(KEY_EXPRESSIVE_ARTIST_ART_SHAPE, value).apply()
+    }
+
+    fun setExpressivePlayerArtShape(value: String) {
+        expressivePlayerArtShape.value = value
+        prefs.edit().putString(KEY_EXPRESSIVE_PLAYER_ART_SHAPE, value).apply()
+    }
+
+    fun setExpressiveControlsShape(value: String) {
+        expressiveControlsShape.value = value
+        prefs.edit().putString(KEY_EXPRESSIVE_CONTROLS_SHAPE, value).apply()
+    }
+
+    fun setExpressiveMiniPlayerShape(value: String) {
+        expressiveMiniPlayerShape.value = value
+        prefs.edit().putString(KEY_EXPRESSIVE_MINI_PLAYER_SHAPE, value).apply()
     }
 
     fun setCustomFontPath(path: String?) {
@@ -2582,7 +2609,10 @@ object AppSettings {
     private const val KEY_MINIPLAYER_PROGRESS_LINE = "hush_miniplayer_progress_line"
     private const val KEY_EXPRESSIVE_SHAPE_PRESET = "hush_expressive_shape_preset"
     private const val KEY_EXPRESSIVE_ALBUM_ART_SHAPE = "hush_expressive_album_art_shape"
+    private const val KEY_EXPRESSIVE_PLAYER_ART_SHAPE = "hush_expressive_player_art_shape"
     private const val KEY_EXPRESSIVE_ARTIST_ART_SHAPE = "hush_expressive_artist_art_shape"
+    private const val KEY_EXPRESSIVE_CONTROLS_SHAPE = "hush_expressive_controls_shape"
+    private const val KEY_EXPRESSIVE_MINI_PLAYER_SHAPE = "hush_expressive_mini_player_shape"
     private const val KEY_CUSTOM_FONT_PATH = "hush_custom_font_path"
     private const val KEY_CUSTOM_AVATAR_PATH = "hush_custom_avatar_path"
     private const val KEY_DIWALI_GREETING_SHOWN = "diwali_greeting_2026_shown"
