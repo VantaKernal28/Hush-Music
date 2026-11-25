@@ -84,7 +84,7 @@ fun MaterialMenuBarSettingsSheet(
     val previewShape = when (navBarShape) {
         "Pill", "Rounded Stadium" -> RoundedCornerShape(percent = 50)
         "Squircle Dock" -> RoundedCornerShape(navBarCornerRadius.dp)
-        "Expressive Clover-Edge" -> M3EShapes.ScallopedClover
+        "Expressive Clover-Edge" -> M3EShapes.WavyOctagon8
         else -> RoundedCornerShape(navBarCornerRadius.dp)
     }
 

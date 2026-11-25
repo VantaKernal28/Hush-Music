@@ -712,7 +712,7 @@ private fun HomeTitle(
                         Box(
                             modifier = Modifier
                                 .size(56.dp)
-                                .clip(M3EShapes.ScallopedFlower)
+                                .clip(M3EShapes.Scallop12)
                                 .background(MaterialTheme.colorScheme.primary)
                                 .m3eSquish()
                                 .clickable { },
@@ -735,7 +735,7 @@ private fun HomeTitle(
                     Box(
                         modifier = Modifier
                             .size(110.dp)
-                            .m3eRotating(enabled = true, durationMillis = 24000)
+                            .m3eRotating(enabled = true, durationMs = 24000)
                             .clip(heroArtShape)
                             .background(MaterialTheme.colorScheme.primaryContainer)
                             .border(1.5.dp, MaterialTheme.colorScheme.primary.copy(alpha = 0.35f), heroArtShape),
