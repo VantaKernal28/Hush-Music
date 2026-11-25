@@ -443,7 +443,7 @@ fun RhythmPlayerContent(
                         verticalArrangement = Arrangement.Center,
                     ) {
                         // Rotating Material 3 Expressive geometric shape artwork (260dp–280dp) with upright cropped poster
-                        val displayArtSize = (maxWidth * 0.78f).coerceIn(250.dp, if (isCompactHeight) 260.dp else 280.dp)
+                        val displayArtSize = (this@BoxWithConstraints.maxWidth * 0.78f).coerceIn(250.dp, if (isCompactHeight) 260.dp else 280.dp)
                         Box(
                             modifier = Modifier
                                 .size(displayArtSize)
