@@ -371,7 +371,7 @@ fun LiquidGlassSettingsSheet(
             ) {
                 Column(modifier = Modifier.padding(vertical = 4.dp)) {
                     SettingsRow(
-                        icon = SfIcons.PlayFill,
+                        icon = SfIcons.Play,
                         title = "Glass Mini Player",
                         subtitle = "Enable liquid glass materials on floating mini player",
                         trailing = {
