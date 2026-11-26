@@ -355,8 +355,7 @@ fun RhythmPlayerContent(
                 .fillMaxSize()
                 .statusBarsPadding()
                 .navigationBarsPadding()
-                .displayCutoutPadding()
-                .padding(horizontal = if (maxWidth > maxHeight) 16.dp else 20.dp),
+                .displayCutoutPadding(),
         ) {
             val availableHeight = maxHeight
             val isLandscape = maxWidth > maxHeight
@@ -364,7 +363,9 @@ fun RhythmPlayerContent(
             val artSize = (maxWidth * 0.82f).coerceIn(250.dp, if (isCompactHeight) 250.dp else 280.dp)
 
             Column(
-                modifier = Modifier.fillMaxSize(),
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(horizontal = if (isLandscape) 16.dp else 20.dp),
                 horizontalAlignment = Alignment.CenterHorizontally,
                 verticalArrangement = if (isLandscape) Arrangement.Top else Arrangement.SpaceBetween,
             ) {
