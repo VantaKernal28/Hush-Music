@@ -962,6 +962,7 @@ fun RhythmPlayerContent(
                         )
                     }
                 }
+                }
 
                 // Exact Transport & Seekbar Layout (video_3.mp4 00:00 & vid4_f08.jpg)
                 Column(
