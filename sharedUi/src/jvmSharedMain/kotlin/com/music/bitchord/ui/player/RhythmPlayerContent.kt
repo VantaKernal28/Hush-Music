@@ -18,8 +18,12 @@ import androidx.compose.animation.core.spring
 import androidx.compose.animation.core.tween
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
+import androidx.compose.animation.scaleIn
+import androidx.compose.animation.scaleOut
 import androidx.compose.animation.slideInVertically
 import androidx.compose.animation.slideOutVertically
+import androidx.compose.animation.togetherWith
+import androidx.compose.foundation.layout.displayCutoutPadding
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
@@ -351,16 +355,18 @@ fun RhythmPlayerContent(
                 .fillMaxSize()
                 .statusBarsPadding()
                 .navigationBarsPadding()
-                .padding(horizontal = 20.dp),
+                .displayCutoutPadding()
+                .padding(horizontal = if (maxWidth > maxHeight) 16.dp else 20.dp),
         ) {
             val availableHeight = maxHeight
+            val isLandscape = maxWidth > maxHeight
             val isCompactHeight = availableHeight < 680.dp
             val artSize = (maxWidth * 0.82f).coerceIn(250.dp, if (isCompactHeight) 250.dp else 280.dp)
 
             Column(
                 modifier = Modifier.fillMaxSize(),
                 horizontalAlignment = Alignment.CenterHorizontally,
-                verticalArrangement = Arrangement.SpaceBetween,
+                verticalArrangement = if (isLandscape) Arrangement.Top else Arrangement.SpaceBetween,
             ) {
                 // Top Header: Subtle drag handle + balanced action row (Collapse on left, "Now Playing" centered, Output & Lyrics on right)
                 Column(
@@ -461,8 +467,342 @@ fun RhythmPlayerContent(
                     }
                 }
 
-                // Upper Stage: Artwork Shape + Centered Title/Artist OR Full-Stage Synced Lyrics
-                if (!showInlineLyrics) {
+                if (isLandscape) {
+                    // Landscape 2-Pane Horizontal Split
+                    Row(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .weight(1f)
+                            .padding(top = 4.dp, bottom = 4.dp),
+                        verticalAlignment = Alignment.CenterVertically,
+                    ) {
+                        // Left Pane: 46% Width (Centerpiece Rotating M3E Artwork Shape or Synced Lyrics)
+                        Box(
+                            modifier = Modifier
+                                .weight(0.46f)
+                                .fillMaxHeight(),
+                            contentAlignment = Alignment.Center,
+                        ) {
+                            if (!showInlineLyrics) {
+                                val landscapeArtSize = (availableHeight * 0.70f).coerceIn(160.dp, 280.dp)
+                                Box(
+                                    modifier = Modifier
+                                        .size(landscapeArtSize)
+                                        .graphicsLayer {
+                                            scaleX = effectiveArtScale
+                                            scaleY = effectiveArtScale
+                                            if (isRotationalShape) rotationZ = artRotationDeg
+                                        }
+                                        .clip(albumShape)
+                                        .background(if (isDark) Color(0xFF242428) else Color(0xFFE2E0E6))
+                                        .border(1.5.dp, Color.White.copy(alpha = 0.12f), albumShape)
+                                        .clickable { showInlineLyrics = true },
+                                    contentAlignment = Alignment.Center,
+                                ) {
+                                    AsyncImage(
+                                        model = song.thumbnailUrl,
+                                        contentDescription = song.title,
+                                        contentScale = ContentScale.Crop,
+                                        alignment = Alignment.Center,
+                                        modifier = Modifier
+                                            .fillMaxSize()
+                                            .graphicsLayer {
+                                                if (isRotationalShape) {
+                                                    rotationZ = -artRotationDeg
+                                                    scaleX = 1.42f
+                                                    scaleY = 1.42f
+                                                }
+                                            },
+                                    )
+                                }
+                            } else {
+                                LyricsPanel(
+                                    lines = lyrics.orEmpty(),
+                                    trackKey = song.videoId,
+                                    playhead = rememberLyricPlayhead(position),
+                                    looking = !lyricsUnavailable && lyrics == null,
+                                    isPlaying = isPlaying,
+                                    onSeekToLine = { ms ->
+                                        if (durationMs > 0L) {
+                                            onSeekFraction((ms.toFloat() / durationMs.toFloat()).coerceIn(0f, 1f))
+                                        }
+                                    },
+                                    controlsOpen = true,
+                                    onRevealControls = {},
+                                    onHideControls = {},
+                                    centerFocus = true,
+                                    activeColor = primaryAccent,
+                                    inactiveColor = if (isDark) Color.White else Color(0xFF1C1C22),
+                                    modifier = Modifier.fillMaxSize(),
+                                )
+                            }
+                        }
+
+                        // Right Pane: 54% Width (Title, Clickable Artist, Seekbar, Transport, Dock)
+                        Column(
+                            modifier = Modifier
+                                .weight(0.54f)
+                                .fillMaxHeight()
+                                .padding(start = 16.dp, end = 4.dp),
+                            verticalArrangement = Arrangement.SpaceEvenly,
+                            horizontalAlignment = Alignment.CenterHorizontally,
+                        ) {
+                            // Title & Clickable Artist
+                            Column(
+                                modifier = Modifier.fillMaxWidth(),
+                                horizontalAlignment = Alignment.CenterHorizontally,
+                            ) {
+                                Text(
+                                    text = song.title,
+                                    style = MaterialTheme.typography.titleLarge.copy(
+                                        fontWeight = FontWeight.Bold,
+                                        fontSize = 20.sp,
+                                        letterSpacing = (-0.5).sp,
+                                    ),
+                                    color = titleColor,
+                                    maxLines = 1,
+                                    overflow = TextOverflow.Ellipsis,
+                                    textAlign = TextAlign.Center,
+                                )
+                                Spacer(Modifier.height(2.dp))
+                                Text(
+                                    text = song.artist,
+                                    style = MaterialTheme.typography.bodyMedium.copy(
+                                        fontWeight = FontWeight.Normal,
+                                        fontSize = 14.sp,
+                                    ),
+                                    color = textSubColor,
+                                    maxLines = 1,
+                                    overflow = TextOverflow.Ellipsis,
+                                    textAlign = TextAlign.Center,
+                                    modifier = Modifier.clickable { onOpenArtist() },
+                                )
+                            }
+
+                            // Progress Seekbar & Timestamps
+                            Column(modifier = Modifier.fillMaxWidth()) {
+                                RhythmProgressSeekbar(
+                                    progress = currentProgress,
+                                    style = progressLineStyle,
+                                    onProgressChange = {
+                                        isScrubbing = true
+                                        scrubProgress = it
+                                    },
+                                    onProgressChangeFinished = {
+                                        onSeekFraction(it)
+                                        isScrubbing = false
+                                    },
+                                    activeColor = if (isDark) Color.White else primaryAccent,
+                                    inactiveColor = if (isDark) Color.White.copy(alpha = 0.22f) else Color.Black.copy(alpha = 0.12f),
+                                )
+                                Spacer(Modifier.height(2.dp))
+                                Row(
+                                    modifier = Modifier
+                                        .fillMaxWidth()
+                                        .padding(horizontal = 2.dp),
+                                    horizontalArrangement = Arrangement.SpaceBetween,
+                                    verticalAlignment = Alignment.CenterVertically,
+                                ) {
+                                    val currentMs = if (isScrubbing) (scrubProgress * durationMs).toLong() else position.positionMs
+                                    Text(
+                                        text = formatDuration(currentMs),
+                                        style = MaterialTheme.typography.labelSmall.copy(
+                                            fontSize = 11.sp,
+                                            fontWeight = FontWeight.Medium,
+                                        ),
+                                        color = timeColor,
+                                    )
+                                    Text(
+                                        text = formatDuration(durationMs),
+                                        style = MaterialTheme.typography.labelSmall.copy(
+                                            fontSize = 11.sp,
+                                            fontWeight = FontWeight.Medium,
+                                        ),
+                                        color = timeColor,
+                                    )
+                                }
+                            }
+
+                            // Transport Controls Row (Previous, Play/Pause Pill, Next)
+                            Row(
+                                modifier = Modifier.fillMaxWidth(),
+                                horizontalArrangement = Arrangement.spacedBy(10.dp),
+                                verticalAlignment = Alignment.CenterVertically,
+                            ) {
+                                Box(
+                                    modifier = Modifier
+                                        .size(48.dp)
+                                        .clip(CircleShape)
+                                        .background(if (isDark) Color(0xFFE8E7EE) else MaterialTheme.colorScheme.surfaceVariant)
+                                        .clickable(onClick = onPrevious),
+                                    contentAlignment = Alignment.Center,
+                                ) {
+                                    Icon(
+                                        imageVector = Icons.Rounded.SkipPrevious,
+                                        contentDescription = "Previous",
+                                        tint = if (isDark) Color(0xFF141418) else MaterialTheme.colorScheme.onSurfaceVariant,
+                                        modifier = Modifier.size(24.dp),
+                                    )
+                                }
+
+                                Box(
+                                    modifier = Modifier
+                                        .weight(1f)
+                                        .height(52.dp)
+                                        .clip(CircleShape)
+                                        .background(if (isDark) Color(0xFF28282E) else Color(0xFF1E1E24))
+                                        .clickable(onClick = onPlayPause),
+                                    contentAlignment = Alignment.Center,
+                                ) {
+                                    Row(
+                                        verticalAlignment = Alignment.CenterVertically,
+                                        horizontalArrangement = Arrangement.spacedBy(8.dp),
+                                    ) {
+                                        Icon(
+                                            imageVector = if (isPlaying) Icons.Rounded.Pause else Icons.Rounded.PlayArrow,
+                                            contentDescription = if (isPlaying) "Pause" else "Play",
+                                            tint = Color.White,
+                                            modifier = Modifier.size(26.dp),
+                                        )
+                                        Text(
+                                            text = if (isPlaying) "Pause" else "Play",
+                                            style = MaterialTheme.typography.titleMedium.copy(
+                                                fontWeight = FontWeight.Bold,
+                                                fontSize = 16.sp,
+                                            ),
+                                            color = Color.White,
+                                        )
+                                    }
+                                }
+
+                                Box(
+                                    modifier = Modifier
+                                        .size(48.dp)
+                                        .clip(CircleShape)
+                                        .background(if (isDark) Color(0xFFE8E7EE) else MaterialTheme.colorScheme.surfaceVariant)
+                                        .clickable(onClick = onNext),
+                                    contentAlignment = Alignment.Center,
+                                ) {
+                                    Icon(
+                                        imageVector = Icons.Rounded.SkipNext,
+                                        contentDescription = "Next",
+                                        tint = if (isDark) Color(0xFF141418) else MaterialTheme.colorScheme.onSurfaceVariant,
+                                        modifier = Modifier.size(24.dp),
+                                    )
+                                }
+                            }
+
+                            // 5-Button Utility Dock
+                            Row(
+                                modifier = Modifier.fillMaxWidth(),
+                                horizontalArrangement = Arrangement.spacedBy(6.dp),
+                                verticalAlignment = Alignment.CenterVertically,
+                            ) {
+                                val audioActive = showAudioSheet
+                                Box(
+                                    modifier = Modifier
+                                        .weight(1f)
+                                        .height(44.dp)
+                                        .clip(RoundedCornerShape(14.dp))
+                                        .background(if (audioActive) primaryAccent else dockGlass)
+                                        .clickable { showAudioSheet = true },
+                                    contentAlignment = Alignment.Center,
+                                ) {
+                                    Icon(
+                                        imageVector = Icons.Rounded.Speaker,
+                                        contentDescription = "Audio Output",
+                                        tint = if (audioActive) activeDockContent else iconTint,
+                                        modifier = Modifier.size(20.dp),
+                                    )
+                                }
+
+                                val liked = likeStatus == LikeStatus.LIKE
+                                Box(
+                                    modifier = Modifier
+                                        .weight(1f)
+                                        .height(44.dp)
+                                        .clip(RoundedCornerShape(14.dp))
+                                        .background(dockGlass)
+                                        .clickable(onClick = onToggleLike),
+                                    contentAlignment = Alignment.Center,
+                                ) {
+                                    Icon(
+                                        imageVector = if (liked) Icons.Rounded.Favorite else Icons.Rounded.FavoriteBorder,
+                                        contentDescription = if (liked) "Unlike" else "Like",
+                                        tint = if (liked) primaryAccent else iconTint,
+                                        modifier = Modifier.size(20.dp),
+                                    )
+                                }
+
+                                val lyricsActive = showInlineLyrics
+                                Box(
+                                    modifier = Modifier
+                                        .weight(1f)
+                                        .height(44.dp)
+                                        .clip(RoundedCornerShape(14.dp))
+                                        .background(if (lyricsActive) primaryAccent else dockGlass)
+                                        .clickable { showInlineLyrics = !showInlineLyrics },
+                                    contentAlignment = Alignment.Center,
+                                ) {
+                                    Icon(
+                                        imageVector = BitChordIcons.LyricsQuote,
+                                        contentDescription = "Lyrics",
+                                        tint = if (lyricsActive) activeDockContent else iconTint,
+                                        modifier = Modifier.size(20.dp),
+                                    )
+                                }
+
+                                val queueActive = showQueueSheet
+                                Box(
+                                    modifier = Modifier
+                                        .weight(1f)
+                                        .height(44.dp)
+                                        .clip(RoundedCornerShape(14.dp))
+                                        .background(if (queueActive) primaryAccent else dockGlass)
+                                        .clickable { showQueueSheet = true },
+                                    contentAlignment = Alignment.Center,
+                                ) {
+                                    Icon(
+                                        imageVector = BitChordIcons.Queue,
+                                        contentDescription = "Queue",
+                                        tint = if (queueActive) activeDockContent else iconTint,
+                                        modifier = Modifier.size(20.dp),
+                                    )
+                                }
+
+                                val moreActive = showMoreSheet
+                                Box(
+                                    modifier = Modifier
+                                        .weight(1f)
+                                        .height(44.dp)
+                                        .clip(RoundedCornerShape(14.dp))
+                                        .background(if (moreActive) primaryAccent else dockGlass)
+                                        .clickable { showMoreSheet = true },
+                                    contentAlignment = Alignment.Center,
+                                ) {
+                                    Icon(
+                                        imageVector = Icons.Rounded.MoreVert,
+                                        contentDescription = "More",
+                                        tint = if (moreActive) activeDockContent else iconTint,
+                                        modifier = Modifier.size(20.dp),
+                                    )
+                                }
+                            }
+                        }
+                    }
+                } else {
+                AnimatedContent(
+                    targetState = showInlineLyrics,
+                    transitionSpec = {
+                        (fadeIn(spring(stiffness = 380f, dampingRatio = 0.82f)) + scaleIn(initialScale = 0.94f, animationSpec = spring(stiffness = 380f, dampingRatio = 0.82f))) togetherWith
+                        (fadeOut(spring(stiffness = 450f)) + scaleOut(targetScale = 1.04f, animationSpec = spring(stiffness = 450f)))
+                    },
+                    label = "m3e_player_lyrics_morph",
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .weight(1f),
+                ) { lyricsActive ->
+                    if (!lyricsActive) {
                     Column(
                         modifier = Modifier
                             .fillMaxWidth()
@@ -530,7 +870,9 @@ fun RhythmPlayerContent(
                             maxLines = 1,
                             overflow = TextOverflow.Ellipsis,
                             textAlign = TextAlign.Center,
-                            modifier = Modifier.padding(horizontal = 16.dp),
+                            modifier = Modifier
+                                .clickable { onOpenArtist() }
+                                .padding(horizontal = 16.dp),
                         )
                     }
                 } else {
@@ -576,6 +918,7 @@ fun RhythmPlayerContent(
                                         color = textSubColor,
                                         maxLines = 1,
                                         overflow = TextOverflow.Ellipsis,
+                                        modifier = Modifier.clickable { onOpenArtist() },
                                     )
                                 }
                             }
@@ -856,6 +1199,7 @@ fun RhythmPlayerContent(
                             )
                         }
                     }
+                }
                 }
             }
         }
@@ -1787,21 +2131,24 @@ private fun RhythmProgressSeekbar(
 
             when (style) {
                 ProgressLineStyle.WAVY -> {
+                    val strokeW = 4.5.dp.toPx()
+                    val radius = strokeW / 2f
+                    val waveLength = 48.dp.toPx()
+                    val waveAmplitude = 5.dp.toPx()
+
                     val inactivePath = Path()
-                    inactivePath.moveTo(activeW, midY)
-                    inactivePath.lineTo(w, midY)
+                    inactivePath.moveTo(activeW.coerceAtLeast(radius), midY)
+                    inactivePath.lineTo((w - radius).coerceAtLeast(radius), midY)
                     drawPath(
                         path = inactivePath,
                         color = inactiveColor,
-                        style = Stroke(width = 4.dp.toPx(), cap = StrokeCap.Round),
+                        style = Stroke(width = strokeW, cap = StrokeCap.Round),
                     )
 
                     val activePath = Path()
-                    val waveLength = 48.dp.toPx()
-                    val waveAmplitude = 5.dp.toPx()
-                    activePath.moveTo(0f, midY)
-                    var x = 0f
-                    val step = 1.5f
+                    activePath.moveTo(radius, midY)
+                    var x = radius
+                    val step = 3f
                     while (x <= activeW) {
                         val angle = (x / waveLength) * (2 * PI).toFloat() - wavePhase
                         val y = midY + sin(angle) * waveAmplitude
@@ -1811,49 +2158,54 @@ private fun RhythmProgressSeekbar(
                     drawPath(
                         path = activePath,
                         color = activeColor,
-                        style = Stroke(width = 4.5.dp.toPx(), cap = StrokeCap.Round),
+                        style = Stroke(width = strokeW, cap = StrokeCap.Round),
                     )
 
                     val thumbAngle = (activeW / waveLength) * (2 * PI).toFloat() - wavePhase
                     val thumbY = midY + sin(thumbAngle) * waveAmplitude
+                    val thumbX = activeW.coerceIn(radius, (w - radius).coerceAtLeast(radius))
                     drawCircle(
                         color = Color.White.copy(alpha = 0.25f),
                         radius = 10.dp.toPx(),
-                        center = Offset(activeW, thumbY),
+                        center = Offset(thumbX, thumbY),
                     )
                     drawCircle(
                         color = Color.White,
                         radius = 7.dp.toPx(),
-                        center = Offset(activeW, thumbY),
+                        center = Offset(thumbX, thumbY),
                     )
                 }
                 ProgressLineStyle.STRAIGHT -> {
+                    val trackHeight = 6.dp.toPx()
+                    val radius = trackHeight / 2f
                     drawLine(
                         color = inactiveColor,
-                        start = Offset(0f, midY),
-                        end = Offset(w, midY),
-                        strokeWidth = 6.dp.toPx(),
+                        start = Offset(radius, midY),
+                        end = Offset((w - radius).coerceAtLeast(radius), midY),
+                        strokeWidth = trackHeight,
                         cap = StrokeCap.Round,
                     )
                     if (activeW > 0f) {
+                        val activeEnd = activeW.coerceIn(radius, (w - radius).coerceAtLeast(radius))
                         drawLine(
                             color = activeColor,
-                            start = Offset(0f, midY),
-                            end = Offset(activeW, midY),
-                            strokeWidth = 6.dp.toPx(),
+                            start = Offset(radius, midY),
+                            end = Offset(activeEnd, midY),
+                            strokeWidth = trackHeight,
                             cap = StrokeCap.Round,
                         )
                     }
+                    val thumbX = activeW.coerceIn(radius, (w - radius).coerceAtLeast(radius))
                     // Sleek circular M3 thumb with soft outer ring
                     drawCircle(
                         color = Color.White.copy(alpha = 0.25f),
                         radius = 10.dp.toPx(),
-                        center = Offset(activeW, midY),
+                        center = Offset(thumbX, midY),
                     )
                     drawCircle(
                         color = Color.White,
                         radius = 7.dp.toPx(),
-                        center = Offset(activeW, midY),
+                        center = Offset(thumbX, midY),
                     )
                 }
                 ProgressLineStyle.DOTTED -> {
@@ -1868,31 +2220,34 @@ private fun RhythmProgressSeekbar(
                             center = Offset(dotX, midY),
                         )
                     }
+                    val thumbX = activeW.coerceIn(0f, w)
                     drawCircle(
                         color = Color.White.copy(alpha = 0.25f),
                         radius = 10.dp.toPx(),
-                        center = Offset(activeW, midY),
+                        center = Offset(thumbX, midY),
                     )
                     drawCircle(
                         color = Color.White,
                         radius = 7.dp.toPx(),
-                        center = Offset(activeW, midY),
+                        center = Offset(thumbX, midY),
                     )
                 }
                 ProgressLineStyle.PULSE -> {
+                    val strokeW = 4.5.dp.toPx()
+                    val radius = strokeW / 2f
                     val inactivePath = Path()
-                    inactivePath.moveTo(activeW, midY)
-                    inactivePath.lineTo(w, midY)
+                    inactivePath.moveTo(activeW.coerceAtLeast(radius), midY)
+                    inactivePath.lineTo((w - radius).coerceAtLeast(radius), midY)
                     drawPath(
                         path = inactivePath,
                         color = inactiveColor,
-                        style = Stroke(width = 4.dp.toPx(), cap = StrokeCap.Round),
+                        style = Stroke(width = strokeW, cap = StrokeCap.Round),
                     )
 
                     val activePath = Path()
-                    activePath.moveTo(0f, midY)
-                    var px = 0f
-                    val pulseStep = 1.5f
+                    activePath.moveTo(radius, midY)
+                    var px = radius
+                    val pulseStep = 2.5f
                     val pulsePeriod = 64.dp.toPx()
                     while (px <= activeW) {
                         val phaseOffset = ((px - wavePhase * 18.dp.toPx()) % pulsePeriod + pulsePeriod) % pulsePeriod
@@ -1911,17 +2266,18 @@ private fun RhythmProgressSeekbar(
                     drawPath(
                         path = activePath,
                         color = activeColor,
-                        style = Stroke(width = 4.5.dp.toPx(), cap = StrokeCap.Round),
+                        style = Stroke(width = strokeW, cap = StrokeCap.Round),
                     )
+                    val thumbX = activeW.coerceIn(radius, (w - radius).coerceAtLeast(radius))
                     drawCircle(
                         color = Color.White.copy(alpha = 0.25f),
                         radius = 10.dp.toPx(),
-                        center = Offset(activeW, midY),
+                        center = Offset(thumbX, midY),
                     )
                     drawCircle(
                         color = Color.White,
                         radius = 7.dp.toPx(),
-                        center = Offset(activeW, midY),
+                        center = Offset(thumbX, midY),
                     )
                 }
             }

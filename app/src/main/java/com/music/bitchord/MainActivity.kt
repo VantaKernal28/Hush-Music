@@ -256,6 +256,7 @@ import com.music.bitchord.playback.QualityUpgrade
 import com.music.bitchord.playback.rememberMediaController
 import com.music.bitchord.playback.rememberPlayerState
 import com.music.bitchord.playback.setQueueDragActive
+import com.music.bitchord.data.scrobbling.primaryArtist
 import com.music.bitchord.ui.MainViewModel
 import com.music.bitchord.ui.SearchSource
 import com.music.bitchord.ui.components.BottomFadeScrim
@@ -1938,7 +1939,8 @@ private fun BitChordApp(
             } else {
                 SearchFilter.ALBUMS
             }
-            val query = listOfNotNull(name, subtitle).joinToString(" ")
+            val targetName = if (type == BrowseType.ARTIST) name.primaryArtist() else name
+            val query = if (type == BrowseType.ARTIST) targetName else listOfNotNull(name, subtitle).joinToString(" ")
             val hit = YtMusicRepository.search(query, filter).getOrNull()
                 ?.filterIsInstance<SearchResult.Browse>()
                 ?.firstOrNull()
@@ -2733,7 +2735,7 @@ private fun BitChordApp(
             // picture, and the page fills its own in once loaded.
             onOpenArtist = { id, name ->
                 dismissPlayer()
-                if (id != null) {
+                if (!id.isNullOrBlank()) {
                     viewModel.openDetail(
                         id,
                         name,
@@ -2743,11 +2745,16 @@ private fun BitChordApp(
                     )
                 } else {
                     scope.launch {
-                        val found = YtMusicRepository.findArtistPageId(name).getOrNull()
+                        val primary = name.primaryArtist()
+                        val found = YtMusicRepository.findArtistPageId(primary).getOrNull()
+                            ?: YtMusicRepository.search(primary, SearchFilter.ARTISTS).getOrNull()
+                                ?.filterIsInstance<SearchResult.Browse>()
+                                ?.firstOrNull { it.item.type == BrowseType.ARTIST }
+                                ?.item?.browseId
                         if (found != null) {
                             viewModel.openDetail(
                                 found,
-                                name,
+                                primary,
                                 context.getString(R.string.artist),
                                 null,
                                 BrowseType.ARTIST,
@@ -3370,7 +3377,11 @@ private fun BitChordApp(
                                 searching = detailSearching && page.browseId == detail?.browseId,
                                 onSearchingChange = { detailSearching = it },
                                 onArtistClick = { id, name ->
-                                    viewModel.openDetail(id, name, "Artist", null, BrowseType.ARTIST)
+                                    if (id.isNotBlank()) {
+                                        viewModel.openDetail(id, name, "Artist", null, BrowseType.ARTIST)
+                                    } else {
+                                        openByName(name, null, BrowseType.ARTIST)
+                                    }
                                 },
                                 onAddSuggested = { song -> viewModel.addSuggestedSong(page.browseId, song) },
                                 // Saving is an account action, so it isn't offered to a
@@ -4997,6 +5008,9 @@ private fun BitChordApp(
                 availableSongs = availableSongs,
                 onDismiss = { showAiPlaylistMaker = false },
                 onCreatePlaylist = { title, songIds, songs, playImmediately ->
+                    if (playImmediately && songs.isNotEmpty()) {
+                        play(songs, 0)
+                    }
                     viewModel.createPlaylistWithVideoIds(
                         title = title,
                         privacy = com.music.bitchord.data.model.PlaylistPrivacy.PRIVATE,
@@ -5004,9 +5018,6 @@ private fun BitChordApp(
                         songs = songs,
                     ) { _, createdTitle, _ ->
                         showQueueNotice("Saved playlist: $createdTitle")
-                        if (playImmediately && songs.isNotEmpty()) {
-                            play(songs, 0)
-                        }
                     }
                 },
             )

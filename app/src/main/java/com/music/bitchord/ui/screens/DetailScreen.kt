@@ -727,35 +727,37 @@ fun DetailScreen(
                 } else if (isArtist) {
                     // An artist's full song list would bury the album shelves, so
                     // it pages sideways four at a time and stops at twenty.
-                    item {
-                        val top = state.data.take(MAX_ARTIST_SONGS)
-                        val isCurrentRow = playingRowMatcher(top, currentSong)
-                        SectionHeading(
-                            title = stringResource(R.string.top_songs),
-                            palette = palette,
-                            horizontalPadding = ARTIST_CONTENT_GUTTER,
-                        )
-                        BoxWithConstraints {
-                            val columnWidth = trackColumnWidth(maxWidth)
-                            val topSongsState = rememberLazyListState()
-                            LazyRow(
-                                state = topSongsState,
-                                contentPadding = PaddingValues(horizontal = ARTIST_CONTENT_GUTTER),
-                                horizontalArrangement = Arrangement.spacedBy(12.dp),
-                                flingBehavior = rememberSnapFlingBehavior(lazyListState = topSongsState),
-                            ) {
-                                items(top.chunked(SONGS_PER_COLUMN)) { column ->
-                                    Column(Modifier.width(columnWidth)) {
-                                        column.forEach { song ->
-                                            CompactSongRow(
-                                                song = song,
-                                                palette = palette,
-                                                onClick = { onSongClick(top, top.indexOf(song)) },
-                                                onLongPress = { onSongLongPress(song) },
-                                                downloadedTint = downloadedTint,
-                                                isCurrent = isCurrentRow(song),
-                                                isPlaying = isCurrentRow(song) && isPlaying,
-                                            )
+                    if (state.data.isNotEmpty()) {
+                        item {
+                            val top = state.data.take(MAX_ARTIST_SONGS)
+                            val isCurrentRow = playingRowMatcher(top, currentSong)
+                            SectionHeading(
+                                title = stringResource(R.string.top_songs),
+                                palette = palette,
+                                horizontalPadding = ARTIST_CONTENT_GUTTER,
+                            )
+                            BoxWithConstraints {
+                                val columnWidth = trackColumnWidth(maxWidth)
+                                val topSongsState = rememberLazyListState()
+                                LazyRow(
+                                    state = topSongsState,
+                                    contentPadding = PaddingValues(horizontal = ARTIST_CONTENT_GUTTER),
+                                    horizontalArrangement = Arrangement.spacedBy(12.dp),
+                                    flingBehavior = rememberSnapFlingBehavior(lazyListState = topSongsState),
+                                ) {
+                                    items(top.chunked(SONGS_PER_COLUMN)) { column ->
+                                        Column(Modifier.width(columnWidth)) {
+                                            column.forEach { song ->
+                                                CompactSongRow(
+                                                    song = song,
+                                                    palette = palette,
+                                                    onClick = { onSongClick(top, top.indexOf(song)) },
+                                                    onLongPress = { onSongLongPress(song) },
+                                                    downloadedTint = downloadedTint,
+                                                    isCurrent = isCurrentRow(song),
+                                                    isPlaying = isCurrentRow(song) && isPlaying,
+                                                )
+                                            }
                                         }
                                     }
                                 }
@@ -1068,12 +1070,12 @@ private fun ReleaseHeader(
                 modifier = Modifier
                     .padding(horizontal = HEADER_GUTTER)
                     .let { m ->
-                        val id = artist?.artistId
-                        if (id == null || onArtistClick == null) {
+                        val artistName = artist?.artist
+                        if (artistName.isNullOrBlank() || onArtistClick == null) {
                             m
                         } else {
                             m.clip(RoundedCornerShape(6.dp))
-                                .clickable { onArtistClick(id, artist.artist) }
+                                .clickable { onArtistClick(artist.artistId.orEmpty(), artistName) }
                         }
                     },
             )
@@ -1418,8 +1420,12 @@ private fun ArtistHeader(
                     // BoxWithConstraints, which would subcompose the image.
                     .layout { measurable, constraints ->
                         val widest = constraints.maxWidth * ARTIST_LOGO_WIDTH * sizeFactor
-                        val height = minOf(widest / aspect, maxLogoHeight.toPx()).roundToInt()
-                        val width = (height * aspect).roundToInt()
+                        val safeAspect = if (aspect <= 0.01f || aspect.isNaN() || aspect.isInfinite()) 1f else aspect
+                        val maxH = if (maxLogoHeight.toPx().isNaN() || maxLogoHeight.toPx() <= 0f) 100f else maxLogoHeight.toPx()
+                        val rawHeight = minOf(widest / safeAspect, maxH).roundToInt()
+                        val height = rawHeight.coerceIn(constraints.minHeight, constraints.maxHeight.coerceAtLeast(constraints.minHeight))
+                        val rawWidth = (height * safeAspect).roundToInt()
+                        val width = rawWidth.coerceIn(constraints.minWidth, constraints.maxWidth.coerceAtLeast(constraints.minWidth))
                         val placeable = measurable.measure(Constraints.fixed(width, height))
                         layout(width, height) { placeable.place(0, 0) }
                     },

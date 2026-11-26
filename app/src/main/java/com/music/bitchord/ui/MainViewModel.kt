@@ -2804,7 +2804,11 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
                             monthlyListenerCount = page.monthlyListenerCount
                             subscription = page.subscription
                             if (page.songs.isEmpty()) {
-                                UiState.Error(text(R.string.no_tracks_here))
+                                if (page.sections.isNotEmpty()) {
+                                    UiState.Success(emptyList())
+                                } else {
+                                    UiState.Error(text(R.string.no_tracks_here))
+                                }
                             } else {
                                 UiState.Success(page.songs.withArtwork(thumbnailUrl ?: artwork))
                             }

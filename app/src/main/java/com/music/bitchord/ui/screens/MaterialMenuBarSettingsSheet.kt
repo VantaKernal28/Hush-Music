@@ -17,12 +17,17 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
+import androidx.compose.animation.core.animateFloatAsState
+import androidx.compose.animation.core.spring
+import androidx.compose.animation.core.Spring
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.rounded.ArrowBack
+import androidx.compose.material.icons.rounded.Explore
 import androidx.compose.material.icons.rounded.Home
 import androidx.compose.material.icons.rounded.LibraryMusic
 import androidx.compose.material.icons.rounded.Search
@@ -34,11 +39,16 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableIntStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.blur
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -139,6 +149,7 @@ fun MaterialMenuBarSettingsSheet(
             Spacer(Modifier.height(8.dp))
 
             // Top Live Interactive M3E Menu Bar Preview Banner
+            var previewSelectedTab by remember { mutableIntStateOf(0) }
             Card(
                 shape = RoundedCornerShape(24.dp),
                 colors = CardDefaults.cardColors(
@@ -146,12 +157,12 @@ fun MaterialMenuBarSettingsSheet(
                 ),
                 modifier = Modifier
                     .fillMaxWidth()
-                    .height(200.dp),
+                    .height(210.dp),
             ) {
                 Box(
                     modifier = Modifier
                         .fillMaxSize()
-                        .padding(bottom = navBarPadding.dp),
+                        .padding(bottom = navBarPadding.dp.coerceAtLeast(6.dp)),
                     contentAlignment = Alignment.BottomCenter,
                 ) {
                     // Simulated home cards background to show frosted blur effect
@@ -163,7 +174,7 @@ fun MaterialMenuBarSettingsSheet(
                     ) {
                         Box(
                             modifier = Modifier
-                                .fillMaxWidth(0.6f)
+                                .fillMaxWidth(0.55f)
                                 .height(16.dp)
                                 .clip(RoundedCornerShape(8.dp))
                                 .background(MaterialTheme.colorScheme.primary.copy(alpha = 0.25f)),
@@ -175,21 +186,21 @@ fun MaterialMenuBarSettingsSheet(
                             Box(
                                 modifier = Modifier
                                     .weight(1f)
-                                    .height(70.dp)
-                                    .clip(RoundedCornerShape(14.dp))
-                                    .background(MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.6f)),
+                                    .height(72.dp)
+                                    .clip(RoundedCornerShape(16.dp))
+                                    .background(MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.65f)),
                             )
                             Box(
                                 modifier = Modifier
                                     .weight(1f)
-                                    .height(70.dp)
-                                    .clip(RoundedCornerShape(14.dp))
-                                    .background(MaterialTheme.colorScheme.secondaryContainer.copy(alpha = 0.6f)),
+                                    .height(72.dp)
+                                    .clip(RoundedCornerShape(16.dp))
+                                    .background(MaterialTheme.colorScheme.secondaryContainer.copy(alpha = 0.65f)),
                             )
                         }
                     }
 
-                    // Live M3E Menu Bar Preview
+                    // Live M3E Menu Bar Interactive Preview Dock
                     val surfaceAlpha = (0.15f + navBarTransparency * 0.85f).coerceIn(0.15f, 1f)
                     val barSurface = if (isDark) {
                         Color(0xFF222228).copy(alpha = surfaceAlpha)
@@ -198,67 +209,133 @@ fun MaterialMenuBarSettingsSheet(
                     }
                     val effectiveBlur = (navBarFrostedBlur * 28f).coerceIn(0f, 32f).dp
 
-                    Box(
-                        modifier = Modifier
-                            .fillMaxWidth(navBarWidth)
-                            .height(navBarHeight.dp)
-                            .clip(previewShape)
-                            .background(barSurface)
-                            .then(
-                                if (navBarFrostedBlur > 0.02f) {
-                                    Modifier.background(
-                                        if (isDark) Color.White.copy(alpha = 0.06f * navBarFrostedBlur)
-                                        else Color.White.copy(alpha = 0.35f * navBarFrostedBlur)
-                                    )
-                                } else Modifier
-                            )
-                            .border(
-                                1.dp,
-                                if (isDark) Color.White.copy(alpha = 0.12f) else Color.Black.copy(alpha = 0.08f),
-                                previewShape,
-                            ),
-                    )
-
-                    // Sharp inner tab icons over the blurred dock
                     Row(
                         modifier = Modifier
                             .fillMaxWidth(navBarWidth)
-                            .height(navBarHeight.dp),
-                        horizontalArrangement = Arrangement.SpaceEvenly,
+                            .padding(horizontal = 8.dp),
+                        horizontalArrangement = Arrangement.spacedBy(8.dp),
                         verticalAlignment = Alignment.CenterVertically,
                     ) {
-                        // Home tab (active)
+                        // Main Tab Capsule Dock
                         Box(
                             modifier = Modifier
-                                .height(38.dp)
-                                .width(56.dp)
-                                .clip(RoundedCornerShape(19.dp))
-                                .background(MaterialTheme.colorScheme.primary),
+                                .weight(1f)
+                                .height(navBarHeight.dp)
+                                .shadow(8.dp, previewShape, ambientColor = Color.Black.copy(alpha = 0.25f))
+                                .clip(previewShape)
+                                .background(barSurface)
+                                .blur(effectiveBlur)
+                                .border(
+                                    1.dp,
+                                    if (isDark) Color.White.copy(alpha = 0.14f) else Color.Black.copy(alpha = 0.08f),
+                                    previewShape,
+                                )
+                                .padding(horizontal = 6.dp, vertical = 4.dp),
+                            contentAlignment = Alignment.Center,
+                        ) {
+                            Row(
+                                modifier = Modifier.fillMaxWidth(),
+                                horizontalArrangement = Arrangement.SpaceEvenly,
+                                verticalAlignment = Alignment.CenterVertically,
+                            ) {
+                                listOf(
+                                    Triple(0, Icons.Rounded.Home, "Home"),
+                                    Triple(1, Icons.Rounded.Explore, "Explore"),
+                                    Triple(2, Icons.Rounded.LibraryMusic, "Library"),
+                                ).forEach { (index, icon, label) ->
+                                    val isSelected = previewSelectedTab == index
+                                    val tabScale by animateFloatAsState(
+                                        targetValue = if (isSelected) 1.05f else 1.0f,
+                                        animationSpec = spring(
+                                            dampingRatio = Spring.DampingRatioMediumBouncy,
+                                            stiffness = Spring.StiffnessMediumLow,
+                                        ),
+                                        label = "previewTabScale_$index",
+                                    )
+
+                                    Box(
+                                        modifier = Modifier
+                                            .graphicsLayer {
+                                                scaleX = tabScale
+                                                scaleY = tabScale
+                                            }
+                                            .clip(RoundedCornerShape(50))
+                                            .then(
+                                                if (isSelected) {
+                                                    Modifier
+                                                        .background(MaterialTheme.colorScheme.primary)
+                                                        .padding(horizontal = 14.dp, vertical = 7.dp)
+                                                } else {
+                                                    Modifier
+                                                        .clickable { previewSelectedTab = index }
+                                                        .padding(horizontal = 10.dp, vertical = 7.dp)
+                                                }
+                                            ),
+                                        contentAlignment = Alignment.Center,
+                                    ) {
+                                        Row(
+                                            verticalAlignment = Alignment.CenterVertically,
+                                            horizontalArrangement = Arrangement.spacedBy(4.dp),
+                                        ) {
+                                            Icon(
+                                                imageVector = icon,
+                                                contentDescription = label,
+                                                tint = if (isSelected) MaterialTheme.colorScheme.onPrimary
+                                                else if (isDark) Color.White.copy(alpha = 0.7f)
+                                                else Color.Black.copy(alpha = 0.7f),
+                                                modifier = Modifier.size(19.dp),
+                                            )
+                                            if (isSelected) {
+                                                Text(
+                                                    text = label,
+                                                    style = MaterialTheme.typography.labelSmall.copy(
+                                                        fontWeight = FontWeight.Bold,
+                                                        fontSize = 11.sp,
+                                                    ),
+                                                    color = MaterialTheme.colorScheme.onPrimary,
+                                                )
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                        }
+
+                        // Detached Search Circle Button (Material 3 Expressive Mode)
+                        val isSearchSelected = previewSelectedTab == 3
+                        val searchScale by animateFloatAsState(
+                            targetValue = if (isSearchSelected) 1.08f else 1.0f,
+                            animationSpec = spring(dampingRatio = Spring.DampingRatioMediumBouncy),
+                            label = "previewSearchScale",
+                        )
+                        Box(
+                            modifier = Modifier
+                                .size(navBarHeight.dp)
+                                .graphicsLayer {
+                                    scaleX = searchScale
+                                    scaleY = searchScale
+                                }
+                                .shadow(8.dp, CircleShape, ambientColor = Color.Black.copy(alpha = 0.25f))
+                                .clip(CircleShape)
+                                .background(if (isSearchSelected) MaterialTheme.colorScheme.primaryContainer else barSurface)
+                                .blur(effectiveBlur)
+                                .border(
+                                    1.dp,
+                                    if (isDark) Color.White.copy(alpha = 0.14f) else Color.Black.copy(alpha = 0.08f),
+                                    CircleShape,
+                                )
+                                .clickable { previewSelectedTab = 3 },
                             contentAlignment = Alignment.Center,
                         ) {
                             Icon(
-                                imageVector = Icons.Rounded.Home,
-                                contentDescription = "Home",
-                                tint = MaterialTheme.colorScheme.onPrimary,
+                                imageVector = Icons.Rounded.Search,
+                                contentDescription = "Search",
+                                tint = if (isSearchSelected) MaterialTheme.colorScheme.onPrimaryContainer
+                                else if (isDark) Color.White.copy(alpha = 0.85f)
+                                else Color.Black.copy(alpha = 0.85f),
                                 modifier = Modifier.size(20.dp),
                             )
                         }
-
-                        // Search tab
-                        Icon(
-                            imageVector = Icons.Rounded.Search,
-                            contentDescription = "Search",
-                            tint = if (isDark) Color.White.copy(alpha = 0.7f) else Color.Black.copy(alpha = 0.7f),
-                            modifier = Modifier.size(20.dp),
-                        )
-
-                        // Library tab
-                        Icon(
-                            imageVector = Icons.Rounded.LibraryMusic,
-                            contentDescription = "Library",
-                            tint = if (isDark) Color.White.copy(alpha = 0.7f) else Color.Black.copy(alpha = 0.7f),
-                            modifier = Modifier.size(20.dp),
-                        )
                     }
                 }
             }
@@ -279,7 +356,7 @@ fun MaterialMenuBarSettingsSheet(
             Spacer(Modifier.height(8.dp))
 
             Card(
-                shape = RoundedCornerShape(20.dp),
+                shape = RoundedCornerShape(24.dp),
                 colors = CardDefaults.cardColors(
                     containerColor = if (isDark) Color(0xFF18181E) else MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.45f),
                 ),
@@ -354,7 +431,7 @@ fun MaterialMenuBarSettingsSheet(
             Spacer(Modifier.height(8.dp))
 
             Card(
-                shape = RoundedCornerShape(20.dp),
+                shape = RoundedCornerShape(24.dp),
                 colors = CardDefaults.cardColors(
                     containerColor = if (isDark) Color(0xFF18181E) else MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.45f),
                 ),
@@ -407,7 +484,7 @@ fun MaterialMenuBarSettingsSheet(
             Spacer(Modifier.height(8.dp))
 
             Card(
-                shape = RoundedCornerShape(20.dp),
+                shape = RoundedCornerShape(24.dp),
                 colors = CardDefaults.cardColors(
                     containerColor = if (isDark) Color(0xFF18181E) else MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.45f),
                 ),
@@ -438,7 +515,7 @@ fun MaterialMenuBarSettingsSheet(
                 }
             }
 
-            Spacer(Modifier.height(140.dp))
+            Spacer(Modifier.navigationBarsPadding().height(120.dp))
         }
     }
 }

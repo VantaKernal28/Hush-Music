@@ -15,6 +15,7 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.statusBarsPadding
+import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
@@ -22,6 +23,9 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.rounded.ArrowBack
+import androidx.compose.material.icons.rounded.Home
+import androidx.compose.material.icons.rounded.LibraryMusic
+import androidx.compose.material.icons.rounded.Search
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.Icon
@@ -30,10 +34,14 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableIntStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.blur
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.graphicsLayer
@@ -128,6 +136,7 @@ fun LiquidGlassSettingsSheet(
             Spacer(Modifier.height(8.dp))
 
             // Top Live Interactive Glass Preview Banner (video_2.mp4 00:00–00:04)
+            var previewGlassTab by remember { mutableIntStateOf(0) }
             Card(
                 shape = RoundedCornerShape(24.dp),
                 colors = CardDefaults.cardColors(
@@ -135,28 +144,45 @@ fun LiquidGlassSettingsSheet(
                 ),
                 modifier = Modifier
                     .fillMaxWidth()
-                    .height(180.dp),
+                    .height(200.dp),
             ) {
                 Box(
                     modifier = Modifier.fillMaxSize(),
                     contentAlignment = Alignment.Center,
                 ) {
-                    // Vibrant background gradient simulating wallpaper/artwork beneath glass
-                    val vibrancyFactor = (0.5f + 1.3f * glassVibrancy).coerceIn(0.5f, 1.8f)
+                    // Vibrant background gradient with layered geometric shapes simulating wallpaper/artwork beneath glass
+                    val vibrancyFactor = (0.6f + 1.4f * glassVibrancy).coerceIn(0.6f, 2.0f)
                     Box(
                         modifier = Modifier
                             .fillMaxSize()
                             .background(
                                 Brush.linearGradient(
                                     listOf(
-                                        Color(0xFF6366F1).copy(alpha = (0.75f * vibrancyFactor).coerceIn(0.3f, 1f)),
-                                        Color(0xFFA855F7).copy(alpha = (0.80f * vibrancyFactor).coerceIn(0.3f, 1f)),
-                                        Color(0xFFEC4899).copy(alpha = (0.75f * vibrancyFactor).coerceIn(0.3f, 1f)),
-                                        Color(0xFF3B82F6).copy(alpha = (0.70f * vibrancyFactor).coerceIn(0.3f, 1f)),
+                                        Color(0xFF6366F1).copy(alpha = (0.85f * vibrancyFactor).coerceIn(0.4f, 1f)),
+                                        Color(0xFFA855F7).copy(alpha = (0.88f * vibrancyFactor).coerceIn(0.4f, 1f)),
+                                        Color(0xFFEC4899).copy(alpha = (0.85f * vibrancyFactor).coerceIn(0.4f, 1f)),
+                                        Color(0xFF3B82F6).copy(alpha = (0.80f * vibrancyFactor).coerceIn(0.4f, 1f)),
                                     )
                                 )
                             ),
-                    )
+                    ) {
+                        // Decorative visual contrast circles beneath glass
+                        Box(
+                            modifier = Modifier
+                                .padding(start = 24.dp, top = 20.dp)
+                                .size(72.dp)
+                                .clip(CircleShape)
+                                .background(Color(0xFFFDE047).copy(alpha = 0.65f * vibrancyFactor.coerceAtMost(1f))),
+                        )
+                        Box(
+                            modifier = Modifier
+                                .align(Alignment.BottomEnd)
+                                .padding(end = 28.dp, bottom = 16.dp)
+                                .size(90.dp)
+                                .clip(RoundedCornerShape(24.dp))
+                                .background(Color(0xFF06B6D4).copy(alpha = 0.55f * vibrancyFactor.coerceAtMost(1f))),
+                        )
+                    }
 
                     // Floating Liquid Glass Lens Pill (live optical refraction preview)
                     val effectiveBlur = (glassBlurPercentage * 36f).coerceIn(0f, 36f).dp
@@ -168,39 +194,89 @@ fun LiquidGlassSettingsSheet(
                     }
                     val borderAlpha = (glassHighlightOpacity * 0.85f).coerceIn(0f, 0.85f)
                     val lensScale = (0.85f + 0.15f * glassLensRefractionAmount).coerceIn(0.85f, 1.0f)
+                    val pillHeight = (58f + 14f * glassLensRefractionHeight).dp
+                    val pillShape = RoundedCornerShape(32.dp)
 
                     Box(
                         modifier = Modifier
-                            .fillMaxWidth(0.85f * lensScale)
-                            .height(64.dp)
-                            .clip(RoundedCornerShape(32.dp))
+                            .fillMaxWidth(0.88f * lensScale)
+                            .height(pillHeight)
+                            .then(
+                                if (glassDepthEffect > 0.05f) {
+                                    Modifier.shadow(
+                                        elevation = (12f * glassDepthEffect).dp,
+                                        shape = pillShape,
+                                        ambientColor = Color.Black.copy(alpha = 0.45f),
+                                    )
+                                } else Modifier
+                            )
+                            .clip(pillShape)
                             .background(glassSurfaceColor)
                             .blur(effectiveBlur)
-                            .border(1.5.dp, Color.White.copy(alpha = borderAlpha), RoundedCornerShape(32.dp)),
+                            .then(
+                                if (glassChromaticAberration) {
+                                    Modifier
+                                        .border(2.dp, Color(0xFFFF2A85).copy(alpha = 0.35f), pillShape)
+                                        .border(1.dp, Color(0xFF00E5FF).copy(alpha = 0.40f), pillShape)
+                                } else Modifier
+                            )
+                            .border(1.5.dp, Color.White.copy(alpha = borderAlpha), pillShape),
                     )
 
-                    // Sharp inner text over the blurred glass
-                    Column(
-                        horizontalAlignment = Alignment.CenterHorizontally,
-                        verticalArrangement = Arrangement.Center,
+                    // Interactive preview tab bar over the live liquid glass pill
+                    Row(
+                        modifier = Modifier
+                            .fillMaxWidth(0.88f * lensScale)
+                            .height(pillHeight),
+                        horizontalArrangement = Arrangement.SpaceEvenly,
+                        verticalAlignment = Alignment.CenterVertically,
                     ) {
-                        Text(
-                            text = "Liquid Glass Engine",
-                            style = MaterialTheme.typography.titleMedium.copy(
-                                fontWeight = FontWeight.Bold,
-                                fontSize = 16.sp,
-                            ),
-                            color = Color.White,
-                        )
-                        Spacer(Modifier.height(2.dp))
-                        Text(
-                            text = "Refraction: ${(glassLensRefractionAmount * 100).roundToInt()}% · Blur: ${(glassBlurPercentage * 100).roundToInt()}%",
-                            style = MaterialTheme.typography.bodySmall.copy(
-                                fontSize = 12.sp,
-                                fontWeight = FontWeight.Medium,
-                            ),
-                            color = Color.White.copy(alpha = 0.85f),
-                        )
+                        listOf(
+                            Triple(0, Icons.Rounded.Home, "Home"),
+                            Triple(1, Icons.Rounded.Search, "Search"),
+                            Triple(2, Icons.Rounded.LibraryMusic, "Library"),
+                        ).forEach { (idx, icon, label) ->
+                            val isSelected = previewGlassTab == idx
+                            Box(
+                                modifier = Modifier
+                                    .clip(RoundedCornerShape(20.dp))
+                                    .then(
+                                        if (isSelected) {
+                                            Modifier
+                                                .background(Color.White.copy(alpha = if (isDark) 0.22f else 0.45f))
+                                                .border(1.dp, Color.White.copy(alpha = 0.4f), RoundedCornerShape(20.dp))
+                                                .padding(horizontal = 14.dp, vertical = 6.dp)
+                                        } else {
+                                            Modifier
+                                                .clickable { previewGlassTab = idx }
+                                                .padding(horizontal = 12.dp, vertical = 6.dp)
+                                        }
+                                    ),
+                                contentAlignment = Alignment.Center,
+                            ) {
+                                Row(
+                                    verticalAlignment = Alignment.CenterVertically,
+                                    horizontalArrangement = Arrangement.spacedBy(6.dp),
+                                ) {
+                                    Icon(
+                                        imageVector = icon,
+                                        contentDescription = label,
+                                        tint = if (isSelected) Color.White else Color.White.copy(alpha = 0.75f),
+                                        modifier = Modifier.size(18.dp),
+                                    )
+                                    if (isSelected) {
+                                        Text(
+                                            text = label,
+                                            style = MaterialTheme.typography.labelMedium.copy(
+                                                fontWeight = FontWeight.Bold,
+                                                fontSize = 12.sp,
+                                            ),
+                                            color = Color.White,
+                                        )
+                                    }
+                                }
+                            }
+                        }
                     }
                 }
             }
@@ -221,7 +297,7 @@ fun LiquidGlassSettingsSheet(
             Spacer(Modifier.height(8.dp))
 
             Card(
-                shape = RoundedCornerShape(20.dp),
+                shape = RoundedCornerShape(24.dp),
                 colors = CardDefaults.cardColors(
                     containerColor = if (isDark) Color(0xFF18181E) else MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.45f),
                 ),
@@ -310,7 +386,7 @@ fun LiquidGlassSettingsSheet(
             Spacer(Modifier.height(8.dp))
 
             Card(
-                shape = RoundedCornerShape(20.dp),
+                shape = RoundedCornerShape(24.dp),
                 colors = CardDefaults.cardColors(
                     containerColor = if (isDark) Color(0xFF18181E) else MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.45f),
                 ),
@@ -366,7 +442,7 @@ fun LiquidGlassSettingsSheet(
             Spacer(Modifier.height(8.dp))
 
             Card(
-                shape = RoundedCornerShape(20.dp),
+                shape = RoundedCornerShape(24.dp),
                 colors = CardDefaults.cardColors(
                     containerColor = if (isDark) Color(0xFF18181E) else MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.45f),
                 ),
@@ -400,7 +476,7 @@ fun LiquidGlassSettingsSheet(
                 }
             }
 
-            Spacer(Modifier.height(140.dp))
+            Spacer(Modifier.navigationBarsPadding().height(120.dp))
         }
     }
 }

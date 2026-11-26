@@ -366,13 +366,36 @@ private fun DotMatrixLogoAnimation(
     Canvas(modifier = modifier) {
         val cx = size.width / 2f
         val cy = size.height / 2f
-        val s = (size.minDimension / 140f) * (if (settled) breathScale else 1f)
-        val dotRadius = 4.8.dp.toPx()
         val p = progress.coerceIn(0f, 1f)
         val eased = orbitEasing.transform(p)
+        val zoomScale = if (settled) breathScale else (1.85f - 0.85f * eased)
+        val s = (size.minDimension / 140f) * zoomScale
+        val dotRadius = 4.8.dp.toPx()
 
         for (i in 0 until 10) {
             val (startAngle, targetAngle, startRadius) = particleTargets[i]
+
+            // Motion-blur particle velocity trails during dynamic convergence
+            if (!settled && p > 0.01f && p < 0.98f) {
+                val motionVelocityFactor = (1f - p) * 0.8f
+                for (trailStep in 1..3) {
+                    val trailP = (p - trailStep * 0.024f).coerceAtLeast(0f)
+                    val trailEased = orbitEasing.transform(trailP)
+                    val trailAngle = startAngle + (targetAngle - startAngle) * trailEased
+                    val trailRadius = (startRadius + (38f - startRadius) * trailEased) * s
+                    val trailOffset = Offset(
+                        cx + trailRadius * cos(trailAngle),
+                        cy + trailRadius * sin(trailAngle),
+                    )
+                    val trailAlpha = (0.22f / trailStep) * motionVelocityFactor
+                    drawCircle(
+                        color = Color.White.copy(alpha = trailAlpha),
+                        radius = dotRadius * (1f + trailStep * 0.35f),
+                        center = trailOffset,
+                    )
+                }
+            }
+
             val currentAngle = startAngle + (targetAngle - startAngle) * eased
             val currentRadius = (startRadius + (38f - startRadius) * eased) * s
             val currentOffset = Offset(

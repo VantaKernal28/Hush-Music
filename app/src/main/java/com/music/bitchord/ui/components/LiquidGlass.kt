@@ -352,8 +352,8 @@ fun Modifier.liquidGlass(
     val lensHeightPx = with(density) { (LENS_MAX_DP * glassLensRefractionHeight).dp.toPx() } * resolutionScale
     val lensAmountPx = with(density) { (LENS_MAX_DP * glassLensRefractionAmount).dp.toPx() } * resolutionScale
 
-    // Vibrancy (0% -> 100%): saturation 0.5f -> 1.8f
-    val saturation = (0.5f + 1.3f * glassVibrancy).coerceIn(0.5f, 1.8f)
+    // Vibrancy (0% -> 100%): saturation 0.6f -> 2.0f
+    val saturation = (0.6f + 1.4f * glassVibrancy).coerceIn(0.6f, 2.0f)
 
     return this
         .drawBackdrop(
@@ -379,6 +379,10 @@ fun Modifier.liquidGlass(
                     drawRect(if (dark) Color.White.copy(alpha = 0.08f) else Color.White.copy(alpha = 0.35f))
                 } else if (surfaceTint != null) {
                     drawRect(surfaceTint)
+                }
+                if (glassVibrancy > 0.05f) {
+                    val bleedAlpha = ((glassVibrancy - 0.05f) * 0.08f).coerceIn(0f, 0.08f)
+                    drawRect(Color(0xFF6366F1).copy(alpha = bleedAlpha))
                 }
                 drawRect(sheen)
             },

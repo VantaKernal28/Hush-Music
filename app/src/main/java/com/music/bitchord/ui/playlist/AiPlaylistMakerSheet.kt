@@ -119,180 +119,196 @@ fun AiPlaylistMakerSheet(
             isGenerating = true
             isLiveAiCurated = false
 
-            val targetPrompt = if (query.isNotBlank()) query.trim() else vibeName
+            try {
+                val targetPrompt = if (query.isNotBlank()) query.trim() else vibeName
 
-            // Step 0: Ensure rich candidate pool by querying YouTube Music when candidates are low or matching
-            val onlineCandidates = withContext(Dispatchers.IO) {
-                try {
-                    val searchQuery = when (vibeName) {
-                        "Workout Energy" -> "workout gym high energy motivation hits"
-                        "Late Night Chill" -> "late night chill lofi r&b relax songs"
-                        "Carnatic & Classical" -> "carnatic classical ragam songs hits"
-                        "Indian Cinema Hits" -> "indian cinema songs hits tamil telugu hindi"
-                        "Deep Focus & Beats" -> "deep focus study beats instrumental lofi"
-                        "Indie & Acoustic" -> "indie acoustic guitar songs hits"
-                        "Nostalgia Rewind" -> "classic 90s 2000s throwback hits"
-                        "Melancholy Moods" -> "sad emotional slow songs hits"
-                        "Party & Dance" -> "party dance edm club banger hits"
-                        "Morning Acoustic" -> "morning acoustic coffee sunshine songs"
-                        else -> "$targetPrompt music hits"
-                    }
-                    val finalSearch = if (query.isNotBlank()) query.trim() else searchQuery
-                    val res1 = YtMusicRepository.search(finalSearch, SearchFilter.SONGS)
-                        .getOrDefault(emptyList())
-                        .filterIsInstance<SearchResult.Track>()
-                        .map { it.song }
-                    if (res1.size < 20) {
-                        val fallbackSearch = if (query.isNotBlank()) "$targetPrompt top hits" else "$vibeName popular tracks"
-                        val res2 = YtMusicRepository.search(fallbackSearch, SearchFilter.SONGS)
+                // Step 0: Ensure rich candidate pool by querying YouTube Music when candidates are low or matching
+                val onlineCandidates = withContext(Dispatchers.IO) {
+                    try {
+                        val searchQuery = when (vibeName) {
+                            "Workout Energy" -> "workout gym high energy motivation hits"
+                            "Late Night Chill" -> "late night chill lofi r&b relax songs"
+                            "Carnatic & Classical" -> "carnatic classical ragam songs hits"
+                            "Indian Cinema Hits" -> "indian cinema songs hits tamil telugu hindi"
+                            "Deep Focus & Beats" -> "deep focus study beats instrumental lofi"
+                            "Indie & Acoustic" -> "indie acoustic guitar songs hits"
+                            "Nostalgia Rewind" -> "classic 90s 2000s throwback hits"
+                            "Melancholy Moods" -> "sad emotional slow songs hits"
+                            "Party & Dance" -> "party dance edm club banger hits"
+                            "Morning Acoustic" -> "morning acoustic coffee sunshine songs"
+                            else -> "$targetPrompt music hits"
+                        }
+                        val finalSearch = if (query.isNotBlank()) query.trim() else searchQuery
+                        val res1 = YtMusicRepository.search(finalSearch, SearchFilter.SONGS)
                             .getOrDefault(emptyList())
                             .filterIsInstance<SearchResult.Track>()
                             .map { it.song }
-                        (res1 + res2).distinctBy { it.videoId }
-                    } else {
-                        res1
-                    }
-                } catch (_: Throwable) {
-                    emptyList()
-                }
-            }
-
-            val allCandidates = (availableSongs + onlineCandidates).distinctBy { it.videoId }
-            val candidates = allCandidates.take(50)
-
-            // Step 1: Query online free open-source AI inference for realtime curation
-            val aiSelectedIndices = withContext(Dispatchers.IO) {
-                try {
-                    val candidateSummary = candidates.mapIndexed { idx, s ->
-                        "$idx: ${s.title.take(35)} by ${s.artist.take(25)}"
-                    }.joinToString("\n")
-
-                    val payload = JSONObject().apply {
-                        val msgs = JSONArray().apply {
-                            put(JSONObject().apply {
-                                put("role", "system")
-                                put(
-                                    "content",
-                                    "You are a world-class AI music supervisor and curator. Given a target vibe, mood, tempo, or genre (including Carnatic, Indian regional [Tamil/Telugu/Hindi/Malayalam/Kannada/Punjabi], Lo-Fi, Film OSTs, Western, Indie, Electronic, Classical, etc.) and candidate songs [index: title by artist], select the 20 to 25 songs that best match the vibe, culture, and emotional resonance. Sequence them into an exquisite cohesive listening journey. Return ONLY a comma-separated list of candidate index numbers (e.g. 2, 7, 11, 14, 23). Zero markdown or commentary.",
-                                )
-                            })
-                            put(JSONObject().apply {
-                                put("role", "user")
-                                put(
-                                    "content",
-                                    "Target Vibe: $targetPrompt\nCandidate Songs:\n$candidateSummary",
-                                )
-                            })
+                        if (res1.size < 20) {
+                            val fallbackSearch = if (query.isNotBlank()) "$targetPrompt top hits" else "$vibeName popular tracks"
+                            val res2 = YtMusicRepository.search(fallbackSearch, SearchFilter.SONGS)
+                                .getOrDefault(emptyList())
+                                .filterIsInstance<SearchResult.Track>()
+                                .map { it.song }
+                            val combined = (res1 + res2).distinctBy { it.videoId }
+                            if (combined.size < 15) {
+                                val broadSearch = if (query.isNotBlank()) targetPrompt else "$vibeName songs"
+                                val res3 = YtMusicRepository.search(broadSearch, SearchFilter.SONGS)
+                                    .getOrDefault(emptyList())
+                                    .filterIsInstance<SearchResult.Track>()
+                                    .map { it.song }
+                                (combined + res3).distinctBy { it.videoId }
+                            } else {
+                                combined
+                            }
+                        } else {
+                            res1
                         }
-                        put("messages", msgs)
-                    }.toString()
-
-                    val conn = (URL("https://text.pollinations.ai/").openConnection() as HttpURLConnection).apply {
-                        requestMethod = "POST"
-                        connectTimeout = 7000
-                        readTimeout = 7000
-                        doOutput = true
-                        setRequestProperty("Content-Type", "application/json")
-                        setRequestProperty("User-Agent", "HushMusic/1.0")
-                    }
-
-                    conn.outputStream.use { os ->
-                        os.write(payload.toByteArray(Charsets.UTF_8))
-                    }
-
-                    if (conn.responseCode in 200..299) {
-                        val responseText = conn.inputStream.bufferedReader(Charsets.UTF_8).use { it.readText() }
-                        val nums = Regex("\\d+").findAll(responseText).mapNotNull { it.value.toIntOrNull() }.toList()
-                        nums.filter { it in candidates.indices }.distinct()
-                    } else {
+                    } catch (_: Throwable) {
                         emptyList()
                     }
-                } catch (_: Throwable) {
-                    emptyList()
                 }
-            }
 
-            // Step 2: Use AI indices if retrieved; otherwise fallback seamlessly to multi-pass semantic catalog ranking
-            val chosenTracks: List<Song> = if (aiSelectedIndices.isNotEmpty() && aiSelectedIndices.size >= 5) {
-                isLiveAiCurated = true
-                val aiPicked = aiSelectedIndices.mapNotNull { candidates.getOrNull(it) }
-                val remaining = candidates.filter { it !in aiPicked }
-                (aiPicked + remaining).distinctBy { it.videoId }.take(25)
-            } else {
-                // Intelligent semantic tokenizer & multi-pass catalog ranker
-                val tokens = targetPrompt.lowercase(Locale.ROOT)
-                    .split(Regex("[\\s,;:.\\-_/()\\[\\]]+"))
-                    .filter { it.length > 1 }
+                val allCandidates = (availableSongs + onlineCandidates).distinctBy { it.videoId }
+                val candidates = allCandidates.take(50)
 
-                val vibeKeywords = vibes.find { it.first == vibeName }?.second.orEmpty()
-                val allKeywords = (vibeKeywords + tokens).distinct()
+                // Step 1: Query online free open-source AI inference for realtime curation (2500ms timeout)
+                val aiSelectedIndices = withContext(Dispatchers.IO) {
+                    try {
+                        val candidateSummary = candidates.mapIndexed { idx, s ->
+                            "$idx: ${s.title.take(35)} by ${s.artist.take(25)}"
+                        }.joinToString("\n")
 
-                // Genre / Region / Mood weights
-                val highWeightKeywords = setOf(
-                    "carnatic", "classical", "raga", "ragam", "tamil", "telugu", "hindi",
-                    "bollywood", "kollywood", "tollywood", "malayalam", "kannada", "punjabi",
-                    "lofi", "lo-fi", "ost", "soundtrack", "acoustic", "rock", "indie", "jazz",
-                    "ambient", "edm", "workout", "chill", "sad", "party",
-                )
+                        val payload = JSONObject().apply {
+                            val msgs = JSONArray().apply {
+                                put(JSONObject().apply {
+                                    put("role", "system")
+                                    put(
+                                        "content",
+                                        "You are a world-class AI music supervisor and curator. Given a target vibe, mood, tempo, or genre and candidate songs [index: title by artist], select the 20 to 25 songs that best match the vibe. Return ONLY a comma-separated list of candidate index numbers (e.g. 2, 7, 11, 14, 23). Zero markdown or commentary.",
+                                    )
+                                })
+                                put(JSONObject().apply {
+                                    put("role", "user")
+                                    put(
+                                        "content",
+                                        "Target Vibe: $targetPrompt\nCandidate Songs:\n$candidateSummary",
+                                    )
+                                })
+                            }
+                            put("messages", msgs)
+                        }.toString()
 
-                // Pass 1: Semantic relevance scoring
-                val scored = allCandidates.map { song ->
-                    val titleLower = song.title.lowercase(Locale.ROOT)
-                    val artistLower = song.artist.lowercase(Locale.ROOT)
-                    val albumLower = song.albumName?.lowercase(Locale.ROOT).orEmpty()
-                    val fullText = "$titleLower $artistLower $albumLower"
+                        val conn = (URL("https://text.pollinations.ai/").openConnection() as HttpURLConnection).apply {
+                            requestMethod = "POST"
+                            connectTimeout = 2500
+                            readTimeout = 2500
+                            doOutput = true
+                            setRequestProperty("Content-Type", "application/json")
+                            setRequestProperty("User-Agent", "HushMusic/1.0")
+                        }
 
-                    var score = 0
-                    for (kw in allKeywords) {
-                        if (fullText.contains(kw)) {
-                            score += if (kw in highWeightKeywords) 6 else 3
-                            if (titleLower.contains(kw)) score += 2
-                            if (artistLower.contains(kw)) score += 2
+                        conn.outputStream.use { os ->
+                            os.write(payload.toByteArray(Charsets.UTF_8))
+                        }
+
+                        if (conn.responseCode in 200..299) {
+                            val responseText = conn.inputStream.bufferedReader(Charsets.UTF_8).use { it.readText() }
+                            val nums = Regex("\\d+").findAll(responseText).mapNotNull { it.value.toIntOrNull() }.toList()
+                            nums.filter { it in candidates.indices }.distinct()
+                        } else {
+                            emptyList()
+                        }
+                    } catch (_: Throwable) {
+                        emptyList()
+                    }
+                }
+
+                // Step 2: Use AI indices if retrieved; otherwise fallback seamlessly to multi-pass semantic catalog ranking
+                val chosenTracks: List<Song> = if (aiSelectedIndices.isNotEmpty() && aiSelectedIndices.size >= 5) {
+                    isLiveAiCurated = true
+                    val aiPicked = aiSelectedIndices.mapNotNull { candidates.getOrNull(it) }
+                    val remaining = candidates.filter { it !in aiPicked }
+                    (aiPicked + remaining).distinctBy { it.videoId }.take(25)
+                } else {
+                    // Intelligent semantic tokenizer & multi-pass catalog ranker
+                    val tokens = targetPrompt.lowercase(Locale.ROOT)
+                        .split(Regex("[\\s,;:.\\-_/()\\[\\]]+"))
+                        .filter { it.length > 1 }
+
+                    val vibeKeywords = vibes.find { it.first == vibeName }?.second.orEmpty()
+                    val allKeywords = (vibeKeywords + tokens).distinct()
+
+                    // Genre / Region / Mood weights
+                    val highWeightKeywords = setOf(
+                        "carnatic", "classical", "raga", "ragam", "tamil", "telugu", "hindi",
+                        "bollywood", "kollywood", "tollywood", "malayalam", "kannada", "punjabi",
+                        "lofi", "lo-fi", "ost", "soundtrack", "acoustic", "rock", "indie", "jazz",
+                        "ambient", "edm", "workout", "chill", "sad", "party",
+                    )
+
+                    // Pass 1: Semantic relevance scoring
+                    val scored = allCandidates.map { song ->
+                        val titleLower = song.title.lowercase(Locale.ROOT)
+                        val artistLower = song.artist.lowercase(Locale.ROOT)
+                        val albumLower = song.albumName?.lowercase(Locale.ROOT).orEmpty()
+                        val fullText = "$titleLower $artistLower $albumLower"
+
+                        var score = 0
+                        for (kw in allKeywords) {
+                            if (fullText.contains(kw)) {
+                                score += if (kw in highWeightKeywords) 6 else 3
+                                if (titleLower.contains(kw)) score += 2
+                                if (artistLower.contains(kw)) score += 2
+                            }
+                        }
+                        val pseudoRandomJitter = (song.videoId.hashCode() and 0x7FFFFFFF) % 3
+                        song to (score + pseudoRandomJitter)
+                    }
+
+                    // Pass 2: Artist diversity penalty to prevent artist monopoly
+                    val sortedCandidates = scored.sortedByDescending { it.second }.map { it.first }
+                    val artistCounts = mutableMapOf<String, Int>()
+                    val diverseList = mutableListOf<Song>()
+                    val deferredList = mutableListOf<Song>()
+
+                    for (song in sortedCandidates) {
+                        val key = song.artist.trim().lowercase(Locale.ROOT)
+                        val count = artistCounts.getOrDefault(key, 0)
+                        if (count < 3) {
+                            diverseList.add(song)
+                            artistCounts[key] = count + 1
+                        } else {
+                            deferredList.add(song)
                         }
                     }
-                    val pseudoRandomJitter = (song.videoId.hashCode() and 0x7FFFFFFF) % 3
-                    song to (score + pseudoRandomJitter)
-                }
 
-                // Pass 2: Artist diversity penalty to prevent artist monopoly
-                val sortedCandidates = scored.sortedByDescending { it.second }.map { it.first }
-                val artistCounts = mutableMapOf<String, Int>()
-                val diverseList = mutableListOf<Song>()
-                val deferredList = mutableListOf<Song>()
-
-                for (song in sortedCandidates) {
-                    val key = song.artist.trim().lowercase(Locale.ROOT)
-                    val count = artistCounts.getOrDefault(key, 0)
-                    if (count < 3) {
-                        diverseList.add(song)
-                        artistCounts[key] = count + 1
+                    val finalSelection = (diverseList + deferredList).distinctBy { it.videoId }
+                    if (finalSelection.size >= 20) {
+                        finalSelection.take(25)
                     } else {
-                        deferredList.add(song)
+                        (finalSelection + allCandidates).distinctBy { it.videoId }.take(25)
                     }
                 }
 
-                val finalSelection = (diverseList + deferredList).distinctBy { it.videoId }
-                if (finalSelection.size >= 20) {
-                    finalSelection.take(25)
+                val finalizedTracks = if (chosenTracks.size < 15 && allCandidates.size >= 15) {
+                    (chosenTracks + allCandidates).distinctBy { it.videoId }.take(25)
                 } else {
-                    (finalSelection + allCandidates).distinctBy { it.videoId }.take(25)
+                    chosenTracks.take(25)
                 }
-            }
 
-            curatedSongs.clear()
-            for ((idx, song) in chosenTracks.withIndex()) {
-                curatedSongs.add(song)
-                if (idx < 12) {
-                    delay(20)
+                curatedSongs.clear()
+                curatedSongs.addAll(finalizedTracks)
+
+                playlistTitle = when {
+                    query.isNotBlank() -> "${query.trim().replaceFirstChar { it.uppercase() }} AI Mix"
+                    else -> "$vibeName AI Mix"
                 }
+            } catch (_: Throwable) {
+                // Keep existing or graceful state
+            } finally {
+                hasGenerated = true
+                isGenerating = false
             }
-
-            playlistTitle = when {
-                query.isNotBlank() -> "${query.trim().replaceFirstChar { it.uppercase() }} AI Mix"
-                else -> "$vibeName AI Mix"
-            }
-            hasGenerated = true
-            isGenerating = false
         }
     }
 
