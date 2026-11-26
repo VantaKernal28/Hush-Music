@@ -3380,7 +3380,7 @@ private fun BitChordApp(
                                     if (id.isNotBlank()) {
                                         viewModel.openDetail(id, name, "Artist", null, BrowseType.ARTIST)
                                     } else {
-                                        openByName(name, null, BrowseType.ARTIST)
+                                        openByName(null, name, "Artist", BrowseType.ARTIST)
                                     }
                                 },
                                 onAddSuggested = { song -> viewModel.addSuggestedSong(page.browseId, song) },
