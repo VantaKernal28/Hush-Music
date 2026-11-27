@@ -748,6 +748,45 @@
                 android:resource="@xml/widget_media_pill" />
         </receiver>
 
+        <!-- Retro Analog Cassette Tape Widget -->
+        <receiver
+            android:name=".widget.CassetteWidget"
+            android:exported="false"
+            android:label="@string/widget_cassette_label">
+            <intent-filter>
+                <action android:name="android.appwidget.action.APPWIDGET_UPDATE" />
+            </intent-filter>
+            <meta-data
+                android:name="android.appwidget.provider"
+                android:resource="@xml/widget_cassette_info" />
+        </receiver>
+
+        <!-- Material 3 Expressive Widget -->
+        <receiver
+            android:name=".widget.M3Widget"
+            android:exported="false"
+            android:label="@string/widget_m3_label">
+            <intent-filter>
+                <action android:name="android.appwidget.action.APPWIDGET_UPDATE" />
+            </intent-filter>
+            <meta-data
+                android:name="android.appwidget.provider"
+                android:resource="@xml/widget_m3_info" />
+        </receiver>
+
+        <!-- Classic Liquid Glass Widget -->
+        <receiver
+            android:name=".widget.ClassicWidget"
+            android:exported="false"
+            android:label="@string/widget_classic_label">
+            <intent-filter>
+                <action android:name="android.appwidget.action.APPWIDGET_UPDATE" />
+            </intent-filter>
+            <meta-data
+                android:name="android.appwidget.provider"
+                android:resource="@xml/widget_classic_info" />
+        </receiver>
+
         <!-- The transport buttons. Reached only by this app's own PendingIntents. -->
         <receiver
             android:name=".widget.MediaWidgetActions"

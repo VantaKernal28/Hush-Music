@@ -113,7 +113,7 @@ fun AiPlaylistPillButton(
             .graphicsLayer {
                 scaleX = pressScale * breatheScale
                 scaleY = pressScale * breatheScale
-                alpha = if (pressed) 1f else 0.74f
+                alpha = if (isPressed) 1f else 0.74f
             }
             .then(glassModifier)
             .clickable(

@@ -7851,8 +7851,9 @@ class PlaybackService : MediaLibraryService() {
                         applyMasterVolumeAndZeroCheck()
                         return@launch
                     }
+                    val factory = mediaSourceFactory ?: DefaultMediaSourceFactory(this@PlaybackService)
                     val secondary = remixPlayer ?: ExoPlayer.Builder(this@PlaybackService)
-                        .setMediaSourceFactory(mediaSourceFactory)
+                        .setMediaSourceFactory(factory)
                         .setHandleAudioBecomingNoisy(false)
                         .build()
                         .also {

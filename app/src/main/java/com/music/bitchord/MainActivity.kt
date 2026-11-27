@@ -161,6 +161,7 @@ import com.music.bitchord.data.model.SearchHistoryEntity
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import com.music.bitchord.data.model.durationMillis
+import com.music.bitchord.data.model.artworkAt
 import com.music.bitchord.data.scrobbling.LastFM
 import com.music.bitchord.data.settings.AppSettings
 import com.music.bitchord.data.settings.BitPerfectMode
@@ -947,8 +948,7 @@ private fun BitChordApp(
         } else if (onboardingComplete &&
             !dontShowDisplayModePrompt &&
             !displayModePromptedThisLaunch &&
-            !showStandByDisplayMode &&
-            !(player.song?.isVideo == true && playerRaised)
+            !showStandByDisplayMode
         ) {
             displayModePromptedThisLaunch = true
             showDisplayModePrompt = true
@@ -4301,7 +4301,7 @@ private fun BitChordApp(
                 }
 
                 // Fade out completely on Search/Routes/Details and sit subtly faded elsewhere
-                AnimatedVisibility(
+                androidx.compose.animation.AnimatedVisibility(
                     visible = route == null && detail == null && selectedMoodGenre == null && selectedTab != TAB_SEARCH,
                     enter = fadeIn(tween(240)),
                     exit = fadeOut(tween(200)),
@@ -5172,10 +5172,11 @@ private fun BitChordApp(
         // ---- Remix Studio Sheet ----
         if (showSongMixer) {
             val mixerHistoryState by viewModel.history.collectAsStateWithLifecycle()
-            val mixerCandidates = remember(mixerHistoryState, topDetail, player.queue, player.song) {
-                val fromHistory = (mixerHistoryState as? com.music.bitchord.data.model.UiState.Success<List<Song>>)?.data.orEmpty()
-                val fromDetail = topDetail?.songs.orEmpty()
-                (player.queue + fromHistory + fromDetail)
+            val mixerCandidates: List<Song> = remember(mixerHistoryState, topDetail, player.queue, player.song) {
+                val fromHistory: List<Song> = (mixerHistoryState as? com.music.bitchord.data.model.UiState.Success<List<Song>>)?.data.orEmpty()
+                val fromDetail: List<Song> = (topDetail?.songs as? com.music.bitchord.data.model.UiState.Success<List<Song>>)?.data.orEmpty()
+                val fromQueue: List<Song> = player.queue
+                (fromQueue + fromHistory + fromDetail)
                     .distinctBy { it.videoId }
                     .filter { it.videoId != player.song?.videoId }
             }
@@ -6344,7 +6345,7 @@ private fun BitChordApp(
                     ),
                 ) {
                     val view = androidx.compose.ui.platform.LocalView.current
-                    SideEffect {
+                    androidx.compose.runtime.SideEffect {
                         val window = (view.parent as? androidx.compose.ui.window.DialogWindowProvider)?.window
                         if (window != null) {
                             if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.S) {

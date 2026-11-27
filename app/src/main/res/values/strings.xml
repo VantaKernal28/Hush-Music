@@ -195,6 +195,15 @@
     <string name="widget_pill_label">Now playing 4×1</string>
     <string name="widget_pill_description">The track with Like, Shuffle and playback controls, in a single row.</string>
     <string name="widget_preview_pill">Song title - Artist</string>
+    <string name="widget_cassette_label">Retro Cassette</string>
+    <string name="widget_cassette_description">Vintage analog cassette tape with reel tape window and retro physical deck buttons.</string>
+    <string name="widget_m3_label">Material 3 Expressive</string>
+    <string name="widget_m3_description">Modern Material You dynamic color card with squircle cover and pill controls.</string>
+    <string name="widget_classic_label">Classic Liquid Glass</string>
+    <string name="widget_classic_description">Translucent frosted glass player with specular highlights and glowing accents.</string>
+    <string name="home_screen_widgets">Home Screen Widgets</string>
+    <string name="widget_added_toast">Widget pinned to home screen!</string>
+    <string name="widget_pin_unsupported">Your launcher doesn\'t support automatic pinning. Please touch and hold your home screen, tap Widgets, and drag Hush Music onto your screen.</string>
     <string name="download_quality">Download quality</string>
     <string name="download_wifi_only">Download over Wi-Fi only</string>
     <string name="convert_to_audio">Convert to audio</string>

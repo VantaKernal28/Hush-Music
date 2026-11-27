@@ -203,6 +203,7 @@ import com.music.bitchord.data.settings.AppFont
 import com.music.bitchord.data.settings.PlayerTheme
 import com.music.bitchord.data.stats.Backup
 import com.music.bitchord.playback.AudioCache
+import com.music.bitchord.ui.components.AppRestartController
 import com.music.bitchord.ui.player.fullBleedArtworkAvailable
 import kotlinx.coroutines.launch
 import kotlin.math.roundToInt
@@ -265,6 +266,13 @@ fun SettingsScreen(
     var showLiquidGlassSheet by rememberSaveable { mutableStateOf(false) }
     var showMaterialMenuBarSheet by rememberSaveable { mutableStateOf(false) }
     var showTipsAndTricksSheet by rememberSaveable { mutableStateOf(false) }
+    var showWidgetsSheet by rememberSaveable { mutableStateOf(false) }
+
+    if (showWidgetsSheet) {
+        com.music.bitchord.ui.sheets.WidgetStudioSheet(
+            onDismiss = { showWidgetsSheet = false },
+        )
+    }
 
     if (showTipsAndTricksSheet) {
         TipsAndTricksSheet(
@@ -1920,6 +1928,15 @@ fun SettingsScreen(
                         onClick = { showMaterialMenuBarSheet = true },
                     )
                 }
+            }
+            val homeScreenWidgetsTitle = "Home Screen Widgets"
+            row(homeScreenWidgetsTitle, "widget", "widgets", "cassette", "retro", "material", "home screen", "preview") {
+                SettingsRow(
+                    icon = SfIcons.Sparkles,
+                    title = homeScreenWidgetsTitle,
+                    subtitle = "Cassette Tape, Material 3 Expressive & Classic widgets",
+                    onClick = { showWidgetsSheet = true },
+                )
             }
             // Left out where the player won't honour it: a window too wide for
             // the player to fill and too narrow to stand a page beside it keeps

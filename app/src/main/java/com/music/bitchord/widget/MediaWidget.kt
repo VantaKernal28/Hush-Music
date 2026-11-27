@@ -130,6 +130,9 @@ abstract class MediaWidget : AppWidgetProvider() {
         fun refresh(context: Context) {
             val app = context.applicationContext
             MediaWidgetPill.refresh(app)
+            CassetteWidget.refresh(app)
+            M3Widget.refresh(app)
+            ClassicWidget.refresh(app)
             scope.launch {
                 val manager = runCatching { AppWidgetManager.getInstance(app) }.getOrNull() ?: return@launch
                 for ((provider, fallbackWidthDp) in PROVIDERS) {
