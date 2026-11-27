@@ -118,6 +118,7 @@ class BitChordApplication : Application(), SingletonImageLoader.Factory, Configu
         }
 
         AppSettings.init(this, authStore)
+        com.music.bitchord.ui.components.AppLocaleHelper.syncLocaleOnAppCreate(this)
         SpotifyToken.init(this)
 
         if (AppSettings.consumeVersionUpdate(BuildConfig.VERSION_CODE)) {

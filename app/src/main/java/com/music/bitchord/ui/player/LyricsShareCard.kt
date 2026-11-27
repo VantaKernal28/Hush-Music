@@ -4,228 +4,574 @@ import android.content.Context
 import android.graphics.Bitmap
 import android.graphics.Canvas
 import android.graphics.Color
+import android.graphics.LinearGradient
 import android.graphics.Paint
+import android.graphics.Path
+import android.graphics.RadialGradient
+import android.graphics.RectF
+import android.graphics.Shader
+import androidx.core.content.res.ResourcesCompat
+import androidx.core.graphics.ColorUtils
+import com.music.bitchord.R
 import com.music.bitchord.ui.replay.Fonts
-import com.music.bitchord.ui.replay.drawArtwork
-import com.music.bitchord.ui.replay.drawBackdrop
-import com.music.bitchord.ui.replay.drawLogo
 import com.music.bitchord.ui.replay.ellipsised
 import com.music.bitchord.ui.replay.loadBitmap
-import kotlin.math.roundToInt
+import com.music.bitchord.ui.replay.paletteOf
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
+import kotlin.math.PI
+import kotlin.math.atan2
+import kotlin.math.cos
+import kotlin.math.min
+import kotlin.math.roundToInt
+import kotlin.math.sin
+import kotlin.math.tan
+
+internal enum class LyricsCardThemeMode(val label: String) {
+    ALBUM_GRADIENT("Album Gradient"),
+    APP_THEME("App Theme"),
+}
+
+internal data class LyricsCardRenderResult(
+    val bitmap: Bitmap,
+    val topHexColor: String,
+    val bottomHexColor: String,
+)
 
 /**
- * The picked lines as one picture, drawn to a bitmap you can send.
- *
- * ## Why this is drawn rather than screenshotted
- *
- * The same reason the Replay is. A screenshot of the lyrics panel carries the
- * scrubber, the glow falloff, whichever lines happened to be on screen and the
- * status bar of that particular phone, so two people sharing the same verse
- * would send two different-looking pictures. A card laid out here is the verse,
- * the sleeve and this app's mark, and nothing else — and it is only as tall as
- * that verse needs, which holds it inside 1080×1920 (9:16): the shape a story
- * or a chat head expects. Keeping it there is the player's job, by refusing
- * more words at the pick rather than by shrinking them here.
- *
- * ## Why it isn't Compose
- *
- * `Bitmap` + `android.graphics.Canvas`, exactly as
- * [com.music.bitchord.ui.replay.ReplayPoster] does it, and for the same
- * reasons written up there: Compose offscreen on minSdk 26 is a cascade of
- * hardware bitmaps and layers that fails differently per device, while a
- * software canvas draws identically from API 26 up. The backdrop, the logo, the
- * fonts and the sleeve are shared with the Replay by importing them rather than
- * by copying, so the two cards cannot drift apart.
- *
- * ## Fitting the type
- *
- * A passage can be one line or twenty, so both the size and the height are
- * chosen rather than fixed: the layout is retried down a fixed ladder of sizes
- * until the rows stop overflowing, and the card is then grown to exactly the
- * room those rows take. The bottom rung of that ladder is a floor rather than a
- * last resort — no card ever sets type smaller than it to squeeze a passage
- * in, so a passage too long for the frame lengthens the card instead of being
- * cut, or made small enough to hold a phone at arm's length to read.
+ * Renders the Spotify/Apple-inspired Hush Lyrics Card bitmap with smooth
+ * Apple continuous squircle corners, selectable App Theme vs Album Gradient background,
+ * and custom M3E small top-left album artwork shape.
  */
 internal suspend fun renderLyricsShareCard(
     context: Context,
     card: LyricsShareRequest,
-    /** Pad out to the full 1080×1920 frame, the passage centred in the room. */
     story: Boolean = false,
-): Bitmap = withContext(Dispatchers.Default) {
+    themeMode: LyricsCardThemeMode = LyricsCardThemeMode.ALBUM_GRADIENT,
+    coverShapeName: String = "Squircle",
+    playerPrimaryArgb: Int = 0xFF0077C8.toInt(),
+    playerSecondaryArgb: Int = 0xFF5A48D8.toInt(),
+    playerSurfaceArgb: Int = 0xFF191B24.toInt(),
+): Bitmap = renderLyricsShareCardWithColors(
+    context = context,
+    card = card,
+    story = story,
+    themeMode = themeMode,
+    coverShapeName = coverShapeName,
+    playerPrimaryArgb = playerPrimaryArgb,
+    playerSecondaryArgb = playerSecondaryArgb,
+    playerSurfaceArgb = playerSurfaceArgb,
+).bitmap
+
+internal suspend fun renderLyricsShareCardWithColors(
+    context: Context,
+    card: LyricsShareRequest,
+    story: Boolean = false,
+    themeMode: LyricsCardThemeMode = LyricsCardThemeMode.ALBUM_GRADIENT,
+    coverShapeName: String = "Squircle",
+    playerPrimaryArgb: Int = 0xFF0077C8.toInt(),
+    playerSecondaryArgb: Int = 0xFF5A48D8.toInt(),
+    playerSurfaceArgb: Int = 0xFF191B24.toInt(),
+): LyricsCardRenderResult = withContext(Dispatchers.Default) {
     val type = Fonts(context)
     val cover = card.artworkUrl?.let { loadBitmap(context, it) }
 
-    // ── Sizing ──────────────────────────────────────────────────────────────
-    // No room is reserved for the words to sit in: they get their own height,
-    // and the card is built down from that number. A chorus comes out a strip
-    // barely taller than its own text instead of a 9:16 sheet with a paragraph
-    // floating in the middle of it, and the size comes down only as far as the
-    // ladder goes — past that the frame gives rather than the type does.
-    val headTop = HEADER_BOTTOM + GAP_ABOVE_BODY
-    val frameRoom = MAX_CARD_H - FOOTER_THUMB - FOOTER_PAD - GAP_BELOW_BODY - headTop
-    val plan = fittestPlan(type, card.lines, frameRoom)
-    // A story is always the whole frame, so the spare room is split above and
-    // below the passage; otherwise the card is only as tall as its words.
-    val spare = if (story) (frameRoom - plan.content).coerceAtLeast(0f) else 0f
-    val bodyTop = headTop + spare / 2
-    // The passage ends where its own rows end, and everything under it — the
-    // gap, the sleeve credit, the foot — hangs off that. Because the card is
-    // measured from the same sum the rows are drawn from, no line can ever
-    // land past the bottom by a rounding error and be replaced by a mark
-    // saying something was left out.
-    val bodyBottom = bodyTop + plan.content
-    val cardH = bodyBottom + spare / 2 + GAP_BELOW_BODY + FOOTER_THUMB + FOOTER_PAD
+    val extracted = paletteOf(cover)
+    val albumLead = vibrantColor(extracted.getOrElse(0) { playerPrimaryArgb })
+    val albumAccent = vibrantColor(extracted.getOrElse(1) { albumLead })
+    val albumDeep = darkenOrShift(extracted.getOrElse(2) { albumLead }, 0.72f)
 
-    val bitmap = Bitmap.createBitmap(CARD_W, cardH.roundToInt(), Bitmap.Config.ARGB_8888)
-    val canvas = Canvas(bitmap)
-    drawBackdrop(canvas, cover, 0f, cardH)
+    val appPrimary = vibrantColor(playerPrimaryArgb)
+    val appSecondary = vibrantColor(playerSecondaryArgb)
+    val appIsDark = ColorUtils.calculateLuminance(playerSurfaceArgb) < 0.45
 
-    // ── Header ──────────────────────────────────────────────────────────────
-    // The mark alone, at the top right — the same one the Replay carries, so
-    // two of these cards still read as one family. Nothing else goes above
-    // the passage: the picture is the verse, not a caption for it.
-    val brand = type.heading(46f, 0xE6FFFFFF.toInt()).apply {
-        textAlign = Paint.Align.RIGHT
+    val cardStartColor: Int
+    val cardEndColor: Int
+    val storyBgTop: Int
+    val storyBgMid: Int
+    val storyBgBottom: Int
+
+    if (themeMode == LyricsCardThemeMode.ALBUM_GRADIENT) {
+        cardStartColor = albumLead
+        cardEndColor = darkenOrShift(blendColors(albumLead, albumAccent, 0.55f), 0.76f)
+        storyBgTop = darkenOrShift(albumLead, 0.90f)
+        storyBgMid = darkenOrShift(albumAccent, 0.78f)
+        storyBgBottom = albumDeep
+    } else {
+        cardStartColor = if (appIsDark) {
+            blendColors(playerSurfaceArgb, appPrimary, 0.24f)
+        } else {
+            blendColors(0xFFF6F5FA.toInt(), appPrimary, 0.18f)
+        }
+        cardEndColor = if (appIsDark) {
+            blendColors(playerSurfaceArgb, appSecondary, 0.34f)
+        } else {
+            blendColors(0xFFEDEBF4.toInt(), appSecondary, 0.24f)
+        }
+        storyBgTop = if (appIsDark) darkenOrShift(appPrimary, 0.85f) else blendColors(appPrimary, 0xFFFFFFFF.toInt(), 0.20f)
+        storyBgMid = if (appIsDark) playerSurfaceArgb else blendColors(appSecondary, 0xFFF4F3FA.toInt(), 0.35f)
+        storyBgBottom = if (appIsDark) darkenOrShift(appSecondary, 0.62f) else blendColors(appSecondary, 0xFFE5E2F0.toInt(), 0.25f)
     }
-    canvas.drawText(BRAND, CARD_W - CARD_MARGIN, HEADER_BASELINE, brand)
-    drawLogo(
-        canvas,
-        context,
-        CARD_W - CARD_MARGIN - brand.measureText(BRAND) - LOGO_GAP,
-        HEADER_BASELINE,
-    )
 
-    // ── The passage ─────────────────────────────────────────────────────────
-    // Every row that exists is drawn: the frame below is measured from
-    // wherever these rows end, so there is never room to be short of and
-    // nothing that has to be cut to make it.
-    var y = bodyTop
+    val cardMidLum = ColorUtils.calculateLuminance(blendColors(cardStartColor, cardEndColor, 0.5f))
+    val lightInkSurface = cardMidLum > 0.52
+    val inkColor = if (lightInkSurface) 0xFF141418.toInt() else Color.WHITE
+    val subInkColor = ColorUtils.setAlphaComponent(inkColor, 198)
+    val subLyricColor = ColorUtils.setAlphaComponent(inkColor, 215)
+    val gapInkColor = ColorUtils.setAlphaComponent(inkColor, 132)
+
+    val cardLeft = if (story) STORY_CARD_INSET else 0f
+    val cardWidth = CARD_W - cardLeft * 2f
+    val cardPad = if (story) 58f else CARD_MARGIN
+    val contentW = cardWidth - cardPad * 2f
+
+    val headHeight = SMALL_COVER_SIZE + 44f
+    val footerHeight = BRAND_LOGO_SIZE + 54f
+    val maxCardHeight = if (story) (STORY_H - STORY_CARD_TOP_MIN * 2f) else MAX_CARD_H
+    val maxLyricsRoom = (maxCardHeight - cardPad * 2f - headHeight - footerHeight).coerceAtLeast(300f)
+
+    val safeLines = card.lines.ifEmpty {
+        listOf(
+            LyricsShareLine(
+                text = card.song.title,
+                subText = card.song.artist,
+            ),
+        )
+    }
+    val plan = fittestPlan(type, safeLines, maxLyricsRoom, contentW, inkColor, subLyricColor, gapInkColor)
+
+    val cardH = cardPad + headHeight + plan.content + 46f + footerHeight + cardPad
+    val outW = CARD_W
+    val outH = if (story) STORY_H else cardH.roundToInt().coerceAtMost(MAX_CARD_H.toInt())
+
+    val bitmap = Bitmap.createBitmap(outW, outH, Bitmap.Config.ARGB_8888)
+    val canvas = Canvas(bitmap)
+
+    if (story) {
+        val storyPaint = Paint(Paint.ANTI_ALIAS_FLAG).apply {
+            shader = LinearGradient(
+                0f,
+                0f,
+                outW.toFloat(),
+                outH.toFloat(),
+                intArrayOf(storyBgTop, storyBgMid, storyBgBottom),
+                floatArrayOf(0f, 0.50f, 1f),
+                Shader.TileMode.CLAMP,
+            )
+        }
+        canvas.drawRect(0f, 0f, outW.toFloat(), outH.toFloat(), storyPaint)
+
+        // Subtle atmospheric radial bloom replacing old hardcoded drawBackdrop
+        val glowColor = if (themeMode == LyricsCardThemeMode.ALBUM_GRADIENT) albumAccent else appPrimary
+        val glowPaint = Paint(Paint.ANTI_ALIAS_FLAG).apply {
+            shader = RadialGradient(
+                outW * 0.25f,
+                outH * 0.24f,
+                outW * 0.85f,
+                intArrayOf(ColorUtils.setAlphaComponent(glowColor, 120), ColorUtils.setAlphaComponent(glowColor, 0)),
+                floatArrayOf(0f, 1f),
+                Shader.TileMode.CLAMP,
+            )
+        }
+        canvas.drawRect(0f, 0f, outW.toFloat(), outH.toFloat(), glowPaint)
+    }
+
+    val cardTop = if (story) ((outH - cardH) / 2f).coerceAtLeast(48f) else 0f
+    val cardRect = RectF(cardLeft, cardTop, cardLeft + cardWidth, cardTop + cardH)
+    val cornerRadius = if (story) 64f else 70f
+    val squirclePath = continuousRoundRectPath(cardRect, radius = cornerRadius)
+
+    if (story) {
+        val shadowPaint = Paint(Paint.ANTI_ALIAS_FLAG).apply {
+            color = 0x48000000
+            setShadowLayer(44f, 0f, 22f, 0x66000000)
+        }
+        canvas.drawPath(squirclePath, shadowPaint)
+    }
+
+    canvas.save()
+    canvas.clipPath(squirclePath)
+
+    // Smooth surface gradient (App Theme vs Album Gradient)
+    val surfacePaint = Paint(Paint.ANTI_ALIAS_FLAG).apply {
+        shader = LinearGradient(
+            cardRect.left,
+            cardRect.top,
+            cardRect.right,
+            cardRect.bottom,
+            intArrayOf(cardStartColor, cardEndColor),
+            floatArrayOf(0f, 1f),
+            Shader.TileMode.CLAMP,
+        )
+    }
+    canvas.drawRect(cardRect, surfacePaint)
+
+    if (themeMode == LyricsCardThemeMode.ALBUM_GRADIENT) {
+        val bloomColor = extracted.getOrElse(3) { albumAccent }
+        val cardBloom = Paint(Paint.ANTI_ALIAS_FLAG).apply {
+            shader = RadialGradient(
+                cardRect.right - cardWidth * 0.16f,
+                cardRect.top + cardH * 0.18f,
+                cardWidth * 0.72f,
+                intArrayOf(ColorUtils.setAlphaComponent(bloomColor, 86), ColorUtils.setAlphaComponent(bloomColor, 0)),
+                floatArrayOf(0f, 1f),
+                Shader.TileMode.CLAMP,
+            )
+        }
+        canvas.drawRect(cardRect, cardBloom)
+    } else {
+        val accentGlow = Paint(Paint.ANTI_ALIAS_FLAG).apply {
+            shader = RadialGradient(
+                cardRect.left + cardWidth * 0.18f,
+                cardRect.top + cardH * 0.14f,
+                cardWidth * 0.70f,
+                intArrayOf(ColorUtils.setAlphaComponent(appPrimary, 72), ColorUtils.setAlphaComponent(appPrimary, 0)),
+                floatArrayOf(0f, 1f),
+                Shader.TileMode.CLAMP,
+            )
+        }
+        canvas.drawRect(cardRect, accentGlow)
+    }
+
+    val rimPaint = Paint(Paint.ANTI_ALIAS_FLAG).apply {
+        style = Paint.Style.STROKE
+        strokeWidth = 3f
+        color = ColorUtils.setAlphaComponent(inkColor, 34)
+    }
+    canvas.drawPath(squirclePath, rimPaint)
+
+    // Header inside card: shaped small album cover + song title + artist
+    val headerX = cardRect.left + cardPad
+    val headerY = cardRect.top + cardPad
+    val coverRect = RectF(headerX, headerY, headerX + SMALL_COVER_SIZE, headerY + SMALL_COVER_SIZE)
+    drawShapedCover(canvas, cover, coverRect, coverShapeName, inkColor)
+
+    val metaX = coverRect.right + 26f
+    val metaRoom = (cardRect.right - cardPad - metaX).coerceAtLeast(100f)
+    val titlePaint = type.body(36f, inkColor, bold = true)
+    val artistPaint = type.body(28f, subInkColor, bold = false)
+    val titleBaseline = coverRect.top + 48f
+    val artistBaseline = coverRect.top + 88f
+    canvas.drawText(ellipsised(card.song.title, titlePaint, metaRoom), metaX, titleBaseline, titlePaint)
+    canvas.drawText(ellipsised(card.song.artist, artistPaint, metaRoom), metaX, artistBaseline, artistPaint)
+
+    // Left-aligned bold lyrics body
+    var y = coverRect.bottom + 44f
     for (row in plan.rows) {
         val baseline = y + row.gapBefore - row.paint.ascent() +
             if (row.isGap) row.paint.textSize * GAP_MARKER_OFFSET else 0f
-        val x = if (row.centered) CARD_W / 2f else CARD_MARGIN
-        canvas.drawText(row.text, x, baseline, row.paint)
+        canvas.drawText(row.text, headerX, baseline, row.paint)
         y += row.gapBefore + row.height
     }
 
-    // ── Footer ──────────────────────────────────────────────────────────────
-    // Which song this is — which only the backdrop had been saying until now.
-    val thumbY = cardH - FOOTER_PAD - FOOTER_THUMB
-    drawArtwork(canvas, cover, card.song.title, CARD_MARGIN, thumbY, FOOTER_THUMB, false)
-    val textX = CARD_MARGIN + FOOTER_THUMB + 34f
-    val room = CARD_W - CARD_MARGIN - textX
-    val title = type.body(50f, Color.WHITE, bold = true)
-    canvas.drawText(ellipsised(card.song.title, title, room), textX, thumbY + 74f, title)
-    val artist = type.body(42f, 0x99FFFFFF.toInt())
-    canvas.drawText(ellipsised(card.song.artist, artist, room), textX, thumbY + 132f, artist)
+    // Bottom footer inside card: Hush transparent vector + "Hush Music"
+    val footerBottom = cardRect.bottom - cardPad
+    val logoTop = footerBottom - BRAND_LOGO_SIZE
+    val logo = runCatching {
+        ResourcesCompat.getDrawable(context.resources, R.drawable.ic_hush_transparent_logo, null)
+    }.getOrNull()
+    if (logo != null) {
+        logo.mutate().setTint(inkColor)
+        logo.setBounds(
+            headerX.toInt(),
+            logoTop.toInt(),
+            (headerX + BRAND_LOGO_SIZE).toInt(),
+            (logoTop + BRAND_LOGO_SIZE).toInt(),
+        )
+        logo.draw(canvas)
+    }
+    val brandTextX = headerX + BRAND_LOGO_SIZE + 16f
+    val brandPaint = type.body(31f, ColorUtils.setAlphaComponent(inkColor, 235), bold = true)
+    val brandBaseline = logoTop + BRAND_LOGO_SIZE * 0.74f
+    canvas.drawText(BRAND, brandTextX, brandBaseline, brandPaint)
 
-    bitmap
+    canvas.restore()
+
+    LyricsCardRenderResult(
+        bitmap = bitmap,
+        topHexColor = toHexColor(if (story) storyBgTop else cardStartColor),
+        bottomHexColor = toHexColor(if (story) storyBgBottom else cardEndColor),
+    )
 }
 
-// ── Fitting ────────────────────────────────────────────────────────────────
+/**
+ * Draws an Apple-style continuous corner squircle into an [android.graphics.Path]
+ * matching Compose `ContinuousCornerShape(smoothing = 0.607f)`.
+ */
+private fun continuousRoundRectPath(
+    rect: RectF,
+    radius: Float,
+    smoothing: Float = 0.607f,
+): Path {
+    val path = Path()
+    val w = rect.width()
+    val h = rect.height()
+    val r = radius.coerceAtMost(min(w, h) / 2f)
+    if (r <= 0f) {
+        path.addRect(rect, Path.Direction.CW)
+        return path
+    }
+    val l = rect.left
+    val t = rect.top
+    val ri = rect.right
+    val b = rect.bottom
+
+    val smoothH = (smoothing * ((w - 2 * r) / (2 * r)).coerceAtLeast(0f).coerceAtMost(1f)).coerceIn(0f, smoothing)
+    val smoothV = (smoothing * ((h - 2 * r) / (2 * r)).coerceAtLeast(0f).coerceAtMost(1f)).coerceIn(0f, smoothing)
+    val s = min(smoothH, smoothV).coerceAtLeast(0.25f)
+
+    val turn = Math.toRadians(45.0 * s)
+    val edge = (1f + s) * r
+    val arcAlong = r - r * sin(turn).toFloat()
+    val arcDepth = r * (1f - cos(turn).toFloat())
+    val c = r * (tan(turn / 2.0) * cos(turn)).toFloat()
+    val kb = (edge - arcAlong - c) / 3f
+    val ka = 2f * kb
+
+    fun corner(
+        cx: Float,
+        cy: Float,
+        ix: Float,
+        iy: Float,
+        ox: Float,
+        oy: Float,
+    ) {
+        val centerX = cx - ix * r + ox * r
+        val centerY = cy - iy * r + oy * r
+        path.lineTo(cx - ix * edge, cy - iy * edge)
+        val asx = cx - ix * arcAlong + ox * arcDepth
+        val asy = cy - iy * arcAlong + oy * arcDepth
+        path.cubicTo(
+            cx - ix * (edge - ka), cy - iy * (edge - ka),
+            cx - ix * (edge - ka - kb), cy - iy * (edge - ka - kb),
+            asx, asy,
+        )
+        val aex = cx + ox * arcAlong - ix * arcDepth
+        val aey = cy + oy * arcAlong - iy * arcDepth
+        val startAngle = Math.toDegrees(atan2((asy - centerY).toDouble(), (asx - centerX).toDouble())).toFloat()
+        val sweep = 90f - 90f * s
+        path.arcTo(RectF(centerX - r, centerY - r, centerX + r, centerY + r), startAngle, sweep, false)
+        path.cubicTo(
+            cx + ox * (edge - ka - kb), cy + oy * (edge - ka - kb),
+            cx + ox * (edge - ka), cy + oy * (edge - ka),
+            cx + ox * edge, cy + oy * edge,
+        )
+    }
+
+    path.moveTo(l + edge, t)
+    corner(ri, t, 1f, 0f, 0f, 1f)
+    corner(ri, b, 0f, 1f, -1f, 0f)
+    corner(l, b, -1f, 0f, 0f, -1f)
+    corner(l, t, 0f, -1f, 1f, 0f)
+    path.close()
+    return path
+}
+
+private fun drawShapedCover(
+    canvas: Canvas,
+    cover: Bitmap?,
+    rect: RectF,
+    shapeName: String,
+    fallbackTint: Int,
+) {
+    val clip = clipPathForShape(shapeName, rect)
+    canvas.save()
+    canvas.clipPath(clip)
+    if (cover != null) {
+        val srcSize = min(cover.width, cover.height)
+        val sx = (cover.width - srcSize) / 2
+        val sy = (cover.height - srcSize) / 2
+        val srcRect = android.graphics.Rect(sx, sy, sx + srcSize, sy + srcSize)
+        canvas.drawBitmap(cover, srcRect, rect, Paint(Paint.ANTI_ALIAS_FLAG or Paint.FILTER_BITMAP_FLAG))
+    } else {
+        val fallbackPaint = Paint(Paint.ANTI_ALIAS_FLAG).apply {
+            color = ColorUtils.setAlphaComponent(fallbackTint, 36)
+        }
+        canvas.drawRect(rect, fallbackPaint)
+    }
+    canvas.restore()
+}
+
+private fun clipPathForShape(shapeName: String, rect: RectF): Path {
+    val path = Path()
+    val w = rect.width()
+    val h = rect.height()
+    val cx = rect.centerX()
+    val cy = rect.centerY()
+    val r = min(w, h) / 2f
+
+    when (shapeName) {
+        "Squircle" -> return continuousRoundRectPath(rect, w * 0.26f)
+        "Rounded" -> path.addRoundRect(rect, w * 0.14f, h * 0.14f, Path.Direction.CW)
+        "Circle" -> path.addOval(rect, Path.Direction.CW)
+        "Pill" -> path.addRoundRect(rect, r, r, Path.Direction.CW)
+        "Puffy" -> {
+            val rBig = w * 0.36f
+            val rSmall = w * 0.16f
+            path.addRoundRect(
+                rect,
+                floatArrayOf(rBig, rBig, rSmall, rSmall, rBig, rBig, rSmall, rSmall),
+                Path.Direction.CW,
+            )
+        }
+        "Heart" -> {
+            path.moveTo(rect.left + w * 0.5f, rect.top + h * 0.88f)
+            path.cubicTo(
+                rect.left + w * 0.14f, rect.top + h * 0.65f,
+                rect.left + w * 0.04f, rect.top + h * 0.42f,
+                rect.left + w * 0.06f, rect.top + h * 0.28f,
+            )
+            path.cubicTo(
+                rect.left + w * 0.08f, rect.top + h * 0.12f,
+                rect.left + w * 0.24f, rect.top + h * 0.07f,
+                rect.left + w * 0.37f, rect.top + h * 0.12f,
+            )
+            path.cubicTo(
+                rect.left + w * 0.44f, rect.top + h * 0.15f,
+                rect.left + w * 0.48f, rect.top + h * 0.21f,
+                rect.left + w * 0.50f, rect.top + h * 0.25f,
+            )
+            path.cubicTo(
+                rect.left + w * 0.52f, rect.top + h * 0.21f,
+                rect.left + w * 0.56f, rect.top + h * 0.15f,
+                rect.left + w * 0.63f, rect.top + h * 0.12f,
+            )
+            path.cubicTo(
+                rect.left + w * 0.76f, rect.top + h * 0.07f,
+                rect.left + w * 0.92f, rect.top + h * 0.12f,
+                rect.left + w * 0.94f, rect.top + h * 0.28f,
+            )
+            path.cubicTo(
+                rect.left + w * 0.96f, rect.top + h * 0.42f,
+                rect.left + w * 0.86f, rect.top + h * 0.65f,
+                rect.left + w * 0.50f, rect.top + h * 0.88f,
+            )
+            path.close()
+        }
+        "8-Leaf Clover", "Wavy Octagon" -> addFlowerPath(path, cx, cy, r, lobes = 8, innerRatio = 0.82f)
+        "Flower", "12-Lobe Scallop" -> addFlowerPath(path, cx, cy, r, lobes = 12, innerRatio = 0.85f)
+        "Sunny", "Sunny Radiance" -> addFlowerPath(path, cx, cy, r, lobes = 16, innerRatio = 0.88f)
+        "4-Sided Cookie", "4-Lobe Clover" -> addFlowerPath(path, cx, cy, r, lobes = 4, innerRatio = 0.76f)
+        "Starburst" -> addFlowerPath(path, cx, cy, r, lobes = 6, innerRatio = 0.70f)
+        "Hexagon" -> addPolygonPath(path, cx, cy, r, sides = 6)
+        "Gem", "Diamond" -> addPolygonPath(path, cx, cy, r, sides = 4)
+        else -> return continuousRoundRectPath(rect, w * 0.24f)
+    }
+    return path
+}
+
+private fun addFlowerPath(path: Path, cx: Float, cy: Float, radius: Float, lobes: Int, innerRatio: Float) {
+    val steps = lobes * 14
+    for (i in 0..steps) {
+        val theta = (2.0 * PI * i) / steps
+        val wave = 0.5f * (1f + cos(lobes * theta).toFloat())
+        val rad = radius * (innerRatio + (1f - innerRatio) * wave)
+        val x = cx + rad * cos(theta).toFloat()
+        val y = cy + rad * sin(theta).toFloat()
+        if (i == 0) path.moveTo(x, y) else path.lineTo(x, y)
+    }
+    path.close()
+}
+
+private fun addPolygonPath(path: Path, cx: Float, cy: Float, radius: Float, sides: Int) {
+    val startAngle = -PI / 2.0
+    for (i in 0 until sides) {
+        val theta = startAngle + (2.0 * PI * i) / sides
+        val x = cx + radius * cos(theta).toFloat()
+        val y = cy + radius * sin(theta).toFloat()
+        if (i == 0) path.moveTo(x, y) else path.lineTo(x, y)
+    }
+    path.close()
+}
+
+private fun toHexColor(argb: Int): String = String.format("#%06X", argb and 0x00FFFFFF)
+
+private fun vibrantColor(color: Int): Int {
+    val hsl = FloatArray(3)
+    ColorUtils.colorToHSL(color, hsl)
+    hsl[1] = hsl[1].coerceIn(0.45f, 0.90f)
+    hsl[2] = hsl[2].coerceIn(0.28f, 0.54f)
+    return ColorUtils.HSLToColor(hsl)
+}
+
+private fun darkenOrShift(color: Int, factor: Float): Int {
+    val hsl = FloatArray(3)
+    ColorUtils.colorToHSL(color, hsl)
+    hsl[2] = (hsl[2] * factor).coerceIn(0.14f, 0.72f)
+    return ColorUtils.HSLToColor(hsl)
+}
+
+private fun blendColors(c1: Int, c2: Int, ratio: Float): Int = ColorUtils.blendARGB(c1, c2, ratio.coerceIn(0f, 1f))
 
 private class Row(
     val text: String,
     val paint: Paint,
     val height: Float,
     val gapBefore: Float,
-    /** Drawn centred rather than off the left edge — the gap marker. */
-    val centered: Boolean = false,
     val isGap: Boolean = false,
 )
 
-/** The rows at one size, with everything needed to place them. */
 private class Plan(val rows: List<Row>, val ascent: Float) {
-    /** Distance from the top of the first line to the bottom of the last. */
     val content: Float
         get() = ascent + rows.fold(0f) { total, row -> total + row.gapBefore + row.height }
 }
 
-/**
- * The largest size on [FIT_LADDER] whose rows still fit in [room], or the
- * bottom rung when none of them do.
- *
- * The bottom rung is a floor rather than a last resort: under it the type stops
- * being worth sharing, so the frame grows to hold the words instead of the
- * words shrinking to hold the frame. That the player budgets characters at the
- * pick is what keeps this branch from ever being reached in practice.
- */
 private fun fittestPlan(
     type: Fonts,
     lines: List<LyricsShareLine>,
     room: Float,
+    width: Float,
+    inkColor: Int,
+    subInkColor: Int,
+    gapColor: Int,
 ): Plan {
     for (size in FIT_LADDER) {
-        val plan = planAt(type, lines, size)
+        val plan = planAt(type, lines, size, width, inkColor, subInkColor, gapColor)
         if (plan.content <= room) return plan
     }
-    return planAt(type, lines, FIT_LADDER.last())
+    return planAt(type, lines, FIT_LADDER.last(), width, inkColor, subInkColor, gapColor)
 }
 
-/**
- * The rows at one [size], set in the face the lyrics panel draws with.
- *
- * SF Pro Display Heavy with the panel's tight tracking and its line advance,
- * carried over as the same ratios the panel's 34sp headline uses — so the card
- * reads as a still of that panel rather than as a different app quoting it.
- * Compose's tracking is absolute and `Paint`'s is a fraction of the size, hence
- * the divisions: -0.7 over 34 for the words, -0.7 over 20 for the smaller line
- * the panel hangs underneath them.
- */
-private fun planAt(type: Fonts, lines: List<LyricsShareLine>, size: Float): Plan {
-    val primary = type.heading(size, Color.WHITE).apply { letterSpacing = TRACKING }
+private fun planAt(
+    type: Fonts,
+    lines: List<LyricsShareLine>,
+    size: Float,
+    width: Float,
+    inkColor: Int,
+    subInkColor: Int,
+    gapColor: Int,
+): Plan {
+    val primary = type.heading(size, inkColor).apply { letterSpacing = TRACKING }
     val subSize = (size * SUB_RATIO).coerceAtLeast(SUB_FLOOR)
-    val secondary = type.heading(subSize, SUB_COLOR).apply { letterSpacing = SUB_TRACKING }
+    val secondary = type.body(subSize, subInkColor, bold = false).apply { letterSpacing = SUB_TRACKING }
 
     val rows = mutableListOf<Row>()
     lines.forEachIndexed { index, line ->
         if (line.isGap) {
-            // The skipped lines, as "(...)" — the conventional editorial mark
-            // for an omission. Hung off the left edge with the words, smaller
-            // and a dim grey. Keep its row compact so the marker follows the
-            // preceding lyric closely; the regular gap on the next lyric line
-            // provides the separation below it.
-            val marker = type.body(size * 0.65f, 0x66FFFFFF.toInt())
+            val marker = type.body(size * 0.65f, gapColor)
             val markerHeight = marker.descent() - marker.ascent()
             rows += Row("(...)", marker, markerHeight, 0f, isGap = true)
             return@forEachIndexed
         }
         var firstOfLine = true
         fun add(text: String, paint: Paint, height: Float) {
-            // One verse line is one paragraph: its first row carries the space
-            // above it and its wraps sit tight underneath, so a phrase reads as
-            // a block rather than as a list of separate sentences.
             val gap = when {
                 rows.isEmpty() -> 0f
-                firstOfLine && index > 0 -> size * 0.55f
+                firstOfLine && index > 0 -> size * 0.42f
                 else -> 0f
             }
             rows += Row(text, paint, height, gap)
             firstOfLine = false
         }
-        wrap(line.text, primary, CARD_CONTENT_W).forEach { add(it, primary, size * LEAD) }
+        wrap(line.text, primary, width).forEach { add(it, primary, size * LEAD) }
         val sub = line.subText
         if (!sub.isNullOrBlank() && sub != line.text) {
-            wrap(sub, secondary, CARD_CONTENT_W).forEach { add(it, secondary, subSize * SUB_LEAD) }
+            wrap(sub, secondary, width).forEach { add(it, secondary, subSize * SUB_LEAD) }
         }
     }
     return Plan(rows, -primary.ascent())
 }
 
-// ── Text ───────────────────────────────────────────────────────────────────
-
-/**
- * Greedy wrap at [width], breaking wherever the line has to.
- *
- * Not a plain word-wrap: Japanese, Chinese and Korean lyrics carry no spaces at
- * all, and a wrapper that only split on spaces would hand the whole verse to
- * `drawText` and let it run off the card. `breakText` finds the character that
- * fits, and only then is the break walked back to a space — so scripts that keep
- * their words apart lose nothing, and scripts that don't still get several lines.
- */
 private fun wrap(text: String, paint: Paint, width: Float): List<String> {
     val source = text.trim()
     if (source.isEmpty()) return listOf("")
@@ -238,9 +584,6 @@ private fun wrap(text: String, paint: Paint, width: Float): List<String> {
             out += rest
             break
         }
-        // Walk back to the last space inside the fit, but only when something
-        // still has to follow it — otherwise the fit is the whole string and
-        // cutting at the space would drop the final word.
         val space = rest.lastIndexOf(' ', fit - 1)
         val take = if (space > 0 && fit < rest.length) space else fit
         if (take <= 0) {
@@ -253,66 +596,24 @@ private fun wrap(text: String, paint: Paint, width: Float): List<String> {
     return out.filter { it.isNotEmpty() }.ifEmpty { listOf("") }
 }
 
-// ── Card geometry ──────────────────────────────────────────────────────────
-
 private const val CARD_W = 1080
-
-/**
- * 9:16 — a ceiling on the height, not the height itself. The card is grown to
- * its passage and only ever comes out this tall when the passage demands it.
- */
+private const val STORY_H = 1920
 private const val MAX_CARD_H = 1920f
+private const val STORY_CARD_INSET = 86f
+private const val STORY_CARD_TOP_MIN = 210f
 
-private const val CARD_MARGIN = 72f
-private const val CARD_CONTENT_W = CARD_W - CARD_MARGIN * 2
+private const val CARD_MARGIN = 64f
+private const val SMALL_COVER_SIZE = 108f
+private const val BRAND_LOGO_SIZE = 44f
+private const val BRAND = "Hush Music"
 
-private const val LOGO_GAP = 20f
-private const val BRAND = "Hush"
-
-/** Baseline of the mark at the top right, and just under it where the gap starts. */
-private const val HEADER_BASELINE = 132f
-private const val HEADER_BOTTOM = 170f
-
-/** Air kept between the fixed furniture and the passage, both ends alike. */
-private const val GAP_ABOVE_BODY = 20f
-private const val GAP_BELOW_BODY = 20f
-
-/** The sleeve square in the footer, and the air kept under it. */
-private const val FOOTER_THUMB = 160f
-private const val FOOTER_PAD = 96f
-
-/** Smallest the translation line is allowed to get before it stops being legible. */
 private const val SUB_FLOOR = 24f
-
-/** Small visual correction so the omission marker sits below the line above. */
 private const val GAP_MARKER_OFFSET = 0.18f
 
-/**
- * The sizes tried, largest first.
- *
- * A ladder rather than a search: a dozen candidates is nothing to lay out, and
- * stepping by a visible amount keeps two cards with adjacent line counts from
- * coming out nearly the same size and reading as a mistake.
- *
- * The last rung doubles as the floor — see [fittestPlan] for why the frame is
- * what gives way under it rather than the type.
- */
-private val FIT_LADDER = floatArrayOf(96f, 88f, 80f, 72f, 64f, 56f, 50f, 44f, 38f, 32f)
+private val FIT_LADDER = floatArrayOf(72f, 64f, 56f, 50f, 44f, 38f, 34f, 30f)
 
-// ── The panel's type, as ratios ────────────────────────────────────────────
-// Every number here is one the lyrics panel uses, divided by the size it uses
-// it at so it holds at whatever size the ladder lands on.
-
-/** Tracking of the panel's headline: -0.7sp against its 34sp. */
-private const val TRACKING = -0.7f / 34f
-
-/** The same -0.7sp, against the 20sp it sets the line underneath in. */
-private const val SUB_TRACKING = -0.7f / 20f
-
-/** Line advance: 41sp over 34sp for the words, 25sp over 20sp for the sub. */
-private const val LEAD = 41f / 34f
+private const val TRACKING = -0.65f / 34f
+private const val SUB_TRACKING = -0.5f / 20f
+private const val LEAD = 40f / 34f
 private const val SUB_LEAD = 25f / 20f
-
-/** The sub-line against the words above it, and the white it is drawn in. */
 private const val SUB_RATIO = 20f / 34f
-private val SUB_COLOR = 0xD9FFFFFF.toInt()

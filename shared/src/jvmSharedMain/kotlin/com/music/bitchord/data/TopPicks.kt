@@ -77,7 +77,9 @@ object TopPicks {
         val mixesAsync = async { findMixes(homeShelves) }
 
         val history = historyAsync.await()
-        val ranked = weightedSample(rankArtists(history, local.artists).take(ARTIST_POOL), ARTISTS)
+        val effectiveHistory = history.ifEmpty { homeTasteSongs(homeShelves) }
+        val rankedRaw = resolveCandidateArtists(rankArtists(effectiveHistory, local).take(ARTIST_POOL))
+        val ranked = weightedSample(rankedRaw, ARTISTS)
         val pages = ranked.map { artist ->
             async { YtMusicRepository.artistLanding(artist.browseId!!).getOrNull() }
         }.awaitAll()
@@ -88,18 +90,17 @@ object TopPicks {
             // one, or a spelling of their name); two of them would be the
             // same face on two cards.
             .distinctBy { normalizedArtistName(it.name) }
-        // Every artist face on the row is Apple Music's photo of them, not
-        // YouTube's channel art: the artists themselves, and the people their
-        // fans also play. Looked up together, a few at a time.
+        // Every artist face on the row prefers Apple Music's photo of them, falling
+        // back to YouTube Music's portrait so the listener's own artists aren't dropped.
         val photos = applePhotos(artists)
         val mixes = mixesAsync.await()
-        Log.d(TAG, "topPicks: history=${history.size} artists=${artists.map { it.name }} mixes=${mixes.keys}")
+        Log.d(TAG, "topPicks: history=${effectiveHistory.size} artists=${artists.map { it.name }} mixes=${mixes.keys}")
 
         // The first card is always the new release when there is one, as on
         // Apple Music; the rest come in a different order every build.
         val lead = latestRelease(artists)
         val rest = buildList {
-            personalStation(mixes, history, local)?.let(::add)
+            personalStation(mixes, effectiveHistory, local)?.let(::add)
             add(moodPick(now, local))
             artists.getOrNull(0)?.let { andSimilar(it, photos) }?.let(::add)
             artists.getOrNull(1)?.let { featured(it, photos) }?.let(::add)
@@ -115,7 +116,7 @@ object TopPicks {
                 )
             }
             artists.getOrNull(2)?.let { andSimilar(it, photos) }?.let(::add)
-            discoveryStation(mixes, artists, history)?.let(::add)
+            discoveryStation(mixes, artists, effectiveHistory)?.let(::add)
         }.shuffled()
         listOfNotNull(lead) + rest
     }
@@ -303,8 +304,7 @@ object TopPicks {
 
     private fun andSimilar(artist: ArtistCard, photos: Map<String, String>): TopPick? {
         val radio = artist.page.radio ?: return null
-        // No Apple photo of the artist, no card: the big circle is the card.
-        val face = photos[artist.name] ?: return null
+        val face = photos[artist.name] ?: artist.page.thumbnailUrl ?: return null
         val related = artist.relatedNames
             .mapNotNull { photos[it] }
             // Two names can share one photo; one face per circle.
@@ -323,7 +323,7 @@ object TopPicks {
 
     private fun featured(artist: ArtistCard, photos: Map<String, String>): TopPick? {
         val shuffle = artist.page.shuffle ?: artist.page.radio ?: return null
-        val face = photos[artist.name] ?: return null
+        val face = photos[artist.name] ?: artist.page.thumbnailUrl ?: return null
         return TopPick(
             kind = TopPickKind.FEATURED_ARTIST,
             title = artist.name,
@@ -358,31 +358,94 @@ object TopPicks {
     // ---- Artists ------------------------------------------------------------
 
     /**
-     * The listener's artists, best first. Each history row counts once, with
-     * a little extra the more recent it is; the app's own chart adds a smaller
-     * share by position. Only artists with a channel id take part — a card
-     * needs the page, and a bare name would need a search to find one.
+     * Extracts playable song candidates from the listener's own home shelves
+     * (such as Quick Picks or Listen Again) when formal history is empty.
      */
-    private fun rankArtists(history: List<Song>, local: List<ArtistRef>): List<ArtistRef> {
-        val scores = LinkedHashMap<String, Pair<String, Double>>()
-        fun credit(id: String?, name: String, weight: Double) {
-            if (id == null || !id.startsWith("UC") || name.isBlank()) return
-            if (name.equals("Various Artists", ignoreCase = true)) return
-            val (_, score) = scores[id] ?: (name to 0.0)
-            scores[id] = name to score + weight
+    private fun homeTasteSongs(homeShelves: List<HomeShelf>): List<Song> {
+        val personalTitles = listOf("listen again", "quick picks", "forgotten favorites", "favorites", "from your library")
+        val matching = homeShelves.filter { shelf ->
+            val t = shelf.title.lowercase(Locale.ROOT)
+            personalTitles.any { it in t }
+        }
+        val pool = matching.ifEmpty { homeShelves.take(2) }
+        return pool.flatMap { it.items }
+            .mapNotNull { item ->
+                val vid = item.videoId ?: return@mapNotNull null
+                val artist = item.subtitle.substringBefore(" • ").trim()
+                Song(
+                    videoId = vid,
+                    title = item.title,
+                    artist = artist,
+                    artistId = item.browseId?.takeIf { it.startsWith("UC") },
+                    thumbnailUrl = item.thumbnailUrl,
+                )
+            }
+            .take(40)
+    }
+
+    /**
+     * Resolves any user-favorite artists that came from local playback or
+     * metadata without a `UC...` channel id so they participate in Top Picks too.
+     */
+    private suspend fun resolveCandidateArtists(candidates: List<ArtistRef>): List<ArtistRef> = coroutineScope {
+        candidates.map { ref ->
+            async {
+                val id = ref.browseId?.takeIf { it.startsWith("UC") }
+                if (id != null) {
+                    ref.copy(browseId = id)
+                } else {
+                    val found = YtMusicRepository.findArtistPageId(ref.name).getOrNull()
+                        ?.takeIf { it.startsWith("UC") }
+                    found?.let { ref.copy(browseId = it) }
+                }
+            }
+        }.awaitAll().filterNotNull().distinctBy { it.browseId }
+    }
+
+    /**
+     * The listener's artists, best first. Each history row counts once, with
+     * a little extra the more recent it is; local Replay artists and top songs
+     * contribute regardless of whether a channel id is already known.
+     */
+    private fun rankArtists(history: List<Song>, local: LocalTaste): List<ArtistRef> {
+        val byKey = LinkedHashMap<String, Pair<ArtistRef, Double>>()
+        fun credit(id: String?, rawName: String, weight: Double) {
+            val name = rawName.trim()
+            if (name.isBlank()) return
+            if (name.equals("Various Artists", ignoreCase = true) ||
+                name.equals("Unknown artist", ignoreCase = true) ||
+                name.equals("<unknown>", ignoreCase = true)
+            ) {
+                return
+            }
+            val cleanId = id?.takeIf { it.startsWith("UC") }
+            val key = cleanId ?: "name:${normalizedArtistName(name)}"
+            val existing = byKey[key]
+            val mergedRef = when {
+                existing == null -> ArtistRef(name = name, browseId = cleanId)
+                existing.first.browseId == null && cleanId != null -> existing.first.copy(browseId = cleanId)
+                else -> existing.first
+            }
+            byKey[key] = mergedRef to ((existing?.second ?: 0.0) + weight)
         }
         history.forEachIndexed { index, song ->
             val recency = 1.0 - index.toDouble() / history.size.coerceAtLeast(1)
-            val lead = song.artists.firstOrNull { it.browseId != null }
-            if (lead != null) credit(lead.browseId, lead.name, 1.0 + recency * 0.5)
-            else credit(song.artistId, song.artist, 1.0 + recency * 0.5)
+            val lead = song.artists.firstOrNull { !it.browseId.isNullOrBlank() } ?: song.artists.firstOrNull()
+            if (lead != null) credit(lead.browseId, lead.name, 1.0 + recency * 0.6)
+            else credit(song.artistId, song.artist.substringBefore(",").substringBefore("&"), 1.0 + recency * 0.6)
         }
-        local.forEachIndexed { index, artist ->
-            credit(artist.browseId, artist.name, (local.size - index).toDouble() * 0.5)
+        local.artists.forEachIndexed { index, artist ->
+            credit(artist.browseId, artist.name, (local.artists.size - index).toDouble() * 0.65)
         }
-        return scores.entries
-            .sortedByDescending { it.value.second }
-            .map { ArtistRef(name = it.value.first, browseId = it.key) }
+        local.songs.forEachIndexed { index, song ->
+            val boost = (local.songs.size - index).toDouble() * 0.45
+            val lead = song.artists.firstOrNull()
+            if (lead != null) credit(lead.browseId, lead.name, boost)
+            else credit(song.artistId, song.artist.substringBefore(","), boost)
+        }
+        return byKey.values
+            .sortedByDescending { it.second }
+            .map { it.first }
     }
 
     // ---- Mixes --------------------------------------------------------------

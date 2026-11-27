@@ -23,9 +23,13 @@ import com.music.bitchord.data.lyrics.LyricsTranslation
 import com.music.bitchord.data.model.Song
 import com.music.bitchord.data.settings.AppSettings
 import com.music.bitchord.data.settings.LastPlayerScreen
+import com.music.bitchord.download.LocalFileSaver
+import com.music.bitchord.playback.EqualizerPreset
 import com.music.bitchord.playback.MusicOnlyPlayback
 import com.music.bitchord.playback.AudioOutputStatus
 import com.music.bitchord.playback.AudioRouting
+import com.music.bitchord.playback.SleepTimer
+import kotlinx.coroutines.launch
 import com.music.bitchord.playback.audio.bitperfect.BitPerfectOutput
 import com.music.bitchord.playback.audio.bitperfect.DacVolume
 import com.music.bitchord.playback.cast.CastController
@@ -107,6 +111,16 @@ class AndroidPlayerHost(context: Context) : PlayerHost {
         override val expressiveArtistArtShape get() = AppSettings.expressiveArtistArtShape
         override val expressiveControlsShape get() = AppSettings.expressiveControlsShape
         override val expressiveMiniPlayerShape get() = AppSettings.expressiveMiniPlayerShape
+        override val useSystemVolume get() = AppSettings.useSystemVolume
+        override val pauseOnZeroVolume get() = AppSettings.pauseOnZeroVolume
+        override val autoResumeOnVolume get() = AppSettings.autoResumeOnVolume
+        override val appPlayerVolume get() = AppSettings.appPlayerVolume
+        override val equalizerEnabled get() = AppSettings.equalizerEnabled
+        override val equalizerBands get() = AppSettings.equalizerBands
+        override val equalizerPresetName: StateFlow<String> = AppSettings.equalizerPreset
+            .map { it.name }
+            .stateIn(scope, SharingStarted.Eagerly, AppSettings.equalizerPreset.value.name)
+        override val equalizerBalance get() = AppSettings.equalizerBalance
 
         override fun setLastPlayerScreen(value: LastPlayerScreen) = AppSettings.setLastPlayerScreen(value)
         override fun setLyricsOffsetMs(value: Int) = AppSettings.setLyricsOffsetMs(value)
@@ -117,6 +131,28 @@ class AndroidPlayerHost(context: Context) : PlayerHost {
             AppSettings.setProgressLineStyle(value)
         override fun setBeatImpulse(value: Boolean) =
             AppSettings.setBeatImpulse(value)
+        override fun setUseSystemVolume(value: Boolean) = AppSettings.setUseSystemVolume(value)
+        override fun setPauseOnZeroVolume(value: Boolean) = AppSettings.setPauseOnZeroVolume(value)
+        override fun setAutoResumeOnVolume(value: Boolean) = AppSettings.setAutoResumeOnVolume(value)
+        override fun setAppPlayerVolume(value: Float) = AppSettings.setAppPlayerVolume(value)
+        override fun setSmartFadeEnabled(value: Boolean) = AppSettings.setSmartFadeEnabled(value)
+        override fun setEqualizerEnabled(value: Boolean) = AppSettings.setEqualizerEnabled(value)
+        override fun setEqualizerBands(values: List<Float>) {
+            AppSettings.setEqualizerMode(com.music.bitchord.data.settings.EqualizerMode.MANUAL)
+            AppSettings.setEqualizerBands(values)
+        }
+        override fun setEqualizerBalance(value: Float) = AppSettings.setEqualizerBalance(value)
+        override fun applyEqualizerPreset(presetName: String) {
+            val preset = runCatching { EqualizerPreset.valueOf(presetName) }.getOrNull() ?: return
+            AppSettings.setEqualizerMode(com.music.bitchord.data.settings.EqualizerMode.MANUAL)
+            AppSettings.setEqualizerPreset(preset)
+        }
+        override fun setExpressivePlayerArtShape(value: String) = AppSettings.setExpressivePlayerArtShape(value)
+        override fun setExpressiveControlsShape(value: String) = AppSettings.setExpressiveControlsShape(value)
+        override fun setExpressiveMiniPlayerShape(value: String) = AppSettings.setExpressiveMiniPlayerShape(value)
+        override fun setLiveSongColorGradient(value: Boolean) = AppSettings.setLiveSongColorGradient(value)
+        override fun setHideVolumeBar(value: Boolean) = AppSettings.setHideVolumeBar(value)
+        override fun setHideSongStatus(value: Boolean) = AppSettings.setHideSongStatus(value)
     }
 
     override fun cachedCanvas(song: Song): CanvasArtwork? = CanvasRepository.cached(song)
@@ -266,6 +302,31 @@ class AndroidPlayerHost(context: Context) : PlayerHost {
         request: LyricsShareRequest,
         onDismiss: () -> Unit,
     ) = AndroidLyricsShareSheet(hazeState = hazeState, request = request, onDismiss = onDismiss)
+
+    override val sleepTimerActiveMinutes: StateFlow<Int?> get() = SleepTimer.minutes
+    override val sleepTimerAfterTrack: StateFlow<Boolean> get() = SleepTimer.afterTrack
+    override val sleepTimerDeadlineMs: StateFlow<Long?> get() = SleepTimer.deadline
+    override fun sleepTimerRemainingMs(): Long? = SleepTimer.remainingMs()
+    override fun startSleepTimer(minutes: Int) = SleepTimer.start(minutes)
+    override fun startSleepTimerAfterTrack() = SleepTimer.startAfterTrack()
+    override fun cancelSleepTimer() = SleepTimer.cancel()
+
+    override fun saveTrackLocally(song: Song) {
+        showMessage("Saving \"${song.title}\" locally...")
+        scope.launch {
+            LocalFileSaver.saveTrackToPublicMusic(app, song)
+                .onSuccess { fileName ->
+                    showMessage("Saved $fileName to Music/Hush Music")
+                }
+                .onFailure { err ->
+                    showMessage(err.message ?: "Failed to save track locally")
+                }
+        }
+    }
+
+    @Composable
+    override fun SongInfoCard(song: Song, onDismiss: () -> Unit) =
+        com.music.bitchord.ui.components.SongInfoDialog(song = song, onDismiss = onDismiss)
 }
 
 /**

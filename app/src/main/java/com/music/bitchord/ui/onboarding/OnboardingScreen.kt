@@ -269,7 +269,10 @@ private fun ColumnScope.IntroPage(
     LaunchedEffect(Unit) {
         animProgress.animateTo(
             targetValue = 1f,
-            animationSpec = tween(durationMillis = 2200, easing = FastOutSlowInEasing),
+            animationSpec = tween(
+                durationMillis = 1550,
+                easing = CubicBezierEasing(0.20f, 1.0f, 0.30f, 1.0f),
+            ),
         )
         settled = true
     }
@@ -292,10 +295,10 @@ private fun ColumnScope.IntroPage(
 
     Spacer(Modifier.height(18.dp))
 
-    // Subtitle text (fades in as dots settle)
+    // Subtitle text (fades in smoothly as dots settle)
     AnimatedVisibility(
-        visible = animProgress.value > 0.7f,
-        enter = fadeIn(tween(400)),
+        visible = animProgress.value > 0.55f,
+        enter = fadeIn(tween(420)) + slideInVertically(tween(420, easing = FastOutSlowInEasing)) { it / 4 },
         exit = fadeOut(),
         modifier = Modifier.align(Alignment.CenterHorizontally),
     ) {
@@ -316,8 +319,10 @@ private fun ColumnScope.IntroPage(
 
     // Solid Opaque Pure-White Pill Button: "Go" (#FFFFFF fill, #0D0D0F bold text)
     AnimatedVisibility(
-        visible = settled,
-        enter = fadeIn(spring(stiffness = 400f)) + slideInVertically(spring(stiffness = 350f)) { it / 2 },
+        visible = animProgress.value > 0.78f || settled,
+        enter = fadeIn(tween(380)) + slideInVertically(
+            spring(dampingRatio = 0.82f, stiffness = 360f),
+        ) { it / 3 },
         exit = fadeOut(tween(150)),
     ) {
         PillButton(
@@ -342,13 +347,18 @@ private fun DotMatrixLogoAnimation(
 ) {
     val infiniteTransition = rememberInfiniteTransition(label = "dotBreathing")
     val breathScale by infiniteTransition.animateFloat(
-        initialValue = 0.985f,
-        targetValue = 1.025f,
+        initialValue = 1.0f,
+        targetValue = 1.035f,
         animationSpec = infiniteRepeatable(
-            animation = tween(durationMillis = 3200, easing = FastOutSlowInEasing),
+            animation = tween(durationMillis = 2800, easing = FastOutSlowInEasing),
             repeatMode = RepeatMode.Reverse,
         ),
         label = "dotBreath",
+    )
+    val breathBlend by animateFloatAsState(
+        targetValue = if (settled) 1f else 0f,
+        animationSpec = tween(durationMillis = 550, easing = FastOutSlowInEasing),
+        label = "breathBlend",
     )
 
     val orbitEasing = remember { CubicBezierEasing(0.18f, 0.90f, 0.25f, 1.0f) }
@@ -368,7 +378,9 @@ private fun DotMatrixLogoAnimation(
         val cy = size.height / 2f
         val p = progress.coerceIn(0f, 1f)
         val eased = orbitEasing.transform(p)
-        val zoomScale = if (settled) breathScale else (1.85f - 0.85f * eased)
+        val introZoom = 1.65f - 0.65f * eased
+        val targetBreath = 1f + (breathScale - 1f) * breathBlend
+        val zoomScale = introZoom * targetBreath
         val s = (size.minDimension / 140f) * zoomScale
         val dotRadius = 4.8.dp.toPx()
 
@@ -487,7 +499,100 @@ private fun ColumnScope.ThemePage(
 
     Spacer(Modifier.height(28.dp))
 
-    // Mode Option 1: Classic (Liquid Glass)
+    // Mode Option 1 (Default): Material UI Mode (M3E Expressive / MT3)
+    val isM3 = materialUi
+    val m3Bg by animateColorAsState(
+        targetValue = if (isM3) Color.White.copy(alpha = 0.14f) else Color.White.copy(alpha = 0.05f),
+        animationSpec = tween(260),
+        label = "m3Bg",
+    )
+    val m3BorderColor by animateColorAsState(
+        targetValue = if (isM3) Color.White else Color.White.copy(alpha = 0.15f),
+        animationSpec = tween(260),
+        label = "m3BorderColor",
+    )
+    val m3BorderWidth by animateDpAsState(
+        targetValue = if (isM3) 2.dp else 1.dp,
+        animationSpec = spring(dampingRatio = 0.78f, stiffness = 400f),
+        label = "m3BorderWidth",
+    )
+    val m3Scale by animateFloatAsState(
+        targetValue = if (isM3) 1.015f else 0.985f,
+        animationSpec = spring(dampingRatio = 0.75f, stiffness = 400f),
+        label = "m3Scale",
+    )
+    Box(
+        modifier = Modifier
+            .fillMaxWidth()
+            .graphicsLayer {
+                scaleX = m3Scale
+                scaleY = m3Scale
+            }
+            .clip(RoundedCornerShape(22.dp))
+            .background(m3Bg)
+            .border(
+                width = m3BorderWidth,
+                color = m3BorderColor,
+                shape = RoundedCornerShape(22.dp),
+            )
+            .clickable { AppSettings.setMaterialUiMode(true) }
+            .padding(18.dp),
+    ) {
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.SpaceBetween,
+        ) {
+            Column(modifier = Modifier.weight(1f)) {
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    Text(
+                        text = "Material UI",
+                        style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold),
+                        color = Color.White,
+                    )
+                    Spacer(Modifier.width(8.dp))
+                    Box(
+                        modifier = Modifier
+                            .clip(CircleShape)
+                            .background(Color(0xFF6750A4).copy(alpha = 0.65f))
+                            .padding(horizontal = 8.dp, vertical = 2.dp),
+                    ) {
+                        Text(
+                            text = "MT3 · Default",
+                            style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.SemiBold),
+                            color = Color.White,
+                        )
+                    }
+                }
+                Spacer(Modifier.height(4.dp))
+                Text(
+                    text = "Pixel-grade squircle physics, bento cards & dynamic seekbar",
+                    style = MaterialTheme.typography.bodySmall,
+                    color = Color.White.copy(alpha = 0.65f),
+                )
+            }
+            AnimatedVisibility(visible = isM3) {
+                Box(
+                    modifier = Modifier
+                        .size(24.dp)
+                        .clip(CircleShape)
+                        .background(Color.White),
+                    contentAlignment = Alignment.Center,
+                ) {
+                    Icon(
+                        imageVector = Icons.Rounded.Check,
+                        contentDescription = null,
+                        tint = Color(0xFF0D0D0F),
+                        modifier = Modifier.size(16.dp),
+                    )
+                }
+            }
+        }
+    }
+
+    Spacer(Modifier.height(14.dp))
+
+    // Mode Option 2: Classic (Liquid Glass)
     val isClassic = !materialUi
     val classicBg by animateColorAsState(
         targetValue = if (isClassic) Color.White.copy(alpha = 0.14f) else Color.White.copy(alpha = 0.05f),
@@ -560,99 +665,6 @@ private fun ColumnScope.ThemePage(
                 )
             }
             AnimatedVisibility(visible = isClassic) {
-                Box(
-                    modifier = Modifier
-                        .size(24.dp)
-                        .clip(CircleShape)
-                        .background(Color.White),
-                    contentAlignment = Alignment.Center,
-                ) {
-                    Icon(
-                        imageVector = Icons.Rounded.Check,
-                        contentDescription = null,
-                        tint = Color(0xFF0D0D0F),
-                        modifier = Modifier.size(16.dp),
-                    )
-                }
-            }
-        }
-    }
-
-    Spacer(Modifier.height(14.dp))
-
-    // Mode Option 2: Material UI Mode (M3E Expressive)
-    val isM3 = materialUi
-    val m3Bg by animateColorAsState(
-        targetValue = if (isM3) Color.White.copy(alpha = 0.14f) else Color.White.copy(alpha = 0.05f),
-        animationSpec = tween(260),
-        label = "m3Bg",
-    )
-    val m3BorderColor by animateColorAsState(
-        targetValue = if (isM3) Color.White else Color.White.copy(alpha = 0.15f),
-        animationSpec = tween(260),
-        label = "m3BorderColor",
-    )
-    val m3BorderWidth by animateDpAsState(
-        targetValue = if (isM3) 2.dp else 1.dp,
-        animationSpec = spring(dampingRatio = 0.78f, stiffness = 400f),
-        label = "m3BorderWidth",
-    )
-    val m3Scale by animateFloatAsState(
-        targetValue = if (isM3) 1.015f else 0.985f,
-        animationSpec = spring(dampingRatio = 0.75f, stiffness = 400f),
-        label = "m3Scale",
-    )
-    Box(
-        modifier = Modifier
-            .fillMaxWidth()
-            .graphicsLayer {
-                scaleX = m3Scale
-                scaleY = m3Scale
-            }
-            .clip(RoundedCornerShape(22.dp))
-            .background(m3Bg)
-            .border(
-                width = m3BorderWidth,
-                color = m3BorderColor,
-                shape = RoundedCornerShape(22.dp),
-            )
-            .clickable { AppSettings.setMaterialUiMode(true) }
-            .padding(18.dp),
-    ) {
-        Row(
-            modifier = Modifier.fillMaxWidth(),
-            verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.SpaceBetween,
-        ) {
-            Column(modifier = Modifier.weight(1f)) {
-                Row(verticalAlignment = Alignment.CenterVertically) {
-                    Text(
-                        text = "Material UI",
-                        style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold),
-                        color = Color.White,
-                    )
-                    Spacer(Modifier.width(8.dp))
-                    Box(
-                        modifier = Modifier
-                            .clip(CircleShape)
-                            .background(Color(0xFF6750A4).copy(alpha = 0.6f))
-                            .padding(horizontal = 8.dp, vertical = 2.dp),
-                    ) {
-                        Text(
-                            text = "Pixel M3E",
-                            style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.SemiBold),
-                            color = Color.White,
-                        )
-                    }
-                }
-                Spacer(Modifier.height(4.dp))
-                Text(
-                    text = "Pixel-grade squircle physics, bento cards & dynamic seekbar",
-                    style = MaterialTheme.typography.bodySmall,
-                    color = Color.White.copy(alpha = 0.65f),
-                )
-            }
-            AnimatedVisibility(visible = isM3) {
                 Box(
                     modifier = Modifier
                         .size(24.dp)

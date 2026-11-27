@@ -10,10 +10,13 @@ import android.media.AudioManager
 import android.media.MediaMetadataRetriever
 import android.media.audiofx.AudioEffect
 import android.net.Uri
-import android.widget.Toast
+import android.database.ContentObserver
 import android.os.Bundle
 import android.os.Handler
+import android.os.Looper
 import android.os.SystemClock
+import android.provider.Settings
+import android.widget.Toast
 import com.music.bitchord.data.TelemetryProvenance
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
@@ -952,7 +955,12 @@ class PlaybackService : MediaLibraryService() {
             // speaker — an internal path, since the session player's door
             // already sends a listener's play to the receiver. The phone goes
             // quiet again and the receiver is asked instead.
-            if (playWhenReady) player?.let(speakers::onLocalStartedPlaying)
+            if (playWhenReady) {
+            pausedByZeroVolume = false
+            player?.let(speakers::onLocalStartedPlaying)
+        } else if (reason == Player.PLAY_WHEN_READY_CHANGE_REASON_USER_REQUEST) {
+            pausedByZeroVolume = false
+        }
             publishWidgetState(playing = playWhenReady)
             // The only place the *reason* can be read. A party has to tell a
             // pause the listener asked for from one another app imposed, and
@@ -1788,6 +1796,7 @@ class PlaybackService : MediaLibraryService() {
         observeScrobbling()
         observeDiscord()
         watchSleepTimer()
+        watchVolumeAndRemixStudio()
         val restored = if (PartyPersonalQueueStash.hasStash()) {
             val stashed = PartyPersonalQueueStash.load()
             PartyPersonalQueueStash.clear()
@@ -3713,8 +3722,15 @@ class PlaybackService : MediaLibraryService() {
         // unplayable track. [retryingMediaId] is the one case that must not
         // reset; everything else still does.
         val becameCurrent = mediaItem?.mediaId
-        if (becameCurrent == null || becameCurrent != retryingMediaId) {
+        val wasRetrying = becameCurrent != null && becameCurrent == retryingMediaId
+        if (becameCurrent == null || !wasRetrying) {
             recoveries.clear()
+        }
+        if (becameCurrent != null && !wasRetrying && (becameCurrent != lastRemixTrackId || previousEnded)) {
+            RemixStudioController.resetForNewTrack()
+        }
+        if (becameCurrent != null) {
+            lastRemixTrackId = becameCurrent
         }
         retryingMediaId = null
 
@@ -3876,6 +3892,11 @@ class PlaybackService : MediaLibraryService() {
      * the listener asking again — see [onTrackBecameCurrent]. Cleared by the
      * transition it describes, the same way [swappingMediaId] is.
      */
+    private var lastRemixTrackId: String? = null
+    private var pausedByZeroVolume: Boolean = false
+    private var volumeObserver: ContentObserver? = null
+    private var remixPlayer: ExoPlayer? = null
+    private var remixTickerJob: Job? = null
     private var retryingMediaId: String? = null
 
     /**
@@ -7812,19 +7833,147 @@ class PlaybackService : MediaLibraryService() {
     override fun onTaskRemoved(rootIntent: Intent?) {
         super.onTaskRemoved(rootIntent)
         if (AppSettings.stopOnTaskRemoved.value) {
-            // A receiver left playing with nothing on the phone to drive it
-            // would run out its few queued tracks and stop on its own anyway;
-            // better to say so now than leave the TV on a casting screen.
             if (castPlayback.active) CastController.disconnect(resumeHere = false)
-            // Both, or a swipe-away mid-crossfade leaves the outgoing track
-            // playing on its own out of a service that is on its way out.
             eachPlayer { it.stop() }
             stopSelf()
         }
     }
 
+    private fun watchVolumeAndRemixStudio() {
+        RemixStudioController.attachDelegate(object : RemixStudioController.ServiceDelegate {
+            override fun loadSecondTrack(song: Song?) {
+                scope.launch(Dispatchers.Main) {
+                    if (song == null) {
+                        remixTickerJob?.cancel()
+                        remixTickerJob = null
+                        remixPlayer?.stop()
+                        remixPlayer?.clearMediaItems()
+                        applyMasterVolumeAndZeroCheck()
+                        return@launch
+                    }
+                    val secondary = remixPlayer ?: ExoPlayer.Builder(this@PlaybackService)
+                        .setMediaSourceFactory(mediaSourceFactory)
+                        .setHandleAudioBecomingNoisy(false)
+                        .build()
+                        .also {
+                            it.repeatMode = Player.REPEAT_MODE_ONE
+                            remixPlayer = it
+                        }
+                    secondary.setMediaItem(song.toMediaItem())
+                    secondary.volume = RemixStudioController.deckBVolume.value
+                    secondary.playbackParameters = androidx.media3.common.PlaybackParameters(
+                        RemixStudioController.deckBSpeed.value,
+                        RemixStudioController.deckBPitch.value,
+                    )
+                    secondary.prepare()
+                    secondary.playWhenReady = true
+                    applyMasterVolumeAndZeroCheck()
+
+                    remixTickerJob?.cancel()
+                    remixTickerJob = scope.launch(Dispatchers.Main) {
+                        while (true) {
+                            val p = remixPlayer ?: break
+                            RemixStudioController.updateSecondTrackProgress(
+                                playing = p.isPlaying || p.playWhenReady,
+                                loading = p.playbackState == Player.STATE_BUFFERING,
+                                positionMs = p.currentPosition,
+                                durationMs = p.duration.takeIf { it > 0L } ?: 0L,
+                            )
+                            delay(250L)
+                        }
+                    }
+                }
+            }
+
+            override fun setSecondTrackPlaying(playing: Boolean) {
+                scope.launch(Dispatchers.Main) {
+                    val p = remixPlayer ?: return@launch
+                    p.playWhenReady = playing
+                    RemixStudioController.updateSecondTrackProgress(
+                        playing = playing,
+                        loading = p.playbackState == Player.STATE_BUFFERING,
+                        positionMs = p.currentPosition,
+                        durationMs = p.duration.takeIf { it > 0L } ?: 0L,
+                    )
+                }
+            }
+
+            override fun seekSecondTrackToFraction(fraction: Float) {
+                scope.launch(Dispatchers.Main) {
+                    val p = remixPlayer ?: return@launch
+                    val dur = p.duration.takeIf { it > 0L } ?: return@launch
+                    p.seekTo((dur * fraction).toLong().coerceIn(0L, dur))
+                }
+            }
+
+            override fun syncSecondTrackParams() {
+                scope.launch(Dispatchers.Main) {
+                    applyMasterVolumeAndZeroCheck()
+                    remixPlayer?.let { p ->
+                        p.volume = RemixStudioController.deckBVolume.value
+                        p.playbackParameters = androidx.media3.common.PlaybackParameters(
+                            RemixStudioController.deckBSpeed.value,
+                            RemixStudioController.deckBPitch.value,
+                        )
+                    }
+                }
+            }
+        })
+
+        val observer = object : ContentObserver(Handler(Looper.getMainLooper())) {
+            override fun onChange(selfChange: Boolean) {
+                applyMasterVolumeAndZeroCheck()
+            }
+        }
+        volumeObserver = observer
+        contentResolver.registerContentObserver(Settings.System.CONTENT_URI, true, observer)
+
+        scope.launch(Dispatchers.Main) {
+            combine(
+                AppSettings.useSystemVolume,
+                AppSettings.appPlayerVolume,
+                AppSettings.pauseOnZeroVolume,
+                AppSettings.autoResumeOnVolume,
+            ) { _, _, _, _ -> Unit }.collect {
+                applyMasterVolumeAndZeroCheck()
+            }
+        }
+    }
+
+    private fun applyMasterVolumeAndZeroCheck() {
+        val useSystem = AppSettings.useSystemVolume.value
+        val appVol = AppSettings.appPlayerVolume.value.coerceIn(0f, 1f)
+        val deckGain = RemixStudioController.deckAVolume.value.coerceIn(0f, 1f)
+        val targetPlayerVolume = (if (useSystem) 1f else appVol) * deckGain
+
+        if (crossfade?.isTransitioning() != true) {
+            player?.volume = targetPlayerVolume
+        }
+
+        val maxStream = audioManager?.getStreamMaxVolume(AudioManager.STREAM_MUSIC)?.coerceAtLeast(1) ?: 15
+        val curStream = audioManager?.getStreamVolume(AudioManager.STREAM_MUSIC) ?: 1
+        val effectiveVol = if (useSystem) (curStream.toFloat() / maxStream.toFloat()) else appVol
+
+        val live = player ?: return
+        if (effectiveVol <= 0.001f) {
+            if (AppSettings.pauseOnZeroVolume.value && live.isPlaying) {
+                pausedByZeroVolume = true
+                live.pause()
+            }
+        } else if (pausedByZeroVolume && AppSettings.autoResumeOnVolume.value && !live.isPlaying) {
+            pausedByZeroVolume = false
+            live.play()
+        }
+    }
 
     override fun onDestroy() {
+        RemixStudioController.attachDelegate(null)
+        remixTickerJob?.cancel()
+        remixTickerJob = null
+        remixPlayer?.release()
+        remixPlayer = null
+        volumeObserver?.let { contentResolver.unregisterContentObserver(it) }
+        volumeObserver = null
         WearBridge.attachStreams(null)
         WearBridge.releaseSpeaker()
         // Let go of the receiver's player but leave its session alone: a

@@ -1127,6 +1127,10 @@ fun SettingsScreen(
                     onOpenMiniPlayer = { showMiniPlayerSheet = true },
                     onOpenAbout = { showAboutSheet = true },
                     onOpenTipsAndTricks = { showTipsAndTricksSheet = true },
+                    onRestartTutorial = {
+                        AppSettings.resetTutorial()
+                        Toast.makeText(context, "Tutorial started", Toast.LENGTH_SHORT).show()
+                    },
                 )
                 if (watchAvailable) {
                     SettingsGroup {
@@ -1690,8 +1694,13 @@ fun SettingsScreen(
                                     shape = RoundedCornerShape(16.dp),
                                 )
                                 .clickable {
-                                    AppIcon.apply(context, iconOption)
-                                    currentIcon = iconOption
+                                    if (currentIcon != iconOption) {
+                                        AppIcon.apply(context, iconOption)
+                                        currentIcon = iconOption
+                                        AppRestartController.requestRestart(
+                                            "Launcher icon updated. Restart Hush Music to refresh your home screen shortcut cleanly.",
+                                        )
+                                    }
                                 }
                                 .padding(horizontal = 12.dp, vertical = 10.dp),
                         ) {
@@ -2531,12 +2540,23 @@ fun SettingsScreen(
                     },
                 )
             }
+            row("Restart Tutorial", "tutorial", "spotlight", "walkthrough", "guide", "tour", "help") {
+                SettingsRow(
+                    icon = Icons.Rounded.Lightbulb,
+                    title = "Restart Tutorial",
+                    subtitle = "Replay the interactive spotlight walkthrough on Home",
+                    onClick = {
+                        AppSettings.resetTutorial()
+                        Toast.makeText(context, "Tutorial started", Toast.LENGTH_SHORT).show()
+                    },
+                )
+            }
         }
 
         if (shows(SettingsCategory.LANGUAGE)) SearchableSettingsGroup(search, header = stringResource(R.string.language)) {
             val appLanguageTitle = stringResource(R.string.app_language)
             row(appLanguageTitle, "locale", "translate") {
-                val selectedLanguage = AppCompatDelegate.getApplicationLocales().get(0)?.toLanguageTag()
+                val selectedLanguage = com.music.bitchord.ui.components.AppLocaleHelper.resolveSavedLanguageTag(context)
                     ?: Locale.getDefault().toLanguageTag()
                 SettingsRow(
                     icon = SfIcons.Language,
@@ -3658,6 +3678,7 @@ private fun SettingsCategoryList(
     onOpenMiniPlayer: () -> Unit = {},
     onOpenAbout: () -> Unit = {},
     onOpenTipsAndTricks: () -> Unit = {},
+    onRestartTutorial: () -> Unit = {},
 ) {
     // Unified clean categorized hierarchy matching 20366.jpg & 20386.jpg (Zero Subtitles)
     // 1. LOOK & FEEL
@@ -3746,6 +3767,13 @@ private fun SettingsCategoryList(
             iconBadgeColor = Color(0xFFF59E0B),
             title = "Tips & Tricks",
             onClick = onOpenTipsAndTricks,
+        )
+        RowDivider()
+        SettingsRow(
+            icon = SfIcons.Appearance,
+            iconBadgeColor = Color(0xFF10B981),
+            title = "Restart Tutorial",
+            onClick = onRestartTutorial,
         )
         RowDivider()
         SettingsRow(

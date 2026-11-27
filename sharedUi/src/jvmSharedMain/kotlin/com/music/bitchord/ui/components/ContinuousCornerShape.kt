@@ -8,6 +8,7 @@ import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.geometry.toRect
 import androidx.compose.ui.graphics.Outline
 import androidx.compose.ui.graphics.Path
+import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.LayoutDirection
 import kotlin.math.atan2
 import kotlin.math.cos
@@ -17,22 +18,6 @@ import kotlin.math.tan
 /**
  * Apple's continuous corner — the squircle every iOS surface is cut to — rather
  * than the circular arc of a [androidx.compose.foundation.shape.RoundedCornerShape].
- *
- * A circular corner meets its straight edge with a jump in curvature, from none
- * to all of it, and that jump is the hard "shoulder" a rounded rectangle shows
- * next to an Apple one. Here the curvature ramps in over a cubic either side of
- * a shorter arc, the construction Figma's corner smoothing uses, with
- * [smoothing] the share of each corner's quarter-turn handed to those ramps.
- *
- * Each corner smooths into each of its two edges separately, as far as the
- * straight run of that edge leaves room. So a capsule keeps a true semicircular
- * end — the short edge has no straight run to ramp into — while its long edges
- * ease into the curve, which is how a continuous capsule is drawn; a circle
- * stays a circle. Every point of the curve lies on or inside the circular corner
- * of the same radius, so a surface clipped by the plain shape loses nothing.
- *
- * A [CornerBasedShape], so the backdrop's lens and highlight shaders, which read
- * corner radii off one, take it as they would the plain shape.
  */
 class ContinuousCornerShape(
     topStart: CornerSize,
@@ -41,6 +26,9 @@ class ContinuousCornerShape(
     bottomStart: CornerSize,
     val smoothing: Float = GLASS_CORNER_SMOOTHING,
 ) : CornerBasedShape(topStart, topEnd, bottomEnd, bottomStart) {
+
+    constructor(radius: Dp, smoothing: Float = GLASS_CORNER_SMOOTHING) :
+        this(CornerSize(radius), CornerSize(radius), CornerSize(radius), CornerSize(radius), smoothing)
 
     constructor(percent: Int, smoothing: Float = GLASS_CORNER_SMOOTHING) :
         this(CornerSize(percent), CornerSize(percent), CornerSize(percent), CornerSize(percent), smoothing)
@@ -72,8 +60,6 @@ class ContinuousCornerShape(
         val s = smoothing.coerceIn(0f, 1f)
 
         val path = Path()
-        // Clockwise from the top edge, each corner drawn from the edge running
-        // into it ([inward] along that edge) to the edge leaving it ([outward]).
         path.moveTo(topLeft * (1 + edgeSmoothing(s, topLeft, topRight, w)), 0f)
         path.corner(
             corner = Offset(w, 0f), radius = topRight,
@@ -135,19 +121,8 @@ fun CornerBasedShape.continuous(smoothing: Float = GLASS_CORNER_SMOOTHING): Corn
         else -> ContinuousCornerShape(topStart, topEnd, bottomEnd, bottomStart, smoothing)
     }
 
-/**
- * Apple's corner smoothing, as the share of each corner's turn given over to the
- * curvature ramps. Figma calls 60% "iOS"; measured off Apple's own glass it
- * comes to a touch over that.
- */
 const val GLASS_CORNER_SMOOTHING = 0.607f
 
-/**
- * How much of [smoothing] a corner of [radius] can spend along an edge of
- * [length] whose other end has a corner of [otherRadius]: the straight run
- * between the two arcs is shared between them in proportion to their radii,
- * so neither ramp reaches into the other's.
- */
 private fun edgeSmoothing(smoothing: Float, radius: Float, otherRadius: Float, length: Float): Float {
     if (radius <= 0f) return 0f
     val straight = (length - radius - otherRadius).coerceAtLeast(0f)
@@ -155,14 +130,6 @@ private fun edgeSmoothing(smoothing: Float, radius: Float, otherRadius: Float, l
     return smoothing.coerceAtMost(share / radius)
 }
 
-/**
- * One corner, from the end of the straight edge running into it to the start
- * of the straight edge leaving it.
- *
- * Each half is a cubic from the edge onto the arc, Figma's construction: the
- * edge point sits `(1 + s) * radius` from the corner, the arc keeps the
- * circular corner's own centre, and gives up `45 * s` degrees to the cubic.
- */
 private fun Path.corner(
     corner: Offset,
     radius: Float,
@@ -178,7 +145,6 @@ private fun Path.corner(
     val center = corner - inward * radius + outward * radius
 
     val inHalf = CornerHalf(radius, smoothingIn)
-    // Measured back along the incoming edge from the corner, and in from it.
     fun alongIn(distance: Float, depth: Float = 0f) = corner - inward * distance + outward * depth
     lineTo(alongIn(inHalf.edge))
     val arcStart = alongIn(inHalf.arcAlong, inHalf.arcDepth)
@@ -187,7 +153,6 @@ private fun Path.corner(
     }
 
     val outHalf = CornerHalf(radius, smoothingOut)
-    // Measured on along the outgoing edge from the corner, and in from it.
     fun alongOut(distance: Float, depth: Float = 0f) = corner + outward * distance - inward * depth
     val arcEnd = alongOut(outHalf.arcAlong, outHalf.arcDepth)
     val startAngle = angleOf(arcStart - center)
@@ -209,17 +174,11 @@ private fun Path.corner(
     }
 }
 
-/** The measurements of half a smoothed corner, along and in from its edge. */
 private class CornerHalf(radius: Float, smoothing: Float) {
     private val turn = Math.toRadians(45.0 * smoothing)
-
-    /** Where the curve leaves the straight edge, measured from the corner. */
     val edge = (1 + smoothing) * radius
-
-    /** Where the cubic meets the arc. */
     val arcAlong = radius - radius * sin(turn).toFloat()
     val arcDepth = radius * (1 - cos(turn).toFloat())
-
     private val c = radius * (tan(turn / 2) * cos(turn)).toFloat()
     val b = (edge - arcAlong - c) / 3f
     val a = 2f * b

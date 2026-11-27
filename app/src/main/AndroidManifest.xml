@@ -60,6 +60,20 @@
         android:name="android.permission.WRITE_EXTERNAL_STORAGE"
         android:maxSdkVersion="28" />
 
+    <queries>
+        <package android:name="com.instagram.android" />
+        <package android:name="com.facebook.katana" />
+        <package android:name="com.facebook.lite" />
+        <intent>
+            <action android:name="com.instagram.share.ADD_TO_STORY" />
+            <data android:mimeType="image/png" />
+        </intent>
+        <intent>
+            <action android:name="com.facebook.stories.ADD_TO_STORY" />
+            <data android:mimeType="image/png" />
+        </intent>
+    </queries>
+
     <application
         android:name=".BitChordApplication"
         android:allowBackup="true"

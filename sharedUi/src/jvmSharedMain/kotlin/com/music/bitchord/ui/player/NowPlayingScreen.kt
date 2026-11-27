@@ -2396,11 +2396,19 @@ fun NowPlayingScreen(
                     onClearQueue = onClearQueue,
                     onOpenMenu = onOpenMenu,
                     onOpenAlbum = { song.albumId?.let { onOpenAlbum(it) } },
-                    onOpenArtist = { onOpenArtist(song.artistId, song.artist) },
+                    onOpenArtist = {
+                        val resolvedArtistId = song.artistId?.takeIf { it.isNotBlank() }
+                            ?: song.artists.firstOrNull { !it.browseId.isNullOrBlank() }?.browseId
+                        val resolvedArtistName = song.artist.ifBlank {
+                            song.artists.firstOrNull()?.name.orEmpty()
+                        }
+                        onOpenArtist(resolvedArtistId, resolvedArtistName)
+                    },
                     lyrics = lyrics,
                     lyricsUnavailable = lyricsUnavailable,
                     onDismiss = onDismissPlayer,
                     onOpenMixer = onOpenMixer,
+                    onShareLyrics = { lyricsShare = it },
                     modifier = Modifier.fillMaxSize(),
                 )
             }
@@ -2941,11 +2949,19 @@ fun NowPlayingScreen(
                             onClearQueue = onClearQueue,
                             onOpenMenu = onOpenMenu,
                             onOpenAlbum = { song.albumId?.let { onOpenAlbum(it) } },
-                            onOpenArtist = { onOpenArtist(song.artistId, song.artist) },
+                            onOpenArtist = {
+                                val resolvedArtistId = song.artistId?.takeIf { it.isNotBlank() }
+                                    ?: song.artists.firstOrNull { !it.browseId.isNullOrBlank() }?.browseId
+                                val resolvedArtistName = song.artist.ifBlank {
+                                    song.artists.firstOrNull()?.name.orEmpty()
+                                }
+                                onOpenArtist(resolvedArtistId, resolvedArtistName)
+                            },
                             lyrics = lyrics,
                             lyricsUnavailable = lyricsUnavailable,
                             onDismiss = onDismissPlayer,
                             onOpenMixer = onOpenMixer,
+                            onShareLyrics = { lyricsShare = it },
                             modifier = Modifier.fillMaxSize(),
                         )
                     } else {

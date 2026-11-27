@@ -158,7 +158,24 @@ interface PlayerHost {
      */
     @Composable
     fun LyricsShareSheet(hazeState: HazeState, request: LyricsShareRequest, onDismiss: () -> Unit) = Unit
+
+    // ---- Real Player Utilities (Sleep Timer, Song Info, Local Save) ----
+    val sleepTimerActiveMinutes: StateFlow<Int?> get() = NoSleepMinutes
+    val sleepTimerAfterTrack: StateFlow<Boolean> get() = NoSleepAfterTrack
+    val sleepTimerDeadlineMs: StateFlow<Long?> get() = NoSleepDeadline
+    fun sleepTimerRemainingMs(): Long? = null
+    fun startSleepTimer(minutes: Int) = Unit
+    fun startSleepTimerAfterTrack() = Unit
+    fun cancelSleepTimer() = Unit
+    fun saveTrackLocally(song: Song) = Unit
+
+    @Composable
+    fun SongInfoCard(song: Song, onDismiss: () -> Unit) = Unit
 }
+
+private val NoSleepMinutes = MutableStateFlow<Int?>(null)
+private val NoSleepAfterTrack = MutableStateFlow(false)
+private val NoSleepDeadline = MutableStateFlow<Long?>(null)
 
 private val NoCast = MutableStateFlow(CastUi())
 
@@ -300,6 +317,14 @@ interface PlayerSettingsSource {
     val expressiveArtistArtShape: StateFlow<String> get() = MutableStateFlow("Heart")
     val expressiveControlsShape: StateFlow<String> get() = MutableStateFlow("Flower")
     val expressiveMiniPlayerShape: StateFlow<String> get() = MutableStateFlow("Pill")
+    val useSystemVolume: StateFlow<Boolean> get() = DefaultTrueFlow
+    val pauseOnZeroVolume: StateFlow<Boolean> get() = DefaultFalseFlow
+    val autoResumeOnVolume: StateFlow<Boolean> get() = DefaultTrueFlow
+    val appPlayerVolume: StateFlow<Float> get() = DefaultFullVolumeFlow
+    val equalizerEnabled: StateFlow<Boolean> get() = DefaultFalseFlow
+    val equalizerBands: StateFlow<List<Float>> get() = DefaultEqBandsFlow
+    val equalizerPresetName: StateFlow<String> get() = DefaultEqPresetNameFlow
+    val equalizerBalance: StateFlow<Float> get() = DefaultEqBalanceFlow
 
     fun setLastPlayerScreen(value: LastPlayerScreen)
     fun setLyricsOffsetMs(value: Int)
@@ -307,7 +332,29 @@ interface PlayerSettingsSource {
     fun setMixViewOpen(open: Boolean)
     fun setProgressLineStyle(value: ProgressLineStyle) = Unit
     fun setBeatImpulse(value: Boolean) = Unit
+    fun setUseSystemVolume(value: Boolean) = Unit
+    fun setPauseOnZeroVolume(value: Boolean) = Unit
+    fun setAutoResumeOnVolume(value: Boolean) = Unit
+    fun setAppPlayerVolume(value: Float) = Unit
+    fun setSmartFadeEnabled(value: Boolean) = Unit
+    fun setEqualizerEnabled(value: Boolean) = Unit
+    fun setEqualizerBands(values: List<Float>) = Unit
+    fun setEqualizerBalance(value: Float) = Unit
+    fun applyEqualizerPreset(presetName: String) = Unit
+    fun setExpressivePlayerArtShape(value: String) = Unit
+    fun setExpressiveControlsShape(value: String) = Unit
+    fun setExpressiveMiniPlayerShape(value: String) = Unit
+    fun setLiveSongColorGradient(value: Boolean) = Unit
+    fun setHideVolumeBar(value: Boolean) = Unit
+    fun setHideSongStatus(value: Boolean) = Unit
 }
+
+private val DefaultTrueFlow = MutableStateFlow(true)
+private val DefaultFalseFlow = MutableStateFlow(false)
+private val DefaultFullVolumeFlow = MutableStateFlow(1.0f)
+private val DefaultEqBandsFlow = MutableStateFlow(List(7) { 0f })
+private val DefaultEqPresetNameFlow = MutableStateFlow("FLAT")
+private val DefaultEqBalanceFlow = MutableStateFlow(0f)
 
 /** The player's name for the installed host's settings, read where AppSettings used to be. */
 internal val PlayerSettings: PlayerSettingsSource

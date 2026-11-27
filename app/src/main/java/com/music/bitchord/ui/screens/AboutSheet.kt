@@ -5,6 +5,8 @@
 
 package com.music.bitchord.ui.screens
 
+import android.content.Intent
+import android.net.Uri
 import android.os.Build
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
@@ -28,38 +30,49 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.rounded.ArrowBack
 import androidx.compose.material.icons.rounded.Check
+import androidx.compose.material.icons.rounded.CheckCircle
 import androidx.compose.material.icons.rounded.ChevronRight
+import androidx.compose.material.icons.rounded.Favorite
+import androidx.compose.material.icons.rounded.Info
+import androidx.compose.material.icons.rounded.Memory
+import androidx.compose.material.icons.rounded.PhoneAndroid
+import androidx.compose.material.icons.rounded.SystemUpdate
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.layout.ContentScale
-import androidx.compose.ui.platform.LocalUriHandler
-import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
-import androidx.compose.material.icons.rounded.BatteryChargingFull
-import androidx.compose.material.icons.rounded.CheckCircle
-import androidx.compose.material.icons.rounded.GraphicEq
-import androidx.compose.material.icons.rounded.Memory
-import androidx.compose.material.icons.rounded.PhoneAndroid
-import androidx.compose.material.icons.rounded.Waves
+import androidx.compose.ui.graphics.luminance
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalUriHandler
 import androidx.compose.ui.text.font.Font
 import androidx.compose.ui.text.font.FontFamily
-import androidx.compose.ui.text.style.TextOverflow
-import androidx.compose.ui.graphics.luminance
-import androidx.compose.foundation.isSystemInDarkTheme
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
-import com.music.bitchord.R
+import androidx.compose.ui.text.style.TextOverflow
+import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import coil3.compose.AsyncImage
+import com.music.bitchord.BuildConfig
+import com.music.bitchord.R
+import com.music.bitchord.data.AppUpdateChecker
+import kotlinx.coroutines.launch
+import kotlin.random.Random
 
 private const val PHOENIX_HANDLE = "phoenixdevellopment75"
 private const val PHOENIX_AVATAR = "https://github.com/$PHOENIX_HANDLE.png"
@@ -84,6 +97,13 @@ fun AboutSheet(
     contentPadding: PaddingValues = PaddingValues(0.dp),
 ) {
     val uriHandler = LocalUriHandler.current
+    val context = LocalContext.current
+    val scope = rememberCoroutineScope()
+    val dhruvFirst = remember { Random.nextBoolean() }
+    var checkingUpdate by remember { mutableStateOf(false) }
+    var checkedOnce by remember { mutableStateOf(false) }
+    val updateAvailable by AppUpdateChecker.available.collectAsStateWithLifecycle()
+    val downloadState by AppUpdateChecker.download.collectAsStateWithLifecycle()
     val isDark = MaterialTheme.colorScheme.background.luminance() < 0.5f
     val cardBg = if (isDark) Color(0xFF1C1C21) else MaterialTheme.colorScheme.surfaceContainerHigh
     val cardBorder = if (isDark) Color.White.copy(alpha = 0.08f) else MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.45f)
@@ -251,7 +271,7 @@ fun AboutSheet(
                     }
                 }
 
-                // 2. Clean 2-Column Bento Grid Specifications (Architecture, Android Version, Device, Audio Engine)
+                // 2. Clean 2-Column Bento Grid Specifications + Check for Updates
                 item {
                     Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
                         Row(
@@ -294,9 +314,9 @@ fun AboutSheet(
                                 modifier = Modifier.weight(1f),
                             )
                             BentoSpecCard(
-                                icon = Icons.Rounded.GraphicEq,
-                                label = "Audio Engine",
-                                value = "32-bit Float DSP · Bit-Exact",
+                                icon = Icons.Rounded.Info,
+                                label = "App Version",
+                                value = "v${BuildConfig.VERSION_NAME}",
                                 cardBg = cardBg,
                                 cardBorder = cardBorder,
                                 inkColor = inkColor,
@@ -304,35 +324,110 @@ fun AboutSheet(
                                 modifier = Modifier.weight(1f),
                             )
                         }
+
+                        // Check for Updates Card
+                        val currentUpdate = updateAvailable
+                        val currentDownload = downloadState
+                        val updateSubtitle = when {
+                            checkingUpdate -> "Checking for updates..."
+                            currentDownload is AppUpdateChecker.DownloadState.Downloading ->
+                                "Downloading update (${(currentDownload.fraction * 100).toInt()}%)..."
+                            currentDownload is AppUpdateChecker.DownloadState.Ready ->
+                                "Update downloaded · Tap to install"
+                            currentDownload is AppUpdateChecker.DownloadState.Failed ->
+                                currentDownload.message.ifBlank { "Download failed · Tap to retry" }
+                            currentUpdate != null ->
+                                "Version ${currentUpdate.version} available · Tap to download"
+                            checkedOnce ->
+                                "You are on the latest version (${BuildConfig.VERSION_NAME})"
+                            else -> "Tap to check GitHub for the latest release"
+                        }
                         Row(
-                            modifier = Modifier.fillMaxWidth(),
-                            horizontalArrangement = Arrangement.spacedBy(12.dp),
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .clip(RoundedCornerShape(22.dp))
+                                .background(cardBg)
+                                .border(1.dp, cardBorder, RoundedCornerShape(22.dp))
+                                .clickable {
+                                    if (checkingUpdate) return@clickable
+                                    when {
+                                        currentDownload is AppUpdateChecker.DownloadState.Ready -> {
+                                            AppUpdateChecker.installApk(context, currentDownload.file)
+                                        }
+                                        currentUpdate != null && currentDownload !is AppUpdateChecker.DownloadState.Downloading -> {
+                                            if (currentUpdate.apkUrl != null) {
+                                                scope.launch { AppUpdateChecker.downloadApk(context) }
+                                            } else {
+                                                context.startActivity(Intent(Intent.ACTION_VIEW, Uri.parse(currentUpdate.releaseUrl)))
+                                            }
+                                        }
+                                        else -> {
+                                            checkingUpdate = true
+                                            scope.launch {
+                                                AppUpdateChecker.check()
+                                                checkingUpdate = false
+                                                checkedOnce = true
+                                            }
+                                        }
+                                    }
+                                }
+                                .padding(horizontal = 20.dp, vertical = 16.dp),
+                            horizontalArrangement = Arrangement.SpaceBetween,
+                            verticalAlignment = Alignment.CenterVertically,
                         ) {
-                            BentoSpecCard(
-                                icon = Icons.Rounded.Waves,
-                                label = "Sample Rate",
-                                value = "48.0 kHz · Direct Output",
-                                cardBg = cardBg,
-                                cardBorder = cardBorder,
-                                inkColor = inkColor,
-                                accentColor = primaryAccent,
+                            Row(
                                 modifier = Modifier.weight(1f),
-                            )
-                            BentoSpecCard(
-                                icon = Icons.Rounded.BatteryChargingFull,
-                                label = "Display Target",
-                                value = "120Hz Locked Smooth",
-                                cardBg = cardBg,
-                                cardBorder = cardBorder,
-                                inkColor = inkColor,
-                                accentColor = primaryAccent,
-                                modifier = Modifier.weight(1f),
+                                verticalAlignment = Alignment.CenterVertically,
+                                horizontalArrangement = Arrangement.spacedBy(14.dp),
+                            ) {
+                                Box(
+                                    modifier = Modifier
+                                        .size(38.dp)
+                                        .clip(CircleShape)
+                                        .background(primaryAccent.copy(alpha = 0.14f)),
+                                    contentAlignment = Alignment.Center,
+                                ) {
+                                    if (checkingUpdate || currentDownload is AppUpdateChecker.DownloadState.Downloading) {
+                                        CircularProgressIndicator(
+                                            modifier = Modifier.size(18.dp),
+                                            color = primaryAccent,
+                                            strokeWidth = 2.dp,
+                                        )
+                                    } else {
+                                        Icon(
+                                            imageVector = Icons.Rounded.SystemUpdate,
+                                            contentDescription = null,
+                                            tint = primaryAccent,
+                                            modifier = Modifier.size(20.dp),
+                                        )
+                                    }
+                                }
+                                Column {
+                                    Text(
+                                        text = if (currentUpdate != null) "Update Available" else "Check for Updates",
+                                        style = MaterialTheme.typography.bodyLarge.copy(fontWeight = FontWeight.SemiBold),
+                                        color = inkColor,
+                                    )
+                                    Text(
+                                        text = updateSubtitle,
+                                        style = MaterialTheme.typography.bodySmall,
+                                        color = if (currentUpdate != null) primaryAccent else subInkColor,
+                                        maxLines = 2,
+                                        overflow = TextOverflow.Ellipsis,
+                                    )
+                                }
+                            }
+                            Icon(
+                                imageVector = Icons.Rounded.ChevronRight,
+                                contentDescription = null,
+                                tint = subInkColor,
+                                modifier = Modifier.size(20.dp),
                             )
                         }
                     }
                 }
 
-                // 3. Lead Developers
+                // 3. Made with LOVE by Dhruv and Srikar (randomized order on every visit)
                 item {
                     Column(
                         modifier = Modifier
@@ -342,36 +437,73 @@ fun AboutSheet(
                             .border(1.dp, cardBorder, RoundedCornerShape(24.dp))
                             .padding(20.dp),
                     ) {
-                        Text(
-                            text = "Lead Developers",
-                            style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold),
-                            color = inkColor,
-                        )
+                        Row(
+                            verticalAlignment = Alignment.CenterVertically,
+                            horizontalArrangement = Arrangement.spacedBy(8.dp),
+                        ) {
+                            Icon(
+                                imageVector = Icons.Rounded.Favorite,
+                                contentDescription = null,
+                                tint = primaryAccent,
+                                modifier = Modifier.size(18.dp),
+                            )
+                            Text(
+                                text = if (dhruvFirst) {
+                                    "Made with LOVE by Dhruv and Srikar"
+                                } else {
+                                    "Made with LOVE by Srikar and Dhruv"
+                                },
+                                style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold),
+                                color = inkColor,
+                            )
+                        }
                         Spacer(Modifier.height(14.dp))
 
-                        // Phoenix
-                        DeveloperCard(
-                            name = "Phoenix",
-                            handle = "@$PHOENIX_HANDLE",
-                            role = "Lead Developer",
-                            avatarUrl = PHOENIX_AVATAR,
-                            inkColor = inkColor,
-                            onClick = { uriHandler.openUri(PHOENIX_URL) },
-                        )
+                        if (dhruvFirst) {
+                            DeveloperCard(
+                                name = "Dhruv Patil",
+                                handle = "@$DHRUV_HANDLE",
+                                role = "Creator",
+                                avatarUrl = DHRUV_AVATAR,
+                                inkColor = inkColor,
+                                onClick = { uriHandler.openUri(DHRUV_URL) },
+                            )
 
-                        Spacer(Modifier.height(14.dp))
-                        HorizontalDivider(color = cardBorder, thickness = 0.8.dp)
-                        Spacer(Modifier.height(14.dp))
+                            Spacer(Modifier.height(14.dp))
+                            HorizontalDivider(color = cardBorder, thickness = 0.8.dp)
+                            Spacer(Modifier.height(14.dp))
 
-                        // Dhruv Patil
-                        DeveloperCard(
-                            name = "Dhruv Patil",
-                            handle = "@$DHRUV_HANDLE",
-                            role = "Lead Developer",
-                            avatarUrl = DHRUV_AVATAR,
-                            inkColor = inkColor,
-                            onClick = { uriHandler.openUri(DHRUV_URL) },
-                        )
+                            DeveloperCard(
+                                name = "Srikar",
+                                handle = "@$PHOENIX_HANDLE",
+                                role = "Creator",
+                                avatarUrl = PHOENIX_AVATAR,
+                                inkColor = inkColor,
+                                onClick = { uriHandler.openUri(PHOENIX_URL) },
+                            )
+                        } else {
+                            DeveloperCard(
+                                name = "Srikar",
+                                handle = "@$PHOENIX_HANDLE",
+                                role = "Creator",
+                                avatarUrl = PHOENIX_AVATAR,
+                                inkColor = inkColor,
+                                onClick = { uriHandler.openUri(PHOENIX_URL) },
+                            )
+
+                            Spacer(Modifier.height(14.dp))
+                            HorizontalDivider(color = cardBorder, thickness = 0.8.dp)
+                            Spacer(Modifier.height(14.dp))
+
+                            DeveloperCard(
+                                name = "Dhruv Patil",
+                                handle = "@$DHRUV_HANDLE",
+                                role = "Creator",
+                                avatarUrl = DHRUV_AVATAR,
+                                inkColor = inkColor,
+                                onClick = { uriHandler.openUri(DHRUV_URL) },
+                            )
+                        }
                     }
                 }
 

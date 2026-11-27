@@ -113,6 +113,7 @@ fun AiPlaylistPillButton(
             .graphicsLayer {
                 scaleX = pressScale * breatheScale
                 scaleY = pressScale * breatheScale
+                alpha = if (pressed) 1f else 0.74f
             }
             .then(glassModifier)
             .clickable(
@@ -124,7 +125,7 @@ fun AiPlaylistPillButton(
     ) {
         Icon(
             imageVector = SfIcons.AutoAwesome,
-            contentDescription = "AI Playlist Maker",
+            contentDescription = "Playlist Maker",
             tint = if (!materialUi && !isDark) Color(0xFF1A1A1E) else accent,
             modifier = Modifier.size(18.dp),
         )

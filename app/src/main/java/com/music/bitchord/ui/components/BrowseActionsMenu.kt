@@ -112,6 +112,7 @@ fun BrowseActionsMenu(
     /** Null where the menu was opened from the page it would navigate to. */
     onOpen: (() -> Unit)? = null,
     onDownloadAll: (() -> Unit)? = null,
+    onSaveLocally: (() -> Unit)? = null,
     /**
      * Shares the release's own YouTube Music link — the album/playlist
      * counterpart to a track's own Share tile in [SongActionsMenu]. Null for
@@ -223,6 +224,13 @@ fun BrowseActionsMenu(
                         else -> null
                     },
                     onClick = download,
+                )
+            }
+            onSaveLocally?.let { saveLocal ->
+                ActionRow(
+                    SfIcons.Download,
+                    "Save playlist locally",
+                    onClick = saveLocal,
                 )
             }
             onOpen?.let {

@@ -1,8 +1,5 @@
 package com.music.bitchord.ui.playlist
 
-import androidx.compose.animation.AnimatedVisibility
-import androidx.compose.animation.fadeIn
-import androidx.compose.animation.fadeOut
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
@@ -12,10 +9,9 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.navigationBarsPadding
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
@@ -25,27 +21,24 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.text.KeyboardActions
+import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.AutoAwesome
-import androidx.compose.material.icons.filled.Close
-import androidx.compose.material.icons.filled.PlayArrow
-import androidx.compose.material.icons.filled.Save
+import androidx.compose.material.icons.rounded.AutoAwesome
+import androidx.compose.material.icons.rounded.Close
+import androidx.compose.material.icons.rounded.PlayArrow
+import androidx.compose.material.icons.rounded.QueueMusic
+import androidx.compose.material.icons.rounded.Refresh
+import androidx.compose.material.icons.rounded.Save
 import androidx.compose.material3.CircularProgressIndicator
-import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.OutlinedTextFieldDefaults
 import androidx.compose.material3.Text
-import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
-import com.music.bitchord.data.YtMusicRepository
-import com.music.bitchord.data.model.SearchFilter
-import com.music.bitchord.data.model.SearchResult
 import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -54,257 +47,99 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.input.ImeAction
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import coil3.compose.AsyncImage
+import com.music.bitchord.data.YtMusicRepository
+import com.music.bitchord.data.model.BrowseType
+import com.music.bitchord.data.model.SearchFilter
+import com.music.bitchord.data.model.SearchResult
 import com.music.bitchord.data.model.Song
+import com.music.bitchord.data.model.WatchTarget
+import com.music.bitchord.data.settings.AppSettings
+import com.music.bitchord.ui.components.ContinuousCornerShape
+import com.music.bitchord.ui.components.HushCenteredCard
 import com.music.bitchord.ui.components.expressive.expressiveClickable
 import com.music.bitchord.ui.components.expressive.m3eSquish
+import dev.chrisbanes.haze.HazeState
 import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.delay
+import kotlinx.coroutines.async
+import kotlinx.coroutines.awaitAll
+import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import org.json.JSONArray
 import org.json.JSONObject
 import java.net.HttpURLConnection
 import java.net.URL
+import java.net.URLEncoder
 import java.util.Locale
 
+private val COUNT_PRESETS: List<Int?> = listOf(null, 5, 10, 15, 20)
+
 /**
- * Intelligent Realtime AI Playlist Maker Bottom Sheet.
- *
- * Triggered by long-pressing the Explore tab:
- * Connects live to free open-source neural AI inference to curate bespoke playlists
- * from the user's available tracks based on vibe or custom descriptions.
- * Strictly adheres to clean typography with zero emojis.
+ * Compact centered frosted Squircle Playlist Maker.
+ * Combines real neural curation + multi-strategy YouTube Music playlist, artist radio,
+ * and acoustic similarity queues to curate real matching songs on demand.
  */
-@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun AiPlaylistMakerSheet(
     availableSongs: List<Song>,
     onDismiss: () -> Unit,
     onCreatePlaylist: (title: String, songIds: List<String>, songs: List<Song>, playImmediately: Boolean) -> Unit,
+    hazeState: HazeState? = null,
 ) {
-    val sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
     val scope = rememberCoroutineScope()
+    val focusManager = LocalFocusManager.current
+    val reduceBlur by AppSettings.reduceDynamicBlur.collectAsStateWithLifecycle()
 
     var customPrompt by remember { mutableStateOf("") }
-    var selectedVibe by remember { mutableStateOf("Workout Energy") }
+    var selectedCount by remember { mutableStateOf<Int?>(null) }
     var isGenerating by remember { mutableStateOf(false) }
-    var isLiveAiCurated by remember { mutableStateOf(false) }
-    var playlistTitle by remember { mutableStateOf("Workout Energy AI Mix") }
-    val curatedSongs = remember { mutableStateListOf<Song>() }
     var hasGenerated by remember { mutableStateOf(false) }
+    var playlistTitle by remember { mutableStateOf("Custom Playlist") }
+    var statusError by remember { mutableStateOf<String?>(null) }
+    var shuffleSeed by remember { mutableStateOf(0) }
+    val curatedSongs = remember { mutableStateListOf<Song>() }
 
-    val vibes = listOf(
-        "Workout Energy" to listOf("workout", "gym", "energy", "pump", "power", "run", "fast", "bass", "beat", "hype", "club", "dance", "electronic", "rock", "heavy", "trap", "hard"),
-        "Late Night Chill" to listOf("night", "chill", "calm", "slow", "ambient", "dream", "quiet", "sleep", "moon", "lo-fi", "lofi", "r&b", "soul", "relax", "cozy", "mellow", "peace"),
-        "Carnatic & Classical" to listOf("carnatic", "classical", "raga", "ragam", "kriti", "keerthanam", "violin", "veena", "flute", "vocal", "hindustani", "sitar", "thillana", "varnam", "alaap", "mandolin"),
-        "Indian Cinema Hits" to listOf("tamil", "telugu", "hindi", "bollywood", "kollywood", "tollywood", "malayalam", "kannada", "punjabi", "melody", "anirudh", "rahman", "ilaiyaraaja", "arijit", "sid sriram", "shreya", "spb", "ost", "soundtrack"),
-        "Deep Focus & Beats" to listOf("focus", "study", "work", "instrumental", "piano", "jazz", "lofi", "beats", "peace", "flow", "ambient", "drone", "concentration"),
-        "Indie & Acoustic" to listOf("indie", "alternative", "acoustic", "guitar", "unplugged", "folk", "singer", "songwriter", "organic", "fresh", "authentic", "mellow", "gentle"),
-        "Nostalgia Rewind" to listOf("classic", "old", "90s", "80s", "2000s", "retro", "vintage", "golden", "timeless", "love", "memory", "evergreen", "throwback"),
-        "Melancholy Moods" to listOf("sad", "rain", "cry", "lonely", "dark", "heart", "tears", "blue", "acoustic", "pain", "sorrow", "emotional", "deep", "moody"),
-        "Party & Dance" to listOf("party", "hit", "fire", "drop", "summer", "dance", "wild", "turn", "radio", "pop", "remix", "edm", "club", "banger", "groove"),
-        "Morning Acoustic" to listOf("morning", "coffee", "wake", "sunrise", "acoustic", "guitar", "folk", "peaceful", "fresh", "dawn", "cheerful", "positive"),
-    )
+    fun generatePlaylist(rawInput: String, variationSeed: Int = 0) {
+        val trimmed = rawInput.trim()
+        if (trimmed.isEmpty() || isGenerating) return
+        focusManager.clearFocus()
 
-    fun generatePlaylist(vibeName: String, query: String) {
         scope.launch {
             isGenerating = true
-            isLiveAiCurated = false
+            statusError = null
 
             try {
-                val targetPrompt = if (query.isNotBlank()) query.trim() else vibeName
+                val intent = parsePromptIntent(trimmed, selectedCount)
+                val targetCount = intent.targetCount
 
-                // Step 0: Ensure rich candidate pool by querying YouTube Music when candidates are low or matching
-                val onlineCandidates = withContext(Dispatchers.IO) {
-                    try {
-                        val searchQuery = when (vibeName) {
-                            "Workout Energy" -> "workout gym high energy motivation hits"
-                            "Late Night Chill" -> "late night chill lofi r&b relax songs"
-                            "Carnatic & Classical" -> "carnatic classical ragam songs hits"
-                            "Indian Cinema Hits" -> "indian cinema songs hits tamil telugu hindi"
-                            "Deep Focus & Beats" -> "deep focus study beats instrumental lofi"
-                            "Indie & Acoustic" -> "indie acoustic guitar songs hits"
-                            "Nostalgia Rewind" -> "classic 90s 2000s throwback hits"
-                            "Melancholy Moods" -> "sad emotional slow songs hits"
-                            "Party & Dance" -> "party dance edm club banger hits"
-                            "Morning Acoustic" -> "morning acoustic coffee sunshine songs"
-                            else -> "$targetPrompt music hits"
-                        }
-                        val finalSearch = if (query.isNotBlank()) query.trim() else searchQuery
-                        val res1 = YtMusicRepository.search(finalSearch, SearchFilter.SONGS)
-                            .getOrDefault(emptyList())
-                            .filterIsInstance<SearchResult.Track>()
-                            .map { it.song }
-                        if (res1.size < 20) {
-                            val fallbackSearch = if (query.isNotBlank()) "$targetPrompt top hits" else "$vibeName popular tracks"
-                            val res2 = YtMusicRepository.search(fallbackSearch, SearchFilter.SONGS)
-                                .getOrDefault(emptyList())
-                                .filterIsInstance<SearchResult.Track>()
-                                .map { it.song }
-                            val combined = (res1 + res2).distinctBy { it.videoId }
-                            if (combined.size < 15) {
-                                val broadSearch = if (query.isNotBlank()) targetPrompt else "$vibeName songs"
-                                val res3 = YtMusicRepository.search(broadSearch, SearchFilter.SONGS)
-                                    .getOrDefault(emptyList())
-                                    .filterIsInstance<SearchResult.Track>()
-                                    .map { it.song }
-                                (combined + res3).distinctBy { it.videoId }
-                            } else {
-                                combined
-                            }
-                        } else {
-                            res1
-                        }
-                    } catch (_: Throwable) {
-                        emptyList()
-                    }
-                }
-
-                val allCandidates = (availableSongs + onlineCandidates).distinctBy { it.videoId }
-                val candidates = allCandidates.take(50)
-
-                // Step 1: Query online free open-source AI inference for realtime curation (2500ms timeout)
-                val aiSelectedIndices = withContext(Dispatchers.IO) {
-                    try {
-                        val candidateSummary = candidates.mapIndexed { idx, s ->
-                            "$idx: ${s.title.take(35)} by ${s.artist.take(25)}"
-                        }.joinToString("\n")
-
-                        val payload = JSONObject().apply {
-                            val msgs = JSONArray().apply {
-                                put(JSONObject().apply {
-                                    put("role", "system")
-                                    put(
-                                        "content",
-                                        "You are a world-class AI music supervisor and curator. Given a target vibe, mood, tempo, or genre and candidate songs [index: title by artist], select the 20 to 25 songs that best match the vibe. Return ONLY a comma-separated list of candidate index numbers (e.g. 2, 7, 11, 14, 23). Zero markdown or commentary.",
-                                    )
-                                })
-                                put(JSONObject().apply {
-                                    put("role", "user")
-                                    put(
-                                        "content",
-                                        "Target Vibe: $targetPrompt\nCandidate Songs:\n$candidateSummary",
-                                    )
-                                })
-                            }
-                            put("messages", msgs)
-                        }.toString()
-
-                        val conn = (URL("https://text.pollinations.ai/").openConnection() as HttpURLConnection).apply {
-                            requestMethod = "POST"
-                            connectTimeout = 2500
-                            readTimeout = 2500
-                            doOutput = true
-                            setRequestProperty("Content-Type", "application/json")
-                            setRequestProperty("User-Agent", "HushMusic/1.0")
-                        }
-
-                        conn.outputStream.use { os ->
-                            os.write(payload.toByteArray(Charsets.UTF_8))
-                        }
-
-                        if (conn.responseCode in 200..299) {
-                            val responseText = conn.inputStream.bufferedReader(Charsets.UTF_8).use { it.readText() }
-                            val nums = Regex("\\d+").findAll(responseText).mapNotNull { it.value.toIntOrNull() }.toList()
-                            nums.filter { it in candidates.indices }.distinct()
-                        } else {
-                            emptyList()
-                        }
-                    } catch (_: Throwable) {
-                        emptyList()
-                    }
-                }
-
-                // Step 2: Use AI indices if retrieved; otherwise fallback seamlessly to multi-pass semantic catalog ranking
-                val chosenTracks: List<Song> = if (aiSelectedIndices.isNotEmpty() && aiSelectedIndices.size >= 5) {
-                    isLiveAiCurated = true
-                    val aiPicked = aiSelectedIndices.mapNotNull { candidates.getOrNull(it) }
-                    val remaining = candidates.filter { it !in aiPicked }
-                    (aiPicked + remaining).distinctBy { it.videoId }.take(25)
-                } else {
-                    // Intelligent semantic tokenizer & multi-pass catalog ranker
-                    val tokens = targetPrompt.lowercase(Locale.ROOT)
-                        .split(Regex("[\\s,;:.\\-_/()\\[\\]]+"))
-                        .filter { it.length > 1 }
-
-                    val vibeKeywords = vibes.find { it.first == vibeName }?.second.orEmpty()
-                    val allKeywords = (vibeKeywords + tokens).distinct()
-
-                    // Genre / Region / Mood weights
-                    val highWeightKeywords = setOf(
-                        "carnatic", "classical", "raga", "ragam", "tamil", "telugu", "hindi",
-                        "bollywood", "kollywood", "tollywood", "malayalam", "kannada", "punjabi",
-                        "lofi", "lo-fi", "ost", "soundtrack", "acoustic", "rock", "indie", "jazz",
-                        "ambient", "edm", "workout", "chill", "sad", "party",
+                val outcome = withContext(Dispatchers.IO) {
+                    curateSmartPlaylist(
+                        intent = intent,
+                        localPool = availableSongs,
+                        variationSeed = variationSeed,
                     )
-
-                    // Pass 1: Semantic relevance scoring
-                    val scored = allCandidates.map { song ->
-                        val titleLower = song.title.lowercase(Locale.ROOT)
-                        val artistLower = song.artist.lowercase(Locale.ROOT)
-                        val albumLower = song.albumName?.lowercase(Locale.ROOT).orEmpty()
-                        val fullText = "$titleLower $artistLower $albumLower"
-
-                        var score = 0
-                        for (kw in allKeywords) {
-                            if (fullText.contains(kw)) {
-                                score += if (kw in highWeightKeywords) 6 else 3
-                                if (titleLower.contains(kw)) score += 2
-                                if (artistLower.contains(kw)) score += 2
-                            }
-                        }
-                        val pseudoRandomJitter = (song.videoId.hashCode() and 0x7FFFFFFF) % 3
-                        song to (score + pseudoRandomJitter)
-                    }
-
-                    // Pass 2: Artist diversity penalty to prevent artist monopoly
-                    val sortedCandidates = scored.sortedByDescending { it.second }.map { it.first }
-                    val artistCounts = mutableMapOf<String, Int>()
-                    val diverseList = mutableListOf<Song>()
-                    val deferredList = mutableListOf<Song>()
-
-                    for (song in sortedCandidates) {
-                        val key = song.artist.trim().lowercase(Locale.ROOT)
-                        val count = artistCounts.getOrDefault(key, 0)
-                        if (count < 3) {
-                            diverseList.add(song)
-                            artistCounts[key] = count + 1
-                        } else {
-                            deferredList.add(song)
-                        }
-                    }
-
-                    val finalSelection = (diverseList + deferredList).distinctBy { it.videoId }
-                    if (finalSelection.size >= 20) {
-                        finalSelection.take(25)
-                    } else {
-                        (finalSelection + allCandidates).distinctBy { it.videoId }.take(25)
-                    }
-                }
-
-                val finalizedTracks = if (chosenTracks.size < 15 && allCandidates.size >= 15) {
-                    (chosenTracks + allCandidates).distinctBy { it.videoId }.take(25)
-                } else {
-                    chosenTracks.take(25)
                 }
 
                 curatedSongs.clear()
-                curatedSongs.addAll(finalizedTracks)
+                curatedSongs.addAll(outcome.songs.take(targetCount))
 
-                playlistTitle = when {
-                    query.isNotBlank() -> "${query.trim().replaceFirstChar { it.uppercase() }} AI Mix"
-                    else -> "$vibeName AI Mix"
+                playlistTitle = outcome.title.ifBlank { deriveEditorialTitle(intent.cleanTopic) }
+
+                if (curatedSongs.isEmpty()) {
+                    statusError = "Couldn't reach any close tracks for that prompt. Check connection or name an artist, mood, or song."
                 }
             } catch (_: Throwable) {
-                // Keep existing or graceful state
+                statusError = "Unable to curate playlist right now. Check connection and retry."
             } finally {
                 hasGenerated = true
                 isGenerating = false
@@ -312,158 +147,162 @@ fun AiPlaylistMakerSheet(
         }
     }
 
-    // Auto-generate initial playlist on first show
-    LaunchedEffect(Unit) {
-        if (!hasGenerated) {
-            generatePlaylist(selectedVibe, "")
-        }
-    }
-
-    ModalBottomSheet(
-        onDismissRequest = onDismiss,
-        sheetState = sheetState,
-        containerColor = MaterialTheme.colorScheme.surfaceContainerHigh,
-        shape = RoundedCornerShape(topStart = 32.dp, topEnd = 32.dp),
+    HushCenteredCard(
+        onDismiss = onDismiss,
+        hazeState = hazeState,
+        reduceBlur = reduceBlur,
+        title = "Playlist Maker",
+        subtitle = "Real AI + YouTube Music Curation",
+        maxWidth = 376.dp,
+        maxHeight = 590.dp,
+        headerEnd = if (hasGenerated && customPrompt.isNotBlank() && !isGenerating) {
+            {
+                Box(
+                    modifier = Modifier
+                        .size(34.dp)
+                        .clip(CircleShape)
+                        .background(MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.7f))
+                        .clickable {
+                            shuffleSeed += 1
+                            generatePlaylist(customPrompt, variationSeed = shuffleSeed)
+                        },
+                    contentAlignment = Alignment.Center,
+                ) {
+                    Icon(
+                        imageVector = Icons.Rounded.Refresh,
+                        contentDescription = "Regenerate",
+                        tint = MaterialTheme.colorScheme.onSurface,
+                        modifier = Modifier.size(17.dp),
+                    )
+                }
+            }
+        } else {
+            null
+        },
     ) {
         Column(
             modifier = Modifier
                 .fillMaxWidth()
-                .fillMaxHeight(0.92f)
-                .navigationBarsPadding()
-                .padding(horizontal = 20.dp),
+                .padding(top = 10.dp),
         ) {
-            // Header with AI gradient emblem (Zero emojis)
-            Row(
-                modifier = Modifier.fillMaxWidth().padding(bottom = 12.dp),
-                horizontalArrangement = Arrangement.SpaceBetween,
-                verticalAlignment = Alignment.CenterVertically,
-            ) {
-                Row(verticalAlignment = Alignment.CenterVertically) {
-                    Box(
-                        modifier = Modifier
-                            .size(36.dp)
-                            .clip(CircleShape)
-                            .background(
-                                Brush.linearGradient(
-                                    listOf(Color(0xFFFF6E40), Color(0xFFB388FF), Color(0xFF00E5FF)),
-                                ),
-                            ),
-                        contentAlignment = Alignment.Center,
-                    ) {
-                        Icon(
-                            imageVector = Icons.Default.AutoAwesome,
-                            contentDescription = null,
-                            tint = Color.White,
-                            modifier = Modifier.size(20.dp),
-                        )
-                    }
-                    Spacer(Modifier.width(12.dp))
-                    Column {
-                        Text(
-                            text = "AI Playlist Maker",
-                            style = MaterialTheme.typography.titleLarge,
-                            fontWeight = FontWeight.Bold,
-                            color = MaterialTheme.colorScheme.onSurface,
-                        )
-                        Text(
-                            text = if (isLiveAiCurated) "Curated in realtime by Open Neural AI" else "Bespoke intelligent music curation",
-                            style = MaterialTheme.typography.labelSmall,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant,
-                        )
-                    }
-                }
-                IconButton(onClick = onDismiss) {
-                    Icon(
-                        imageVector = Icons.Default.Close,
-                        contentDescription = "Close",
-                        tint = MaterialTheme.colorScheme.onSurfaceVariant,
-                    )
-                }
-            }
-
-            // Vibe Pills Carousel (Clean text, Zero emojis)
-            Text(
-                text = "Choose a Vibe",
-                style = MaterialTheme.typography.labelMedium,
-                fontWeight = FontWeight.SemiBold,
-                color = MaterialTheme.colorScheme.primary,
-                modifier = Modifier.padding(top = 4.dp, bottom = 8.dp),
-            )
-            LazyRow(
-                horizontalArrangement = Arrangement.spacedBy(8.dp),
-                contentPadding = PaddingValues(horizontal = 2.dp),
-            ) {
-                items(vibes) { (vibe, _) ->
-                    val isSelected = selectedVibe == vibe
-                    Box(
-                        modifier = Modifier
-                            .clip(RoundedCornerShape(20.dp))
-                            .background(
-                                if (isSelected) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.surfaceVariant,
-                            )
-                            .m3eSquish()
-                            .clickable {
-                                selectedVibe = vibe
-                                generatePlaylist(vibe, customPrompt)
-                            }
-                            .padding(horizontal = 14.dp, vertical = 9.dp),
-                    ) {
-                        Text(
-                            text = vibe,
-                            style = MaterialTheme.typography.labelMedium,
-                            fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Medium,
-                            color = if (isSelected) MaterialTheme.colorScheme.onPrimary else MaterialTheme.colorScheme.onSurfaceVariant,
-                        )
-                    }
-                }
-            }
-
-            Spacer(Modifier.height(14.dp))
-
-            // Custom prompt text field
             OutlinedTextField(
                 value = customPrompt,
-                onValueChange = {
-                    customPrompt = it
-                },
+                onValueChange = { customPrompt = it },
                 placeholder = {
-                    Text("Describe any custom mood, tempo or genre...")
+                    Text(
+                        "e.g. 8 late night R&B, songs like Blinding Lights...",
+                        style = MaterialTheme.typography.bodySmall,
+                    )
                 },
                 trailingIcon = {
                     Box(
                         modifier = Modifier
+                            .size(34.dp)
                             .clip(CircleShape)
-                            .background(MaterialTheme.colorScheme.primary)
+                            .background(
+                                if (customPrompt.isNotBlank()) MaterialTheme.colorScheme.primary
+                                else MaterialTheme.colorScheme.surfaceVariant,
+                            )
                             .m3eSquish()
-                            .clickable { generatePlaylist(selectedVibe, customPrompt) }
-                            .padding(8.dp),
+                            .clickable(enabled = customPrompt.isNotBlank() && !isGenerating) {
+                                shuffleSeed = 0
+                                generatePlaylist(customPrompt)
+                            },
+                        contentAlignment = Alignment.Center,
                     ) {
-                        Icon(
-                            imageVector = Icons.Default.AutoAwesome,
-                            contentDescription = "Generate",
-                            tint = MaterialTheme.colorScheme.onPrimary,
-                            modifier = Modifier.size(18.dp),
-                        )
+                        if (isGenerating) {
+                            CircularProgressIndicator(
+                                modifier = Modifier.size(16.dp),
+                                strokeWidth = 2.dp,
+                                color = MaterialTheme.colorScheme.onPrimary,
+                            )
+                        } else {
+                            Icon(
+                                imageVector = Icons.Rounded.AutoAwesome,
+                                contentDescription = "Create",
+                                tint = if (customPrompt.isNotBlank()) {
+                                    MaterialTheme.colorScheme.onPrimary
+                                } else {
+                                    MaterialTheme.colorScheme.onSurfaceVariant
+                                },
+                                modifier = Modifier.size(17.dp),
+                            )
+                        }
                     }
                 },
+                keyboardOptions = KeyboardOptions(imeAction = ImeAction.Done),
+                keyboardActions = KeyboardActions(
+                    onDone = {
+                        shuffleSeed = 0
+                        generatePlaylist(customPrompt)
+                    },
+                ),
                 modifier = Modifier.fillMaxWidth(),
-                shape = RoundedCornerShape(18.dp),
+                shape = ContinuousCornerShape(18.dp),
                 colors = OutlinedTextFieldDefaults.colors(
                     focusedBorderColor = MaterialTheme.colorScheme.primary,
-                    unfocusedBorderColor = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.5f),
+                    unfocusedBorderColor = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.55f),
                 ),
                 singleLine = true,
             )
 
-            Spacer(Modifier.height(16.dp))
+            Spacer(Modifier.height(10.dp))
 
-            // Playlist Title & Results
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.SpaceBetween,
+            // Track count preset row
+            LazyRow(
+                horizontalArrangement = Arrangement.spacedBy(8.dp),
+                contentPadding = PaddingValues(horizontal = 2.dp),
                 verticalAlignment = Alignment.CenterVertically,
             ) {
-                Column(Modifier.weight(1f)) {
+                item {
+                    Text(
+                        text = "Tracks",
+                        style = MaterialTheme.typography.labelSmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        modifier = Modifier.padding(end = 2.dp),
+                    )
+                }
+                items(COUNT_PRESETS) { count ->
+                    val selected = selectedCount == count
+                    Box(
+                        modifier = Modifier
+                            .clip(RoundedCornerShape(50))
+                            .background(
+                                if (selected) MaterialTheme.colorScheme.primaryContainer
+                                else MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.55f),
+                            )
+                            .border(
+                                width = 1.dp,
+                                color = if (selected) MaterialTheme.colorScheme.primary.copy(alpha = 0.5f)
+                                else Color.Transparent,
+                                shape = RoundedCornerShape(50),
+                            )
+                            .clickable {
+                                selectedCount = count
+                                if (customPrompt.isNotBlank() && hasGenerated) {
+                                    generatePlaylist(customPrompt, variationSeed = shuffleSeed)
+                                }
+                            }
+                            .padding(horizontal = 12.dp, vertical = 6.dp),
+                    ) {
+                        Text(
+                            text = if (count == null) "Auto" else "$count",
+                            style = MaterialTheme.typography.labelSmall,
+                            fontWeight = if (selected) FontWeight.Bold else FontWeight.Medium,
+                            color = if (selected) {
+                                MaterialTheme.colorScheme.onPrimaryContainer
+                            } else {
+                                MaterialTheme.colorScheme.onSurfaceVariant
+                            },
+                        )
+                    }
+                }
+            }
+
+            Spacer(Modifier.height(12.dp))
+
+            if (hasGenerated || isGenerating) {
+                Column(modifier = Modifier.fillMaxWidth()) {
                     Text(
                         text = playlistTitle,
                         style = MaterialTheme.typography.titleMedium,
@@ -472,112 +311,133 @@ fun AiPlaylistMakerSheet(
                         maxLines = 1,
                         overflow = TextOverflow.Ellipsis,
                     )
-                    Row(verticalAlignment = Alignment.CenterVertically) {
+                    Text(
+                        text = if (isGenerating) {
+                            "Curating real tracks across artists & playlists..."
+                        } else {
+                            "${curatedSongs.size} curated tracks"
+                        },
+                        style = MaterialTheme.typography.labelSmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    )
+                }
+
+                Spacer(Modifier.height(8.dp))
+            }
+
+            // Results container (compact Squircle container inside centered card)
+            Box(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .heightIn(min = 132.dp, max = 264.dp)
+                    .clip(ContinuousCornerShape(20.dp))
+                    .background(MaterialTheme.colorScheme.surfaceContainer.copy(alpha = 0.72f))
+                    .padding(8.dp),
+                contentAlignment = Alignment.Center,
+            ) {
+                when {
+                    isGenerating && curatedSongs.isEmpty() -> Column(
+                        horizontalAlignment = Alignment.CenterHorizontally,
+                        verticalArrangement = Arrangement.spacedBy(8.dp),
+                    ) {
+                        CircularProgressIndicator(
+                            modifier = Modifier.size(26.dp),
+                            strokeWidth = 2.5.dp,
+                            color = MaterialTheme.colorScheme.primary,
+                        )
                         Text(
-                            text = "${curatedSongs.size} tracks curated for you",
-                            style = MaterialTheme.typography.labelSmall,
+                            text = "Curating playlist...",
+                            style = MaterialTheme.typography.bodySmall,
                             color = MaterialTheme.colorScheme.onSurfaceVariant,
                         )
-                        if (isLiveAiCurated) {
-                            Spacer(Modifier.width(8.dp))
-                            Box(
+                    }
+
+                    curatedSongs.isEmpty() -> Column(
+                        horizontalAlignment = Alignment.CenterHorizontally,
+                        modifier = Modifier.padding(horizontal = 14.dp),
+                    ) {
+                        Icon(
+                            imageVector = Icons.Rounded.QueueMusic,
+                            contentDescription = null,
+                            tint = MaterialTheme.colorScheme.primary.copy(alpha = 0.7f),
+                            modifier = Modifier.size(30.dp),
+                        )
+                        Spacer(Modifier.height(8.dp))
+                        Text(
+                            text = statusError
+                                ?: "Try an artist mix, \"songs like <track>\", a mood & era, or comma-separated songs.",
+                            style = MaterialTheme.typography.bodySmall,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant,
+                            textAlign = TextAlign.Center,
+                        )
+                    }
+
+                    else -> LazyColumn(
+                        modifier = Modifier.fillMaxWidth(),
+                        verticalArrangement = Arrangement.spacedBy(6.dp),
+                    ) {
+                        itemsIndexed(curatedSongs, key = { index, song -> "${song.videoId}_$index" }) { index, song ->
+                            Row(
                                 modifier = Modifier
-                                    .clip(RoundedCornerShape(8.dp))
-                                    .background(MaterialTheme.colorScheme.primaryContainer)
-                                    .padding(horizontal = 6.dp, vertical = 2.dp),
+                                    .fillMaxWidth()
+                                    .clip(ContinuousCornerShape(14.dp))
+                                    .background(MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.55f))
+                                    .padding(8.dp),
+                                verticalAlignment = Alignment.CenterVertically,
                             ) {
-                                Text(
-                                    text = "Realtime AI",
-                                    style = MaterialTheme.typography.labelSmall.copy(fontSize = 9.sp, fontWeight = FontWeight.Bold),
-                                    color = MaterialTheme.colorScheme.onPrimaryContainer,
+                                AsyncImage(
+                                    model = song.thumbnailUrl,
+                                    contentDescription = null,
+                                    contentScale = ContentScale.Crop,
+                                    modifier = Modifier
+                                        .size(40.dp)
+                                        .clip(ContinuousCornerShape(10.dp)),
                                 )
+                                Spacer(Modifier.width(10.dp))
+                                Column(Modifier.weight(1f)) {
+                                    Text(
+                                        text = song.title,
+                                        style = MaterialTheme.typography.bodyMedium,
+                                        fontWeight = FontWeight.SemiBold,
+                                        color = MaterialTheme.colorScheme.onSurface,
+                                        maxLines = 1,
+                                        overflow = TextOverflow.Ellipsis,
+                                    )
+                                    Text(
+                                        text = song.artist,
+                                        style = MaterialTheme.typography.bodySmall,
+                                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                        maxLines = 1,
+                                        overflow = TextOverflow.Ellipsis,
+                                    )
+                                }
+                                IconButton(
+                                    onClick = { curatedSongs.removeAt(index) },
+                                    modifier = Modifier.size(30.dp),
+                                ) {
+                                    Icon(
+                                        imageVector = Icons.Rounded.Close,
+                                        contentDescription = "Remove",
+                                        tint = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.75f),
+                                        modifier = Modifier.size(16.dp),
+                                    )
+                                }
                             }
                         }
                     }
                 }
-                if (isGenerating) {
-                    CircularProgressIndicator(
-                        modifier = Modifier.size(24.dp),
-                        strokeWidth = 2.5.dp,
-                        color = MaterialTheme.colorScheme.primary,
-                    )
-                }
             }
 
-            Spacer(Modifier.height(10.dp))
+            Spacer(Modifier.height(12.dp))
 
-            // Curated Tracklist Preview
-            LazyColumn(
-                modifier = Modifier
-                    .weight(1f)
-                    .fillMaxWidth()
-                    .clip(RoundedCornerShape(22.dp))
-                    .background(MaterialTheme.colorScheme.surfaceContainer)
-                    .padding(8.dp),
-                verticalArrangement = Arrangement.spacedBy(6.dp),
-            ) {
-                itemsIndexed(curatedSongs) { index, song ->
-                    Row(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .clip(RoundedCornerShape(14.dp))
-                            .background(MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.6f))
-                            .padding(8.dp),
-                        verticalAlignment = Alignment.CenterVertically,
-                    ) {
-                        AsyncImage(
-                            model = song.thumbnailUrl,
-                            contentDescription = null,
-                            contentScale = ContentScale.Crop,
-                            modifier = Modifier
-                                .size(44.dp)
-                                .clip(RoundedCornerShape(10.dp)),
-                        )
-                        Spacer(Modifier.width(12.dp))
-                        Column(Modifier.weight(1f)) {
-                            Text(
-                                text = song.title,
-                                style = MaterialTheme.typography.bodyMedium,
-                                fontWeight = FontWeight.SemiBold,
-                                color = MaterialTheme.colorScheme.onSurface,
-                                maxLines = 1,
-                                overflow = TextOverflow.Ellipsis,
-                            )
-                            Text(
-                                text = song.artist,
-                                style = MaterialTheme.typography.bodySmall,
-                                color = MaterialTheme.colorScheme.onSurfaceVariant,
-                                maxLines = 1,
-                                overflow = TextOverflow.Ellipsis,
-                            )
-                        }
-                        IconButton(
-                            onClick = { curatedSongs.removeAt(index) },
-                            modifier = Modifier.size(32.dp),
-                        ) {
-                            Icon(
-                                imageVector = Icons.Default.Close,
-                                contentDescription = "Remove",
-                                tint = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.7f),
-                                modifier = Modifier.size(16.dp),
-                            )
-                        }
-                    }
-                }
-            }
-
-            Spacer(Modifier.height(14.dp))
-
-            // Action Buttons: Save & Play (Zero emojis)
             Row(
-                modifier = Modifier.fillMaxWidth().padding(bottom = 12.dp),
+                modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.spacedBy(10.dp),
             ) {
-                // Save Only button
                 Box(
                     modifier = Modifier
                         .weight(1f)
-                        .clip(RoundedCornerShape(24.dp))
+                        .clip(RoundedCornerShape(50))
                         .background(MaterialTheme.colorScheme.surfaceVariant)
                         .expressiveClickable(enabled = curatedSongs.isNotEmpty()) {
                             onCreatePlaylist(
@@ -588,19 +448,19 @@ fun AiPlaylistMakerSheet(
                             )
                             onDismiss()
                         }
-                        .padding(vertical = 14.dp),
+                        .padding(vertical = 12.dp),
                     contentAlignment = Alignment.Center,
                 ) {
                     Row(verticalAlignment = Alignment.CenterVertically) {
                         Icon(
-                            imageVector = Icons.Default.Save,
+                            imageVector = Icons.Rounded.Save,
                             contentDescription = null,
                             tint = MaterialTheme.colorScheme.onSurfaceVariant,
-                            modifier = Modifier.size(18.dp),
+                            modifier = Modifier.size(17.dp),
                         )
-                        Spacer(Modifier.width(8.dp))
+                        Spacer(Modifier.width(6.dp))
                         Text(
-                            text = "Save Playlist",
+                            text = "Save",
                             style = MaterialTheme.typography.labelLarge,
                             fontWeight = FontWeight.Bold,
                             color = MaterialTheme.colorScheme.onSurfaceVariant,
@@ -608,11 +468,10 @@ fun AiPlaylistMakerSheet(
                     }
                 }
 
-                // Save & Play Immediately button
                 Box(
                     modifier = Modifier
-                        .weight(1.3f)
-                        .clip(RoundedCornerShape(24.dp))
+                        .weight(1.35f)
+                        .clip(RoundedCornerShape(50))
                         .background(MaterialTheme.colorScheme.primary)
                         .expressiveClickable(enabled = curatedSongs.isNotEmpty()) {
                             onCreatePlaylist(
@@ -623,19 +482,19 @@ fun AiPlaylistMakerSheet(
                             )
                             onDismiss()
                         }
-                        .padding(vertical = 14.dp),
+                        .padding(vertical = 12.dp),
                     contentAlignment = Alignment.Center,
                 ) {
                     Row(verticalAlignment = Alignment.CenterVertically) {
                         Icon(
-                            imageVector = Icons.Default.PlayArrow,
+                            imageVector = Icons.Rounded.PlayArrow,
                             contentDescription = null,
                             tint = MaterialTheme.colorScheme.onPrimary,
-                            modifier = Modifier.size(20.dp),
+                            modifier = Modifier.size(19.dp),
                         )
-                        Spacer(Modifier.width(8.dp))
+                        Spacer(Modifier.width(6.dp))
                         Text(
-                            text = "Save & Play Now",
+                            text = "Save & Play",
                             style = MaterialTheme.typography.labelLarge,
                             fontWeight = FontWeight.Bold,
                             color = MaterialTheme.colorScheme.onPrimary,
@@ -645,4 +504,636 @@ fun AiPlaylistMakerSheet(
             }
         }
     }
+}
+
+/**
+ * Centered promo shown occasionally (once every 15 launches) highlighting Playlist Maker.
+ */
+@Composable
+fun PlaylistMakerPromoCard(
+    hazeState: HazeState,
+    onTryNow: () -> Unit,
+    onDismiss: () -> Unit,
+) {
+    val reduceBlur by AppSettings.reduceDynamicBlur.collectAsStateWithLifecycle()
+    HushCenteredCard(
+        onDismiss = onDismiss,
+        hazeState = hazeState,
+        reduceBlur = reduceBlur,
+        title = "Playlist Maker",
+        subtitle = "Hush Tip",
+        maxWidth = 356.dp,
+    ) {
+        Column(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(top = 12.dp, bottom = 4.dp),
+            horizontalAlignment = Alignment.CenterHorizontally,
+        ) {
+            Box(
+                modifier = Modifier
+                    .size(54.dp)
+                    .clip(CircleShape)
+                    .background(MaterialTheme.colorScheme.primaryContainer),
+                contentAlignment = Alignment.Center,
+            ) {
+                Icon(
+                    imageVector = Icons.Rounded.AutoAwesome,
+                    contentDescription = null,
+                    tint = MaterialTheme.colorScheme.onPrimaryContainer,
+                    modifier = Modifier.size(26.dp),
+                )
+            }
+            Spacer(Modifier.height(12.dp))
+            Text(
+                text = "Build a curated playlist for any mood, artist mix, similar track, or exact song count in seconds.",
+                style = MaterialTheme.typography.bodyMedium,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                textAlign = TextAlign.Center,
+                modifier = Modifier.padding(horizontal = 6.dp),
+            )
+            Spacer(Modifier.height(18.dp))
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.spacedBy(10.dp),
+            ) {
+                Box(
+                    modifier = Modifier
+                        .weight(1f)
+                        .height(46.dp)
+                        .clip(RoundedCornerShape(50))
+                        .background(MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.7f))
+                        .clickable(onClick = onDismiss),
+                    contentAlignment = Alignment.Center,
+                ) {
+                    Text(
+                        text = "Not Now",
+                        style = MaterialTheme.typography.labelLarge,
+                        fontWeight = FontWeight.SemiBold,
+                        color = MaterialTheme.colorScheme.onSurface,
+                    )
+                }
+                Box(
+                    modifier = Modifier
+                        .weight(1f)
+                        .height(46.dp)
+                        .clip(RoundedCornerShape(50))
+                        .background(MaterialTheme.colorScheme.primary)
+                        .clickable(onClick = onTryNow),
+                    contentAlignment = Alignment.Center,
+                ) {
+                    Text(
+                        text = "Try Now",
+                        style = MaterialTheme.typography.labelLarge,
+                        fontWeight = FontWeight.Bold,
+                        color = MaterialTheme.colorScheme.onPrimary,
+                    )
+                }
+            }
+        }
+    }
+}
+
+private data class PromptIntent(
+    val rawPrompt: String,
+    val cleanTopic: String,
+    val explicitSongs: List<String>,
+    val likeSeed: String?,
+    val artistHint: String?,
+    val targetCount: Int,
+    val singleArtistRequested: Boolean,
+)
+
+private data class CuratedPlaylistOutcome(
+    val title: String,
+    val songs: List<Song>,
+)
+
+private data class AiTracklistPlan(
+    val title: String,
+    val tracks: List<String>,
+)
+
+private fun parsePromptIntent(prompt: String, selectedCount: Int?): PromptIntent {
+    val explicitCount = parseRequestedTrackCount(prompt) ?: selectedCount
+    val explicitSongs = parseExplicitSongQueries(prompt)
+    val likeSeed = parseSimilaritySeed(prompt)
+    val artistHint = parseArtistHint(prompt)
+    val cleanTopic = cleanSearchPrompt(prompt)
+    val singleArtist = artistHint != null &&
+        !prompt.contains(',') &&
+        !prompt.contains(" and ", ignoreCase = true) &&
+        !prompt.contains('&')
+    val count = explicitCount ?: when {
+        explicitSongs.size >= 2 -> explicitSongs.size.coerceAtMost(30)
+        else -> 10
+    }
+    return PromptIntent(
+        rawPrompt = prompt,
+        cleanTopic = cleanTopic,
+        explicitSongs = explicitSongs,
+        likeSeed = likeSeed,
+        artistHint = artistHint,
+        targetCount = count,
+        singleArtistRequested = singleArtist,
+    )
+}
+
+private fun parseRequestedTrackCount(prompt: String): Int? {
+    val match = Regex("\\b(\\d{1,2})\\s*(?:songs?|tracks?|tunes?|picks?)\\b", RegexOption.IGNORE_CASE)
+        .find(prompt)
+        ?: Regex("^\\s*(?:top|best|give\\s+me|make\\s+me|create|build)?\\s*(\\d{1,2})\\b", RegexOption.IGNORE_CASE)
+            .find(prompt)
+    val count = match?.groupValues?.getOrNull(1)?.toIntOrNull() ?: return null
+    return count.coerceIn(1, 30)
+}
+
+private fun parseExplicitSongQueries(prompt: String): List<String> {
+    if (!prompt.contains(',') && !prompt.contains('\n') && !prompt.contains(';')) return emptyList()
+    return prompt.split(',', '\n', ';')
+        .map { it.trim() }
+        .filter { it.length >= 2 }
+        .distinct()
+}
+
+private fun parseSimilaritySeed(prompt: String): String? {
+    val match = Regex(
+        "(?:songs?|tracks?|music|vibes?|something)\\s+(?:like|similar\\s+to)\\s+(.+)$",
+        RegexOption.IGNORE_CASE,
+    ).find(prompt.trim())
+        ?: Regex("^(?:like|similar\\s+to)\\s+(.+)$", RegexOption.IGNORE_CASE).find(prompt.trim())
+    return match?.groupValues?.getOrNull(1)
+        ?.replace(Regex("\\b\\d{1,2}\\s*(?:songs?|tracks?)\\b", RegexOption.IGNORE_CASE), "")
+        ?.trim()
+        ?.takeIf { it.length >= 2 }
+}
+
+private fun parseArtistHint(prompt: String): String? {
+    val byMatch = Regex("\\b(?:by|from)\\s+([\\p{L}0-9 .&'-]{2,40})$", RegexOption.IGNORE_CASE)
+        .find(prompt.trim())
+        ?: Regex("^([\\p{L}0-9 .&'-]{2,36})\\s+(?:songs?|tracks?|mix|essentials?|hits|playlist)$", RegexOption.IGNORE_CASE)
+            .find(cleanSearchPrompt(prompt).trim())
+    val candidate = byMatch?.groupValues?.getOrNull(1)?.trim().orEmpty()
+    val genericWords = setOf(
+        "chill", "sad", "happy", "workout", "gym", "study", "focus", "sleep", "party",
+        "night", "late night", "morning", "roadtrip", "hindi", "english", "pop", "rock",
+        "jazz", "hip hop", "rap", "lofi", "lo-fi", "r&b", "indie", "phonk", "bollywood",
+        "punjabi", "romantic", "90s", "80s", "2000s",
+    )
+    if (candidate.lowercase(Locale.ROOT) in genericWords) return null
+    return candidate.takeIf { it.length >= 2 }
+}
+
+private fun cleanSearchPrompt(prompt: String): String {
+    return prompt
+        .replace(Regex("\\b\\d{1,2}\\s*(?:songs?|tracks?|tunes?|picks?)\\b", RegexOption.IGNORE_CASE), " ")
+        .replace(
+            Regex(
+                "^(?:please\\s+)?(?:make|create|build|generate|give|curate|find)\\s+(?:me\\s+)?(?:a\\s+)?(?:playlist\\s+)?(?:of|for|with|about)?\\s*",
+                RegexOption.IGNORE_CASE,
+            ),
+            "",
+        )
+        .replace(Regex("\\b(?:playlist|tracks?|songs?)\\b", RegexOption.IGNORE_CASE), " ")
+        .replace(Regex("\\s+"), " ")
+        .trim()
+        .ifBlank { prompt.trim() }
+}
+
+private fun deriveEditorialTitle(topic: String): String {
+    val words = topic.replace(',', ' ')
+        .replace(Regex("\\s+"), " ")
+        .trim()
+        .split(' ')
+        .filter { it.isNotBlank() }
+        .take(4)
+    if (words.isEmpty()) return "Custom Playlist"
+    return words.joinToString(" ") { w ->
+        w.replaceFirstChar { c -> if (c.isLowerCase()) c.titlecase(Locale.getDefault()) else c.toString() }
+    }
+}
+
+private suspend fun curateSmartPlaylist(
+    intent: PromptIntent,
+    localPool: List<Song>,
+    variationSeed: Int,
+): CuratedPlaylistOutcome = coroutineScope {
+    // 1) Explicit comma/newline separated song list: resolve each named song cleanly
+    if (intent.explicitSongs.size >= 2) {
+        val exactTracks = resolveTrackQueries(
+            queries = intent.explicitSongs.take(intent.targetCount),
+            localPool = localPool,
+        )
+        val deduped = deduplicateSongs(exactTracks, maxPerArtist = Int.MAX_VALUE).take(intent.targetCount)
+        return@coroutineScope CuratedPlaylistOutcome(
+            title = deriveEditorialTitle(intent.cleanTopic),
+            songs = deduped,
+        )
+    }
+
+    // 2) Run Neural Curator + YouTube Music Multi-Strategy Discovery in parallel!
+    val aiDeferred = async {
+        requestAiTracklistPlan(
+            prompt = intent.rawPrompt,
+            requestedCount = intent.targetCount,
+            variationSeed = variationSeed,
+        )
+    }
+    val ytMusicDeferred = async {
+        curateFromYtMusic(
+            intent = intent,
+            variationSeed = variationSeed,
+        )
+    }
+
+    val aiPlan = aiDeferred.await()
+    val aiResolved = if (aiPlan != null && aiPlan.tracks.isNotEmpty()) {
+        resolveTrackQueries(
+            queries = aiPlan.tracks.take(intent.targetCount + 4),
+            localPool = localPool,
+        )
+    } else {
+        emptyList()
+    }
+
+    val ytCurated = ytMusicDeferred.await()
+
+    // Merge real AI-resolved tracks first, supplemented seamlessly by YouTube Music curated tracks
+    val combined = deduplicateSongs(
+        songs = aiResolved + ytCurated,
+        maxPerArtist = if (intent.singleArtistRequested) Int.MAX_VALUE else 2,
+    ).take(intent.targetCount)
+
+    // Only if ALL network searches returned nothing (e.g. completely offline), inspect exact topic matches offline
+    val finalSongs = if (combined.isNotEmpty()) {
+        combined
+    } else {
+        offlineMatchedTracks(intent.cleanTopic, localPool, intent.targetCount)
+    }
+
+    val resolvedTitle = aiPlan?.title?.takeIf { it.isNotBlank() }
+        ?: deriveEditorialTitle(intent.cleanTopic)
+
+    CuratedPlaylistOutcome(
+        title = resolvedTitle,
+        songs = finalSongs,
+    )
+}
+
+/**
+ * Genuine YouTube Music Curation Engine:
+ * Combines curated YTM Playlists, Song Similarity Radio (RDAMVM), Artist catalogues,
+ * and direct track searches so prompts ALWAYS return real genre/mood/artist tracks.
+ */
+private suspend fun curateFromYtMusic(
+    intent: PromptIntent,
+    variationSeed: Int,
+): List<Song> = coroutineScope {
+    val collected = mutableListOf<Song>()
+    val cleanQuery = intent.cleanTopic
+
+    // Strategy A: Acoustic similarity radio when prompt says "like <Song>"
+    val radioDeferred = async {
+        val seedQuery = intent.likeSeed ?: return@async emptyList<Song>()
+        val seedResults = YtMusicRepository.search(seedQuery, SearchFilter.SONGS)
+            .getOrDefault(emptyList())
+            .mapNotNull { it.asSong() }
+        val seed = seedResults.firstOrNull() ?: return@async emptyList<Song>()
+        val radio = YtMusicRepository.watchQueue(
+            WatchTarget(playlistId = "RDAMVM${seed.videoId}", videoId = seed.videoId),
+        ).getOrDefault(emptyList())
+        if (radio.isNotEmpty()) (listOf(seed) + radio).distinctBy { it.videoId } else seedResults
+    }
+
+    // Strategy B: Curated YouTube Music Playlists (best for moods/eras/genres/vibes)
+    val playlistsDeferred = async {
+        val playlistItems = YtMusicRepository.search(cleanQuery, SearchFilter.PLAYLISTS)
+            .getOrDefault(emptyList())
+            .filterIsInstance<SearchResult.Browse>()
+            .map { it.item }
+            .filter { it.type == BrowseType.PLAYLIST }
+
+        if (playlistItems.isEmpty()) return@async emptyList<Song>()
+
+        val startIdx = if (playlistItems.size > 1) variationSeed % minOf(3, playlistItems.size) else 0
+        val rotated = playlistItems.drop(startIdx) + playlistItems.take(startIdx)
+        val topPlaylists = rotated.take(3)
+
+        val tracksPerPlaylist = topPlaylists.map { pl ->
+            async {
+                val id = pl.browseId.removePrefix("VL")
+                val watchAudio = YtMusicRepository.playlistAsAudio(id).getOrDefault(emptyList())
+                if (watchAudio.isNotEmpty()) {
+                    watchAudio
+                } else {
+                    YtMusicRepository.browseSongs(pl.browseId).getOrNull()?.songs.orEmpty()
+                }
+            }
+        }.awaitAll()
+
+        // Interleave across the curated playlists so the result blends multiple curators
+        interleaveLists(tracksPerPlaylist)
+    }
+
+    // Strategy C: Artist catalogue when an artist is named
+    val artistDeferred = async {
+        val hint = intent.artistHint ?: return@async emptyList<Song>()
+        val artistBrowse = YtMusicRepository.search(hint, SearchFilter.ARTISTS)
+            .getOrDefault(emptyList())
+            .filterIsInstance<SearchResult.Browse>()
+            .firstOrNull { it.item.type == BrowseType.ARTIST }
+            ?.item
+        val page = artistBrowse?.let { YtMusicRepository.artistPage(it.browseId).getOrNull() }
+        val pageSongs = page?.songs.orEmpty()
+        val extraFromMore = page?.moreSongsBrowseId?.let { id ->
+            YtMusicRepository.allSongs(id).getOrNull().orEmpty()
+        }.orEmpty()
+        val songHits = YtMusicRepository.search(hint, SearchFilter.SONGS)
+            .getOrDefault(emptyList())
+            .mapNotNull { it.asSong() }
+        (pageSongs + extraFromMore + songHits).distinctBy { it.videoId }
+    }
+
+    // Strategy D: Mixed/All Search + Direct Song Search
+    val directSongsDeferred = async {
+        val songSearch = YtMusicRepository.search(cleanQuery, SearchFilter.SONGS)
+            .getOrDefault(emptyList())
+            .mapNotNull { it.asSong() }
+        val allSearch = YtMusicRepository.search(cleanQuery, SearchFilter.ALL)
+            .getOrDefault(emptyList())
+            .mapNotNull { it.asSong() }
+        (allSearch + songSearch).distinctBy { it.videoId }
+    }
+
+    val radioTracks = radioDeferred.await()
+    val playlistTracks = playlistsDeferred.await()
+    val artistTracks = artistDeferred.await()
+    val directTracks = directSongsDeferred.await()
+
+    if (intent.likeSeed != null) collected += radioTracks
+    if (intent.artistHint != null) collected += artistTracks
+    collected += playlistTracks
+    collected += directTracks
+
+    if (variationSeed > 0 && collected.size > intent.targetCount) {
+        val offset = (variationSeed * 3) % (collected.size - 1).coerceAtLeast(1)
+        val rotated = collected.drop(offset) + collected.take(offset)
+        rotated
+    } else {
+        collected
+    }
+}
+
+private fun SearchResult.asSong(): Song? = when (this) {
+    is SearchResult.TopTrack -> song
+    is SearchResult.Track -> song
+    is SearchResult.Browse -> null
+}
+
+private fun <T> interleaveLists(lists: List<List<T>>): List<T> {
+    val maxLen = lists.maxOfOrNull { it.size } ?: return emptyList()
+    val out = ArrayList<T>()
+    for (i in 0 until maxLen) {
+        for (list in lists) {
+            if (i < list.size) out += list[i]
+        }
+    }
+    return out
+}
+
+private fun deduplicateSongs(songs: List<Song>, maxPerArtist: Int): List<Song> {
+    val seenIds = HashSet<String>()
+    val seenKeys = HashSet<String>()
+    val artistCounts = HashMap<String, Int>()
+    val chosen = ArrayList<Song>()
+    val overflow = ArrayList<Song>()
+
+    for (song in songs) {
+        if (song.videoId.isBlank() || !seenIds.add(song.videoId)) continue
+        val titleKey = song.title.lowercase(Locale.ROOT)
+            .replace(Regex("\\([^)]*\\)|\\[[^]]*\\]"), "")
+            .replace(Regex("\\s+"), " ")
+            .trim()
+        val artistKey = song.artist.lowercase(Locale.ROOT)
+            .split(',', '&', '·')
+            .firstOrNull()
+            ?.trim()
+            .orEmpty()
+        if (!seenKeys.add("$titleKey|$artistKey")) continue
+
+        val count = artistCounts.getOrDefault(artistKey, 0)
+        if (artistKey.isBlank() || count < maxPerArtist) {
+            chosen += song
+            if (artistKey.isNotBlank()) artistCounts[artistKey] = count + 1
+        } else {
+            overflow += song
+        }
+    }
+    return chosen + overflow
+}
+
+private fun offlineMatchedTracks(topic: String, localPool: List<Song>, limit: Int): List<Song> {
+    val tokens = topic.lowercase(Locale.ROOT)
+        .split(Regex("[\\s,;:.\\-_/()\\[\\]]+"))
+        .filter { it.length > 2 }
+    if (tokens.isEmpty()) return emptyList()
+    return localPool.mapNotNull { song ->
+        val haystack = "${song.title} ${song.artist} ${song.albumName.orEmpty()}".lowercase(Locale.ROOT)
+        val hits = tokens.count { it in haystack }
+        if (hits > 0) song to hits else null
+    }
+        .sortedByDescending { it.second }
+        .take(limit)
+        .map { it.first }
+}
+
+private fun requestAiTracklistPlan(
+    prompt: String,
+    requestedCount: Int,
+    variationSeed: Int,
+): AiTracklistPlan? {
+    val systemPrompt =
+        "You are an expert music curator. Reply with ONLY valid raw JSON (no markdown fences) matching: " +
+            "{\"title\":\"Short Playlist Title\",\"tracks\":[\"Song Name - Artist Name\"]}. " +
+            "List EXACTLY $requestedCount real, well-known songs matching the user prompt" +
+            if (variationSeed > 0) " (fresh variation #$variationSeed)." else "."
+
+    // 1) OpenAI-compatible POST endpoint
+    val openAiResult = runCatching {
+        val payload = JSONObject().apply {
+            put("model", "openai")
+            put("jsonMode", true)
+            put("seed", 42 + variationSeed)
+            val msgs = JSONArray().apply {
+                put(JSONObject().apply {
+                    put("role", "system")
+                    put("content", systemPrompt)
+                })
+                put(JSONObject().apply {
+                    put("role", "user")
+                    put("content", prompt)
+                })
+            }
+            put("messages", msgs)
+        }.toString()
+
+        val conn = (URL("https://text.pollinations.ai/openai").openConnection() as HttpURLConnection).apply {
+            requestMethod = "POST"
+            connectTimeout = 6500
+            readTimeout = 7500
+            doOutput = true
+            setRequestProperty("Content-Type", "application/json")
+            setRequestProperty("User-Agent", "HushMusic/1.0")
+        }
+        conn.outputStream.use { it.write(payload.toByteArray(Charsets.UTF_8)) }
+        if (conn.responseCode in 200..299) {
+            val rawBody = conn.inputStream.bufferedReader(Charsets.UTF_8).use { it.readText() }.trim()
+            extractContentFromOpenAiOrRaw(rawBody)?.let { parseAiResponseText(it, prompt) }
+        } else {
+            null
+        }
+    }.getOrNull()
+    if (openAiResult != null && openAiResult.tracks.isNotEmpty()) return openAiResult
+
+    // 2) Legacy / GET Pollinations fallback
+    return runCatching {
+        val encoded = URLEncoder.encode("$systemPrompt User request: $prompt", "UTF-8")
+        val url = URL("https://text.pollinations.ai/$encoded?json=true&seed=${42 + variationSeed}")
+        val conn = (url.openConnection() as HttpURLConnection).apply {
+            requestMethod = "GET"
+            connectTimeout = 6500
+            readTimeout = 7500
+            setRequestProperty("User-Agent", "HushMusic/1.0")
+        }
+        if (conn.responseCode !in 200..299) return@runCatching null
+        val raw = conn.inputStream.bufferedReader(Charsets.UTF_8).use { it.readText() }.trim()
+        parseAiResponseText(raw, prompt)
+    }.getOrNull()
+}
+
+private fun extractContentFromOpenAiOrRaw(raw: String): String? {
+    if (raw.isBlank()) return null
+    val asObj = runCatching { JSONObject(raw) }.getOrNull()
+    val choices = asObj?.optJSONArray("choices")
+    if (choices != null && choices.length() > 0) {
+        val msg = choices.optJSONObject(0)?.optJSONObject("message")?.optString("content")
+        if (!msg.isNullOrBlank()) return msg.trim()
+    }
+    return raw
+}
+
+private fun parseAiResponseText(raw: String, fallbackPrompt: String): AiTracklistPlan? {
+    val clean = raw
+        .replace("```json", "")
+        .replace("```", "")
+        .trim()
+    val jsonStart = clean.indexOf('{')
+    val jsonEnd = clean.lastIndexOf('}')
+    if (jsonStart >= 0 && jsonEnd > jsonStart) {
+        val obj = runCatching { JSONObject(clean.substring(jsonStart, jsonEnd + 1)) }.getOrNull()
+        if (obj != null) {
+            val title = obj.optString("title").trim()
+            val arr = obj.optJSONArray("tracks") ?: obj.optJSONArray("songs") ?: JSONArray()
+            val tracks = buildList {
+                for (i in 0 until arr.length()) {
+                    val item = arr.opt(i)
+                    when (item) {
+                        is String -> item.trim().takeIf { it.isNotBlank() }?.let(::add)
+                        is JSONObject -> {
+                            val t = item.optString("title").ifBlank { item.optString("song") }
+                            val a = item.optString("artist")
+                            if (t.isNotBlank()) add(if (a.isNotBlank()) "$t - $a" else t)
+                        }
+                    }
+                }
+            }
+            if (tracks.isNotEmpty()) return AiTracklistPlan(title = title, tracks = tracks)
+        }
+    }
+
+    val arrStart = clean.indexOf('[')
+    val arrEnd = clean.lastIndexOf(']')
+    if (arrStart >= 0 && arrEnd > arrStart) {
+        val arr = runCatching { JSONArray(clean.substring(arrStart, arrEnd + 1)) }.getOrNull()
+        if (arr != null) {
+            val tracks = buildList {
+                for (i in 0 until arr.length()) {
+                    val entry = arr.optString(i).trim()
+                    if (entry.isNotBlank()) add(entry)
+                }
+            }
+            if (tracks.isNotEmpty()) {
+                return AiTracklistPlan(title = deriveEditorialTitle(cleanSearchPrompt(fallbackPrompt)), tracks = tracks)
+            }
+        }
+    }
+
+    val lines = clean.lineSequence()
+        .map { it.replace(Regex("^\\s*\\d+[.)\\s-]+"), "").trim(' ', '"', '\'', '-', '•') }
+        .filter { it.length >= 4 && !it.startsWith("{") && !it.startsWith("}") && " - " in it }
+        .toList()
+    return if (lines.isNotEmpty()) {
+        AiTracklistPlan(title = deriveEditorialTitle(cleanSearchPrompt(fallbackPrompt)), tracks = lines)
+    } else {
+        null
+    }
+}
+
+private suspend fun resolveTrackQueries(
+    queries: List<String>,
+    localPool: List<Song>,
+): List<Song> = coroutineScope {
+    queries.map { query ->
+        async {
+            findBestSongMatch(query, localPool)
+        }
+    }.awaitAll().filterNotNull()
+}
+
+private suspend fun findBestSongMatch(query: String, localPool: List<Song>): Song? {
+    val parts = query.split(" - ", " by ", limit = 2).map { it.trim() }
+    val wantTitle = parts.firstOrNull().orEmpty().lowercase(Locale.ROOT)
+    val wantArtist = parts.getOrNull(1).orEmpty().lowercase(Locale.ROOT)
+
+    fun scoreMatch(song: Song): Int {
+        val title = song.title.lowercase(Locale.ROOT)
+        val artist = song.artist.lowercase(Locale.ROOT)
+        var s = 0
+        if (wantTitle.isNotBlank()) {
+            if (title == wantTitle) s += 14
+            else if (title.contains(wantTitle) || wantTitle.contains(title)) s += 8
+            else {
+                val words = wantTitle.split(' ').filter { it.length > 2 }
+                s += words.count { it in title } * 2
+            }
+        }
+        if (wantArtist.isNotBlank()) {
+            if (artist.contains(wantArtist) || wantArtist.contains(artist)) s += 10
+            else {
+                val words = wantArtist.split(' ').filter { it.length > 2 }
+                s += words.count { it in artist } * 2
+            }
+        }
+        return s
+    }
+
+    val localExact = localPool
+        .map { it to scoreMatch(it) }
+        .filter { it.second >= 18 }
+        .maxByOrNull { it.second }
+        ?.first
+    if (localExact != null) return localExact
+
+    val cleanQuery = query.replace(" - ", " ").trim()
+    val results = YtMusicRepository.search(cleanQuery, SearchFilter.SONGS)
+        .getOrDefault(emptyList())
+        .mapNotNull { it.asSong() }
+        .ifEmpty {
+            YtMusicRepository.search(cleanQuery, SearchFilter.ALL)
+                .getOrDefault(emptyList())
+                .mapNotNull { it.asSong() }
+        }
+
+    if (results.isEmpty()) return null
+    return results.maxByOrNull { scoreMatch(it) } ?: results.first()
 }

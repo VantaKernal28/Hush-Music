@@ -132,6 +132,28 @@ import com.music.bitchord.playback.PlaybackPosition
 import com.music.bitchord.ui.components.expressive.M3EShapes
 import com.music.bitchord.ui.components.expressive.ScallopedFlowerShape
 import com.music.bitchord.ui.icons.BitChordIcons
+import androidx.compose.foundation.gestures.calculateZoom
+import androidx.compose.foundation.horizontalScroll
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
+import androidx.compose.material.icons.rounded.Bedtime
+import androidx.compose.material.icons.rounded.BluetoothAudio
+import androidx.compose.material.icons.rounded.Check
+import androidx.compose.material.icons.rounded.Download
+import androidx.compose.material.icons.rounded.Headphones
+import androidx.compose.material.icons.rounded.IosShare
+import androidx.compose.material.icons.rounded.Tune
+import androidx.compose.material.icons.rounded.Usb
+import androidx.compose.material.icons.rounded.VolumeOff
+import androidx.compose.runtime.mutableIntStateOf
+import com.music.bitchord.playback.EqLayout
+import com.music.bitchord.playback.EqualizerPreset
+import com.music.bitchord.ui.components.HushCenteredCard
+import com.music.bitchord.ui.components.HushCenteredCardHost
+import com.music.bitchord.ui.haptics.rememberHaptics
+import dev.chrisbanes.haze.HazeState
+import dev.chrisbanes.haze.hazeSource
+import kotlinx.coroutines.delay
 
 /**
  * Material 3 Expressive Player Content:
@@ -169,6 +191,7 @@ fun RhythmPlayerContent(
     lyricsUnavailable: Boolean = false,
     onDismiss: () -> Unit = {},
     onOpenMixer: (() -> Unit)? = null,
+    onShareLyrics: ((LyricsShareRequest) -> Unit)? = null,
     modifier: Modifier = Modifier,
 ) {
     val isDark = MaterialTheme.colorScheme.surface.luminance() < 0.5f
@@ -278,10 +301,50 @@ fun RhythmPlayerContent(
     val effectiveArtScale = if (isPlaying && beatImpulseEnabled) beatAnim.value else 1.0f
 
     // Modal sheet visibility states
+    val playerHaze = remember { HazeState() }
     var showInlineLyrics by remember { mutableStateOf(false) }
     var showQueueSheet by remember { mutableStateOf(false) }
     var showAudioSheet by remember { mutableStateOf(false) }
     var showMoreSheet by remember { mutableStateOf(false) }
+    var showEditControlsCard by remember { mutableStateOf(false) }
+    var showEqualizerCard by remember { mutableStateOf(false) }
+    var showSleepTimerCard by remember { mutableStateOf(false) }
+    var showSongInfoCard by remember { mutableStateOf(false) }
+
+    val lyricHaptics = rememberHaptics()
+    val canShareLyrics = onShareLyrics != null && lyricsShareAvailable && !lyrics.isNullOrEmpty()
+    val lyricPicker = rememberLyricsPicker(
+        song = song,
+        lines = lyrics,
+        subLines = null,
+        artworkUrl = song.thumbnailUrl,
+        haptics = lyricHaptics,
+        onCard = { req -> onShareLyrics?.invoke(req) },
+    )
+    val openQuickLyricsShare: () -> Unit = {
+        val raw = lyrics.orEmpty()
+        if (raw.isNotEmpty() && onShareLyrics != null) {
+            val allShareLines = raw.map { LyricsShareLine(text = it.text, subText = null) }
+            val posMs = position.positionMs
+            val activeIdx = raw.indexOfLast { it.timeMs <= posMs }.coerceAtLeast(0)
+            val endIdx = (activeIdx + 3).coerceAtMost(raw.lastIndex)
+            val rangeIndices = (activeIdx..endIdx).filter { raw[it].text.isNotBlank() }
+            val picked = rangeIndices.map { allShareLines[it] }.ifEmpty {
+                allShareLines.filter { it.text.isNotBlank() }.take(4)
+            }
+            if (picked.isNotEmpty()) {
+                onShareLyrics.invoke(
+                    LyricsShareRequest(
+                        song = song,
+                        artworkUrl = song.thumbnailUrl,
+                        lines = picked,
+                        allLines = allShareLines,
+                        selectedIndices = rangeIndices,
+                    ),
+                )
+            }
+        }
+    }
 
     Box(
         modifier = modifier
@@ -319,6 +382,11 @@ fun RhythmPlayerContent(
                 ),
         )
 
+        Box(
+            modifier = Modifier
+                .fillMaxSize()
+                .hazeSource(state = playerHaze),
+        ) {
         // Beat-reactive ambient song-color poster gradient that swells with real beat spikes
         val pulseAlpha = if (isPlaying && beatImpulseEnabled) (beatAnim.value - 1.0f) * 3.5f else 0f
         val gradientRadius = 850f * effectiveArtScale
@@ -484,58 +552,107 @@ fun RhythmPlayerContent(
                                 .fillMaxHeight(),
                             contentAlignment = Alignment.Center,
                         ) {
-                            if (!showInlineLyrics) {
-                                val landscapeArtSize = (availableHeight * 0.70f).coerceIn(160.dp, 280.dp)
-                                Box(
-                                    modifier = Modifier
-                                        .size(landscapeArtSize)
-                                        .graphicsLayer {
-                                            scaleX = effectiveArtScale
-                                            scaleY = effectiveArtScale
-                                            if (isRotationalShape) rotationZ = artRotationDeg
-                                        }
-                                        .clip(albumShape)
-                                        .background(if (isDark) Color(0xFF242428) else Color(0xFFE2E0E6))
-                                        .border(1.5.dp, Color.White.copy(alpha = 0.12f), albumShape)
-                                        .clickable { showInlineLyrics = true },
-                                    contentAlignment = Alignment.Center,
-                                ) {
-                                    AsyncImage(
-                                        model = song.thumbnailUrl,
-                                        contentDescription = song.title,
-                                        contentScale = ContentScale.Crop,
-                                        alignment = Alignment.Center,
+                            AnimatedContent(
+                                targetState = showInlineLyrics,
+                                transitionSpec = {
+                                    (fadeIn(tween(260)) + scaleIn(initialScale = 0.94f, animationSpec = tween(260))) togetherWith
+                                        (fadeOut(tween(180)) + scaleOut(targetScale = 0.94f, animationSpec = tween(180)))
+                                },
+                                label = "landscapeCoverLyrics",
+                            ) { showingLyrics ->
+                                if (!showingLyrics) {
+                                    val landscapeArtSize = (availableHeight * 0.70f).coerceIn(160.dp, 280.dp)
+                                    Box(
+                                        modifier = Modifier
+                                            .size(landscapeArtSize)
+                                            .graphicsLayer {
+                                                scaleX = effectiveArtScale
+                                                scaleY = effectiveArtScale
+                                                if (isRotationalShape) rotationZ = artRotationDeg
+                                            }
+                                            .clip(albumShape)
+                                            .background(if (isDark) Color(0xFF242428) else Color(0xFFE2E0E6))
+                                            .border(1.5.dp, Color.White.copy(alpha = 0.12f), albumShape)
+                                            .clickable { showInlineLyrics = true },
+                                        contentAlignment = Alignment.Center,
+                                    ) {
+                                        AsyncImage(
+                                            model = song.thumbnailUrl,
+                                            contentDescription = song.title,
+                                            contentScale = ContentScale.Crop,
+                                            alignment = Alignment.Center,
+                                            modifier = Modifier
+                                                .fillMaxSize()
+                                                .graphicsLayer {
+                                                    if (isRotationalShape) {
+                                                        rotationZ = -artRotationDeg
+                                                        scaleX = 1.42f
+                                                        scaleY = 1.42f
+                                                    }
+                                                },
+                                        )
+                                    }
+                                } else {
+                                    Box(
                                         modifier = Modifier
                                             .fillMaxSize()
-                                            .graphicsLayer {
-                                                if (isRotationalShape) {
-                                                    rotationZ = -artRotationDeg
-                                                    scaleX = 1.42f
-                                                    scaleY = 1.42f
+                                            .lyricsPinchToCover(enabled = showInlineLyrics) {
+                                                showInlineLyrics = false
+                                            },
+                                    ) {
+                                        LyricsPanel(
+                                            lines = lyrics.orEmpty(),
+                                            trackKey = song.videoId,
+                                            playhead = rememberLyricPlayhead(position),
+                                            looking = !lyricsUnavailable && lyrics == null,
+                                            isPlaying = isPlaying,
+                                            onSeekToLine = { ms ->
+                                                if (durationMs > 0L) {
+                                                    onSeekFraction((ms.toFloat() / durationMs.toFloat()).coerceIn(0f, 1f))
                                                 }
                                             },
-                                    )
-                                }
-                            } else {
-                                LyricsPanel(
-                                    lines = lyrics.orEmpty(),
-                                    trackKey = song.videoId,
-                                    playhead = rememberLyricPlayhead(position),
-                                    looking = !lyricsUnavailable && lyrics == null,
-                                    isPlaying = isPlaying,
-                                    onSeekToLine = { ms ->
-                                        if (durationMs > 0L) {
-                                            onSeekFraction((ms.toFloat() / durationMs.toFloat()).coerceIn(0f, 1f))
+                                            controlsOpen = true,
+                                            onRevealControls = {},
+                                            onHideControls = {},
+                                            canPick = canShareLyrics,
+                                            picking = lyricPicker.picking,
+                                            picked = lyricPicker.picks,
+                                            onPickLine = lyricPicker.pick,
+                                            onTogglePick = lyricPicker.toggle,
+                                            centerFocus = true,
+                                            activeColor = primaryAccent,
+                                            inactiveColor = if (isDark) Color.White else Color(0xFF1C1C22),
+                                            modifier = Modifier.fillMaxSize(),
+                                        )
+                                        if (canShareLyrics && !lyricPicker.picking) {
+                                            Box(
+                                                modifier = Modifier
+                                                    .align(Alignment.TopEnd)
+                                                    .padding(4.dp)
+                                                    .size(34.dp)
+                                                    .clip(CircleShape)
+                                                    .background(controlGlass)
+                                                    .clickable { openQuickLyricsShare() },
+                                                contentAlignment = Alignment.Center,
+                                            ) {
+                                                Icon(
+                                                    imageVector = Icons.Rounded.IosShare,
+                                                    contentDescription = "Share Lyrics Card",
+                                                    tint = iconTint,
+                                                    modifier = Modifier.size(16.dp),
+                                                )
+                                            }
                                         }
-                                    },
-                                    controlsOpen = true,
-                                    onRevealControls = {},
-                                    onHideControls = {},
-                                    centerFocus = true,
-                                    activeColor = primaryAccent,
-                                    inactiveColor = if (isDark) Color.White else Color(0xFF1C1C22),
-                                    modifier = Modifier.fillMaxSize(),
-                                )
+                                        if (lyricPicker.picking) {
+                                            LyricsPickBar(
+                                                shareEnabled = lyricPicker.picks.isNotEmpty() && !lyricPicker.overBudget,
+                                                onCancel = lyricPicker.cancel,
+                                                onShare = lyricPicker.share,
+                                                modifier = Modifier.align(Alignment.BottomCenter),
+                                            )
+                                        }
+                                    }
+                                }
                             }
                         }
 
@@ -576,7 +693,10 @@ fun RhythmPlayerContent(
                                     maxLines = 1,
                                     overflow = TextOverflow.Ellipsis,
                                     textAlign = TextAlign.Center,
-                                    modifier = Modifier.clickable { onOpenArtist() },
+                                    modifier = Modifier
+                                        .clip(RoundedCornerShape(8.dp))
+                                        .clickable { onOpenArtist() }
+                                        .padding(horizontal = 12.dp, vertical = 4.dp),
                                 )
                             }
 
@@ -872,8 +992,9 @@ fun RhythmPlayerContent(
                             overflow = TextOverflow.Ellipsis,
                             textAlign = TextAlign.Center,
                             modifier = Modifier
+                                .clip(RoundedCornerShape(10.dp))
                                 .clickable { onOpenArtist() }
-                                .padding(horizontal = 16.dp),
+                                .padding(horizontal = 16.dp, vertical = 4.dp),
                         )
                     }
                 } else {
@@ -923,26 +1044,52 @@ fun RhythmPlayerContent(
                                     )
                                 }
                             }
-                            Box(
-                                modifier = Modifier
-                                    .size(36.dp)
-                                    .clip(CircleShape)
-                                    .background(controlGlass)
-                                    .clickable { showInlineLyrics = false },
-                                contentAlignment = Alignment.Center,
-                            ) {
-                                Icon(
-                                    imageVector = Icons.Rounded.Close,
-                                    contentDescription = "Close lyrics",
-                                    tint = iconTint,
-                                    modifier = Modifier.size(18.dp),
-                                )
+                            Row(horizontalArrangement = Arrangement.spacedBy(8.dp), verticalAlignment = Alignment.CenterVertically) {
+                                if (canShareLyrics) {
+                                    Box(
+                                        modifier = Modifier
+                                            .size(36.dp)
+                                            .clip(CircleShape)
+                                            .background(controlGlass)
+                                            .clickable { openQuickLyricsShare() },
+                                        contentAlignment = Alignment.Center,
+                                    ) {
+                                        Icon(
+                                            imageVector = Icons.Rounded.IosShare,
+                                            contentDescription = "Share Lyrics Card",
+                                            tint = iconTint,
+                                            modifier = Modifier.size(17.dp),
+                                        )
+                                    }
+                                }
+                                Box(
+                                    modifier = Modifier
+                                        .size(36.dp)
+                                        .clip(CircleShape)
+                                        .background(controlGlass)
+                                        .clickable { showInlineLyrics = false },
+                                    contentAlignment = Alignment.Center,
+                                ) {
+                                    Icon(
+                                        imageVector = Icons.Rounded.Close,
+                                        contentDescription = "Close lyrics",
+                                        tint = iconTint,
+                                        modifier = Modifier.size(18.dp),
+                                    )
+                                }
                             }
                         }
 
                         Spacer(Modifier.height(6.dp))
 
-                        LyricsPanel(
+                        Box(
+                            modifier = Modifier
+                                .fillMaxSize()
+                                .lyricsPinchToCover(enabled = showInlineLyrics) {
+                                    showInlineLyrics = false
+                                },
+                        ) {
+                            LyricsPanel(
                             lines = lyrics.orEmpty(),
                             trackKey = song.videoId,
                             playhead = rememberLyricPlayhead(position),
@@ -956,11 +1103,25 @@ fun RhythmPlayerContent(
                             controlsOpen = true,
                             onRevealControls = {},
                             onHideControls = {},
+                            canPick = canShareLyrics,
+                            picking = lyricPicker.picking,
+                            picked = lyricPicker.picks,
+                            onPickLine = lyricPicker.pick,
+                            onTogglePick = lyricPicker.toggle,
                             centerFocus = true,
                             activeColor = primaryAccent,
                             inactiveColor = if (isDark) Color.White else Color(0xFF1C1C22),
                             modifier = Modifier.fillMaxSize(),
                         )
+                            if (lyricPicker.picking) {
+                                LyricsPickBar(
+                                    shareEnabled = lyricPicker.picks.isNotEmpty() && !lyricPicker.overBudget,
+                                    onCancel = lyricPicker.cancel,
+                                    onShare = lyricPicker.share,
+                                    modifier = Modifier.align(Alignment.BottomCenter),
+                                )
+                            }
+                        }
                     }
                 }
                 }
@@ -1205,270 +1366,204 @@ fun RhythmPlayerContent(
                 }
             }
         }
+        }
         // =========================================================================
-        // Modal Sheet 1: Queue Sheet (video_5.mp4 00:01 & frame_004.png)
+        // Modal Sheet 1: Queue Sheet (Centered Frosted Card)
         // =========================================================================
-        AnimatedVisibility(
+        HushCenteredCardHost(
             visible = showQueueSheet,
-            enter = slideInVertically(spring(stiffness = 450f)) { it } + fadeIn(),
-            exit = slideOutVertically(spring(stiffness = 450f)) { it } + fadeOut(),
+            onDismiss = { showQueueSheet = false },
+            hazeState = playerHaze,
+            title = "Queue",
+            subtitle = "${queue.size} songs",
+            maxWidth = 420.dp,
+            maxHeight = 620.dp,
+            headerEnd = {
+                Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                    Box(
+                        modifier = Modifier
+                            .size(36.dp)
+                            .clip(CircleShape)
+                            .background(if (shuffleEnabled) accentBg else sheetPillBg)
+                            .clickable(onClick = onToggleShuffle),
+                        contentAlignment = Alignment.Center,
+                    ) {
+                        Icon(
+                            imageVector = Icons.Rounded.Shuffle,
+                            contentDescription = "Shuffle",
+                            tint = if (shuffleEnabled) accentFg else iconTint,
+                            modifier = Modifier.size(18.dp),
+                        )
+                    }
+                    Box(
+                        modifier = Modifier
+                            .size(36.dp)
+                            .clip(CircleShape)
+                            .background(if (repeatMode != 0) accentBg else sheetPillBg)
+                            .clickable(onClick = onCycleRepeat),
+                        contentAlignment = Alignment.Center,
+                    ) {
+                        Icon(
+                            imageVector = Icons.Rounded.Repeat,
+                            contentDescription = "Repeat",
+                            tint = if (repeatMode != 0) accentFg else iconTint,
+                            modifier = Modifier.size(18.dp),
+                        )
+                    }
+                    Box(
+                        modifier = Modifier
+                            .size(36.dp)
+                            .clip(CircleShape)
+                            .background(Color(0xFFDC2626))
+                            .clickable(onClick = onClearQueue),
+                        contentAlignment = Alignment.Center,
+                    ) {
+                        Icon(
+                            imageVector = Icons.Rounded.Delete,
+                            contentDescription = "Clear Queue",
+                            tint = Color.White,
+                            modifier = Modifier.size(18.dp),
+                        )
+                    }
+                }
+            },
         ) {
+            // "NOW PLAYING" Card
             Box(
                 modifier = Modifier
-                    .fillMaxSize()
-                    .background(if (isDark) Color.Black.copy(alpha = 0.20f) else Color.Black.copy(alpha = 0.12f))
-                    .clickable { showQueueSheet = false },
-                contentAlignment = Alignment.BottomCenter,
+                    .fillMaxWidth()
+                    .clip(RoundedCornerShape(16.dp))
+                    .background(sheetCardBg)
+                    .padding(14.dp),
             ) {
-                Column(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .fillMaxHeight(0.84f)
-                        .clip(RoundedCornerShape(topStart = 28.dp, topEnd = 28.dp))
-                        .background(sheetBg)
-                        .clickable(interactionSource = remember { MutableInteractionSource() }, indication = null) {}
-                        .padding(horizontal = 20.dp, vertical = 12.dp),
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.spacedBy(12.dp),
                 ) {
-                    // Drag Handle
-                    Box(
+                    AsyncImage(
+                        model = song.thumbnailUrl,
+                        contentDescription = null,
+                        contentScale = ContentScale.Crop,
                         modifier = Modifier
-                            .align(Alignment.CenterHorizontally)
-                            .width(36.dp)
-                            .height(4.5.dp)
-                            .clip(RoundedCornerShape(percent = 50))
-                            .background(sheetHandle),
+                            .size(48.dp)
+                            .clip(RoundedCornerShape(10.dp)),
                     )
-                    Spacer(Modifier.height(14.dp))
-
-                    // Title + Actions Row
-                    Row(
-                        modifier = Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.SpaceBetween,
-                        verticalAlignment = Alignment.CenterVertically,
-                    ) {
-                        Column {
-                            Text(
-                                text = "Queue",
-                                style = MaterialTheme.typography.headlineSmall.copy(
-                                    fontWeight = FontWeight.Bold,
-                                    fontSize = 24.sp,
-                                ),
-                                color = titleColor,
-                            )
-                            Spacer(Modifier.height(4.dp))
-                            Box(
-                                modifier = Modifier
-                                    .clip(RoundedCornerShape(percent = 50))
-                                    .background(sheetPillBg)
-                                    .padding(horizontal = 10.dp, vertical = 4.dp),
-                            ) {
-                                Text(
-                                    text = "${queue.size} songs",
-                                    style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.SemiBold),
-                                    color = textSubColor,
-                                )
-                            }
-                        }
-
-                        Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                            // Shuffle
-                            Box(
-                                modifier = Modifier
-                                    .size(42.dp)
-                                    .clip(CircleShape)
-                                    .background(if (shuffleEnabled) accentBg else sheetPillBg)
-                                    .clickable(onClick = onToggleShuffle),
-                                contentAlignment = Alignment.Center,
-                            ) {
-                                Icon(
-                                    imageVector = Icons.Rounded.Shuffle,
-                                    contentDescription = "Shuffle",
-                                    tint = if (shuffleEnabled) accentFg else iconTint,
-                                    modifier = Modifier.size(20.dp),
-                                )
-                            }
-                            // Repeat
-                            Box(
-                                modifier = Modifier
-                                    .size(42.dp)
-                                    .clip(CircleShape)
-                                    .background(if (repeatMode != 0) accentBg else sheetPillBg)
-                                    .clickable(onClick = onCycleRepeat),
-                                contentAlignment = Alignment.Center,
-                            ) {
-                                Icon(
-                                    imageVector = Icons.Rounded.Repeat,
-                                    contentDescription = "Repeat",
-                                    tint = if (repeatMode != 0) accentFg else iconTint,
-                                    modifier = Modifier.size(20.dp),
-                                )
-                            }
-                            // Clear
-                            Box(
-                                modifier = Modifier
-                                    .size(42.dp)
-                                    .clip(CircleShape)
-                                    .background(Color(0xFFDC2626))
-                                    .clickable(onClick = onClearQueue),
-                                contentAlignment = Alignment.Center,
-                            ) {
-                                Icon(
-                                    imageVector = Icons.Rounded.Delete,
-                                    contentDescription = "Clear Queue",
-                                    tint = Color.White,
-                                    modifier = Modifier.size(20.dp),
-                                )
-                            }
-                        }
+                    Column(modifier = Modifier.weight(1f)) {
+                        Text(
+                            text = "NOW PLAYING",
+                            style = MaterialTheme.typography.labelSmall.copy(
+                                fontSize = 11.sp,
+                                fontWeight = FontWeight.Bold,
+                                letterSpacing = 0.8.sp,
+                            ),
+                            color = textSubColor,
+                        )
+                        Text(
+                            text = song.title,
+                            style = MaterialTheme.typography.titleMedium.copy(
+                                fontWeight = FontWeight.Bold,
+                                fontSize = 15.sp,
+                            ),
+                            color = titleColor,
+                            maxLines = 1,
+                            overflow = TextOverflow.Ellipsis,
+                        )
+                        Text(
+                            text = song.artist,
+                            style = MaterialTheme.typography.bodySmall.copy(fontSize = 13.sp),
+                            color = textSubColor,
+                            maxLines = 1,
+                            overflow = TextOverflow.Ellipsis,
+                        )
                     }
+                    Icon(
+                        imageVector = Icons.Rounded.MusicNote,
+                        contentDescription = null,
+                        tint = iconTint,
+                        modifier = Modifier.size(20.dp),
+                    )
+                }
+            }
 
-                    Spacer(Modifier.height(18.dp))
+            Spacer(Modifier.height(14.dp))
+            Text(
+                text = "UP NEXT",
+                style = MaterialTheme.typography.labelMedium.copy(
+                    fontWeight = FontWeight.Bold,
+                    fontSize = 12.sp,
+                    letterSpacing = 0.6.sp,
+                ),
+                color = textSubColor,
+            )
+            Spacer(Modifier.height(8.dp))
 
-                    // "NOW PLAYING" Card
-                    Box(
+            // Up Next List
+            LazyColumn(
+                modifier = Modifier.fillMaxWidth().weight(1f, fill = false),
+                verticalArrangement = Arrangement.spacedBy(8.dp),
+            ) {
+                itemsIndexed(queue) { idx, item ->
+                    Row(
                         modifier = Modifier
                             .fillMaxWidth()
-                            .clip(RoundedCornerShape(16.dp))
+                            .clip(RoundedCornerShape(12.dp))
                             .background(sheetCardBg)
-                            .padding(14.dp),
+                            .clickable { onJumpTo(idx) }
+                            .padding(horizontal = 12.dp, vertical = 8.dp),
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.spacedBy(10.dp),
                     ) {
-                        Row(
-                            verticalAlignment = Alignment.CenterVertically,
-                            horizontalArrangement = Arrangement.spacedBy(12.dp),
+                        Box(
+                            modifier = Modifier
+                                .size(26.dp)
+                                .clip(CircleShape)
+                                .background(sheetPillBg),
+                            contentAlignment = Alignment.Center,
                         ) {
-                            AsyncImage(
-                                model = song.thumbnailUrl,
-                                contentDescription = null,
-                                contentScale = ContentScale.Crop,
-                                modifier = Modifier
-                                    .size(48.dp)
-                                    .clip(RoundedCornerShape(10.dp)),
-                            )
-                            Column(modifier = Modifier.weight(1f)) {
-                                Text(
-                                    text = "NOW PLAYING",
-                                    style = MaterialTheme.typography.labelSmall.copy(
-                                        fontSize = 11.sp,
-                                        fontWeight = FontWeight.Bold,
-                                        letterSpacing = 0.8.sp,
-                                    ),
-                                    color = textSubColor,
-                                )
-                                Text(
-                                    text = song.title,
-                                    style = MaterialTheme.typography.titleMedium.copy(
-                                        fontWeight = FontWeight.Bold,
-                                        fontSize = 15.sp,
-                                    ),
-                                    color = titleColor,
-                                    maxLines = 1,
-                                    overflow = TextOverflow.Ellipsis,
-                                )
-                                Text(
-                                    text = song.artist,
-                                    style = MaterialTheme.typography.bodySmall.copy(fontSize = 13.sp),
-                                    color = textSubColor,
-                                    maxLines = 1,
-                                    overflow = TextOverflow.Ellipsis,
-                                )
-                            }
-                            Icon(
-                                imageVector = Icons.Rounded.MusicNote,
-                                contentDescription = null,
-                                tint = iconTint,
-                                modifier = Modifier.size(20.dp),
+                            Text(
+                                text = "${idx + 1}",
+                                style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.Bold),
+                                color = titleColor,
                             )
                         }
-                    }
-
-                    Spacer(Modifier.height(16.dp))
-                    Text(
-                        text = "UP NEXT",
-                        style = MaterialTheme.typography.labelMedium.copy(
-                            fontWeight = FontWeight.Bold,
-                            fontSize = 12.sp,
-                            letterSpacing = 0.6.sp,
-                        ),
-                        color = textSubColor,
-                    )
-                    Spacer(Modifier.height(8.dp))
-
-                    // Up Next List
-                    LazyColumn(
-                        modifier = Modifier.fillMaxWidth().weight(1f),
-                        verticalArrangement = Arrangement.spacedBy(8.dp),
-                    ) {
-                        itemsIndexed(queue) { idx, item ->
-                            Row(
-                                modifier = Modifier
-                                    .fillMaxWidth()
-                                    .clip(RoundedCornerShape(12.dp))
-                                    .background(sheetCardBg)
-                                    .clickable { onJumpTo(idx) }
-                                    .padding(horizontal = 12.dp, vertical = 8.dp),
-                                verticalAlignment = Alignment.CenterVertically,
-                                horizontalArrangement = Arrangement.spacedBy(10.dp),
-                            ) {
-                                // Index badge
-                                Box(
-                                    modifier = Modifier
-                                        .size(26.dp)
-                                        .clip(CircleShape)
-                                        .background(sheetPillBg),
-                                    contentAlignment = Alignment.Center,
-                                ) {
-                                    Text(
-                                        text = "${idx + 1}",
-                                        style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.Bold),
-                                        color = titleColor,
-                                    )
-                                }
-                                AsyncImage(
-                                    model = item.thumbnailUrl,
-                                    contentDescription = null,
-                                    contentScale = ContentScale.Crop,
-                                    modifier = Modifier
-                                        .size(38.dp)
-                                        .clip(RoundedCornerShape(8.dp)),
-                                )
-                                Column(modifier = Modifier.weight(1f)) {
-                                    Text(
-                                        text = item.title,
-                                        style = MaterialTheme.typography.bodyMedium.copy(fontWeight = FontWeight.SemiBold),
-                                        color = titleColor,
-                                        maxLines = 1,
-                                        overflow = TextOverflow.Ellipsis,
-                                    )
-                                    Text(
-                                        text = item.artist,
-                                        style = MaterialTheme.typography.bodySmall,
-                                        color = textSubColor,
-                                        maxLines = 1,
-                                        overflow = TextOverflow.Ellipsis,
-                                    )
-                                }
-                                Icon(
-                                    imageVector = Icons.Rounded.DragHandle,
-                                    contentDescription = "Reorder",
-                                    tint = textSubColor,
-                                    modifier = Modifier.size(20.dp),
-                                )
-                                Box(
-                                    modifier = Modifier
-                                        .size(28.dp)
-                                        .clip(CircleShape)
-                                        .background(sheetPillBg)
-                                        .clickable { onRemoveFromQueue(idx) },
-                                    contentAlignment = Alignment.Center,
-                                ) {
-                                    Icon(
-                                        imageVector = Icons.Rounded.Close,
-                                        contentDescription = "Remove",
-                                        tint = iconTint,
-                                        modifier = Modifier.size(16.dp),
-                                    )
-                                }
-                            }
+                        AsyncImage(
+                            model = item.thumbnailUrl,
+                            contentDescription = null,
+                            contentScale = ContentScale.Crop,
+                            modifier = Modifier
+                                .size(38.dp)
+                                .clip(RoundedCornerShape(8.dp)),
+                        )
+                        Column(modifier = Modifier.weight(1f)) {
+                            Text(
+                                text = item.title,
+                                style = MaterialTheme.typography.bodyMedium.copy(fontWeight = FontWeight.SemiBold),
+                                color = titleColor,
+                                maxLines = 1,
+                                overflow = TextOverflow.Ellipsis,
+                            )
+                            Text(
+                                text = item.artist,
+                                style = MaterialTheme.typography.bodySmall,
+                                color = textSubColor,
+                                maxLines = 1,
+                                overflow = TextOverflow.Ellipsis,
+                            )
+                        }
+                        Box(
+                            modifier = Modifier
+                                .size(28.dp)
+                                .clip(CircleShape)
+                                .background(sheetPillBg)
+                                .clickable { onRemoveFromQueue(idx) },
+                            contentAlignment = Alignment.Center,
+                        ) {
+                            Icon(
+                                imageVector = Icons.Rounded.Close,
+                                contentDescription = "Remove",
+                                tint = iconTint,
+                                modifier = Modifier.size(16.dp),
+                            )
                         }
                     }
                 }
@@ -1476,417 +1571,497 @@ fun RhythmPlayerContent(
         }
 
         // =========================================================================
-        // Modal Sheet 2: Playback / Audio Settings Sheet (video_5.mp4 00:03 & frame_008.png)
+        // Modal Sheet 2: Playback / Audio Settings Card (Centered Frosted Card)
         // =========================================================================
-        AnimatedVisibility(
+        HushCenteredCardHost(
             visible = showAudioSheet,
-            enter = slideInVertically(spring(stiffness = 450f)) { it } + fadeIn(),
-            exit = slideOutVertically(spring(stiffness = 450f)) { it } + fadeOut(),
+            onDismiss = { showAudioSheet = false },
+            hazeState = playerHaze,
+            title = "Audio Settings",
+            subtitle = "Output & Live Volume",
+            maxWidth = 420.dp,
+            maxHeight = 620.dp,
         ) {
-            Box(
-                modifier = Modifier
-                    .fillMaxSize()
-                    .background(if (isDark) Color.Black.copy(alpha = 0.20f) else Color.Black.copy(alpha = 0.12f))
-                    .clickable { showAudioSheet = false },
-                contentAlignment = Alignment.BottomCenter,
-            ) {
-                var volumeLevel by remember { mutableFloatStateOf(0.65f) }
-                var useSystemVolume by remember { mutableStateOf(true) }
-                var pauseOnZero by remember { mutableStateOf(false) }
-                var autoResume by remember { mutableStateOf(true) }
-                var gaplessPlayback by remember { mutableStateOf(true) }
+            val systemVolume = PlayerPlatform.host.volume
+            val systemVolumeLevel by systemVolume.level.collectAsStateWithLifecycle()
+            val useSystemVolume by PlayerSettings.useSystemVolume.collectAsStateWithLifecycle()
+            val pauseOnZero by PlayerSettings.pauseOnZeroVolume.collectAsStateWithLifecycle()
+            val autoResume by PlayerSettings.autoResumeOnVolume.collectAsStateWithLifecycle()
+            val appPlayerVolume by PlayerSettings.appPlayerVolume.collectAsStateWithLifecycle()
+            val smartFade by PlayerSettings.smartFadeEnabled.collectAsStateWithLifecycle()
+            val audioOutputs = rememberAudioOutputs()
+            val activeOutput = audioOutputs.firstOrNull { it.isActive } ?: audioOutputs.firstOrNull()
+            val activeOutputName = if (activeOutput != null) {
+                outputLabel(activeOutput, accountName = null)
+            } else {
+                "Phone Speaker"
+            }
+            val activeOutputSub = when (activeOutput?.kind) {
+                AudioOutputKind.BLUETOOTH -> "Bluetooth Audio"
+                AudioOutputKind.WIRED -> "Wired Headphones"
+                AudioOutputKind.USB -> "USB Audio DAC"
+                AudioOutputKind.HDMI -> "HDMI Output"
+                else -> "Built-in speaker"
+            }
+            val activeOutputIcon = when (activeOutput?.kind) {
+                AudioOutputKind.BLUETOOTH -> Icons.Rounded.BluetoothAudio
+                AudioOutputKind.WIRED -> Icons.Rounded.Headphones
+                AudioOutputKind.USB -> Icons.Rounded.Usb
+                else -> Icons.Rounded.Speaker
+            }
 
-                Column(
+            var showDevicePicker by remember { mutableStateOf(false) }
+            val openOutputPicker = rememberOutputPicker { showDevicePicker = !showDevicePicker }
+            var sliderLevel by remember { mutableFloatStateOf(if (useSystemVolume) systemVolumeLevel else appPlayerVolume) }
+            var isDraggingVolume by remember { mutableStateOf(false) }
+
+            LaunchedEffect(systemVolumeLevel, appPlayerVolume, useSystemVolume, showAudioSheet) {
+                systemVolume.refresh()
+                if (!isDraggingVolume) {
+                    sliderLevel = if (useSystemVolume) systemVolumeLevel else appPlayerVolume
+                }
+            }
+
+            Column(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .verticalScroll(rememberScrollState()),
+                verticalArrangement = Arrangement.spacedBy(14.dp),
+            ) {
+                // Top Speaker Output & Live Volume Card
+                Box(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .fillMaxHeight(0.84f)
-                        .clip(RoundedCornerShape(topStart = 28.dp, topEnd = 28.dp))
-                        .background(sheetBg)
-                        .clickable(interactionSource = remember { MutableInteractionSource() }, indication = null) {}
-                        .padding(horizontal = 20.dp, vertical = 12.dp),
+                        .clip(RoundedCornerShape(20.dp))
+                        .background(if (isDark) Color(0xFF8E8E93).copy(alpha = 0.28f) else Color.Black.copy(alpha = 0.06f))
+                        .padding(16.dp),
                 ) {
-                    Box(
-                        modifier = Modifier
-                            .align(Alignment.CenterHorizontally)
-                            .width(36.dp)
-                            .height(4.5.dp)
-                            .clip(RoundedCornerShape(percent = 50))
-                            .background(sheetHandle),
-                    )
-                    Spacer(Modifier.height(14.dp))
-                    Text(
-                        text = "Playback",
-                        style = MaterialTheme.typography.headlineSmall.copy(
-                            fontWeight = FontWeight.Bold,
-                            fontSize = 24.sp,
-                        ),
-                        color = titleColor,
-                    )
-                    Spacer(Modifier.height(4.dp))
-                    Box(
-                        modifier = Modifier
-                            .clip(RoundedCornerShape(percent = 50))
-                            .background(sheetPillBg)
-                            .padding(horizontal = 10.dp, vertical = 4.dp),
-                    ) {
-                        Text(
-                            text = "Audio Settings",
-                            style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.SemiBold),
-                            color = textSubColor,
-                        )
-                    }
-
-                    Spacer(Modifier.height(18.dp))
-
-                    // Top Speaker Output Card (frame_008.png)
-                    Box(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .clip(RoundedCornerShape(20.dp))
-                            .background(if (isDark) Color(0xFF8E8E93).copy(alpha = 0.35f) else Color.Black.copy(alpha = 0.06f))
-                            .padding(16.dp),
-                    ) {
-                        Column {
+                    Column {
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.SpaceBetween,
+                            verticalAlignment = Alignment.CenterVertically,
+                        ) {
                             Row(
-                                modifier = Modifier.fillMaxWidth(),
-                                horizontalArrangement = Arrangement.SpaceBetween,
+                                modifier = Modifier.weight(1f),
                                 verticalAlignment = Alignment.CenterVertically,
+                                horizontalArrangement = Arrangement.spacedBy(10.dp),
                             ) {
-                                Row(
-                                    verticalAlignment = Alignment.CenterVertically,
-                                    horizontalArrangement = Arrangement.spacedBy(10.dp),
+                                Box(
+                                    modifier = Modifier
+                                        .size(36.dp)
+                                        .clip(CircleShape)
+                                        .background(if (isDark) Color.White else Color(0xFF121215)),
+                                    contentAlignment = Alignment.Center,
                                 ) {
-                                    Box(
+                                    Icon(
+                                        imageVector = activeOutputIcon,
+                                        contentDescription = null,
+                                        tint = if (isDark) Color.Black else Color.White,
+                                        modifier = Modifier.size(20.dp),
+                                    )
+                                }
+                                Column {
+                                    Text(
+                                        text = activeOutputName,
+                                        style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold),
+                                        color = titleColor,
+                                        maxLines = 1,
+                                        overflow = TextOverflow.Ellipsis,
+                                    )
+                                    Text(
+                                        text = activeOutputSub,
+                                        style = MaterialTheme.typography.bodySmall,
+                                        color = textSubColor,
+                                    )
+                                }
+                            }
+
+                            Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                                Box(
+                                    modifier = Modifier
+                                        .size(36.dp)
+                                        .clip(CircleShape)
+                                        .background(if (isDark) Color.White else Color(0xFF121215))
+                                        .clickable { systemVolume.refresh() },
+                                    contentAlignment = Alignment.Center,
+                                ) {
+                                    Icon(
+                                        imageVector = Icons.Rounded.Refresh,
+                                        contentDescription = "Refresh Volume",
+                                        tint = if (isDark) Color.Black else Color.White,
+                                        modifier = Modifier.size(18.dp),
+                                    )
+                                }
+                                Box(
+                                    modifier = Modifier
+                                        .size(36.dp)
+                                        .clip(CircleShape)
+                                        .background(if (isDark) Color.White else Color(0xFF121215))
+                                        .clickable { openOutputPicker() },
+                                    contentAlignment = Alignment.Center,
+                                ) {
+                                    Icon(
+                                        imageVector = Icons.Rounded.SwapHoriz,
+                                        contentDescription = "Switch Audio Output",
+                                        tint = if (isDark) Color.Black else Color.White,
+                                        modifier = Modifier.size(18.dp),
+                                    )
+                                }
+                            }
+                        }
+
+                        if (showDevicePicker && audioOutputs.isNotEmpty()) {
+                            Spacer(Modifier.height(12.dp))
+                            Column(verticalArrangement = Arrangement.spacedBy(6.dp)) {
+                                audioOutputs.forEach { device ->
+                                    Row(
                                         modifier = Modifier
-                                            .size(36.dp)
-                                            .clip(CircleShape)
-                                            .background(if (isDark) Color.White else Color(0xFF121215)),
-                                        contentAlignment = Alignment.Center,
+                                            .fillMaxWidth()
+                                            .clip(RoundedCornerShape(12.dp))
+                                            .background(if (device.isActive) primaryAccent.copy(alpha = 0.20f) else sheetCardBg)
+                                            .clickable {
+                                                PlayerPlatform.host.selectAudioOutput(device.id)
+                                                showDevicePicker = false
+                                            }
+                                            .padding(horizontal = 12.dp, vertical = 9.dp),
+                                        verticalAlignment = Alignment.CenterVertically,
+                                        horizontalArrangement = Arrangement.SpaceBetween,
                                     ) {
-                                        Icon(
-                                            imageVector = Icons.Rounded.Speaker,
-                                            contentDescription = null,
-                                            tint = if (isDark) Color.Black else Color.White,
-                                            modifier = Modifier.size(20.dp),
-                                        )
-                                    }
-                                    Column {
                                         Text(
-                                            text = "Phone Speaker",
-                                            style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold),
+                                            text = outputLabel(device, accountName = null),
+                                            style = MaterialTheme.typography.bodyMedium.copy(
+                                                fontWeight = if (device.isActive) FontWeight.Bold else FontWeight.Medium,
+                                            ),
                                             color = titleColor,
+                                            maxLines = 1,
+                                            overflow = TextOverflow.Ellipsis,
+                                            modifier = Modifier.weight(1f),
                                         )
-                                        Text(
-                                            text = "Built-in speaker",
-                                            style = MaterialTheme.typography.bodySmall,
-                                            color = textSubColor,
-                                        )
-                                    }
-                                }
-
-                                Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                                    Box(
-                                        modifier = Modifier
-                                            .size(36.dp)
-                                            .clip(CircleShape)
-                                            .background(if (isDark) Color.White else Color(0xFF121215)),
-                                        contentAlignment = Alignment.Center,
-                                    ) {
-                                        Icon(
-                                            imageVector = Icons.Rounded.Refresh,
-                                            contentDescription = null,
-                                            tint = if (isDark) Color.Black else Color.White,
-                                            modifier = Modifier.size(18.dp),
-                                        )
-                                    }
-                                    Box(
-                                        modifier = Modifier
-                                            .size(36.dp)
-                                            .clip(CircleShape)
-                                            .background(if (isDark) Color.White else Color(0xFF121215)),
-                                        contentAlignment = Alignment.Center,
-                                    ) {
-                                        Icon(
-                                            imageVector = Icons.Rounded.SwapHoriz,
-                                            contentDescription = null,
-                                            tint = if (isDark) Color.Black else Color.White,
-                                            modifier = Modifier.size(18.dp),
-                                        )
+                                        if (device.isActive) {
+                                            Icon(
+                                                imageVector = Icons.Rounded.Check,
+                                                contentDescription = null,
+                                                tint = primaryAccent,
+                                                modifier = Modifier.size(18.dp),
+                                            )
+                                        }
                                     }
                                 }
                             }
+                        }
 
-                            Spacer(Modifier.height(16.dp))
-                            Row(
-                                modifier = Modifier.fillMaxWidth(),
-                                horizontalArrangement = Arrangement.SpaceBetween,
-                            ) {
-                                Text(
-                                    text = "System Volume",
-                                    style = MaterialTheme.typography.bodyMedium.copy(fontWeight = FontWeight.SemiBold),
-                                    color = titleColor,
-                                )
-                                Text(
-                                    text = "${(volumeLevel * 100).toInt()}%",
-                                    style = MaterialTheme.typography.bodyMedium.copy(fontWeight = FontWeight.Bold),
-                                    color = titleColor,
-                                )
-                            }
-                            Spacer(Modifier.height(8.dp))
+                        Spacer(Modifier.height(14.dp))
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.SpaceBetween,
+                            verticalAlignment = Alignment.CenterVertically,
+                        ) {
+                            Text(
+                                text = if (useSystemVolume) "System Volume" else "Player Volume",
+                                style = MaterialTheme.typography.bodyMedium.copy(fontWeight = FontWeight.SemiBold),
+                                color = titleColor,
+                            )
+                            Text(
+                                text = "${(sliderLevel * 100).toInt()}%",
+                                style = MaterialTheme.typography.bodyMedium.copy(fontWeight = FontWeight.Bold),
+                                color = titleColor,
+                            )
+                        }
+                        Spacer(Modifier.height(4.dp))
+                        Row(
+                            verticalAlignment = Alignment.CenterVertically,
+                            horizontalArrangement = Arrangement.spacedBy(10.dp),
+                        ) {
+                            Icon(
+                                imageVector = if (sliderLevel <= 0.01f) Icons.Rounded.VolumeOff else Icons.Rounded.VolumeUp,
+                                contentDescription = null,
+                                tint = textSubColor,
+                                modifier = Modifier.size(20.dp),
+                            )
                             Slider(
-                                value = volumeLevel,
-                                onValueChange = { volumeLevel = it },
+                                value = sliderLevel.coerceIn(0f, 1f),
+                                onValueChange = { next ->
+                                    isDraggingVolume = true
+                                    sliderLevel = next
+                                    if (useSystemVolume) {
+                                        systemVolume.set(next)
+                                    } else {
+                                        PlayerSettings.setAppPlayerVolume(next)
+                                    }
+                                },
+                                onValueChangeFinished = { isDraggingVolume = false },
                                 colors = SliderDefaults.colors(
                                     thumbColor = primaryAccent,
                                     activeTrackColor = primaryAccent,
                                     inactiveTrackColor = if (isDark) Color.White.copy(alpha = 0.25f) else Color.Black.copy(alpha = 0.15f),
                                 ),
-                                modifier = Modifier.fillMaxWidth(),
+                                modifier = Modifier.weight(1f),
                             )
                         }
                     }
+                }
 
-                    Spacer(Modifier.height(20.dp))
-                    Text(
-                        text = "Playback Settings",
-                        style = MaterialTheme.typography.labelMedium.copy(
-                            fontWeight = FontWeight.Bold,
-                            fontSize = 13.sp,
-                        ),
-                        color = textSubColor,
+                Text(
+                    text = "PLAYBACK BEHAVIOR",
+                    style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.Bold, letterSpacing = 0.8.sp),
+                    color = textSubColor,
+                )
+
+                Column(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .clip(RoundedCornerShape(16.dp))
+                        .background(sheetCardBg),
+                ) {
+                    RhythmSettingSwitchRow(
+                        icon = Icons.Rounded.VolumeUp,
+                        title = "Use System Volume",
+                        subtitle = "Control hardware volume instead of in-app gain",
+                        checked = useSystemVolume,
+                        onCheckedChange = { PlayerSettings.setUseSystemVolume(it) },
                     )
-                    Spacer(Modifier.height(10.dp))
+                    RhythmSettingSwitchRow(
+                        icon = Icons.Rounded.VolumeOff,
+                        title = "Pause on Zero Volume",
+                        subtitle = "Automatically pause playback when volume hits 0%",
+                        checked = pauseOnZero,
+                        onCheckedChange = { PlayerSettings.setPauseOnZeroVolume(it) },
+                    )
+                    RhythmSettingSwitchRow(
+                        icon = Icons.Rounded.Speaker,
+                        title = "Auto Resume",
+                        subtitle = "Resume playback when volume is turned back up",
+                        checked = autoResume,
+                        onCheckedChange = { PlayerSettings.setAutoResumeOnVolume(it) },
+                    )
+                    RhythmSettingSwitchRow(
+                        icon = Icons.Rounded.SwapHoriz,
+                        title = "Gapless & Smart Fade",
+                        subtitle = "Smooth transitions between tracks",
+                        checked = smartFade,
+                        onCheckedChange = { PlayerSettings.setSmartFadeEnabled(it) },
+                    )
+                }
+            }
+        }
 
-                    Column(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .clip(RoundedCornerShape(16.dp))
-                            .background(sheetCardBg),
+        // =========================================================================
+        // Modal Sheet 3: Player Controls Card (Centered Frosted Card)
+        // =========================================================================
+        val eqEnabledState by PlayerSettings.equalizerEnabled.collectAsStateWithLifecycle()
+        val sleepActiveMins by PlayerPlatform.host.sleepTimerActiveMinutes.collectAsStateWithLifecycle()
+        val sleepAfterTrack by PlayerPlatform.host.sleepTimerAfterTrack.collectAsStateWithLifecycle()
+
+        HushCenteredCardHost(
+            visible = showMoreSheet,
+            onDismiss = { showMoreSheet = false },
+            hazeState = playerHaze,
+            title = "Player Controls",
+            subtitle = "${song.title} · ${song.artist}",
+            maxWidth = 420.dp,
+            maxHeight = 620.dp,
+        ) {
+            LazyColumn(
+                modifier = Modifier.fillMaxWidth().weight(1f, fill = false),
+                verticalArrangement = Arrangement.spacedBy(10.dp),
+            ) {
+                item {
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.spacedBy(10.dp),
                     ) {
-                        RhythmSettingSwitchRow(
-                            icon = Icons.Rounded.VolumeUp,
-                            title = "Use System Volume",
-                            subtitle = "Control system volume instead of app volume",
-                            checked = useSystemVolume,
-                            onCheckedChange = { useSystemVolume = it },
+                        RhythmControlCard(
+                            icon = Icons.Rounded.Edit,
+                            title = "Edit controls",
+                            subtitle = "Shapes & seekbar",
+                            onClick = {
+                                showMoreSheet = false
+                                showEditControlsCard = true
+                            },
+                            modifier = Modifier.weight(1f),
                         )
-                        RhythmSettingSwitchRow(
-                            icon = Icons.Rounded.VolumeUp,
-                            title = "Pause on Zero Volume",
-                            subtitle = "Pause playback when volume reaches zero",
-                            checked = pauseOnZero,
-                            onCheckedChange = { pauseOnZero = it },
+                        RhythmControlCard(
+                            icon = Icons.Rounded.PlaylistAdd,
+                            title = "Add to playlist",
+                            subtitle = "Save to library",
+                            onClick = {
+                                showMoreSheet = false
+                                onOpenMenu()
+                            },
+                            modifier = Modifier.weight(1f),
                         )
-                        RhythmSettingSwitchRow(
-                            icon = Icons.Rounded.Speaker,
-                            title = "Auto Resume",
-                            subtitle = "Auto-resume when audio devices reconnect",
-                            checked = autoResume,
-                            onCheckedChange = { autoResume = it },
+                    }
+                }
+                item {
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.spacedBy(10.dp),
+                    ) {
+                        RhythmControlCard(
+                            icon = Icons.Rounded.Speed,
+                            title = "Remix Studio",
+                            subtitle = "Speed, 2-Song & Save",
+                            onClick = {
+                                showMoreSheet = false
+                                onOpenMixer?.invoke()
+                            },
+                            modifier = Modifier.weight(1f),
                         )
-                        RhythmSettingSwitchRow(
-                            icon = Icons.Rounded.SwapHoriz,
-                            title = "Gapless Playback",
-                            subtitle = "Switch tracks without silence",
-                            checked = gaplessPlayback,
-                            onCheckedChange = { gaplessPlayback = it },
+                        RhythmControlCard(
+                            icon = Icons.Rounded.GraphicEq,
+                            title = "Equalizer",
+                            subtitle = if (eqEnabledState) "Active" else "Off",
+                            onClick = {
+                                showMoreSheet = false
+                                showEqualizerCard = true
+                            },
+                            modifier = Modifier.weight(1f),
                         )
+                    }
+                }
+                item {
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.spacedBy(10.dp),
+                    ) {
+                        RhythmControlCard(
+                            icon = Icons.Rounded.Timer,
+                            title = "Sleep Timer",
+                            subtitle = when {
+                                sleepAfterTrack -> "End of track"
+                                sleepActiveMins != null -> "${sleepActiveMins}m set"
+                                else -> "Disabled"
+                            },
+                            onClick = {
+                                showMoreSheet = false
+                                showSleepTimerCard = true
+                            },
+                            modifier = Modifier.weight(1f),
+                        )
+                        RhythmControlCard(
+                            icon = BitChordIcons.LyricsQuote,
+                            title = if (showInlineLyrics) "Show Artwork" else "Show Lyrics",
+                            subtitle = "Tap cover or pinch",
+                            onClick = {
+                                showMoreSheet = false
+                                showInlineLyrics = !showInlineLyrics
+                            },
+                            modifier = Modifier.weight(1f),
+                        )
+                    }
+                }
+                item {
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.spacedBy(10.dp),
+                    ) {
+                        RhythmControlCard(
+                            icon = Icons.Rounded.Album,
+                            title = "Go to album",
+                            subtitle = null,
+                            onClick = {
+                                showMoreSheet = false
+                                onOpenAlbum()
+                            },
+                            modifier = Modifier.weight(1f),
+                        )
+                        RhythmControlCard(
+                            icon = Icons.Rounded.Person,
+                            title = "Go to artist",
+                            subtitle = null,
+                            onClick = {
+                                showMoreSheet = false
+                                onOpenArtist()
+                            },
+                            modifier = Modifier.weight(1f),
+                        )
+                    }
+                }
+                item {
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.spacedBy(10.dp),
+                    ) {
+                        RhythmControlCard(
+                            icon = Icons.Rounded.Info,
+                            title = "Song info",
+                            subtitle = "Details & codecs",
+                            onClick = {
+                                showMoreSheet = false
+                                showSongInfoCard = true
+                            },
+                            modifier = Modifier.weight(1f),
+                        )
+                        RhythmControlCard(
+                            icon = Icons.Rounded.Download,
+                            title = "Save Locally",
+                            subtitle = "To Music/Hush",
+                            onClick = {
+                                showMoreSheet = false
+                                PlayerPlatform.host.saveTrackLocally(song)
+                            },
+                            modifier = Modifier.weight(1f),
+                        )
+                    }
+                }
+                item {
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.spacedBy(10.dp),
+                    ) {
+                        RhythmControlCard(
+                            icon = Icons.Rounded.Share,
+                            title = "Share & More",
+                            subtitle = "Share link or options",
+                            onClick = {
+                                showMoreSheet = false
+                                onOpenMenu()
+                            },
+                            modifier = Modifier.weight(1f),
+                        )
+                        if (canShareLyrics) {
+                            RhythmControlCard(
+                                icon = Icons.Rounded.IosShare,
+                                title = "Lyrics Card",
+                                subtitle = "Share styled lyrics",
+                                onClick = {
+                                    showMoreSheet = false
+                                    openQuickLyricsShare()
+                                },
+                                modifier = Modifier.weight(1f),
+                            )
+                        } else {
+                            Spacer(modifier = Modifier.weight(1f))
+                        }
                     }
                 }
             }
         }
 
         // =========================================================================
-        // Modal Sheet 3: Player Controls 2-Column Grid (video_5.mp4 00:08 & frame_017.png)
+        // Centered Sub-Cards: Edit Controls, Equalizer, Sleep Timer, Song Info
         // =========================================================================
-        AnimatedVisibility(
-            visible = showMoreSheet,
-            enter = slideInVertically(spring(stiffness = 450f)) { it } + fadeIn(),
-            exit = slideOutVertically(spring(stiffness = 450f)) { it } + fadeOut(),
-        ) {
-            Box(
-                modifier = Modifier
-                    .fillMaxSize()
-                    .background(if (isDark) Color.Black.copy(alpha = 0.20f) else Color.Black.copy(alpha = 0.12f))
-                    .clickable { showMoreSheet = false },
-                contentAlignment = Alignment.BottomCenter,
-            ) {
-                Column(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .fillMaxHeight(0.84f)
-                        .clip(RoundedCornerShape(topStart = 28.dp, topEnd = 28.dp))
-                        .background(sheetBg)
-                        .clickable(interactionSource = remember { MutableInteractionSource() }, indication = null) {}
-                        .padding(horizontal = 20.dp, vertical = 12.dp),
-                ) {
-                    Box(
-                        modifier = Modifier
-                            .align(Alignment.CenterHorizontally)
-                            .width(36.dp)
-                            .height(4.5.dp)
-                            .clip(RoundedCornerShape(percent = 50))
-                            .background(sheetHandle),
-                    )
-                    Spacer(Modifier.height(14.dp))
-                    Text(
-                        text = "Player Controls",
-                        style = MaterialTheme.typography.headlineSmall.copy(
-                            fontWeight = FontWeight.Bold,
-                            fontSize = 24.sp,
-                        ),
-                        color = titleColor,
-                    )
-                    Spacer(Modifier.height(4.dp))
-                    Box(
-                        modifier = Modifier
-                            .clip(RoundedCornerShape(percent = 50))
-                            .background(sheetPillBg)
-                            .padding(horizontal = 10.dp, vertical = 4.dp),
-                    ) {
-                        Text(
-                            text = "More actions",
-                            style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.SemiBold),
-                            color = textSubColor,
-                        )
-                    }
-
-                    Spacer(Modifier.height(14.dp))
-
-                    // 2-Column Grid (frame_017.png)
-                    LazyColumn(
-                        modifier = Modifier.fillMaxWidth().weight(1f),
-                        verticalArrangement = Arrangement.spacedBy(10.dp),
-                    ) {
-                        item {
-                            Row(
-                                modifier = Modifier.fillMaxWidth(),
-                                horizontalArrangement = Arrangement.spacedBy(10.dp),
-                            ) {
-                                RhythmControlCard(
-                                    icon = Icons.Rounded.Edit,
-                                    title = "Edit controls",
-                                    subtitle = null,
-                                    onClick = { showMoreSheet = false },
-                                    modifier = Modifier.weight(1f),
-                                )
-                                RhythmControlCard(
-                                    icon = Icons.Rounded.PlaylistAdd,
-                                    title = "Add to playlist",
-                                    subtitle = null,
-                                    onClick = {
-                                        showMoreSheet = false
-                                        onOpenMenu()
-                                    },
-                                    modifier = Modifier.weight(1f),
-                                )
-                            }
-                        }
-                        item {
-                            Row(
-                                modifier = Modifier.fillMaxWidth(),
-                                horizontalArrangement = Arrangement.spacedBy(10.dp),
-                            ) {
-                                RhythmControlCard(
-                                    icon = Icons.Rounded.Speed,
-                                    title = "Song Mixer",
-                                    subtitle = "Remix & Speed",
-                                    onClick = {
-                                        showMoreSheet = false
-                                        onOpenMixer?.invoke()
-                                    },
-                                    modifier = Modifier.weight(1f),
-                                )
-                                RhythmControlCard(
-                                    icon = Icons.Rounded.GraphicEq,
-                                    title = "Equalizer",
-                                    subtitle = "Enabled",
-                                    onClick = { showMoreSheet = false },
-                                    modifier = Modifier.weight(1f),
-                                )
-                            }
-                        }
-                        item {
-                            Row(
-                                modifier = Modifier.fillMaxWidth(),
-                                horizontalArrangement = Arrangement.spacedBy(10.dp),
-                            ) {
-                                RhythmControlCard(
-                                    icon = Icons.Rounded.Timer,
-                                    title = "Sleep Timer",
-                                    subtitle = "Disabled",
-                                    onClick = { showMoreSheet = false },
-                                    modifier = Modifier.weight(1f),
-                                )
-                                RhythmControlCard(
-                                    icon = BitChordIcons.LyricsQuote,
-                                    title = "Add Lyrics",
-                                    subtitle = null,
-                                    onClick = {
-                                        showMoreSheet = false
-                                        showInlineLyrics = true
-                                    },
-                                    modifier = Modifier.weight(1f),
-                                )
-                            }
-                        }
-                        item {
-                            Row(
-                                modifier = Modifier.fillMaxWidth(),
-                                horizontalArrangement = Arrangement.spacedBy(10.dp),
-                            ) {
-                                RhythmControlCard(
-                                    icon = Icons.Rounded.Album,
-                                    title = "Go to album",
-                                    subtitle = null,
-                                    onClick = {
-                                        showMoreSheet = false
-                                        onOpenAlbum()
-                                    },
-                                    modifier = Modifier.weight(1f),
-                                )
-                                RhythmControlCard(
-                                    icon = Icons.Rounded.Person,
-                                    title = "Go to artist",
-                                    subtitle = null,
-                                    onClick = {
-                                        showMoreSheet = false
-                                        onOpenArtist()
-                                    },
-                                    modifier = Modifier.weight(1f),
-                                )
-                            }
-                        }
-                        item {
-                            Row(
-                                modifier = Modifier.fillMaxWidth(),
-                                horizontalArrangement = Arrangement.spacedBy(10.dp),
-                            ) {
-                                RhythmControlCard(
-                                    icon = Icons.Rounded.Info,
-                                    title = "Song info",
-                                    subtitle = null,
-                                    onClick = {
-                                        showMoreSheet = false
-                                        onOpenMenu()
-                                    },
-                                    modifier = Modifier.weight(1f),
-                                )
-                                RhythmControlCard(
-                                    icon = Icons.Rounded.Share,
-                                    title = "Share File",
-                                    subtitle = null,
-                                    onClick = {
-                                        showMoreSheet = false
-                                        onOpenMenu()
-                                    },
-                                    modifier = Modifier.weight(1f),
-                                )
-                            }
-                        }
-                    }
-                }
-            }
+        RhythmEditControlsCard(
+            visible = showEditControlsCard,
+            hazeState = playerHaze,
+            onDismiss = { showEditControlsCard = false },
+        )
+        RhythmEqualizerCard(
+            visible = showEqualizerCard,
+            hazeState = playerHaze,
+            onDismiss = { showEqualizerCard = false },
+        )
+        RhythmSleepTimerCard(
+            visible = showSleepTimerCard,
+            hazeState = playerHaze,
+            onDismiss = { showSleepTimerCard = false },
+        )
+        if (showSongInfoCard) {
+            PlayerPlatform.host.SongInfoCard(
+                song = song,
+                onDismiss = { showSongInfoCard = false },
+            )
         }
     }
 }
@@ -2293,5 +2468,531 @@ private fun formatDuration(ms: Long): String {
     val minutes = totalSeconds / 60L
     val seconds = totalSeconds % 60L
     return "$minutes:${seconds.toString().padStart(2, '0')}"
+}
+
+private fun Modifier.lyricsPinchToCover(
+    enabled: Boolean,
+    onReturnToCover: () -> Unit,
+): Modifier = if (!enabled) {
+    this
+} else {
+    this.pointerInput(Unit) {
+        awaitPointerEventScope {
+            var zoom = 1f
+            while (true) {
+                val event = awaitPointerEvent()
+                val pressed = event.changes.count { it.pressed }
+                if (pressed >= 2) {
+                    val stepZoom = event.calculateZoom()
+                    if (stepZoom > 0f && stepZoom.isFinite()) {
+                        zoom *= stepZoom
+                        event.changes.forEach { if (it.pressed) it.consume() }
+                        if (zoom < 0.88f) {
+                            zoom = 1f
+                            onReturnToCover()
+                        }
+                    }
+                } else {
+                    zoom = 1f
+                }
+            }
+        }
+    }
+}
+
+@Composable
+private fun RhythmEditControlsCard(
+    visible: Boolean,
+    hazeState: HazeState,
+    onDismiss: () -> Unit,
+) {
+    val progressStyle by PlayerSettings.progressLineStyle.collectAsStateWithLifecycle()
+    val beatImpulse by PlayerSettings.beatImpulse.collectAsStateWithLifecycle()
+    val artShapeName by PlayerSettings.expressivePlayerArtShape.collectAsStateWithLifecycle()
+    val controlsShapeName by PlayerSettings.expressiveControlsShape.collectAsStateWithLifecycle()
+    val liveGradient by PlayerSettings.liveSongColorGradient.collectAsStateWithLifecycle()
+    val hideVolumeBar by PlayerSettings.hideVolumeBar.collectAsStateWithLifecycle()
+    val hideSongStatus by PlayerSettings.hideSongStatus.collectAsStateWithLifecycle()
+
+    val isDark = MaterialTheme.colorScheme.surface.luminance() < 0.5f
+    val titleColor = if (isDark) Color.White else Color(0xFF121215)
+    val subColor = if (isDark) Color.White.copy(alpha = 0.60f) else Color(0xFF555562)
+    val accent = MaterialTheme.colorScheme.primary
+    val chipBg = if (isDark) Color.White.copy(alpha = 0.08f) else Color.Black.copy(alpha = 0.05f)
+
+    val artShapeOptions = remember {
+        listOf("8-Leaf Clover", "Flower", "Sunny", "4-Sided Cookie", "Circle", "Squircle", "Puffy", "Gem", "Heart", "Pill", "Hexagon", "Starburst")
+    }
+    val controlShapeOptions = remember {
+        listOf("Flower", "Squircle", "Pill", "Circle", "8-Leaf Clover", "4-Sided Cookie")
+    }
+
+    HushCenteredCardHost(
+        visible = visible,
+        onDismiss = onDismiss,
+        hazeState = hazeState,
+        title = "Edit Controls",
+        subtitle = "Customize M3E Player Layout & Motion",
+        maxWidth = 420.dp,
+        maxHeight = 620.dp,
+    ) {
+        Column(
+            modifier = Modifier
+                .fillMaxWidth()
+                .verticalScroll(rememberScrollState()),
+            verticalArrangement = Arrangement.spacedBy(14.dp),
+        ) {
+            Text(
+                text = "SEEKBAR STYLE",
+                style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.Bold, letterSpacing = 0.8.sp),
+                color = subColor,
+            )
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.spacedBy(8.dp),
+            ) {
+                ProgressLineStyle.entries.forEach { style ->
+                    val selected = progressStyle == style
+                    Box(
+                        modifier = Modifier
+                            .weight(1f)
+                            .clip(RoundedCornerShape(14.dp))
+                            .background(if (selected) accent else chipBg)
+                            .clickable { PlayerSettings.setProgressLineStyle(style) }
+                            .padding(vertical = 10.dp),
+                        contentAlignment = Alignment.Center,
+                    ) {
+                        Text(
+                            text = style.label,
+                            style = MaterialTheme.typography.labelMedium.copy(fontWeight = FontWeight.SemiBold),
+                            color = if (selected) Color.White else titleColor,
+                            maxLines = 1,
+                        )
+                    }
+                }
+            }
+
+            Text(
+                text = "ARTWORK SHAPE",
+                style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.Bold, letterSpacing = 0.8.sp),
+                color = subColor,
+            )
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .horizontalScroll(rememberScrollState()),
+                horizontalArrangement = Arrangement.spacedBy(8.dp),
+            ) {
+                artShapeOptions.forEach { shapeName ->
+                    val selected = artShapeName == shapeName
+                    Box(
+                        modifier = Modifier
+                            .clip(RoundedCornerShape(14.dp))
+                            .background(if (selected) accent else chipBg)
+                            .border(
+                                width = 1.dp,
+                                color = if (selected) accent else Color.Transparent,
+                                shape = RoundedCornerShape(14.dp),
+                            )
+                            .clickable { PlayerSettings.setExpressivePlayerArtShape(shapeName) }
+                            .padding(horizontal = 12.dp, vertical = 9.dp),
+                    ) {
+                        Text(
+                            text = shapeName,
+                            style = MaterialTheme.typography.labelMedium.copy(fontWeight = FontWeight.SemiBold),
+                            color = if (selected) Color.White else titleColor,
+                        )
+                    }
+                }
+            }
+
+            Text(
+                text = "TRANSPORT CONTROLS SHAPE",
+                style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.Bold, letterSpacing = 0.8.sp),
+                color = subColor,
+            )
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .horizontalScroll(rememberScrollState()),
+                horizontalArrangement = Arrangement.spacedBy(8.dp),
+            ) {
+                controlShapeOptions.forEach { shapeName ->
+                    val selected = controlsShapeName == shapeName
+                    Box(
+                        modifier = Modifier
+                            .clip(RoundedCornerShape(14.dp))
+                            .background(if (selected) accent else chipBg)
+                            .clickable { PlayerSettings.setExpressiveControlsShape(shapeName) }
+                            .padding(horizontal = 12.dp, vertical = 9.dp),
+                    ) {
+                        Text(
+                            text = shapeName,
+                            style = MaterialTheme.typography.labelMedium.copy(fontWeight = FontWeight.SemiBold),
+                            color = if (selected) Color.White else titleColor,
+                        )
+                    }
+                }
+            }
+
+            RhythmSettingSwitchRow(
+                icon = Icons.Rounded.GraphicEq,
+                title = "Beat Impulse",
+                subtitle = "Pulse artwork with live bass & beat peaks",
+                checked = beatImpulse,
+                onCheckedChange = { PlayerSettings.setBeatImpulse(it) },
+            )
+            RhythmSettingSwitchRow(
+                icon = Icons.Rounded.Tune,
+                title = "Live Song Color Gradient",
+                subtitle = "Adapt glow & lyric highlight to album art",
+                checked = liveGradient,
+                onCheckedChange = { PlayerSettings.setLiveSongColorGradient(it) },
+            )
+            RhythmSettingSwitchRow(
+                icon = Icons.Rounded.VolumeUp,
+                title = "Show Quick Volume Strip",
+                subtitle = "Display inline output & volume indicator",
+                checked = !hideVolumeBar,
+                onCheckedChange = { PlayerSettings.setHideVolumeBar(!it) },
+            )
+            RhythmSettingSwitchRow(
+                icon = Icons.Rounded.MusicNote,
+                title = "Minimal Header Mode",
+                subtitle = "Hide quality & playback status badges",
+                checked = hideSongStatus,
+                onCheckedChange = { PlayerSettings.setHideSongStatus(it) },
+            )
+        }
+    }
+}
+
+@Composable
+private fun RhythmEqualizerCard(
+    visible: Boolean,
+    hazeState: HazeState,
+    onDismiss: () -> Unit,
+) {
+    val eqEnabled by PlayerSettings.equalizerEnabled.collectAsStateWithLifecycle()
+    val bands by PlayerSettings.equalizerBands.collectAsStateWithLifecycle()
+    val presetName by PlayerSettings.equalizerPresetName.collectAsStateWithLifecycle()
+    val balance by PlayerSettings.equalizerBalance.collectAsStateWithLifecycle()
+
+    val isDark = MaterialTheme.colorScheme.surface.luminance() < 0.5f
+    val titleColor = if (isDark) Color.White else Color(0xFF121215)
+    val subColor = if (isDark) Color.White.copy(alpha = 0.60f) else Color(0xFF555562)
+    val accent = MaterialTheme.colorScheme.primary
+    val chipBg = if (isDark) Color.White.copy(alpha = 0.08f) else Color.Black.copy(alpha = 0.05f)
+    val cardBg = if (isDark) Color.White.copy(alpha = 0.07f) else Color.Black.copy(alpha = 0.04f)
+    val presets = remember { EqualizerPreset.entries.filter { it != EqualizerPreset.CUSTOM } }
+    val bandLabels = remember {
+        EqLayout.MANUAL_BANDS_HZ.map { hz ->
+            if (hz >= 1000f) {
+                val khz = hz / 1000f
+                if (khz % 1f == 0f) "${khz.toInt()} kHz" else "$khz kHz"
+            } else {
+                "${hz.toInt()} Hz"
+            }
+        }
+    }
+    val maxRange = EqLayout.MANUAL_RANGE_DB
+
+    HushCenteredCardHost(
+        visible = visible,
+        onDismiss = onDismiss,
+        hazeState = hazeState,
+        title = "Equalizer",
+        subtitle = if (eqEnabled) {
+            presetName.replace('_', ' ').lowercase().replaceFirstChar { it.uppercase() }
+        } else {
+            "Bypassed · Tap to enable"
+        },
+        maxWidth = 420.dp,
+        maxHeight = 640.dp,
+        headerEnd = {
+            Box(
+                modifier = Modifier
+                    .clip(RoundedCornerShape(14.dp))
+                    .background(chipBg)
+                    .clickable {
+                        PlayerSettings.setEqualizerEnabled(true)
+                        PlayerSettings.applyEqualizerPreset(EqualizerPreset.FLAT.name)
+                    }
+                    .padding(horizontal = 10.dp, vertical = 6.dp),
+            ) {
+                Text(
+                    text = "Reset",
+                    style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.Bold),
+                    color = titleColor,
+                )
+            }
+        },
+    ) {
+        Column(
+            modifier = Modifier
+                .fillMaxWidth()
+                .verticalScroll(rememberScrollState()),
+            verticalArrangement = Arrangement.spacedBy(12.dp),
+        ) {
+            RhythmSettingSwitchRow(
+                icon = Icons.Rounded.GraphicEq,
+                title = "Enable Equalizer",
+                subtitle = if (eqEnabled) "Active on live PCM pipeline" else "Pass-through studio flat audio",
+                checked = eqEnabled,
+                onCheckedChange = { PlayerSettings.setEqualizerEnabled(it) },
+            )
+
+            Text(
+                text = "PRESETS",
+                style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.Bold, letterSpacing = 0.8.sp),
+                color = subColor,
+            )
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .horizontalScroll(rememberScrollState()),
+                horizontalArrangement = Arrangement.spacedBy(8.dp),
+            ) {
+                presets.forEach { preset ->
+                    val selected = eqEnabled && presetName == preset.name
+                    val label = preset.name.replace('_', ' ').lowercase()
+                        .split(' ')
+                        .joinToString(" ") { w -> w.replaceFirstChar { it.uppercase() } }
+                    Box(
+                        modifier = Modifier
+                            .clip(RoundedCornerShape(14.dp))
+                            .background(if (selected) accent else chipBg)
+                            .clickable {
+                                PlayerSettings.setEqualizerEnabled(true)
+                                PlayerSettings.applyEqualizerPreset(preset.name)
+                            }
+                            .padding(horizontal = 12.dp, vertical = 8.dp),
+                    ) {
+                        Text(
+                            text = label,
+                            style = MaterialTheme.typography.labelMedium.copy(fontWeight = FontWeight.SemiBold),
+                            color = if (selected) Color.White else titleColor,
+                        )
+                    }
+                }
+            }
+
+            Text(
+                text = "FREQUENCY BANDS",
+                style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.Bold, letterSpacing = 0.8.sp),
+                color = subColor,
+            )
+
+            Column(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .clip(RoundedCornerShape(18.dp))
+                    .background(cardBg)
+                    .padding(horizontal = 14.dp, vertical = 10.dp),
+                verticalArrangement = Arrangement.spacedBy(6.dp),
+            ) {
+                bandLabels.forEachIndexed { idx, hzLabel ->
+                    val currentDb = bands.getOrElse(idx) { 0f }
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.spacedBy(10.dp),
+                    ) {
+                        Text(
+                            text = hzLabel,
+                            style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.SemiBold),
+                            color = titleColor,
+                            modifier = Modifier.width(52.dp),
+                        )
+                        Slider(
+                            value = currentDb,
+                            onValueChange = { nextDb ->
+                                val mutable = List(bandLabels.size) { i ->
+                                    if (i == idx) nextDb else bands.getOrElse(i) { 0f }
+                                }
+                                if (!eqEnabled) PlayerSettings.setEqualizerEnabled(true)
+                                PlayerSettings.setEqualizerBands(mutable)
+                            },
+                            valueRange = -maxRange..maxRange,
+                            modifier = Modifier.weight(1f),
+                            colors = SliderDefaults.colors(
+                                thumbColor = accent,
+                                activeTrackColor = accent,
+                                inactiveTrackColor = if (isDark) Color.White.copy(alpha = 0.16f) else Color.Black.copy(alpha = 0.12f),
+                            ),
+                        )
+                        val rounded = (currentDb * 10).toInt() / 10f
+                        Text(
+                            text = if (rounded > 0f) "+$rounded" else "$rounded",
+                            style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.Medium),
+                            color = subColor,
+                            modifier = Modifier.width(42.dp),
+                            textAlign = TextAlign.End,
+                        )
+                    }
+                }
+            }
+
+            Column(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .clip(RoundedCornerShape(18.dp))
+                    .background(cardBg)
+                    .padding(horizontal = 14.dp, vertical = 10.dp),
+            ) {
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.CenterVertically,
+                ) {
+                    Text(
+                        text = "Channel Balance",
+                        style = MaterialTheme.typography.bodyMedium.copy(fontWeight = FontWeight.SemiBold),
+                        color = titleColor,
+                    )
+                    Text(
+                        text = when {
+                            balance < -0.05f -> "L ${((-balance) * 100).toInt()}%"
+                            balance > 0.05f -> "R ${(balance * 100).toInt()}%"
+                            else -> "Center"
+                        },
+                        style = MaterialTheme.typography.labelMedium,
+                        color = subColor,
+                    )
+                }
+                Slider(
+                    value = balance,
+                    onValueChange = { next ->
+                        if (!eqEnabled) PlayerSettings.setEqualizerEnabled(true)
+                        PlayerSettings.setEqualizerBalance(if (kotlin.math.abs(next) < 0.04f) 0f else next)
+                    },
+                    valueRange = -1f..1f,
+                    colors = SliderDefaults.colors(
+                        thumbColor = accent,
+                        activeTrackColor = accent,
+                        inactiveTrackColor = if (isDark) Color.White.copy(alpha = 0.16f) else Color.Black.copy(alpha = 0.12f),
+                    ),
+                )
+            }
+        }
+    }
+}
+
+@Composable
+private fun RhythmSleepTimerCard(
+    visible: Boolean,
+    hazeState: HazeState,
+    onDismiss: () -> Unit,
+) {
+    val activeMinutes by PlayerPlatform.host.sleepTimerActiveMinutes.collectAsStateWithLifecycle()
+    val afterTrack by PlayerPlatform.host.sleepTimerAfterTrack.collectAsStateWithLifecycle()
+    val deadlineMs by PlayerPlatform.host.sleepTimerDeadlineMs.collectAsStateWithLifecycle()
+    var remainingMs by remember { mutableStateOf<Long?>(null) }
+
+    LaunchedEffect(visible, deadlineMs, afterTrack, activeMinutes) {
+        if (!visible) return@LaunchedEffect
+        while (true) {
+            remainingMs = PlayerPlatform.host.sleepTimerRemainingMs()
+            delay(1000L)
+        }
+    }
+
+    val isDark = MaterialTheme.colorScheme.surface.luminance() < 0.5f
+    val titleColor = if (isDark) Color.White else Color(0xFF121215)
+    val subColor = if (isDark) Color.White.copy(alpha = 0.62f) else Color(0xFF555562)
+    val accent = MaterialTheme.colorScheme.primary
+    val chipBg = if (isDark) Color.White.copy(alpha = 0.08f) else Color.Black.copy(alpha = 0.05f)
+
+    val statusText = when {
+        afterTrack -> "Stops at end of current track"
+        remainingMs != null && remainingMs!! > 0L -> {
+            val totalSec = remainingMs!! / 1000L
+            val m = totalSec / 60L
+            val s = totalSec % 60L
+            "Pauses in $m:${s.toString().padStart(2, '0')}"
+        }
+        activeMinutes != null -> "${activeMinutes}m active"
+        else -> "Timer is off"
+    }
+
+    val minuteOptions = remember { listOf(5, 10, 15, 20, 30, 45, 60) }
+
+    HushCenteredCardHost(
+        visible = visible,
+        onDismiss = onDismiss,
+        hazeState = hazeState,
+        title = "Sleep Timer",
+        subtitle = statusText,
+        maxWidth = 390.dp,
+        maxHeight = 480.dp,
+    ) {
+        Column(
+            modifier = Modifier.fillMaxWidth(),
+            verticalArrangement = Arrangement.spacedBy(10.dp),
+        ) {
+            minuteOptions.chunked(3).forEach { rowItems ->
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.spacedBy(8.dp),
+                ) {
+                    rowItems.forEach { mins ->
+                        val selected = !afterTrack && activeMinutes == mins
+                        Box(
+                            modifier = Modifier
+                                .weight(1f)
+                                .clip(RoundedCornerShape(14.dp))
+                                .background(if (selected) accent else chipBg)
+                                .clickable { PlayerPlatform.host.startSleepTimer(mins) }
+                                .padding(vertical = 12.dp),
+                            contentAlignment = Alignment.Center,
+                        ) {
+                            Text(
+                                text = "$mins min",
+                                style = MaterialTheme.typography.bodyMedium.copy(fontWeight = FontWeight.SemiBold),
+                                color = if (selected) Color.White else titleColor,
+                            )
+                        }
+                    }
+                    repeat(3 - rowItems.size) {
+                        Spacer(modifier = Modifier.weight(1f))
+                    }
+                }
+            }
+
+            Box(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .clip(RoundedCornerShape(14.dp))
+                    .background(if (afterTrack) accent else chipBg)
+                    .clickable { PlayerPlatform.host.startSleepTimerAfterTrack() }
+                    .padding(horizontal = 16.dp, vertical = 13.dp),
+                contentAlignment = Alignment.Center,
+            ) {
+                Text(
+                    text = "Stop After Current Track",
+                    style = MaterialTheme.typography.bodyMedium.copy(fontWeight = FontWeight.SemiBold),
+                    color = if (afterTrack) Color.White else titleColor,
+                )
+            }
+
+            if (activeMinutes != null || afterTrack) {
+                Box(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .clip(RoundedCornerShape(14.dp))
+                        .background(Color(0xFFDC2626).copy(alpha = 0.16f))
+                        .clickable { PlayerPlatform.host.cancelSleepTimer() }
+                        .padding(vertical = 12.dp),
+                    contentAlignment = Alignment.Center,
+                ) {
+                    Text(
+                        text = "Turn Off Timer",
+                        style = MaterialTheme.typography.bodyMedium.copy(fontWeight = FontWeight.Bold),
+                        color = Color(0xFFEF4444),
+                    )
+                }
+            }
+        }
+    }
 }
 

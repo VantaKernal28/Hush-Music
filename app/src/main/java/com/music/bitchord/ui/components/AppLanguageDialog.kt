@@ -109,6 +109,7 @@ fun AppLanguageDialog(
     onDismiss: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
+    val context = LocalContext.current
     val reduceDynamicBlur by AppSettings.reduceDynamicBlur.collectAsStateWithLifecycle()
 
     // Ten quick taps on the title swap this dialog for the tester-code field.
@@ -124,8 +125,8 @@ fun AppLanguageDialog(
 
     val shape = RoundedCornerShape(ALERT_CORNER)
     // Full script tag (zh-Hant / zh-Hans preserved); legacy bare "zh" reads as Simplified.
-    val currentLanguage = com.music.bitchord.data.LocaleTags.normalizeAppTag(
-        AppCompatDelegate.getApplicationLocales().get(0)?.toLanguageTag()
+    val currentLanguage = AppLocaleHelper.normalizeLanguageTag(
+        AppLocaleHelper.resolveSavedLanguageTag(context)
             ?: Locale.getDefault().toLanguageTag(),
     )
 
@@ -207,12 +208,14 @@ fun AppLanguageDialog(
                     AlertRule()
                     LanguageRow(
                         language = language,
-                        selected = com.music.bitchord.data.LocaleTags.normalizeAppTag(language.tag) == currentLanguage,
+                        selected = AppLocaleHelper.normalizeLanguageTag(language.tag) == currentLanguage,
                         onClick = {
-                            AppCompatDelegate.setApplicationLocales(
-                                LocaleListCompat.forLanguageTags(language.tag),
-                            )
+                            val languageName = context.getString(language.nameRes)
+                            AppLocaleHelper.applyLanguageSelection(context, language.tag)
                             onDismiss()
+                            AppRestartController.requestRestart(
+                                "Language changed to $languageName. Restart Hush Music to apply it across every screen.",
+                            )
                         },
                     )
                 }

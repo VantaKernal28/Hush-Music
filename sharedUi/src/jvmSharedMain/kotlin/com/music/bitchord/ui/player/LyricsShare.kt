@@ -73,6 +73,8 @@ data class LyricsShareRequest(
     /** Resolved sleeve — remote URL or local file, whatever the player found. */
     val artworkUrl: String?,
     val lines: List<LyricsShareLine>,
+    val allLines: List<LyricsShareLine> = lines,
+    val selectedIndices: List<Int> = lines.indices.toList(),
 )
 
 /**
@@ -264,7 +266,22 @@ internal fun rememberLyricsPicker(
         // An empty pick draws nothing worth sending, so it is simply left alone
         // rather than putting an empty card on screen to be dismissed.
         if (picked.isNotEmpty()) {
-            onCard(LyricsShareRequest(song = song, artworkUrl = artworkUrl, lines = picked))
+            val allShareLines = source.mapIndexed { i, l ->
+                val s = subLines?.getOrNull(i)?.text
+                LyricsShareLine(
+                    text = l.text,
+                    subText = s?.takeIf { it.isNotBlank() && it != l.text },
+                )
+            }
+            onCard(
+                LyricsShareRequest(
+                    song = song,
+                    artworkUrl = artworkUrl,
+                    lines = picked,
+                    allLines = allShareLines,
+                    selectedIndices = chosen,
+                ),
+            )
         }
         cancel()
     }

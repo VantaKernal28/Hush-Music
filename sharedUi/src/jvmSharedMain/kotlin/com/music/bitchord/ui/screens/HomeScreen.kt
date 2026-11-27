@@ -185,6 +185,10 @@ fun HomeScreen(
     onMoodClick: ((TopPickMood, String) -> Unit)? = null,
     /** Find Your Mood's Show all: every mood and activity. */
     onMoodsShowAll: () -> Unit = {},
+    /** Interactive M3E Hero "Your Mix" Shuffle action. */
+    onShuffleMix: (() -> Unit)? = null,
+    /** Opens the interactive "Your Mix" liquid popup card when the hero artwork shape is tapped. */
+    onHeroMixClick: (() -> Unit)? = null,
     /** Whether the Top Picks and mood artwork may animate — see [LocalArtworkMotion]. */
     artworkMotion: Boolean = true,
 ) {
@@ -237,6 +241,8 @@ fun HomeScreen(
                         festiveLogo = festiveLogo,
                         onFestiveLogoClick = onFestiveLogoClick,
                         heroArtworkUri = heroArt,
+                        onShuffleMix = onShuffleMix,
+                        onHeroMixClick = onHeroMixClick,
                     )
                 }
             }
@@ -636,6 +642,8 @@ private fun HomeTitle(
     festiveLogo: Boolean = false,
     onFestiveLogoClick: (() -> Unit)? = null,
     heroArtworkUri: String? = null,
+    onShuffleMix: (() -> Unit)? = null,
+    onHeroMixClick: (() -> Unit)? = null,
 ) {
     val hour = remember { java.util.Calendar.getInstance().get(java.util.Calendar.HOUR_OF_DAY) }
     val name = listenerName?.takeIf { it.isNotBlank() && it != "Listener" }
@@ -729,7 +737,7 @@ private fun HomeTitle(
                                 .clip(M3EShapes.Scallop12)
                                 .background(MaterialTheme.colorScheme.primary)
                                 .m3eSquish()
-                                .clickable { },
+                                .clickable { (onShuffleMix ?: onHeroMixClick)?.invoke() },
                             contentAlignment = Alignment.Center,
                         ) {
                             Icon(
@@ -760,10 +768,12 @@ private fun HomeTitle(
                     Box(
                         modifier = Modifier
                             .size(110.dp)
+                            .m3eSquish()
                             .graphicsLayer { rotationZ = heroRotation }
                             .clip(heroArtShape)
                             .background(MaterialTheme.colorScheme.primaryContainer)
-                            .border(1.5.dp, MaterialTheme.colorScheme.primary.copy(alpha = 0.35f), heroArtShape),
+                            .border(1.5.dp, MaterialTheme.colorScheme.primary.copy(alpha = 0.35f), heroArtShape)
+                            .clickable { onHeroMixClick?.invoke() },
                         contentAlignment = Alignment.Center,
                     ) {
                         if (!heroArtworkUri.isNullOrBlank()) {

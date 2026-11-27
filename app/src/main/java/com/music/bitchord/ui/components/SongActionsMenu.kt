@@ -7,12 +7,17 @@ import androidx.compose.ui.layout.ContentScale
 import com.music.bitchord.R
 
 import android.net.Uri
+import android.os.Build
+import android.view.WindowManager
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.interaction.MutableInteractionSource
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.ColumnScope
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
@@ -21,6 +26,8 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.rounded.AutoAwesome
 import androidx.compose.material.icons.rounded.Check
 import androidx.compose.material.icons.rounded.ErrorOutline
 import androidx.compose.material3.CircularProgressIndicator
@@ -32,6 +39,7 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.DisposableEffect
+import androidx.compose.runtime.SideEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.produceState
@@ -41,6 +49,10 @@ import androidx.compose.runtime.setValue
 import androidx.compose.runtime.staticCompositionLocalOf
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalView
+import androidx.compose.ui.window.Dialog
+import androidx.compose.ui.window.DialogProperties
+import androidx.compose.ui.window.DialogWindowProvider
 import androidx.compose.ui.res.pluralStringResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.draw.clip
@@ -108,6 +120,7 @@ fun SongActionsMenu(
     onAddToQueue: () -> Unit,
     onStartRadio: () -> Unit,
     onDownload: () -> Unit,
+    onSaveLocally: (() -> Unit)? = null,
     /**
      * Copies this track to the WebDAV server. Null hides the row — the caller
      * passes one only for a readable device file while a server is
@@ -164,6 +177,7 @@ fun SongActionsMenu(
      */
     audioVersionMissing: Boolean = false,
     onShare: (() -> Unit)? = null,
+    onShareLyricsCard: (() -> Unit)? = null,
     /**
      * Copies what the app logged while starting this track. Null everywhere
      * except the player, where "this track" means something.
@@ -187,8 +201,10 @@ fun SongActionsMenu(
 ) {
     var showingSongInfo by remember(song.videoId) { mutableStateOf(false) }
     var pickingSleepTimer by remember { mutableStateOf(false) }
-    // A menu has no pages to swap, so Song Info opens as a dialog.
+    var pickingShareTab by remember(song.videoId) { mutableStateOf(false) }
+    // A menu has no pages to swap, so Song Info and Sleep Timer open as centered frosted cards.
     if (showingSongInfo) SongInfoDialog(song) { showingSongInfo = false }
+    if (pickingSleepTimer) SleepTimerDialog { pickingSleepTimer = false }
     // Neutral rather than the sleeve's colours: the panel floats over the page
     // or the player, and an accent pitched against the artwork's tint is not
     // guaranteed to read against the panel.
@@ -210,7 +226,7 @@ fun SongActionsMenu(
 
         // Leads with the actions it is opened for most, as tiles: the rating
         // — kept up after a tap, so the new state shows in place — and Share.
-        if (canRate || shareAction != null) {
+        if (canRate || shareAction != null || onShareLyricsCard != null) {
             if (startsGroup()) IosMenuSeparator()
             IosMenuQuickActions {
                 if (canRate) {
@@ -231,8 +247,18 @@ fun SongActionsMenu(
                         onClick = onToggleDislike,
                     )
                 }
-                shareAction?.let {
-                    IosMenuQuickAction(icon = SfIcons.Share, label = stringResource(R.string.share), onClick = it)
+                if (shareAction != null || onShareLyricsCard != null) {
+                    IosMenuQuickAction(
+                        icon = SfIcons.Share,
+                        label = stringResource(R.string.share),
+                        onClick = {
+                            if (onShareLyricsCard != null) {
+                                pickingShareTab = true
+                            } else {
+                                shareAction?.invoke()
+                            }
+                        },
+                    )
                 }
             }
         }
@@ -329,6 +355,16 @@ fun SongActionsMenu(
             onClick = onAddToQueue,
         )
         DownloadRow(song, palette, isOffline, onDownload)
+        if (!isOffline) {
+            onSaveLocally?.let { saveLocal ->
+                ActionRow(
+                    icon = SfIcons.Download,
+                    label = "Save file locally",
+                    accent = palette.accent,
+                    onClick = saveLocal,
+                )
+            }
+        }
         onRemoveFromCache?.let {
             ActionRow(
                 icon = SfIcons.Trash,
@@ -374,6 +410,15 @@ fun SongActionsMenu(
         ActionRow(SfIcons.Info, stringResource(R.string.song_info), accent = palette.accent) {
             showingSongInfo = true
         }
+        onShareLyricsCard?.let { openCard ->
+            ActionRow(
+                icon = Icons.Rounded.AutoAwesome,
+                label = "Lyric Card Maker",
+                description = "Hush card, Album Gradient & Add to Story",
+                accent = palette.accent,
+                onClick = openCard,
+            )
+        }
 
         // The player's own: about the track playing right now rather than
         // about the song as a thing in a library.
@@ -417,10 +462,39 @@ fun SongActionsMenu(
 
     CompositionLocalProvider(LocalActionRowStyle provides ActionRowStyle.Menu) {
         Column(modifier.fillMaxWidth().verticalScroll(rememberScrollState())) {
-            // The player's menu has the sleep timer, and swaps its rows for
-            // the picker in place.
-            if (pickingSleepTimer) {
-                SleepTimerPicker(palette = palette, onBack = { pickingSleepTimer = false })
+            if (pickingShareTab) {
+                SleepTimerHeader(
+                    title = stringResource(R.string.share),
+                    subtitle = song.title,
+                    onBack = { pickingShareTab = false },
+                )
+                HorizontalDivider(thickness = 0.5.dp, color = palette.divider)
+                onShareLyricsCard?.let { openCard ->
+                    ActionRow(
+                        icon = Icons.Rounded.AutoAwesome,
+                        label = "Lyric Card Maker",
+                        description = "Live preview, cover shapes, theme & Add to Story",
+                        accent = palette.accent,
+                        onClick = {
+                            pickingShareTab = false
+                            openCard()
+                        },
+                    )
+                }
+                if (!isOffline) {
+                    onShare?.let { shareLink ->
+                        ActionRow(
+                            icon = SfIcons.Share,
+                            label = "Share Song Link",
+                            description = "Send YouTube Music link",
+                            accent = palette.accent,
+                            onClick = {
+                                pickingShareTab = false
+                                shareLink()
+                            },
+                        )
+                    }
+                }
             } else {
                 rows()
             }
@@ -595,6 +669,58 @@ private fun WebDavUploadRow(
 }
 
 /** End of track or a duration, plus a way out once one is running. */
+@Composable
+private fun SleepTimerDialog(onDismiss: () -> Unit) {
+    val palette = neutralMenuPalette()
+    Dialog(
+        onDismissRequest = onDismiss,
+        properties = DialogProperties(
+            usePlatformDefaultWidth = false,
+            decorFitsSystemWindows = false,
+        ),
+    ) {
+        val view = LocalView.current
+        SideEffect {
+            val window = (view.parent as? DialogWindowProvider)?.window ?: return@SideEffect
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
+                window.addFlags(WindowManager.LayoutParams.FLAG_BLUR_BEHIND)
+                window.attributes = window.attributes.apply {
+                    blurBehindRadius = 48
+                }
+            }
+            window.setDimAmount(0.45f)
+        }
+        Box(
+            modifier = Modifier
+                .fillMaxSize()
+                .clickable(
+                    interactionSource = remember { MutableInteractionSource() },
+                    indication = null,
+                    onClick = onDismiss,
+                ),
+            contentAlignment = Alignment.Center,
+        ) {
+            HushCenteredCard(
+                onDismiss = onDismiss,
+                title = stringResource(R.string.sleep_timer),
+                maxWidth = 390.dp,
+                maxHeight = 560.dp,
+                dismissOnBackdropClick = false,
+            ) {
+                CompositionLocalProvider(LocalActionRowStyle provides ActionRowStyle.Menu) {
+                    Column(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .verticalScroll(rememberScrollState()),
+                    ) {
+                        SleepTimerPicker(palette = palette, onBack = onDismiss)
+                    }
+                }
+            }
+        }
+    }
+}
+
 @Composable
 private fun SleepTimerPicker(palette: ArtworkPalette, onBack: () -> Unit) {
     val chosen by SleepTimer.minutes.collectAsStateWithLifecycle()

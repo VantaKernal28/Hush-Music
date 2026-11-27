@@ -89,7 +89,6 @@ android {
             abiFilters.clear()
             abiFilters += listOf("arm64-v8a", "armeabi-v7a", "x86_64")
         }
-        resourceConfigurations += listOf("en", "hi", "te", "ta")
         // Last.fm credentials are supplied locally and never committed.
         buildConfigField("String", "LASTFM_API_KEY", "\"${lastfmApiKey.replace("\\", "\\\\").replace("\"", "\\\"")}\"")
         buildConfigField("String", "LASTFM_SECRET", "\"${lastfmSecret.replace("\\", "\\\\").replace("\"", "\\\"")}\"")

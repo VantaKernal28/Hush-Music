@@ -455,7 +455,34 @@ object AppSettings {
     val expressiveUiEnabled = MutableStateFlow(true)
 
     /** Material UI Theme Mode: tactile Google/M3 expanded tab bar, squircle player buttons, segmented timeline. */
-    val materialUiMode = MutableStateFlow(false)
+    val materialUiMode = MutableStateFlow(true)
+
+    /** Persisted BCP-47 app language tag (`null` = system default). */
+    val appLanguageTag = MutableStateFlow<String?>(null)
+
+    /** Pause audio automatically when volume hits zero. */
+    val pauseOnZeroVolume = MutableStateFlow(false)
+
+    /** Use Android's system music volume instead of a local player-only level. */
+    val useSystemVolume = MutableStateFlow(true)
+
+    /** Resume playback automatically if paused by zero volume and volume goes back up. */
+    val autoResumeOnVolume = MutableStateFlow(true)
+
+    /** App-specific normalized player volume (`0f..1f`) when `useSystemVolume` is disabled. */
+    val appPlayerVolume = MutableStateFlow(1.0f)
+
+    /** Suppress automatic Landscape Display Mode prompt when rotating to landscape. */
+    val dontShowDisplayModePrompt = MutableStateFlow(false)
+
+    /** Whether the interactive spotlight tutorial has been completed or skipped. */
+    val tutorialCompleted = MutableStateFlow(false)
+
+    /** Total app launch count (used for periodic subtle tips/promos). */
+    val appLaunchCount = MutableStateFlow(0)
+
+    /** Launch count at which the Playlist Maker promo card was last shown. */
+    val lastPlaylistPromptLaunch = MutableStateFlow(0)
 
     /** M3E Navigation Bar width factor (0.70f to 1.0f). */
     val m3eNavBarWidth = MutableStateFlow(0.92f)
@@ -1128,7 +1155,16 @@ object AppSettings {
         themeAccent.value = prefs.getString(KEY_THEME_ACCENT, "dynamic") ?: "dynamic"
         expressiveMode.value = prefs.getBoolean(KEY_EXPRESSIVE_MODE, false)
         expressiveUiEnabled.value = prefs.getBoolean(KEY_EXPRESSIVE_UI_ENABLED, true)
-        materialUiMode.value = prefs.getBoolean(KEY_MATERIAL_UI_MODE, false)
+        materialUiMode.value = prefs.getBoolean(KEY_MATERIAL_UI_MODE, true)
+        appLanguageTag.value = prefs.getString(KEY_APP_LANGUAGE_TAG, null)?.takeIf { it.isNotBlank() }
+        pauseOnZeroVolume.value = prefs.getBoolean(KEY_PAUSE_ON_ZERO_VOLUME, false)
+        useSystemVolume.value = prefs.getBoolean(KEY_USE_SYSTEM_VOLUME, true)
+        autoResumeOnVolume.value = prefs.getBoolean(KEY_AUTO_RESUME_ON_VOLUME, true)
+        appPlayerVolume.value = prefs.getFloat(KEY_APP_PLAYER_VOLUME, 1.0f).coerceIn(0f, 1f)
+        dontShowDisplayModePrompt.value = prefs.getBoolean(KEY_DONT_SHOW_DISPLAY_MODE_PROMPT, false)
+        tutorialCompleted.value = prefs.getBoolean(KEY_TUTORIAL_COMPLETED, false)
+        appLaunchCount.value = prefs.getInt(KEY_APP_LAUNCH_COUNT, 0)
+        lastPlaylistPromptLaunch.value = prefs.getInt(KEY_LAST_PLAYLIST_PROMPT_LAUNCH, 0)
         m3eNavBarWidth.value = prefs.getFloat(KEY_M3E_NAV_BAR_WIDTH, 0.92f).coerceIn(0.70f, 1.0f)
         m3eNavBarHeight.value = prefs.getInt(KEY_M3E_NAV_BAR_HEIGHT, 64).coerceIn(56, 84)
         m3eNavBarPadding.value = prefs.getInt(KEY_M3E_NAV_BAR_PADDING, 8).coerceIn(0, 24)
@@ -1609,6 +1645,61 @@ object AppSettings {
     fun setMaterialUiMode(value: Boolean) {
         materialUiMode.value = value
         prefs.edit().putBoolean(KEY_MATERIAL_UI_MODE, value).apply()
+    }
+
+    fun setAppLanguageTag(tag: String?) {
+        val clean = tag?.takeIf { it.isNotBlank() }
+        appLanguageTag.value = clean
+        prefs.edit().apply {
+            if (clean == null) remove(KEY_APP_LANGUAGE_TAG) else putString(KEY_APP_LANGUAGE_TAG, clean)
+        }.commit()
+    }
+
+    fun setPauseOnZeroVolume(value: Boolean) {
+        pauseOnZeroVolume.value = value
+        prefs.edit().putBoolean(KEY_PAUSE_ON_ZERO_VOLUME, value).apply()
+    }
+
+    fun setUseSystemVolume(value: Boolean) {
+        useSystemVolume.value = value
+        prefs.edit().putBoolean(KEY_USE_SYSTEM_VOLUME, value).apply()
+    }
+
+    fun setAutoResumeOnVolume(value: Boolean) {
+        autoResumeOnVolume.value = value
+        prefs.edit().putBoolean(KEY_AUTO_RESUME_ON_VOLUME, value).apply()
+    }
+
+    fun setAppPlayerVolume(value: Float) {
+        val clamped = value.coerceIn(0f, 1f)
+        appPlayerVolume.value = clamped
+        prefs.edit().putFloat(KEY_APP_PLAYER_VOLUME, clamped).apply()
+    }
+
+    fun setDontShowDisplayModePrompt(value: Boolean) {
+        dontShowDisplayModePrompt.value = value
+        prefs.edit().putBoolean(KEY_DONT_SHOW_DISPLAY_MODE_PROMPT, value).apply()
+    }
+
+    fun setTutorialCompleted(value: Boolean) {
+        tutorialCompleted.value = value
+        prefs.edit().putBoolean(KEY_TUTORIAL_COMPLETED, value).apply()
+    }
+
+    fun resetTutorial() {
+        setTutorialCompleted(false)
+    }
+
+    fun recordAppLaunch(): Int {
+        val next = (appLaunchCount.value + 1).coerceAtLeast(1)
+        appLaunchCount.value = next
+        prefs.edit().putInt(KEY_APP_LAUNCH_COUNT, next).apply()
+        return next
+    }
+
+    fun markPlaylistPromptShown(launchCount: Int) {
+        lastPlaylistPromptLaunch.value = launchCount
+        prefs.edit().putInt(KEY_LAST_PLAYLIST_PROMPT_LAUNCH, launchCount).apply()
     }
 
     fun setM3eNavBarWidth(value: Float) {
@@ -2820,6 +2911,15 @@ object AppSettings {
     private const val KEY_DISCORD_BUTTON_2_VISIBLE = "discord_button_2_visible"
     private const val KEY_DISCORD_INFO_DISMISSED = "discord_info_dismissed"
     private const val KEY_LAST_VERSION_CODE = "last_version_code"
+    private const val KEY_APP_LANGUAGE_TAG = "app_language_tag"
+    private const val KEY_PAUSE_ON_ZERO_VOLUME = "pause_on_zero_volume"
+    private const val KEY_USE_SYSTEM_VOLUME = "use_system_volume"
+    private const val KEY_AUTO_RESUME_ON_VOLUME = "auto_resume_on_volume"
+    private const val KEY_APP_PLAYER_VOLUME = "app_player_volume"
+    private const val KEY_DONT_SHOW_DISPLAY_MODE_PROMPT = "dont_show_display_mode_prompt"
+    private const val KEY_TUTORIAL_COMPLETED = "hush_tutorial_completed"
+    private const val KEY_APP_LAUNCH_COUNT = "hush_app_launch_count"
+    private const val KEY_LAST_PLAYLIST_PROMPT_LAUNCH = "hush_last_playlist_prompt_launch"
 }
 
 

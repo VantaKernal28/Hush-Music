@@ -403,6 +403,10 @@ internal fun shouldSkipAfterDislike(
 
 
 class MainActivity : AppCompatActivity() {
+    override fun attachBaseContext(newBase: Context) {
+        super.attachBaseContext(com.music.bitchord.ui.components.AppLocaleHelper.wrapBaseContext(newBase))
+    }
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
@@ -847,6 +851,9 @@ private fun BitChordApp(
     onboardingShown.targetState = !onboardingComplete
     val onboardingVisible = onboardingShown.currentState || onboardingShown.targetState
 
+    val appLaunchCount = rememberSaveable { AppSettings.recordAppLaunch() }
+    val pendingRestartReason by com.music.bitchord.ui.components.AppRestartController.pendingReason.collectAsStateWithLifecycle()
+
     // ---- Diwali (greeting once after the welcome, golden home wordmark) ----
     // Indian users only, by the device timezone alone, and only on Diwali
     // itself (see DiwaliGate). Asked again each time the app comes to the
@@ -924,6 +931,37 @@ private fun BitChordApp(
     // doesn't bring it back — only a fresh launch does.
     var updateDialogShown by rememberSaveable { mutableStateOf(false) }
     var showUpdateDialog by remember { mutableStateOf(false) }
+    var showYourMixCard by remember { mutableStateOf(false) }
+    var lyricsCardTarget by remember { mutableStateOf<com.music.bitchord.ui.player.LyricsShareRequest?>(null) }
+    var displayModePromptedThisLaunch by rememberSaveable { mutableStateOf(false) }
+    var showDisplayModePrompt by remember { mutableStateOf(false) }
+    var showStandByDisplayMode by rememberSaveable { mutableStateOf(false) }
+    val dontShowDisplayModePrompt by AppSettings.dontShowDisplayModePrompt.collectAsStateWithLifecycle()
+    val configuration = androidx.compose.ui.platform.LocalConfiguration.current
+    val isLandscapeOrientation = configuration.orientation == android.content.res.Configuration.ORIENTATION_LANDSCAPE
+
+    LaunchedEffect(isLandscapeOrientation, onboardingComplete, dontShowDisplayModePrompt) {
+        if (!isLandscapeOrientation) {
+            showDisplayModePrompt = false
+            showStandByDisplayMode = false
+        } else if (onboardingComplete &&
+            !dontShowDisplayModePrompt &&
+            !displayModePromptedThisLaunch &&
+            !showStandByDisplayMode &&
+            !(player.song?.isVideo == true && playerRaised)
+        ) {
+            displayModePromptedThisLaunch = true
+            showDisplayModePrompt = true
+        }
+    }
+
+    val tutorialCompleted by AppSettings.tutorialCompleted.collectAsStateWithLifecycle()
+    LaunchedEffect(tutorialCompleted, onboardingComplete) {
+        if (onboardingComplete && !tutorialCompleted) {
+            while (navigator.pop()) {}
+            selectedTab = TAB_HOME
+        }
+    }
     val updateAvailable by viewModel.updateAvailable.collectAsStateWithLifecycle()
 
     /**
@@ -1926,12 +1964,16 @@ private fun BitChordApp(
         type: BrowseType,
         artwork: String? = null,
     ) {
-        if (browseId != null) {
-            val credit = subtitle ?: context.getString(
-                if (type == BrowseType.ARTIST) R.string.artist else R.string.album,
-            )
-            viewModel.openDetail(browseId, name, credit, artwork, type)
-            return
+        if (!browseId.isNullOrBlank()) {
+            val cleanId = if (browseId.startsWith("MPLAUC")) browseId.removePrefix("MPLA") else browseId
+            val validForType = type != BrowseType.ARTIST || cleanId.startsWith("UC") || cleanId.startsWith(LocalGroups.PREFIX)
+            if (validForType) {
+                val credit = subtitle ?: context.getString(
+                    if (type == BrowseType.ARTIST) R.string.artist else R.string.album,
+                )
+                viewModel.openDetail(cleanId, name, credit, artwork, type)
+                return
+            }
         }
         scope.launch {
             val filter = if (type == BrowseType.ARTIST) {
@@ -2735,9 +2777,12 @@ private fun BitChordApp(
             // picture, and the page fills its own in once loaded.
             onOpenArtist = { id, name ->
                 dismissPlayer()
-                if (!id.isNullOrBlank()) {
+                val channelId = id?.removePrefix("MPLA")?.takeIf {
+                    it.startsWith("UC") || it.startsWith(LocalGroups.PREFIX)
+                }
+                if (channelId != null) {
                     viewModel.openDetail(
-                        id,
+                        channelId,
                         name,
                         context.getString(R.string.artist),
                         null,
@@ -2745,7 +2790,8 @@ private fun BitChordApp(
                     )
                 } else {
                     scope.launch {
-                        val primary = name.primaryArtist()
+                        val primary = name.primaryArtist().ifBlank { name.trim() }
+                        if (primary.isBlank()) return@launch
                         val found = YtMusicRepository.findArtistPageId(primary).getOrNull()
                             ?: YtMusicRepository.search(primary, SearchFilter.ARTISTS).getOrNull()
                                 ?.filterIsInstance<SearchResult.Browse>()
@@ -3002,8 +3048,9 @@ private fun BitChordApp(
                     // This state belongs to this AnimatedContent slot, not to
                     // whichever detail happens to be at the top of the stack
                     // while the slot is fading out.
+                    val stateKey = (destination as? AppDestination.Release)?.browseId ?: key
                     val pageDetailListState = remember(key) {
-                        detailListStates.getOrPut(key) { LazyListState() }
+                        detailListStates.getOrPut(stateKey) { LazyListState() }
                     }
                     val pageContent: @Composable () -> Unit = {
                         if (pageRoute == AppRoute.History) {
@@ -3366,7 +3413,7 @@ private fun BitChordApp(
                                                 title = item.title,
                                                 subtitle = item.subtitle,
                                                 thumbnailUrl = item.thumbnailUrl,
-                                                type = BrowseType.ALBUM,
+                                                type = MainViewModel.browseTypeOf(id),
                                             )
                                         }
                                     }
@@ -3377,11 +3424,7 @@ private fun BitChordApp(
                                 searching = detailSearching && page.browseId == detail?.browseId,
                                 onSearchingChange = { detailSearching = it },
                                 onArtistClick = { id, name ->
-                                    if (id.isNotBlank()) {
-                                        viewModel.openDetail(id, name, "Artist", null, BrowseType.ARTIST)
-                                    } else {
-                                        openByName(null, name, "Artist", BrowseType.ARTIST)
-                                    }
+                                    openByName(id.takeIf { it.isNotBlank() }, name, context.getString(R.string.artist), BrowseType.ARTIST)
                                 },
                                 onAddSuggested = { song -> viewModel.addSuggestedSong(page.browseId, song) },
                                 // Saving is an account action, so it isn't offered to a
@@ -3486,6 +3529,32 @@ private fun BitChordApp(
                                 onTopPickClick = openTopPick.takeUnless { hideTopPicks },
                                 onMoodClick = playMood.takeUnless { hideHomeMoods },
                                 onMoodsShowAll = { navigator.push(AppRoute.Moods) },
+                                onShuffleMix = {
+                                    val cached = (visibleHomeState as? UiState.Success)?.data
+                                        ?.flatMap { it.items }
+                                        ?.mapNotNull { shelfSong(it) }
+                                        ?.distinctBy { it.videoId }
+                                        .orEmpty()
+                                    if (cached.isNotEmpty()) {
+                                        QueueShuffle.enableForNextQueue()
+                                        val shuffled = cached.shuffled()
+                                        playFrom(shuffled, 0, QueueSource("Your Mix", PlaybackSourceType.HOME))
+                                    } else {
+                                        val station = topPicks?.firstOrNull {
+                                            it.kind == TopPickKind.PERSONAL_STATION || it.kind == TopPickKind.DISCOVERY_STATION
+                                        }
+                                        if (station != null) {
+                                            scope.launch {
+                                                val fetched = TopPicks.queue(station).getOrNull().orEmpty()
+                                                if (fetched.isNotEmpty()) {
+                                                    QueueShuffle.enableForNextQueue()
+                                                    playFrom(fetched.shuffled(), 0, QueueSource("Your Mix", PlaybackSourceType.HOME))
+                                                }
+                                            }
+                                        }
+                                    }
+                                },
+                                onHeroMixClick = { showYourMixCard = true },
                                 // Nothing on Home is seen while the greeting covers it.
                                 artworkMotion = artworkMotion && !showDiwali,
                                 onTopPickLongPress = { pick ->
@@ -4231,14 +4300,18 @@ private fun BitChordApp(
                     }
                 }
 
-                // Sleek, compact animated AI pill button
-                if (route == null && detail == null) {
+                // Fade out completely on Search/Routes/Details and sit subtly faded elsewhere
+                AnimatedVisibility(
+                    visible = route == null && detail == null && selectedMoodGenre == null && selectedTab != TAB_SEARCH,
+                    enter = fadeIn(tween(240)),
+                    exit = fadeOut(tween(200)),
+                    modifier = Modifier
+                        .align(Alignment.TopStart)
+                        .statusBarsPadding()
+                        .padding(start = 16.dp, top = 12.dp),
+                ) {
                     AiPlaylistPillButton(
                         onClick = { showAiPlaylistMaker = true },
-                        modifier = Modifier
-                            .align(Alignment.TopStart)
-                            .statusBarsPadding()
-                            .padding(start = 16.dp, top = 12.dp),
                     )
                 }
 
@@ -4549,6 +4622,28 @@ private fun BitChordApp(
                         downloadSong(song)
                     }
                 },
+                onSaveLocally = if (song.localUri == null) {
+                    {
+                        songActions = null
+                        showQueueNotice("Saving \"${song.title}\" locally...")
+                        scope.launch {
+                            com.music.bitchord.download.LocalFileSaver
+                                .saveTrackToPublicMusic(context, song)
+                                .onSuccess { fileName ->
+                                    showQueueNotice("Saved to Music/${com.music.bitchord.download.DownloadStore.FOLDER}/$fileName")
+                                }
+                                .onFailure { err ->
+                                    Toast.makeText(
+                                        context,
+                                        err.message ?: "Could not save file locally",
+                                        Toast.LENGTH_SHORT,
+                                    ).show()
+                                }
+                        }
+                    }
+                } else {
+                    null
+                },
                 // The other direction: a device file going up to the
                 // server. Closed first, unlike a download — progress and
                 // the summary notice live outside the sheet.
@@ -4696,6 +4791,28 @@ private fun BitChordApp(
                 // drops it for a local file via `isOffline`, this catches
                 // the rest.
                 onShare = share.takeIf { song.videoId.isNotBlank() },
+                onShareLyricsCard = {
+                    val currentLines = if (song.videoId == player.song?.videoId) lyrics else null
+                    val preloaded = currentLines.orEmpty()
+                        .filter { it.text.isNotBlank() }
+                        .map { com.music.bitchord.ui.player.LyricsShareLine(text = it.text, subText = null) }
+                    val preSelected = if (preloaded.isNotEmpty()) {
+                        val posMs = player.position.positionMs
+                        val activeIdx = currentLines.orEmpty().indexOfLast { it.timeMs <= posMs }.coerceAtLeast(0)
+                        val endIdx = (activeIdx + 3).coerceAtMost(preloaded.lastIndex)
+                        (activeIdx..endIdx).toList()
+                    } else {
+                        emptyList()
+                    }
+                    songActions = null
+                    lyricsCardTarget = com.music.bitchord.ui.player.LyricsShareRequest(
+                        song = song,
+                        artworkUrl = song.artworkAt(544) ?: song.thumbnailUrl,
+                        lines = preSelected.mapNotNull { preloaded.getOrNull(it) },
+                        allLines = preloaded,
+                        selectedIndices = preSelected,
+                    )
+                },
                 onCopyLog = if (fromPlayer) {
                     {
                         songActions = null
@@ -4994,7 +5111,35 @@ private fun BitChordApp(
             }
         }
 
-        // ---- AI Playlist Maker ----
+        // ---- Playlist Maker ----
+        var playlistPromoShownThisLaunch by rememberSaveable { mutableStateOf(false) }
+        val lastPlaylistPromptLaunch by AppSettings.lastPlaylistPromptLaunch.collectAsStateWithLifecycle()
+        val showPlaylistMakerPromo = !playlistPromoShownThisLaunch &&
+            onboardingComplete &&
+            tutorialCompleted &&
+            appLaunchCount >= 15 &&
+            appLaunchCount % 15 == 0 &&
+            lastPlaylistPromptLaunch < appLaunchCount &&
+            !showDiwali &&
+            !showUpdateDialog &&
+            !showYourMixCard &&
+            !showAiPlaylistMaker &&
+            pendingRestartReason == null
+        if (showPlaylistMakerPromo) {
+            com.music.bitchord.ui.playlist.PlaylistMakerPromoCard(
+                hazeState = hazeState,
+                onTryNow = {
+                    playlistPromoShownThisLaunch = true
+                    AppSettings.markPlaylistPromptShown(appLaunchCount)
+                    showAiPlaylistMaker = true
+                },
+                onDismiss = {
+                    playlistPromoShownThisLaunch = true
+                    AppSettings.markPlaylistPromptShown(appLaunchCount)
+                },
+            )
+        }
+
         if (showAiPlaylistMaker) {
             val historyState by viewModel.history.collectAsStateWithLifecycle()
             val availableSongs = remember(historyState, topDetail, player.queue, player.song) {
@@ -5020,13 +5165,24 @@ private fun BitChordApp(
                         showQueueNotice("Saved playlist: $createdTitle")
                     }
                 },
+                hazeState = hazeState,
             )
         }
 
-        // ---- Song Mixer Sheet ----
+        // ---- Remix Studio Sheet ----
         if (showSongMixer) {
+            val mixerHistoryState by viewModel.history.collectAsStateWithLifecycle()
+            val mixerCandidates = remember(mixerHistoryState, topDetail, player.queue, player.song) {
+                val fromHistory = (mixerHistoryState as? com.music.bitchord.data.model.UiState.Success<List<Song>>)?.data.orEmpty()
+                val fromDetail = topDetail?.songs.orEmpty()
+                (player.queue + fromHistory + fromDetail)
+                    .distinctBy { it.videoId }
+                    .filter { it.videoId != player.song?.videoId }
+            }
             com.music.bitchord.ui.screens.SongMixerSheet(
                 song = player.song,
+                candidateSongs = mixerCandidates,
+                hazeState = hazeState,
                 onDismiss = { showSongMixer = false },
             )
         }
@@ -5268,6 +5424,19 @@ private fun BitChordApp(
                                 )
                             },
                     )
+                }.takeIf { downloadable },
+                onSaveLocally = act { songs ->
+                    val saveable = songs.filter { it.localUri == null }
+                    if (saveable.isEmpty()) {
+                        showQueueNotice("Already saved on device")
+                    } else {
+                        showQueueNotice("Saving ${saveable.size} tracks locally...")
+                        scope.launch {
+                            val (saved, total) = com.music.bitchord.download.LocalFileSaver
+                                .savePlaylistToPublicMusic(context, target.title, saveable)
+                            showQueueNotice("Saved $saved/$total tracks to Music/${com.music.bitchord.download.DownloadStore.FOLDER}")
+                        }
+                    }
                 }.takeIf { downloadable },
                 // The same link a share off YouTube Music's own overflow
                 // gives — built from the browse id rather than fetched,
@@ -6089,6 +6258,149 @@ private fun BitChordApp(
                 inOwnWindow = playerRaised || songActions != null || browseActions != null,
             )
         }
+
+        if (showYourMixCard) {
+            val cachedMixSongs = remember(visibleHomeState, player.song) {
+                buildList {
+                    player.song?.let(::add)
+                    (visibleHomeState as? UiState.Success)?.data
+                        ?.flatMap { it.items }
+                        ?.mapNotNull { shelfSong(it) }
+                        ?.let(::addAll)
+                }.distinctBy { it.videoId }.take(25)
+            }
+            val heroArt = player.song?.thumbnailUrl
+                ?: topPicks?.firstOrNull()?.images?.firstOrNull()
+                ?: (visibleHomeState as? UiState.Success)?.data?.firstOrNull()?.items?.firstOrNull()?.thumbnailUrl
+            com.music.bitchord.ui.components.YourMixCard(
+                listenerName = AppSettings.userName.value.ifBlank { account?.name },
+                heroArtworkUri = heroArt,
+                previewSongs = cachedMixSongs,
+                hazeState = hazeState,
+                onResolveMixSongs = {
+                    val station = topPicks?.firstOrNull {
+                        it.kind == TopPickKind.PERSONAL_STATION || it.kind == TopPickKind.DISCOVERY_STATION
+                    }
+                    val fetched = if (station != null) TopPicks.queue(station).getOrNull().orEmpty() else emptyList()
+                    (cachedMixSongs + fetched).distinctBy { it.videoId }.take(25)
+                },
+                onPlayMix = { songsToPlay ->
+                    playFrom(songsToPlay, 0, QueueSource("Your Mix", PlaybackSourceType.HOME))
+                },
+                onSaveAsPlaylist = { songsToSave ->
+                    val deferred = kotlinx.coroutines.CompletableDeferred<Boolean>()
+                    val dateStamp = java.text.SimpleDateFormat("MMM d", Locale.getDefault()).format(java.util.Date())
+                    val playlistTitle = "Your Mix · $dateStamp"
+                    viewModel.createPlaylistWithVideoIds(
+                        title = playlistTitle,
+                        privacy = com.music.bitchord.data.model.PlaylistPrivacy.PRIVATE,
+                        videoIds = songsToSave.map { it.videoId },
+                        songs = songsToSave,
+                    ) { _, title, _ ->
+                        Toast.makeText(context, "Saved \"$title\" to Library", Toast.LENGTH_SHORT).show()
+                        deferred.complete(true)
+                    }
+                    deferred.await()
+                },
+                onDismiss = { showYourMixCard = false },
+            )
+        }
+
+        if (showDisplayModePrompt && !showStandByDisplayMode) {
+            com.music.bitchord.ui.player.StandByDisplayModePromptCard(
+                hazeState = hazeState,
+                onEnterDisplayMode = {
+                    showDisplayModePrompt = false
+                    showStandByDisplayMode = true
+                },
+                onDismiss = { showDisplayModePrompt = false },
+                onDontShowAgain = {
+                    AppSettings.setDontShowDisplayModePrompt(true)
+                    showDisplayModePrompt = false
+                },
+            )
+        }
+
+        if (showStandByDisplayMode) {
+            com.music.bitchord.ui.player.StandByDisplayMode(
+                song = player.song,
+                isPlaying = player.isPlaying,
+                positionMs = player.position.positionMs,
+                durationMs = player.durationMs,
+                onPlayPause = { togglePlayPause() },
+                onNext = { controller?.seekToNextMediaItem() },
+                onPrevious = { controller?.seekToPrevious() },
+                onExit = { showStandByDisplayMode = false },
+            )
+        }
+
+        lyricsCardTarget?.let { req ->
+            if (playerRaised) {
+                androidx.compose.ui.window.Dialog(
+                    onDismissRequest = { lyricsCardTarget = null },
+                    properties = androidx.compose.ui.window.DialogProperties(
+                        usePlatformDefaultWidth = false,
+                        decorFitsSystemWindows = false,
+                    ),
+                ) {
+                    val view = androidx.compose.ui.platform.LocalView.current
+                    SideEffect {
+                        val window = (view.parent as? androidx.compose.ui.window.DialogWindowProvider)?.window
+                        if (window != null) {
+                            if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.S) {
+                                window.addFlags(android.view.WindowManager.LayoutParams.FLAG_BLUR_BEHIND)
+                                window.attributes = window.attributes.apply {
+                                    blurBehindRadius = 48
+                                }
+                            }
+                            window.setDimAmount(0.45f)
+                        }
+                    }
+                    val dialogHaze = remember { HazeState() }
+                    com.music.bitchord.ui.player.AndroidLyricsShareSheet(
+                        hazeState = dialogHaze,
+                        request = req,
+                        onDismiss = { lyricsCardTarget = null },
+                    )
+                }
+            } else {
+                com.music.bitchord.ui.player.AndroidLyricsShareSheet(
+                    hazeState = hazeState,
+                    request = req,
+                    onDismiss = { lyricsCardTarget = null },
+                )
+            }
+        }
+
+        val showTutorialOverlay = onboardingComplete &&
+            !tutorialCompleted &&
+            !showDiwali &&
+            !showUpdateDialog &&
+            !showYourMixCard &&
+            !showDisplayModePrompt &&
+            !showStandByDisplayMode &&
+            !showAiPlaylistMaker &&
+            pendingRestartReason == null
+        if (showTutorialOverlay) {
+            com.music.bitchord.ui.components.HushSpotlightTutorial(
+                hazeState = hazeState,
+                onComplete = { AppSettings.setTutorialCompleted(true) },
+            )
+        }
+
+        pendingRestartReason?.let { reason ->
+            com.music.bitchord.ui.components.AppRestartPromptCard(
+                reason = reason,
+                hazeState = hazeState,
+                onRestart = { com.music.bitchord.ui.components.AppRestartController.restartApp(context) },
+                onDismiss = { com.music.bitchord.ui.components.AppRestartController.dismiss() },
+            )
+        }
+
+        com.music.bitchord.ui.components.HushLaunchReveal(
+            enabled = onboardingComplete && appLaunchCount >= 1,
+            reduceAnimation = reducePlayerMotion,
+        )
 
     }
 }

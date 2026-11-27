@@ -1835,14 +1835,31 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
         }
     }
 
-    /** This app's own Replay chart for the month — Top Picks' second opinion, and all it has signed out. */
+    /** This app's own Replay chart — THIS_MONTH with THIS_YEAR/ALL_TIME fallback so Top Picks always reflects the user. */
     private suspend fun localTaste(): TopPicks.LocalTaste {
         val month = runCatching { ListeningStats.summary(ReplayPeriod.THIS_MONTH) }.getOrNull()
-            ?: return TopPicks.LocalTaste()
+        val yearOrAll = if (month == null || month.artists.size < 3 || month.songs.isEmpty()) {
+            runCatching { ListeningStats.summary(ReplayPeriod.ALL_TIME) }.getOrNull()
+        } else {
+            null
+        }
+        val artists = ((month?.artists.orEmpty()) + (yearOrAll?.artists.orEmpty()))
+            .distinctBy { it.title.lowercase() }
+            .take(10)
+            .map { ArtistRef(name = it.title, browseId = it.browseId) }
+        val songs = ((month?.songs.orEmpty()) + (yearOrAll?.songs.orEmpty()))
+            .distinctBy { it.song.videoId }
+            .take(8)
+            .map { it.song }
+        val genres = ((month?.genres.orEmpty()) + (yearOrAll?.genres.orEmpty()))
+            .map { it.title }
+            .ifEmpty { AppSettings.selectedGenres.value.toList() }
+            .distinct()
+            .take(4)
         return TopPicks.LocalTaste(
-            artists = month.artists.take(10).map { ArtistRef(name = it.title, browseId = it.browseId) },
-            songs = month.songs.take(5).map { it.song },
-            genres = month.genres.take(3).map { it.title },
+            artists = artists,
+            songs = songs,
+            genres = genres,
         )
     }
 
@@ -2652,7 +2669,7 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
                     ?: BrowseType.PLAYLIST
             browseId.startsWith(LocalGroups.PREFIX) -> LocalGroups.typeOf(browseId) ?: fallback
             browseId.startsWith(OfflinePlaylists.PREFIX) -> BrowseType.PLAYLIST
-            browseId.startsWith("UC") -> BrowseType.ARTIST
+            browseId.startsWith("UC") || browseId.startsWith("MPLAUC") -> BrowseType.ARTIST
             browseId.startsWith("MPREb") || browseId.startsWith("VLOLAK") || browseId.startsWith("OLAK") -> BrowseType.ALBUM
             browseId.startsWith("VL") || browseId.startsWith("PL") -> BrowseType.PLAYLIST
             else -> fallback
@@ -2709,17 +2726,18 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
         // completions then raced to update every matching browse id in the
         // stack. The page is pushed synchronously, so this closes that window
         // without suppressing a deliberate revisit after the first page loads.
+        val canonicalId = if (browseId.startsWith("MPLAUC")) browseId.removePrefix("MPLA") else browseId
         if (_detailStack.value.lastOrNull()?.let {
-                it.browseId == browseId && it.songs is UiState.Loading
+                it.browseId == canonicalId && it.songs is UiState.Loading
             } == true
         ) return
-        if (browseId.startsWith(SPOTIFY_PAGE_PREFIX)) {
-            openSpotifyPage(browseId, title, subtitle, thumbnailUrl)
+        if (canonicalId.startsWith(SPOTIFY_PAGE_PREFIX)) {
+            openSpotifyPage(canonicalId, title, subtitle, thumbnailUrl)
             return
         }
-        val resolved = browseTypeOf(browseId, type)
+        val resolved = browseTypeOf(canonicalId, type)
         _detailStack.value += DetailPage(
-            browseId = browseId,
+            browseId = canonicalId,
             title = title,
             subtitle = subtitle,
             thumbnailUrl = thumbnailUrl,
@@ -2727,6 +2745,7 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
             type = resolved,
         )
         viewModelScope.launch {
+            val browseId = canonicalId
             var sections = emptyList<HomeShelf>()
             // Callers that open an artist from a track — the player, the
             // long-press menu — only have that track's cover art and its full
