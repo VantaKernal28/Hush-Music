@@ -67,7 +67,6 @@ fun HushWearTheme(content: @Composable () -> Unit) {
             onSecondary = Color.White,
             background = Color.Black,
             onBackground = Color(0xFFF2F2F7),
-            surface = Color(0xFF13141B),
             onSurface = Color(0xFFF2F2F7),
             onSurfaceVariant = Secondary,
             surfaceContainer = Cell,
