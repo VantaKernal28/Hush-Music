@@ -377,7 +377,7 @@ private fun PlayDisc(
                     )
                 } else if (fraction * 360f > 0.5f) {
                     drawArc(
-                        color = if (scrubMs != null) AccentRed else Color.White,
+                        color = if (scrubMs != null) AccentRed else HushCoral,
                         startAngle = -90f,
                         sweepAngle = 360f * fraction.coerceIn(0f, 1f),
                         useCenter = false,
@@ -437,7 +437,13 @@ private fun PlayDisc(
                 .padding(size * 0.065f)
                 .fillMaxSize()
                 .clip(CircleShape)
-                .background(Color.White.copy(alpha = 0.12f)),
+                .background(Color.White.copy(alpha = 0.12f))
+                .drawBehind {
+                    drawCircle(
+                        color = Color.White.copy(alpha = 0.22f),
+                        style = Stroke(1.5f),
+                    )
+                },
             contentAlignment = Alignment.Center,
         ) {
             if (artwork != null) {
@@ -546,7 +552,15 @@ fun GlyphButton(
                 scaleY = scale
             }
             .clip(CircleShape)
-            .background(if (pressed) background.copy(alpha = (background.alpha + 0.12f).coerceAtMost(1f)) else background)
+            .background(if (pressed) (if (tint == AccentRed) AccentRed.copy(alpha = 0.25f) else HushCoral.copy(alpha = 0.25f)) else background)
+            .drawBehind {
+                if (background != Color.Transparent) {
+                    drawCircle(
+                        color = if (pressed) HushCoral.copy(alpha = 0.5f) else Color.White.copy(alpha = 0.16f),
+                        style = Stroke(1.dp.toPx()),
+                    )
+                }
+            }
             .clickable(
                 enabled = enabled,
                 interactionSource = interaction,
@@ -604,7 +618,7 @@ private fun BoxScope.VolumeReadout(volume: Volume?, nudge: Int, edgeInset: Dp) {
         )
         if (fraction > 0f) {
             drawArc(
-                color = Color.White,
+                color = HushCoral,
                 startAngle = VOLUME_ARC / 2f,
                 sweepAngle = -VOLUME_ARC * fraction,
                 useCenter = false,

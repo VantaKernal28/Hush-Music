@@ -15,8 +15,8 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.toArgb
 import androidx.core.graphics.ColorUtils
 
-/** BitChord's own colours, for when there is no cover to take them from. */
-val BrandMesh = listOf(Color(0xFFFA2D48), Color(0xFF7B2FF7), Color(0xFFFF7A45), Color(0xFF2E1A8A))
+/** Hush's signature sunset aura colours, for when there is no cover to take them from. */
+val BrandMesh = listOf(Color(0xFFFF5722), Color(0xFF7C4DFF), Color(0xFFFF6E40), Color(0xFF1E1B4B))
 
 /**
  * The phone player's backdrop, sized for a watch.
