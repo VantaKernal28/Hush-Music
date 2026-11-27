@@ -54,6 +54,7 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.drawBehind
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Size
+import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.ImageBitmap
 import androidx.compose.ui.graphics.StrokeCap
@@ -337,6 +338,10 @@ private fun PlayDisc(
     val latestScrubbing by rememberUpdatedState(scrubbing)
     val latestDuration by rememberUpdatedState(np.durationMs)
     val toggleLabel = stringResource(if (np.playing) R.string.pause else R.string.play)
+    val style = LocalHushWearStyle.current
+    val progressBrush = remember(style) {
+        Brush.sweepGradient(listOf(style.accentPrimary, style.accentSecondary, style.accentPrimary))
+    }
 
     Box(
         modifier = Modifier
@@ -346,12 +351,12 @@ private fun PlayDisc(
                 scaleY = scale
             }
             .drawBehind {
-                val stroke = (if (scrubMs != null) 5.dp else 3.5.dp).toPx()
+                val stroke = (if (scrubMs != null) 5.dp else if (style.materialUiMode) 4.dp else 3.5.dp).toPx()
                 val inset = stroke / 2f
                 val arcSize = Size(this.size.width - stroke, this.size.height - stroke)
                 val topLeft = Offset(inset, inset)
                 drawArc(
-                    color = Color.White.copy(alpha = 0.22f),
+                    color = if (style.materialUiMode) style.accentPrimary.copy(alpha = 0.22f) else Color.White.copy(alpha = 0.22f),
                     startAngle = 0f,
                     sweepAngle = 360f,
                     useCenter = false,
@@ -367,7 +372,7 @@ private fun PlayDisc(
                 }
                 if (turning != null) {
                     drawArc(
-                        color = Color.White,
+                        brush = progressBrush,
                         startAngle = turning - 90f,
                         sweepAngle = 70f,
                         useCenter = false,
@@ -376,15 +381,27 @@ private fun PlayDisc(
                         style = Stroke(stroke, cap = StrokeCap.Round),
                     )
                 } else if (fraction * 360f > 0.5f) {
-                    drawArc(
-                        color = if (scrubMs != null) AccentRed else HushCoral,
-                        startAngle = -90f,
-                        sweepAngle = 360f * fraction.coerceIn(0f, 1f),
-                        useCenter = false,
-                        topLeft = topLeft,
-                        size = arcSize,
-                        style = Stroke(stroke, cap = StrokeCap.Round),
-                    )
+                    if (scrubMs != null) {
+                        drawArc(
+                            color = AccentRed,
+                            startAngle = -90f,
+                            sweepAngle = 360f * fraction.coerceIn(0f, 1f),
+                            useCenter = false,
+                            topLeft = topLeft,
+                            size = arcSize,
+                            style = Stroke(stroke, cap = StrokeCap.Round),
+                        )
+                    } else {
+                        drawArc(
+                            brush = progressBrush,
+                            startAngle = -90f,
+                            sweepAngle = 360f * fraction.coerceIn(0f, 1f),
+                            useCenter = false,
+                            topLeft = topLeft,
+                            size = arcSize,
+                            style = Stroke(stroke, cap = StrokeCap.Round),
+                        )
+                    }
                 }
             }
             .clip(CircleShape)
@@ -541,9 +558,16 @@ fun GlyphButton(
     tint: Color = Color.White,
     background: Color = Color.Transparent,
 ) {
+    val style = LocalHushWearStyle.current
     val interaction = remember { MutableInteractionSource() }
     val pressed by interaction.collectIsPressedAsState()
     val scale by animateFloatAsState(if (pressed) 0.88f else 1f, label = "glyphPress")
+    val highlight = if (tint == AccentRed) AccentRed else style.accentPrimary
+    val bgFill = when {
+        pressed -> highlight.copy(alpha = 0.28f)
+        background != Color.Transparent && style.materialUiMode -> highlight.copy(alpha = 0.16f)
+        else -> background
+    }
     Box(
         modifier = modifier
             .size(size)
@@ -552,11 +576,17 @@ fun GlyphButton(
                 scaleY = scale
             }
             .clip(CircleShape)
-            .background(if (pressed) (if (tint == AccentRed) AccentRed.copy(alpha = 0.25f) else HushCoral.copy(alpha = 0.25f)) else background)
+            .background(bgFill)
             .drawBehind {
                 if (background != Color.Transparent) {
                     drawCircle(
-                        color = if (pressed) HushCoral.copy(alpha = 0.5f) else Color.White.copy(alpha = 0.16f),
+                        brush = if (pressed) {
+                            Brush.verticalGradient(listOf(highlight.copy(alpha = 0.7f), highlight.copy(alpha = 0.25f)))
+                        } else if (style.materialUiMode) {
+                            Brush.verticalGradient(listOf(highlight.copy(alpha = 0.30f), highlight.copy(alpha = 0.10f)))
+                        } else {
+                            Brush.verticalGradient(listOf(Color.White.copy(alpha = 0.28f), Color.White.copy(alpha = 0.06f)))
+                        },
                         style = Stroke(1.dp.toPx()),
                     )
                 }
@@ -593,6 +623,7 @@ private fun BoxScope.VolumeReadout(volume: Volume?, nudge: Int, edgeInset: Dp) {
         delay(VOLUME_SHOWN_MS)
         visible = false
     }
+    val style = LocalHushWearStyle.current
     val alpha by animateFloatAsState(if (visible) 1f else 0f, tween(if (visible) 120 else 400), label = "volumeAlpha")
     val fraction by animateFloatAsState(volume?.fraction ?: 0f, tween(120), label = "volumeLevel")
     if (alpha == 0f || volume == null) return
@@ -618,7 +649,7 @@ private fun BoxScope.VolumeReadout(volume: Volume?, nudge: Int, edgeInset: Dp) {
         )
         if (fraction > 0f) {
             drawArc(
-                color = HushCoral,
+                color = style.accentPrimary,
                 startAngle = VOLUME_ARC / 2f,
                 sweepAngle = -VOLUME_ARC * fraction,
                 useCenter = false,

@@ -39,6 +39,10 @@ import com.music.bitchord.playback.ACTION_TOGGLE_FAVORITE
 import com.music.bitchord.playback.ACTION_TOGGLE_SHUFFLE
 import com.music.bitchord.playback.PlaybackService
 import com.music.bitchord.ui.player.artworkMeshColors
+import com.music.bitchord.ui.theme.HushAccents
+import com.music.bitchord.ui.theme.HushPeach
+import com.music.bitchord.ui.theme.HushSunsetOrange
+import androidx.compose.material3.dynamicDarkColorScheme
 import com.music.bitchord.widget.MediaWidgetSnapshot
 import android.net.Uri
 import androidx.media3.common.C
@@ -505,6 +509,7 @@ object WearBridge {
             }
         }
         map.putBoolean(P.KEY_WATCH_SPEAKER, speaker?.active == true)
+        writeThemeTo(app, map)
         val watchVolume = speaker?.watchVolume
         if (watchVolume != null) {
             map.putInt(P.KEY_VOLUME, watchVolume.first)
@@ -516,6 +521,37 @@ object WearBridge {
             }
         }
         put(app, request)
+    }
+
+    /** Pushes the active Hush accent palette & interface mode to connected watches. */
+    fun syncTheme(context: Context) {
+        val app = context.applicationContext
+        scope.launch {
+            if (!isWatchReachable(app)) return@launch
+            val request = PutDataMapRequest.create(P.PATH_THEME)
+            writeThemeTo(app, request.dataMap)
+            request.dataMap.putLong(P.KEY_POSITION_AT, System.currentTimeMillis())
+            put(app, request)
+        }
+    }
+
+    private fun writeThemeTo(app: Context, map: DataMap) {
+        val accentId = AppSettings.themeAccent.value
+        val materialUi = AppSettings.materialUiMode.value
+        val swatch = HushAccents.find { it.id == accentId }
+        val primary = if (accentId == "dynamic" && android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.S) {
+            runCatching { dynamicDarkColorScheme(app).primary }.getOrDefault(HushSunsetOrange)
+        } else {
+            swatch?.primary ?: HushSunsetOrange
+        }
+        val secondary = if (accentId == "dynamic" && android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.S) {
+            runCatching { dynamicDarkColorScheme(app).secondary }.getOrDefault(HushPeach)
+        } else {
+            swatch?.secondary ?: HushPeach
+        }
+        map.putInt(P.KEY_THEME_ACCENT_ARGB, primary.toArgb())
+        map.putInt(P.KEY_THEME_SECONDARY_ARGB, secondary.toArgb())
+        map.putBoolean(P.KEY_THEME_MATERIAL_UI, materialUi)
     }
 
     private fun put(app: Context, request: PutDataMapRequest) {

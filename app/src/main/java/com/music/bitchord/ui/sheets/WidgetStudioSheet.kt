@@ -6,9 +6,6 @@ import android.content.Context
 import android.os.Build
 import android.widget.Toast
 import androidx.compose.animation.AnimatedContent
-import androidx.compose.animation.core.Spring
-import androidx.compose.animation.core.animateFloatAsState
-import androidx.compose.animation.core.spring
 import androidx.compose.animation.core.tween
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
@@ -17,8 +14,6 @@ import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.interaction.MutableInteractionSource
-import androidx.compose.foundation.interaction.collectIsPressedAsState
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -33,13 +28,12 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.rounded.Add
-import androidx.compose.material.icons.rounded.AutoAwesome
-import androidx.compose.material.icons.rounded.Check
 import androidx.compose.material.icons.rounded.Close
+import androidx.compose.material.icons.rounded.SkipNext
+import androidx.compose.material.icons.rounded.SkipPrevious
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -51,7 +45,6 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
@@ -61,14 +54,11 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.asImageBitmap
-import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import com.music.bitchord.R
 import com.music.bitchord.ui.components.ContinuousCornerShape
 import com.music.bitchord.ui.icons.SfIcons
 import com.music.bitchord.widget.CassetteWidget
@@ -77,32 +67,34 @@ import com.music.bitchord.widget.M3Widget
 import com.music.bitchord.widget.MediaWidgetPill
 import com.music.bitchord.widget.MediaWidgetSnapshot
 import dev.chrisbanes.haze.HazeState
-import dev.chrisbanes.haze.hazeChild
 
 enum class WidgetStyle(val label: String, val subtitle: String) {
-    CASSETTE("Retro Cassette", "Analog tape deck with reels & physical buttons"),
+    CASSETTE("Cassette", "Analog tape deck with reels & physical buttons"),
     MATERIAL_3("Material 3", "Material You dynamic color with squircle cover"),
-    CLASSIC("Liquid Glass", "Translucent frosted glass with specular highlight"),
-    PILL("Capsule Pill", "Minimalist 4×1 single-row player bar"),
+    CLASSIC("Glass", "Translucent frosted glass with specular highlight"),
+    PILL("Pill", "Minimalist 4×1 single-row player bar"),
 }
 
-enum class CassetteTheme(val label: String, val colorHex: String, val bgHex: String) {
-    SLATE("Midnight Slate", "#2B3340", "#F5F2EB"),
-    CREAM("Vintage Cream", "#E5DCCB", "#22252B"),
-    BLUSH("Cherry Blush", "#D97B89", "#F7F0E8"),
-    MINT("Retro Mint", "#5E8E89", "#F2F5F4"),
+enum class CassetteTheme(val id: String, val label: String, val colorHex: String, val bgHex: String) {
+    SLATE("slate", "Midnight Slate", "#2B3340", "#F5F2EB"),
+    CREAM("cream", "Vintage Cream", "#E5DCCB", "#22252B"),
+    BLUSH("blush", "Cherry Blush", "#D97B89", "#F7F0E8"),
+    MINT("mint", "Retro Mint", "#5E8E89", "#F2F5F4"),
 }
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun WidgetStudioSheet(
     onDismiss: () -> Unit,
-    hazeState: HazeState? = null,
+    @Suppress("UNUSED_PARAMETER") hazeState: HazeState? = null,
 ) {
     val context = LocalContext.current
     val sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
     var selectedStyle by remember { mutableStateOf(WidgetStyle.CASSETTE) }
-    var selectedCassetteTheme by remember { mutableStateOf(CassetteTheme.SLATE) }
+    var selectedCassetteTheme by remember {
+        val savedId = CassetteWidget.savedThemeId(context)
+        mutableStateOf(CassetteTheme.entries.find { it.id == savedId } ?: CassetteTheme.SLATE)
+    }
 
     val snapshot = remember { MediaWidgetSnapshot.load(context) }
     val title = if (snapshot.hasTrack) snapshot.title else "Yurayura Beat Live at TODAr"
@@ -231,7 +223,11 @@ fun WidgetStudioSheet(
                                     .height(96.dp)
                                     .clip(ContinuousCornerShape(24.dp))
                                     .background(MaterialTheme.colorScheme.surfaceContainerHigh)
-                                    .border(1.dp, MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.4f), ContinuousCornerShape(24.dp))
+                                    .border(
+                                        1.dp,
+                                        MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.4f),
+                                        ContinuousCornerShape(24.dp),
+                                    )
                                     .padding(horizontal = 16.dp, vertical = 12.dp),
                                 contentAlignment = Alignment.CenterStart,
                             ) {
@@ -251,10 +247,10 @@ fun WidgetStudioSheet(
                                         contentAlignment = Alignment.Center,
                                     ) {
                                         Icon(
-                                            imageVector = SfIcons.Play,
+                                            imageVector = SfIcons.MusicNote,
                                             contentDescription = null,
                                             tint = Color.White,
-                                            modifier = Modifier.size(28.dp),
+                                            modifier = Modifier.size(26.dp),
                                         )
                                     }
                                     Spacer(Modifier.width(14.dp))
@@ -346,7 +342,7 @@ fun WidgetStudioSheet(
                                     }
                                     Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                                         Icon(
-                                            imageVector = SfIcons.Previous,
+                                            imageVector = Icons.Rounded.SkipPrevious,
                                             contentDescription = null,
                                             tint = Color.White,
                                             modifier = Modifier.size(24.dp),
@@ -358,7 +354,7 @@ fun WidgetStudioSheet(
                                             modifier = Modifier.size(24.dp),
                                         )
                                         Icon(
-                                            imageVector = SfIcons.Next,
+                                            imageVector = Icons.Rounded.SkipNext,
                                             contentDescription = null,
                                             tint = Color.White,
                                             modifier = Modifier.size(24.dp),
@@ -390,7 +386,7 @@ fun WidgetStudioSheet(
                                         contentAlignment = Alignment.Center,
                                     ) {
                                         Icon(
-                                            imageVector = SfIcons.SleepTimer,
+                                            imageVector = SfIcons.MusicNote,
                                             contentDescription = null,
                                             tint = Color.White,
                                             modifier = Modifier.size(20.dp),
@@ -447,7 +443,11 @@ fun WidgetStudioSheet(
                                     color = if (isPicked) MaterialTheme.colorScheme.primary else Color.Transparent,
                                     shape = ContinuousCornerShape(14.dp),
                                 )
-                                .clickable { selectedCassetteTheme = themeOption }
+                                .clickable {
+                                    selectedCassetteTheme = themeOption
+                                    CassetteWidget.saveTheme(context, themeOption.id)
+                                    CassetteWidget.refresh(context)
+                                }
                                 .padding(vertical = 8.dp, horizontal = 4.dp),
                             horizontalAlignment = Alignment.CenterHorizontally,
                         ) {
@@ -476,6 +476,9 @@ fun WidgetStudioSheet(
             // "Add to Home Screen" Pin Action Button
             Button(
                 onClick = {
+                    if (selectedStyle == WidgetStyle.CASSETTE) {
+                        CassetteWidget.saveTheme(context, selectedCassetteTheme.id)
+                    }
                     pinWidgetToHomeScreen(context, selectedStyle)
                 },
                 modifier = Modifier

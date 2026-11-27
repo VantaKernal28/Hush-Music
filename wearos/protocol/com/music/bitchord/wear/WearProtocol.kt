@@ -32,6 +32,7 @@ object WearProtocol {
     const val PATH_QUEUE = "/bitchord/queue"
     const val PATH_COMMAND = "/bitchord/command"
     const val PATH_OUTPUTS = "/bitchord/outputs"
+    const val PATH_THEME = "/bitchord/theme"
 
     /**
      * Phone → watch messages driving the watch as the speaker, the command as
@@ -173,6 +174,11 @@ object WearProtocol {
     const val KEY_ART_ID = "art_id"
     const val KEY_VOLUME = "volume"
     const val KEY_VOLUME_MAX = "volume_max"
+
+    // ---- Hush theme sync (carried on PATH_NOW_PLAYING and PATH_THEME) ----
+    const val KEY_THEME_ACCENT_ARGB = "theme_accent_argb"
+    const val KEY_THEME_SECONDARY_ARGB = "theme_secondary_argb"
+    const val KEY_THEME_MATERIAL_UI = "theme_material_ui"
 
     // ---- PATH_OUTPUTS keys ----
 

@@ -4,8 +4,13 @@ import android.content.Context
 import android.graphics.BitmapFactory
 import android.net.Uri
 import android.util.Log
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.ImageBitmap
 import androidx.compose.ui.graphics.asImageBitmap
+import androidx.compose.ui.graphics.toArgb
+import com.music.bitchord.wear.ui.HushPeach
+import com.music.bitchord.wear.ui.HushSunsetOrange
+import com.music.bitchord.wear.ui.HushWearStyle
 import com.google.android.gms.wearable.Asset
 import com.google.android.gms.wearable.CapabilityClient
 import com.google.android.gms.wearable.CapabilityInfo
@@ -75,6 +80,16 @@ class PhoneLink(context: Context, private val scope: CoroutineScope) :
     /** The phone's outputs, as its own player lists them. Null until asked. */
     private val _outputs = MutableStateFlow<List<PhoneOutput>?>(null)
     val outputs: StateFlow<List<PhoneOutput>?> = _outputs.asStateFlow()
+
+    private val themePrefs = context.getSharedPreferences(THEME_PREFS, Context.MODE_PRIVATE)
+    private val _theme = MutableStateFlow(loadSavedTheme())
+    val theme: StateFlow<HushWearStyle> = _theme.asStateFlow()
+
+    private fun loadSavedTheme(): HushWearStyle = HushWearStyle(
+        accentPrimary = Color(themePrefs.getInt(KEY_PREF_PRIMARY, HushSunsetOrange.toArgb())),
+        accentSecondary = Color(themePrefs.getInt(KEY_PREF_SECONDARY, HushPeach.toArgb())),
+        materialUiMode = themePrefs.getBoolean(KEY_PREF_M3, false),
+    )
 
     /**
      * Whether this watch is the phone's speaker. The phone still owns the
@@ -249,6 +264,7 @@ class PhoneLink(context: Context, private val scope: CoroutineScope) :
                 P.PATH_NOW_PLAYING -> applyNowPlaying(map)
                 P.PATH_QUEUE -> applyQueue(map)
                 P.PATH_OUTPUTS -> applyOutputs(map)
+                P.PATH_THEME -> applyTheme(map)
             }
         }
     }
@@ -276,6 +292,12 @@ class PhoneLink(context: Context, private val scope: CoroutineScope) :
     }
 
     private suspend fun readCached() {
+        val themeUri = Uri.Builder().scheme(PutDataRequest.WEAR_URI_SCHEME).path(P.PATH_THEME).build()
+        runCatching { dataClient.getDataItems(themeUri).await() }.getOrNull()?.let { items ->
+            val maps = items.map { DataMapItem.fromDataItem(it).dataMap }
+            items.release()
+            maps.lastOrNull()?.let(::applyTheme)
+        }
         val uri = Uri.Builder().scheme(PutDataRequest.WEAR_URI_SCHEME).path(P.PATH_NOW_PLAYING).build()
         val items = runCatching { dataClient.getDataItems(uri).await() }.getOrNull() ?: return
         val maps = items.map { DataMapItem.fromDataItem(it).dataMap }
@@ -322,9 +344,36 @@ class PhoneLink(context: Context, private val scope: CoroutineScope) :
         return false
     }
 
+    private fun applyTheme(map: DataMap) {
+        if (!map.containsKey(P.KEY_THEME_ACCENT_ARGB) && !map.containsKey(P.KEY_THEME_MATERIAL_UI)) return
+        val current = _theme.value
+        val primary = if (map.containsKey(P.KEY_THEME_ACCENT_ARGB)) {
+            Color(map.getInt(P.KEY_THEME_ACCENT_ARGB))
+        } else {
+            current.accentPrimary
+        }
+        val secondary = if (map.containsKey(P.KEY_THEME_SECONDARY_ARGB)) {
+            Color(map.getInt(P.KEY_THEME_SECONDARY_ARGB))
+        } else {
+            current.accentSecondary
+        }
+        val m3 = if (map.containsKey(P.KEY_THEME_MATERIAL_UI)) {
+            map.getBoolean(P.KEY_THEME_MATERIAL_UI)
+        } else {
+            current.materialUiMode
+        }
+        _theme.value = HushWearStyle(primary, secondary, m3)
+        themePrefs.edit()
+            .putInt(KEY_PREF_PRIMARY, primary.toArgb())
+            .putInt(KEY_PREF_SECONDARY, secondary.toArgb())
+            .putBoolean(KEY_PREF_M3, m3)
+            .apply()
+    }
+
     private fun applyNowPlaying(map: DataMap) {
         _heard.value = true
         _watchSpeaker.value = map.getBoolean(P.KEY_WATCH_SPEAKER)
+        applyTheme(map)
         val now = System.currentTimeMillis()
         _nowPlaying.value = NowPlaying.from(map)?.let { merge(it, now) }
 
@@ -401,6 +450,10 @@ class PhoneLink(context: Context, private val scope: CoroutineScope) :
         private const val VOLUME_HOLD_MS = 1_500L
         private const val VOLUME_BATCH_MS = 90L
         private const val FIND_TIMEOUT_MS = 6_000L
+        private const val THEME_PREFS = "hush_wear_theme"
+        private const val KEY_PREF_PRIMARY = "primary_argb"
+        private const val KEY_PREF_SECONDARY = "secondary_argb"
+        private const val KEY_PREF_M3 = "material_ui"
 
         const val REPEAT_OFF = 0
         const val REPEAT_ONE = 1

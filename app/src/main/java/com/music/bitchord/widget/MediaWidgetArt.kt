@@ -146,8 +146,18 @@ internal object MediaWidgetArt {
      * draw, so the layout's own placeholder disc shows instead. Shares the
      * failure cool-off and the cache with [render], under a key of its own.
      */
-    suspend fun circle(context: Context, artworkUrl: String?, sizePx: Int, key: String): Bitmap? {
-        peekCircle(key, sizePx)?.let { return it }
+    suspend fun circle(context: Context, artworkUrl: String?, sizePx: Int, key: String): Bitmap? =
+        roundedSquare(context, artworkUrl, sizePx, sizePx / 2f, key)
+
+    /** The cover cut to a [sizePx] square with [cornerRadiusPx] rounded corners. */
+    suspend fun roundedSquare(
+        context: Context,
+        artworkUrl: String?,
+        sizePx: Int,
+        cornerRadiusPx: Float,
+        key: String,
+    ): Bitmap? {
+        peekRoundedSquare(key, sizePx, cornerRadiusPx)?.let { return it }
         if (isCoolingOff(key)) return null
         val cover = loadArtwork(context, artworkUrl, sizePx)
         if (cover == null) {
@@ -156,17 +166,22 @@ internal object MediaWidgetArt {
         }
         val square = Bitmap.createBitmap(sizePx, sizePx, Bitmap.Config.ARGB_8888)
         Canvas(square).fillCentreCropped(cover)
-        val round = square.withRoundedCorners(sizePx / 2f)
+        val round = square.withRoundedCorners(cornerRadiusPx)
         square.recycle()
-        composites.put(circleKey(key, sizePx), round)
+        composites.put(roundedSquareKey(key, sizePx, cornerRadiusPx), round)
         return round
     }
 
     /** [circle]'s result if it has already been drawn. @see peek */
     fun peekCircle(key: String, sizePx: Int): Bitmap? =
-        composites[circleKey(key, sizePx)]?.takeIf { !it.isRecycled }
+        peekRoundedSquare(key, sizePx, sizePx / 2f)
 
-    private fun circleKey(key: String, sizePx: Int) = "circle|$key|$sizePx"
+    /** [roundedSquare]'s result if it has already been drawn. @see peek */
+    fun peekRoundedSquare(key: String, sizePx: Int, cornerRadiusPx: Float): Bitmap? =
+        composites[roundedSquareKey(key, sizePx, cornerRadiusPx)]?.takeIf { !it.isRecycled }
+
+    private fun roundedSquareKey(key: String, sizePx: Int, cornerRadiusPx: Float) =
+        "rsq|$key|$sizePx|$cornerRadiusPx"
 
     /**
      * The 4×1 widget's body: the cover filling a [widthPx] × [heightPx] capsule,

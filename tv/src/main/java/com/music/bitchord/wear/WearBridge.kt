@@ -50,4 +50,7 @@ object WearBridge {
 
     @Suppress("UNUSED_PARAMETER")
     fun setWatchVolume(fraction: Float) = Unit
+
+    @Suppress("UNUSED_PARAMETER")
+    fun syncTheme(context: Context) = Unit
 }

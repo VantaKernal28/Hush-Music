@@ -21,11 +21,12 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withTimeoutOrNull
 
 /**
  * Hush Classic Liquid Glass Widget (4x2):
- * Features frosted translucent surface, specular rim border, glowing gradient,
- * and minimalist typography.
+ * Features full-bleed blurred album artwork frosted backdrop, specular rim border,
+ * glowing gradient, and minimalist typography.
  */
 class ClassicWidget : AppWidgetProvider() {
 
@@ -56,6 +57,7 @@ class ClassicWidget : AppWidgetProvider() {
 
     companion object {
         private val scope = CoroutineScope(SupervisorJob() + Dispatchers.Default)
+        private const val RENDER_TIMEOUT_MS = 6_000L
 
         fun refresh(context: Context) {
             val app = context.applicationContext
@@ -73,6 +75,26 @@ class ClassicWidget : AppWidgetProvider() {
         private suspend fun render(context: Context, ids: IntArray) {
             val manager = runCatching { AppWidgetManager.getInstance(context) }.getOrNull() ?: return
             val snapshot = MediaWidgetSnapshot.load(context)
+            val widthPx = 800
+            val heightPx = 360
+            val bandPx = 150
+            val key = snapshot.artworkUrl
+
+            val baseBackdrop = key?.let { url ->
+                MediaWidgetArt.peek(url, widthPx, heightPx, bandPx)
+                    ?: withTimeoutOrNull(RENDER_TIMEOUT_MS) {
+                        MediaWidgetArt.render(
+                            context = context,
+                            artworkUrl = url,
+                            widthPx = widthPx,
+                            heightPx = heightPx,
+                            bandPx = bandPx,
+                            key = url,
+                            cornerRadiusPx = 44f,
+                        )
+                    }
+            }
+            val bg = drawClassicGlassBitmap(widthPx, heightPx, baseBackdrop)
 
             for (id in ids) {
                 val views = RemoteViews(context.packageName, R.layout.widget_classic)
@@ -86,11 +108,9 @@ class ClassicWidget : AppWidgetProvider() {
                     if (snapshot.hasTrack) snapshot.artist else "Hush Music",
                 )
 
-                // Classic frosted glass background
-                val bg = drawClassicGlassBitmap(widthPx = 800, heightPx = 360)
                 views.setImageViewBitmap(R.id.widget_classic_art, bg)
+                views.setInt(R.id.widget_classic_root, "setBackgroundResource", 0)
 
-                // Transport actions
                 views.setOnClickPendingIntent(
                     R.id.widget_classic_previous,
                     MediaWidgetActions.pendingIntent(context, MediaWidgetActions.ACTION_PREVIOUS),
@@ -109,7 +129,6 @@ class ClassicWidget : AppWidgetProvider() {
                     if (snapshot.isPlaying) R.drawable.ic_widget_pause else R.drawable.ic_widget_play,
                 )
 
-                // Tap opens app
                 val openIntent = Intent(context, MainActivity::class.java).apply {
                     action = Intent.ACTION_MAIN
                     addCategory(Intent.CATEGORY_LAUNCHER)
@@ -127,24 +146,27 @@ class ClassicWidget : AppWidgetProvider() {
             }
         }
 
-        private fun drawClassicGlassBitmap(widthPx: Int, heightPx: Int): Bitmap {
+        private fun drawClassicGlassBitmap(widthPx: Int, heightPx: Int, coverArt: Bitmap?): Bitmap {
             val bitmap = Bitmap.createBitmap(widthPx, heightPx, Bitmap.Config.ARGB_8888)
             val canvas = Canvas(bitmap)
             val paint = Paint(Paint.ANTI_ALIAS_FLAG)
 
-            // Deep dark frosted glass base
-            paint.shader = LinearGradient(
-                0f, 0f, 0f, heightPx.toFloat(),
-                intArrayOf(Color.parseColor("#E6181920"), Color.parseColor("#F2101116")),
-                null,
-                Shader.TileMode.CLAMP,
-            )
-            canvas.drawRoundRect(0f, 0f, widthPx.toFloat(), heightPx.toFloat(), 44f, 44f, paint)
+            if (coverArt != null) {
+                canvas.drawBitmap(coverArt, 0f, 0f, paint)
+            } else {
+                paint.shader = LinearGradient(
+                    0f, 0f, 0f, heightPx.toFloat(),
+                    intArrayOf(Color.parseColor("#E6181920"), Color.parseColor("#F2101116")),
+                    null,
+                    Shader.TileMode.CLAMP,
+                )
+                canvas.drawRoundRect(0f, 0f, widthPx.toFloat(), heightPx.toFloat(), 44f, 44f, paint)
+            }
 
-            // Specular specular rim highlight
+            // Specular Liquid Glass rim highlight
             paint.shader = LinearGradient(
                 0f, 0f, widthPx.toFloat(), heightPx.toFloat(),
-                intArrayOf(Color.parseColor("#4DFFFFFF"), Color.parseColor("#0DFFFFFF"), Color.parseColor("#26FFFFFF")),
+                intArrayOf(Color.parseColor("#66FFFFFF"), Color.parseColor("#14FFFFFF"), Color.parseColor("#33FFFFFF")),
                 null,
                 Shader.TileMode.CLAMP,
             )

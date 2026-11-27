@@ -15,7 +15,10 @@ import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.viewModels
 import androidx.compose.runtime.CompositionLocalProvider
+import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.music.bitchord.wear.ui.HushWearTheme
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.DefaultLifecycleObserver
 import androidx.lifecycle.LifecycleOwner
@@ -24,7 +27,6 @@ import androidx.wear.ambient.AmbientLifecycleObserver
 import com.music.bitchord.wear.ui.Ambient
 import com.music.bitchord.wear.ui.LocalAmbient
 import com.music.bitchord.wear.data.PhoneLink
-import com.music.bitchord.wear.ui.BitChordWearTheme
 import com.music.bitchord.wear.ui.WearApp
 
 class WearViewModel(app: Application) : AndroidViewModel(app) {
@@ -95,7 +97,8 @@ class WearActivity : ComponentActivity() {
             }
         }
         setContent {
-            BitChordWearTheme {
+            val hushTheme by model.link.theme.collectAsStateWithLifecycle()
+            HushWearTheme(style = hushTheme) {
                 CompositionLocalProvider(LocalAmbient provides ambient.value) {
                     WearApp(model.link)
                 }

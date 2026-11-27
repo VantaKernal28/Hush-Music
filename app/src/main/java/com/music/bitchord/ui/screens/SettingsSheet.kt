@@ -1654,7 +1654,10 @@ fun SettingsScreen(
                                                 Modifier.border(1.dp, Color.White.copy(alpha = 0.2f), CircleShape)
                                             }
                                         )
-                                        .clickable { AppSettings.setThemeAccent(swatch.id) },
+                                        .clickable {
+                                            AppSettings.setThemeAccent(swatch.id)
+                                            com.music.bitchord.wear.WearBridge.syncTheme(context)
+                                        },
                                     contentAlignment = Alignment.Center,
                                 ) {
                                     if (selected) {
@@ -1790,6 +1793,7 @@ fun SettingsScreen(
                         onClick = {
                             if (materialUiMode) {
                                 AppSettings.setMaterialUiMode(false)
+                                com.music.bitchord.wear.WearBridge.syncTheme(context)
                             }
                         },
                     )
@@ -1804,6 +1808,7 @@ fun SettingsScreen(
                         onClick = {
                             if (!materialUiMode) {
                                 AppSettings.setMaterialUiMode(true)
+                                com.music.bitchord.wear.WearBridge.syncTheme(context)
                             }
                         },
                     )
@@ -1932,7 +1937,7 @@ fun SettingsScreen(
             val homeScreenWidgetsTitle = "Home Screen Widgets"
             row(homeScreenWidgetsTitle, "widget", "widgets", "cassette", "retro", "material", "home screen", "preview") {
                 SettingsRow(
-                    icon = SfIcons.Sparkles,
+                    icon = SfIcons.Apps,
                     title = homeScreenWidgetsTitle,
                     subtitle = "Cassette Tape, Material 3 Expressive & Classic widgets",
                     onClick = { showWidgetsSheet = true },

@@ -9,8 +9,10 @@ import android.content.Intent
 import android.graphics.Bitmap
 import android.graphics.Canvas
 import android.graphics.Color
+import android.graphics.LinearGradient
 import android.graphics.Paint
 import android.graphics.RectF
+import android.graphics.Shader
 import android.os.Bundle
 import android.widget.RemoteViews
 import com.music.bitchord.MainActivity
@@ -19,11 +21,12 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withTimeoutOrNull
 
 /**
  * Material 3 Expressive Widget (4x1 / 4x2):
- * Features squircle corners, dynamic surface container, bold typography,
- * and expressive M3 pill transport controls.
+ * Features squircle corners, dynamic surface container, rounded album cover artwork,
+ * bold typography, and expressive M3 pill transport controls.
  */
 class M3Widget : AppWidgetProvider() {
 
@@ -54,6 +57,9 @@ class M3Widget : AppWidgetProvider() {
 
     companion object {
         private val scope = CoroutineScope(SupervisorJob() + Dispatchers.Default)
+        private const val COVER_DP = 68f
+        private const val COVER_RADIUS_DP = 16f
+        private const val RENDER_TIMEOUT_MS = 6_000L
 
         fun refresh(context: Context) {
             val app = context.applicationContext
@@ -71,6 +77,18 @@ class M3Widget : AppWidgetProvider() {
         private suspend fun render(context: Context, ids: IntArray) {
             val manager = runCatching { AppWidgetManager.getInstance(context) }.getOrNull() ?: return
             val snapshot = MediaWidgetSnapshot.load(context)
+            val density = context.resources.displayMetrics.density
+            val coverPx = (COVER_DP * density).toInt().coerceIn(48, 256)
+            val radiusPx = COVER_RADIUS_DP * density
+            val bg = drawM3Background(widthPx = 800, heightPx = 240)
+            val coverKey = snapshot.artworkUrl
+
+            val coverBitmap = coverKey?.let { key ->
+                MediaWidgetArt.peekRoundedSquare(key, coverPx, radiusPx)
+                    ?: withTimeoutOrNull(RENDER_TIMEOUT_MS) {
+                        MediaWidgetArt.roundedSquare(context, key, coverPx, radiusPx, key)
+                    }
+            }
 
             for (id in ids) {
                 val views = RemoteViews(context.packageName, R.layout.widget_m3)
@@ -84,11 +102,15 @@ class M3Widget : AppWidgetProvider() {
                     if (snapshot.hasTrack) snapshot.artist else "Hush Music",
                 )
 
-                // Background container
-                val bg = drawM3Background(widthPx = 800, heightPx = 240)
                 views.setImageViewBitmap(R.id.widget_m3_art_background, bg)
+                views.setInt(R.id.widget_m3_root, "setBackgroundResource", 0)
 
-                // Transport actions
+                if (coverBitmap != null) {
+                    views.setImageViewBitmap(R.id.widget_m3_cover, coverBitmap)
+                } else {
+                    views.setImageViewResource(R.id.widget_m3_cover, R.drawable.widget_pill_art_placeholder)
+                }
+
                 views.setOnClickPendingIntent(
                     R.id.widget_m3_previous,
                     MediaWidgetActions.pendingIntent(context, MediaWidgetActions.ACTION_PREVIOUS),
@@ -107,7 +129,6 @@ class M3Widget : AppWidgetProvider() {
                     if (snapshot.isPlaying) R.drawable.ic_widget_pause else R.drawable.ic_widget_play,
                 )
 
-                // Tap opens app
                 val openIntent = Intent(context, MainActivity::class.java).apply {
                     action = Intent.ACTION_MAIN
                     addCategory(Intent.CATEGORY_LAUNCHER)
@@ -130,22 +151,23 @@ class M3Widget : AppWidgetProvider() {
             val canvas = Canvas(bitmap)
             val paint = Paint(Paint.ANTI_ALIAS_FLAG)
 
-            // M3 surface container high with squircle corners
-            paint.color = Color.parseColor("#211F26")
+            // M3 expressive container with warm Hush charcoal tonal depth
+            paint.shader = LinearGradient(
+                0f, 0f, widthPx.toFloat(), heightPx.toFloat(),
+                intArrayOf(Color.parseColor("#242129"), Color.parseColor("#1B1921")),
+                null,
+                Shader.TileMode.CLAMP,
+            )
             canvas.drawRoundRect(0f, 0f, widthPx.toFloat(), heightPx.toFloat(), 48f, 48f, paint)
+            paint.shader = null
 
-            // Subtle tonal accent line at the bottom
-            paint.color = Color.parseColor("#D0BCFF").copy(alpha = 0.25f)
+            // Subtle tonal accent border
+            paint.color = Color.argb(64, 255, 110, 64)
             paint.strokeWidth = 3f
             paint.style = Paint.Style.STROKE
             canvas.drawRoundRect(RectF(1.5f, 1.5f, widthPx - 1.5f, heightPx - 1.5f), 48f, 48f, paint)
 
             return bitmap
-        }
-
-        private fun Int.copy(alpha: Float): Int {
-            val a = (255 * alpha).toInt().coerceIn(0, 255)
-            return (this and 0x00FFFFFF) or (a shl 24)
         }
     }
 }

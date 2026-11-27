@@ -10,15 +10,15 @@ import android.graphics.Bitmap
 import android.graphics.Canvas
 import android.graphics.Color
 import android.graphics.Paint
-import android.graphics.Path
 import android.graphics.RectF
 import android.graphics.Typeface
 import android.os.Bundle
-import android.view.View
+import android.text.TextPaint
+import android.text.TextUtils
 import android.widget.RemoteViews
+import androidx.core.graphics.ColorUtils
 import com.music.bitchord.MainActivity
 import com.music.bitchord.R
-import com.music.bitchord.playback.PlayerDeepLink
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
@@ -29,7 +29,7 @@ import kotlin.math.sin
 /**
  * Vintage Analog Cassette Tape Widget (4x2), inspired by classic stereo decks and Japanese Lo-Fi aesthetic.
  * Features realistic tape spool reels, magnetic tape window, label badge, subtitle notes card,
- * and physical deck buttons (Rewind, Iconic Terracotta Orange Play/Pause, Fast-Forward).
+ * and physical deck buttons (Rewind, Terracotta Orange Play/Pause, Fast-Forward).
  */
 class CassetteWidget : AppWidgetProvider() {
 
@@ -60,6 +60,26 @@ class CassetteWidget : AppWidgetProvider() {
 
     companion object {
         private val scope = CoroutineScope(SupervisorJob() + Dispatchers.Default)
+        private const val PREFS = "hush_widget_prefs"
+        private const val KEY_CASSETTE_THEME = "cassette_theme"
+
+        fun savedThemeId(context: Context): String =
+            context.getSharedPreferences(PREFS, Context.MODE_PRIVATE)
+                .getString(KEY_CASSETTE_THEME, "slate") ?: "slate"
+
+        fun saveTheme(context: Context, themeId: String) {
+            context.getSharedPreferences(PREFS, Context.MODE_PRIVATE)
+                .edit()
+                .putString(KEY_CASSETTE_THEME, themeId)
+                .apply()
+        }
+
+        private fun colorsForTheme(themeId: String): Pair<Int, Int> = when (themeId) {
+            "cream" -> Color.parseColor("#E5DCCB") to Color.parseColor("#22252B")
+            "blush" -> Color.parseColor("#D97B89") to Color.parseColor("#F7F0E8")
+            "mint" -> Color.parseColor("#5E8E89") to Color.parseColor("#F2F5F4")
+            else -> Color.parseColor("#2B3340") to Color.parseColor("#F5F2EB")
+        }
 
         fun refresh(context: Context) {
             val app = context.applicationContext
@@ -74,24 +94,26 @@ class CassetteWidget : AppWidgetProvider() {
             }
         }
 
-        private suspend fun render(context: Context, ids: IntArray) {
+        private fun render(context: Context, ids: IntArray) {
             val manager = runCatching { AppWidgetManager.getInstance(context) }.getOrNull() ?: return
             val snapshot = MediaWidgetSnapshot.load(context)
+            val (tapeColor, cardBgColor) = colorsForTheme(savedThemeId(context))
 
             for (id in ids) {
                 val views = RemoteViews(context.packageName, R.layout.widget_cassette)
 
-                // Render the complete retro analog cassette bitmap
                 val art = drawCassetteBitmap(
                     widthPx = 800,
                     heightPx = 460,
                     title = if (snapshot.hasTrack) snapshot.title else "Hush Tape Deck C-90",
                     artist = if (snapshot.hasTrack) snapshot.artist else "Analog Sound System",
                     isPlaying = snapshot.isPlaying,
+                    tapeColor = tapeColor,
+                    cardBgColor = cardBgColor,
                 )
                 views.setImageViewBitmap(R.id.widget_cassette_art, art)
+                views.setInt(R.id.widget_cassette_root, "setBackgroundResource", 0)
 
-                // Transport deck buttons
                 views.setOnClickPendingIntent(
                     R.id.widget_cassette_prev,
                     MediaWidgetActions.pendingIntent(context, MediaWidgetActions.ACTION_PREVIOUS),
@@ -105,13 +127,11 @@ class CassetteWidget : AppWidgetProvider() {
                     MediaWidgetActions.pendingIntent(context, MediaWidgetActions.ACTION_NEXT),
                 )
 
-                // Update play/pause glyph
                 views.setImageViewResource(
                     R.id.widget_cassette_toggle,
                     if (snapshot.isPlaying) R.drawable.ic_widget_pause else R.drawable.ic_widget_play,
                 )
 
-                // Tap background opens app
                 val openIntent = Intent(context, MainActivity::class.java).apply {
                     action = Intent.ACTION_MAIN
                     addCategory(Intent.CATEGORY_LAUNCHER)
@@ -138,25 +158,34 @@ class CassetteWidget : AppWidgetProvider() {
             title: String,
             artist: String,
             isPlaying: Boolean,
-            tapeColor: Int = Color.parseColor("#2B3340"), // Slate charcoal cassette
-            cardBgColor: Int = Color.parseColor("#F5F2EB"), // Vintage cream background card
+            tapeColor: Int = Color.parseColor("#2B3340"),
+            cardBgColor: Int = Color.parseColor("#F5F2EB"),
         ): Bitmap {
             val bitmap = Bitmap.createBitmap(widthPx, heightPx, Bitmap.Config.ARGB_8888)
             val canvas = Canvas(bitmap)
+            val paint = TextPaint(Paint.ANTI_ALIAS_FLAG)
+            val isDarkCard = ColorUtils.calculateLuminance(cardBgColor) < 0.35
 
-            val paint = Paint(Paint.ANTI_ALIAS_FLAG)
-
-            // 1. Warm cream background card with smooth rounded corners
+            // 1. Card surface with smooth squircle-like corners
             paint.color = cardBgColor
             canvas.drawRoundRect(0f, 0f, widthPx.toFloat(), heightPx.toFloat(), 48f, 48f, paint)
 
+            // Subtle outer rim when dark
+            if (isDarkCard) {
+                paint.style = Paint.Style.STROKE
+                paint.strokeWidth = 2f
+                paint.color = Color.argb(38, 255, 255, 255)
+                canvas.drawRoundRect(1f, 1f, widthPx - 1f, heightPx - 1f, 48f, 48f, paint)
+                paint.style = Paint.Style.FILL
+            }
+
             // 2. Japanese header typography ("TRACKS / 作った曲たち")
-            paint.color = Color.parseColor("#3A3D42")
+            paint.color = if (isDarkCard) Color.parseColor("#F2F2F7") else Color.parseColor("#3A3D42")
             paint.textSize = 24f
             paint.typeface = Typeface.create(Typeface.MONOSPACE, Typeface.BOLD)
             canvas.drawText("TRACKS", 36f, 42f, paint)
 
-            paint.color = Color.parseColor("#7A7E85")
+            paint.color = if (isDarkCard) Color.parseColor("#9E9EA6") else Color.parseColor("#7A7E85")
             paint.textSize = 16f
             paint.typeface = Typeface.DEFAULT
             canvas.drawText("作った曲たち • Hush Analog", 146f, 40f, paint)
@@ -174,7 +203,7 @@ class CassetteWidget : AppWidgetProvider() {
             // Cassette inner border highlight
             paint.style = Paint.Style.STROKE
             paint.strokeWidth = 3f
-            paint.color = Color.parseColor("#444F63")
+            paint.color = ColorUtils.blendARGB(tapeColor, Color.WHITE, 0.18f)
             canvas.drawRoundRect(cassetteRect, 24f, 24f, paint)
             paint.style = Paint.Style.FILL
 
@@ -192,12 +221,13 @@ class CassetteWidget : AppWidgetProvider() {
             paint.typeface = Typeface.create(Typeface.DEFAULT, Typeface.BOLD)
             canvas.drawText("A", badgeRect.left + 10f, badgeRect.top + 18f, paint)
 
-            // Track title on cassette label
+            // Track title on cassette label (ellipsized cleanly to fit label)
             paint.color = Color.parseColor("#1E2024")
             paint.textSize = 19f
             paint.typeface = Typeface.create(Typeface.MONOSPACE, Typeface.BOLD)
-            val cleanTitle = if (title.length > 26) title.take(24) + "…" else title
-            canvas.drawText(cleanTitle, badgeRect.right + 12f, badgeRect.top + 18f, paint)
+            val titleAvail = (labelRect.right - badgeRect.right - 28f).coerceAtLeast(80f)
+            val ellipsizedTitle = TextUtils.ellipsize(title, paint, titleAvail, TextUtils.TruncateAt.END).toString()
+            canvas.drawText(ellipsizedTitle, badgeRect.right + 12f, badgeRect.top + 18f, paint)
 
             // 5. Center Tape Window & Spool Reels
             val windowWidth = (cassetteRight - cassetteLeft) * 0.54f
@@ -220,22 +250,21 @@ class CassetteWidget : AppWidgetProvider() {
             val leftReelX = windowLeft + 48f
             val rightReelX = windowLeft + windowWidth - 48f
             val reelY = windowTop + windowHeight / 2f
+            val reelPhase = if (isPlaying) 18.0 else 0.0
 
-            for (cx in listOf(leftReelX, rightReelX)) {
-                // White outer reel circle
+            for ((idx, cx) in listOf(leftReelX, rightReelX).withIndex()) {
                 paint.color = Color.parseColor("#F4F4F6")
                 canvas.drawCircle(cx, reelY, reelRadius, paint)
 
-                // Inner hole
                 paint.color = Color.parseColor("#181B20")
                 canvas.drawCircle(cx, reelY, 12f, paint)
 
-                // 6 Reel gear teeth
                 paint.color = Color.parseColor("#181B20")
                 paint.strokeWidth = 3f
                 paint.style = Paint.Style.STROKE
+                val phase = if (idx == 1) reelPhase + 10.0 else reelPhase
                 for (i in 0 until 6) {
-                    val angle = (i * 60.0) * Math.PI / 180.0
+                    val angle = (i * 60.0 + phase) * Math.PI / 180.0
                     val x1 = (cx + 12f * cos(angle)).toFloat()
                     val y1 = (reelY + 12f * sin(angle)).toFloat()
                     val x2 = (cx + 22f * cos(angle)).toFloat()
@@ -252,39 +281,42 @@ class CassetteWidget : AppWidgetProvider() {
             canvas.drawCircle(widthPx / 2f - 40f, cassetteBottom - 10f, 4f, paint)
             canvas.drawCircle(widthPx / 2f + 40f, cassetteBottom - 10f, 4f, paint)
 
-            // 6. Japanese notes card underneath
+            // 6. Notes card underneath (adaptive contrast for dark vs light card background)
             val cardLeft = 32f
             val cardTop = 276f
-            val cardRight = widthPx - 170f // Leaves room for the physical deck buttons on the right
+            val cardRight = widthPx - 170f
             val cardBottom = heightPx - 24f
 
             val noteRect = RectF(cardLeft, cardTop, cardRight, cardBottom)
-            paint.color = Color.parseColor("#ECE7DC")
+            paint.color = if (isDarkCard) Color.parseColor("#2B2F37") else Color.parseColor("#ECE7DC")
             canvas.drawRoundRect(noteRect, 16f, 16f, paint)
 
             // Ruled line in notes
-            paint.color = Color.parseColor("#DFD8C8")
+            paint.color = if (isDarkCard) Color.parseColor("#3B404A") else Color.parseColor("#DFD8C8")
             paint.strokeWidth = 1.5f
             canvas.drawLine(cardLeft + 16f, cardTop + 54f, cardRight - 16f, cardTop + 54f, paint)
 
-            // Subtitle text (Japanese Lo-Fi & Artist metadata)
-            paint.color = Color.parseColor("#484C54")
+            // Subtitle text (Japanese Lo-Fi & Artist metadata, safely ellipsized)
+            paint.color = if (isDarkCard) Color.parseColor("#ECEFF4") else Color.parseColor("#484C54")
             paint.textSize = 15f
             paint.typeface = Typeface.DEFAULT
             val cleanArtist = if (artist.isBlank()) "Hush Hi-Fi Tape C-90" else artist
-            canvas.drawText("サンプラーとシンセサイザーの演奏 • $cleanArtist", cardLeft + 16f, cardTop + 34f, paint)
+            val noteText = "サンプラーとシンセサイザー • $cleanArtist"
+            val noteAvail = (cardRight - cardLeft - 32f).coerceAtLeast(80f)
+            val ellipsizedNote = TextUtils.ellipsize(noteText, paint, noteAvail, TextUtils.TruncateAt.END).toString()
+            canvas.drawText(ellipsizedNote, cardLeft + 16f, cardTop + 34f, paint)
 
-            paint.color = Color.parseColor("#8E939E")
+            paint.color = if (isDarkCard) Color.parseColor("#9DA3AE") else Color.parseColor("#8E939E")
             paint.textSize = 13f
             paint.typeface = Typeface.create(Typeface.MONOSPACE, Typeface.NORMAL)
             canvas.drawText("2026-11 • Hi-Res Analog Output • 120Hz Deck", cardLeft + 16f, cardTop + 86f, paint)
 
             // Subtle website/deck tag pill at the bottom
             val tagText = "hush.music"
-            paint.color = Color.parseColor("#E0DDD4")
+            paint.color = if (isDarkCard) Color.parseColor("#383D47") else Color.parseColor("#E0DDD4")
             val tagRect = RectF(cardLeft + 16f, cardTop + 104f, cardLeft + 116f, cardTop + 130f)
             canvas.drawRoundRect(tagRect, 12f, 12f, paint)
-            paint.color = Color.parseColor("#6A6E78")
+            paint.color = if (isDarkCard) Color.parseColor("#D8DCE3") else Color.parseColor("#6A6E78")
             paint.textSize = 12f
             paint.typeface = Typeface.create(Typeface.MONOSPACE, Typeface.BOLD)
             canvas.drawText(tagText, cardLeft + 30f, cardTop + 122f, paint)
