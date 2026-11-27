@@ -119,7 +119,7 @@ import com.music.bitchord.ui.player.LyricsShareRequest
 import com.music.bitchord.ui.player.PlayerDock
 import com.music.bitchord.ui.player.PlayerSheetMotion
 import com.music.bitchord.ui.replay.ReplayHeroCard
-import com.music.bitchord.ui.replay.ReplayPeriod
+import com.music.bitchord.data.stats.ReplayPeriod
 import com.music.bitchord.ui.replay.ReplayState
 import com.music.bitchord.ui.replay.ReplayStoryPage
 import com.music.bitchord.ui.replay.cards
@@ -451,7 +451,7 @@ internal class MainNavState(
     var isReleaseDetail by mutableStateOf(false)
     var songSort by mutableStateOf(SongSort.DEFAULT)
     var downloadedMusicSort by mutableStateOf(LocalMusicSort.DATE_ADDED)
-    var localMusicSort by mutableStateOf(LocalMusicSort.TITLE)
+    var localMusicSort by mutableStateOf(LocalMusicSort.TITLE_ASC)
     var downloadedMusicViewType by mutableStateOf(LibraryViewType.LIST)
     var localMusicViewType by mutableStateOf(LibraryViewType.LIST)
     var detailSearching by detailSearchingState

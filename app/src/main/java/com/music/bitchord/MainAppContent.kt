@@ -1411,7 +1411,7 @@ private fun MainTopBarSearchAccessory(
 }
 
 @Composable
-private fun RowScope.MainTopBarActions(
+private fun MainTopBarActions(
     overlays: MainOverlayState,
     nav: MainNavState,
     feeds: MainFeedState,
