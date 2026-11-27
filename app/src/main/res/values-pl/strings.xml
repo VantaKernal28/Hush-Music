@@ -1497,4 +1497,15 @@
     <string name="bit_perfect_status_inexact">%1$s · niedokładne: to źródło nie jest bezstratnym PCM</string>
     <string name="bit_perfect_status_waiting">Oczekiwanie na bezstratny utwór na obsługiwanym wyjściu</string>
     <string name="bit_perfect_status_unavailable">Niedostępne dla tego utworu (%1$s)</string>
+
+    <!-- Synced from base strings.xml -->
+    <string name="widget_cassette_label">Retro Cassette</string>
+    <string name="widget_cassette_description">Vintage analog cassette tape with reel tape window and retro physical deck buttons.</string>
+    <string name="widget_m3_label">Material 3 Expressive</string>
+    <string name="widget_m3_description">Modern Material You dynamic color card with squircle cover and pill controls.</string>
+    <string name="widget_classic_label">Classic Liquid Glass</string>
+    <string name="widget_classic_description">Translucent frosted glass player with specular highlights and glowing accents.</string>
+    <string name="home_screen_widgets">Home Screen Widgets</string>
+    <string name="widget_added_toast">Widget pinned to home screen!</string>
+    <string name="widget_pin_unsupported">Your launcher doesn\'t support automatic pinning. Please touch and hold your home screen, tap Widgets, and drag Hush Music onto your screen.</string>
 </resources>
